@@ -73,7 +73,7 @@ pub fn run() -> Result<()> {
 
     // Update framework files
     utils::info("Updating framework files...");
-    let stats = update_files(&target, &source_root, &current_checksums)?;
+    let stats = update_files(&target, &source_root, &manifest, &current_checksums)?;
 
     // Update directive injections
     utils::info("Updating AI agent directives...");
@@ -105,6 +105,7 @@ struct UpdateStats {
 fn update_files(
     target: &Path,
     source_root: &Path,
+    manifest: &DistManifest,
     checksums: &Checksums,
 ) -> Result<UpdateStats> {
     let mut stats = UpdateStats {
@@ -121,20 +122,19 @@ fn update_files(
             .strip_prefix(source_root)
             .unwrap_or(&source_path)
             .display()
-            .to_string();
+            .to_string()
+            .replace('\\', "/");
+
+        // Only touch files declared by the release manifest. The release ZIP also
+        // ships internal artifacts (`dist-manifest.yml`, `dist-templates/`) that
+        // the CLI consumes from the temp dir but must never copy into the
+        // adopter's project. Mirrors `init.rs::extract_matching_files`.
+        if !matches_manifest(&relative, &manifest.files) {
+            continue;
+        }
 
         // Skip user-generated documents
         if utils::is_user_document(&source_path) {
-            continue;
-        }
-
-        // Skip checksums file
-        if relative == ".devtrail/.checksums.json" {
-            continue;
-        }
-
-        // Skip dist-manifest.yml (we save it separately)
-        if relative == ".devtrail/dist-manifest.yml" {
             continue;
         }
 
@@ -325,6 +325,18 @@ fn find_source_root(extract_dir: &Path) -> Result<PathBuf> {
     bail!("Could not find dist-manifest.yml in extracted archive");
 }
 
+/// Match a relative path (POSIX-style) against the manifest's `files` whitelist.
+/// Patterns ending in `/` match any path under that directory; otherwise exact match.
+fn matches_manifest(relative: &str, files: &[String]) -> bool {
+    files.iter().any(|pat| {
+        if pat.ends_with('/') {
+            relative.starts_with(pat.as_str())
+        } else {
+            relative == pat
+        }
+    })
+}
+
 fn walkdir(dir: PathBuf) -> Result<Vec<PathBuf>> {
     let mut files = Vec::new();
     if !dir.is_dir() {
@@ -342,4 +354,50 @@ fn walkdir(dir: PathBuf) -> Result<Vec<PathBuf>> {
     }
 
     Ok(files)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::matches_manifest;
+
+    fn manifest_files() -> Vec<String> {
+        // Matches `dist/dist-manifest.yml` (fw-4.3.0).
+        vec![
+            ".devtrail/".to_string(),
+            "DEVTRAIL.md".to_string(),
+            ".claude/skills/".to_string(),
+            ".gemini/skills/".to_string(),
+            ".agent/workflows/".to_string(),
+            ".github/workflows/docs-validation.yml".to_string(),
+        ]
+    }
+
+    #[test]
+    fn package_artifacts_are_rejected() {
+        let files = manifest_files();
+        // Regression for the bug where `devtrail update` deposited these in the
+        // adopter project. Both live at the ZIP root, neither is in `manifest.files`.
+        assert!(!matches_manifest("dist-manifest.yml", &files));
+        assert!(!matches_manifest("dist-templates/directives/CLAUDE.md", &files));
+    }
+
+    #[test]
+    fn declared_files_and_directories_match() {
+        let files = manifest_files();
+        assert!(matches_manifest("DEVTRAIL.md", &files));
+        assert!(matches_manifest(".devtrail/00-governance/AGENT-RULES.md", &files));
+        assert!(matches_manifest(".claude/skills/devtrail-new/SKILL.md", &files));
+        assert!(matches_manifest(
+            ".github/workflows/docs-validation.yml",
+            &files
+        ));
+    }
+
+    #[test]
+    fn undeclared_paths_are_rejected() {
+        let files = manifest_files();
+        assert!(!matches_manifest("README.md", &files));
+        assert!(!matches_manifest(".github/workflows/release-cli.yml", &files));
+        assert!(!matches_manifest(".claude/agents/foo.md", &files));
+    }
 }
