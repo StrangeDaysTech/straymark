@@ -4,6 +4,8 @@ use colored::Colorize;
 #[cfg(feature = "analyze")]
 mod analysis_engine;
 mod audit_engine;
+mod charter;
+mod charter_schema;
 mod commands;
 mod compliance;
 mod config;
@@ -79,6 +81,12 @@ enum Commands {
         /// Validate only git-staged files (for pre-commit hooks)
         #[arg(long)]
         staged: bool,
+        /// Also validate Charters in docs/charters/ against the Charter schema
+        /// and referential integrity (originating_ailogs IDs exist;
+        /// originating_spec path exists). Default: false, to avoid breaking
+        /// projects that don't yet use the Charter pattern.
+        #[arg(long)]
+        include_charters: bool,
     },
     /// Check regulatory compliance (EU, NIST, ISO; China standards opt-in via regional_scope)
     Compliance {
@@ -173,6 +181,57 @@ enum Commands {
         #[arg(long)]
         lang: Option<String>,
     },
+    /// Manage Charters: bounded units of work declared ex-ante and audited ex-post
+    Charter {
+        #[command(subcommand)]
+        command: CharterCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum CharterCommands {
+    /// Scaffold a new Charter from the framework template
+    New {
+        /// Effort estimate (defaults to M if absent)
+        #[arg(long = "type", short = 't', value_parser = ["XS", "S", "M", "L"])]
+        effort: Option<String>,
+        /// Originating AILOG ID (e.g., AILOG-2026-04-28-021).
+        /// Mutually exclusive with --from-spec.
+        #[arg(long, conflicts_with = "from_spec")]
+        from_ailog: Option<String>,
+        /// Originating SpecKit spec path (e.g., specs/001-feature/spec.md).
+        /// Mutually exclusive with --from-ailog.
+        #[arg(long, conflicts_with = "from_ailog")]
+        from_spec: Option<String>,
+        /// Charter title (used to build the slug and filename)
+        #[arg(long)]
+        title: Option<String>,
+        /// Project directory (default: current directory)
+        #[arg(default_value = ".")]
+        path: String,
+    },
+    /// List Charters with optional status / origin filter
+    List {
+        /// Filter by lifecycle status
+        #[arg(long, default_value = "all", value_parser = ["declared", "in-progress", "closed", "all"])]
+        status: String,
+        /// Filter by origin type
+        #[arg(long, value_parser = ["ailog", "spec", "any"])]
+        origin: Option<String>,
+        /// Project directory (default: current directory)
+        #[arg(default_value = ".")]
+        path: String,
+    },
+    /// Show Charter detail (or last 5 Charters if no ID is given)
+    Status {
+        /// Charter identifier (CHARTER-NN, CHARTER-NN-slug, or just NN)
+        charter_id: Option<String>,
+        /// Project directory (default: current directory).
+        /// Use a flag (rather than positional) so it cannot be confused
+        /// with the optional charter_id positional.
+        #[arg(long = "path", default_value = ".")]
+        path: String,
+    },
 }
 
 fn main() {
@@ -187,7 +246,12 @@ fn main() {
         Commands::UpdateFramework => commands::update_framework::run(),
         Commands::UpdateCli { method } => commands::update_cli::run(&method),
         Commands::Remove { full } => commands::remove::run(full),
-        Commands::Validate { path, fix, staged } => commands::validate::run(&path, fix, staged),
+        Commands::Validate {
+            path,
+            fix,
+            staged,
+            include_charters,
+        } => commands::validate::run(&path, fix, staged, include_charters),
         Commands::Audit {
             path,
             from,
@@ -224,6 +288,29 @@ fn main() {
         } => commands::analyze::run(&path, threshold, &output, top),
         #[cfg(feature = "tui")]
         Commands::Explore { path, lang } => commands::explore::run(&path, lang.as_deref()),
+        Commands::Charter { command } => match command {
+            CharterCommands::New {
+                effort,
+                from_ailog,
+                from_spec,
+                title,
+                path,
+            } => commands::charter::new::run(
+                &path,
+                effort.as_deref(),
+                from_ailog.as_deref(),
+                from_spec.as_deref(),
+                title.as_deref(),
+            ),
+            CharterCommands::List {
+                status,
+                origin,
+                path,
+            } => commands::charter::list::run(&path, &status, origin.as_deref()),
+            CharterCommands::Status { charter_id, path } => {
+                commands::charter::status::run(&path, charter_id.as_deref())
+            }
+        },
     };
 
     if let Err(e) = result {

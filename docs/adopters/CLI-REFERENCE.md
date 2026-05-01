@@ -12,7 +12,7 @@
 
 1. [Installation](#installation)
 2. [Versioning](#versioning)
-3. [Commands](#commands) — init, update, remove, status, repair, validate, new, compliance, metrics, analyze, audit, explore, about
+3. [Commands](#commands) — init, update, remove, status, repair, validate, new, charter, compliance, metrics, analyze, audit, explore, about
 4. [Environment Variables](#environment-variables)
 5. [Exit Codes](#exit-codes)
 
@@ -48,8 +48,8 @@ DevTrail uses **independent version tags** for each component:
 
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
-| Framework | `fw-` | `fw-4.3.0` | Templates (12 types), governance docs, directives |
-| CLI | `cli-` | `cli-3.5.3` | The `devtrail` binary |
+| Framework | `fw-` | `fw-4.4.0` | Templates (12 types), governance docs, directives, Charter template + schema |
+| CLI | `cli-` | `cli-3.6.0` | The `devtrail` binary |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
 
@@ -86,7 +86,7 @@ Initialize DevTrail in a project directory.
 
 ```bash
 $ devtrail init .
-✔ Downloaded DevTrail fw-4.3.0
+✔ Downloaded DevTrail fw-4.4.0
 ✔ Created .devtrail/ directory structure
 ✔ Created DEVTRAIL.md
 ✔ Configured AI agent directives
@@ -108,7 +108,7 @@ If `.devtrail/` does not exist in the current directory, the framework update is
 ```bash
 $ devtrail update
 Updating framework...
-✔ Framework updated to fw-4.3.0
+✔ Framework updated to fw-4.4.0
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -125,7 +125,7 @@ Update only the framework files. Looks for the latest `fw-*` release on GitHub.
 
 ```bash
 $ devtrail update-framework
-✔ Framework updated to fw-4.3.0
+✔ Framework updated to fw-4.4.0
 ```
 
 ---
@@ -209,7 +209,7 @@ $ devtrail status
   Project
   ┌───────────┬──────────────────────────┐
   │ Path      │ /home/user/my-project    │
-  │ Framework │ fw-4.3.0                 │
+  │ Framework │ fw-4.4.0                 │
   │ CLI       │ cli-3.5.2                │
   │ Language  │ en                       │
   └───────────┴──────────────────────────┘
@@ -266,7 +266,7 @@ Repairing DevTrail in /home/user/my-project
 → Restoring 1 missing directory...
 ✓ Restored .devtrail/templates/
 → Downloading framework to restore missing files...
-  Using version: fw-4.3.0
+  Using version: fw-4.4.0
 ✓ Restored 16 file(s) from framework
 → Updating checksums...
 
@@ -275,7 +275,7 @@ Repairing DevTrail in /home/user/my-project
 
 ---
 
-### `devtrail validate [path] [--fix] [--staged]`
+### `devtrail validate [path] [--fix] [--staged] [--include-charters]`
 
 Validate DevTrail documents for compliance and correctness.
 
@@ -286,6 +286,7 @@ Validate DevTrail documents for compliance and correctness.
 | `path` | `.` (current directory) | Target project directory |
 | `--fix` | — | Automatically fix simple issues (e.g., missing `review_required: true` for high-risk docs) |
 | `--staged` | — | Validate only staged (git-added) files. Ideal for pre-commit hooks. |
+| `--include-charters` | — | Also validate Charters in `docs/charters/` against the Charter JSON Schema and referential integrity (originating AILOG IDs resolve, originating spec paths exist). Opt-in so projects that don't yet use the Charter pattern are unaffected. Currently honored only without `--staged` — Charter validation in staged mode lands in cli-3.7.0. |
 
 **What it checks:**
 
@@ -351,6 +352,106 @@ $ devtrail new -t ailog --title "Implement JWT authentication"
   Next steps:
     1. Edit the document to fill in details
     2. Commit: git add .devtrail/07-ai-audit/agent-logs/AILOG-2026-04-01-001-implement-jwt-authentication.md
+```
+
+---
+
+### `devtrail charter <subcommand>`
+
+Manage **Charters**: bounded, auditable units of work declared ex-ante and validated ex-post. A Charter pairs declarative scope (files to touch, risks, executable verification) with ex-post audit anchoring (drift detection, multi-model audit). Charters live at `docs/charters/NN-slug.md` (project-root level, **not** under `.devtrail/`).
+
+> **Naming history.** In the Sentinel `/plan-audit` experiment that crystallized this pattern (2026-04, 6 cycles), Charters were called *Plans*. The DevTrail CLI uses **Charter** going forward to disambiguate from GitHub SpecKit's `plan.md`. Sentinel's historical files preserve "Plan" deliberately. The full conceptual scope and the rename rationale live in `Propuesta/que-es-un-charter.md`.
+
+**Subcommands:**
+
+- `devtrail charter new` — scaffold a new Charter from the framework template
+- `devtrail charter list` — enumerate Charters with optional filters
+- `devtrail charter status` — show Charter detail, or the most recent 5 Charters
+
+Phase 2 of the CLI roadmap will add `charter close` (interactive telemetry) and `charter drift` (file-vs-commit drift check). Phase 3 adds `charter audit` (multi-model external audit).
+
+#### `devtrail charter new [-t XS|S|M|L] [--from-ailog <id> | --from-spec <path>] [--title <title>] [path]`
+
+Scaffold a Charter from the framework template into `docs/charters/NN-slug.md`. Prompts for the title interactively if not passed. The two origin flags are mutually exclusive at the clap level.
+
+| Argument/Flag | Default | Description |
+|---------------|---------|-------------|
+| `path` | `.` (current directory) | Target project directory |
+| `--type`, `-t` | `M` | Effort estimate. One of `XS`, `S`, `M`, `L`. |
+| `--title` | — | Charter title. Used to build the slug and filename. Prompts if absent. |
+| `--from-ailog` | — | Originating AILOG ID (e.g., `AILOG-2026-04-28-021`). Pre-populates `originating_ailogs` in frontmatter. **Mutually exclusive with `--from-spec`.** |
+| `--from-spec` | — | Path to a SpecKit spec.md (e.g., `specs/001-feature/spec.md`). Pre-populates `originating_spec` in frontmatter. The path is verified at scaffold time. **Mutually exclusive with `--from-ailog`.** |
+
+When neither origin flag is given, both `originating_ailogs` and `originating_spec` stay commented out in the generated frontmatter — the Charter is scaffolded "without explicit origin" and the user fills it in before status moves to `in-progress`.
+
+**Examples:**
+
+```bash
+# Standalone (no origin) — interactive title prompt
+$ devtrail charter new --type M
+
+# Maintenance / post-MVP mode — Charter rooted in an existing AILOG
+$ devtrail charter new -t S --from-ailog AILOG-2026-04-28-021 --title "per-service thresholds"
+
+# Greenfield mode — Charter implementing a SpecKit spec
+$ devtrail charter new -t L --from-spec specs/001-payments/spec.md --title "wire payment provider"
+```
+
+**Example output:**
+
+```
+$ devtrail charter new -t M --title "test charter"
+
+  ✔ Created: docs/charters/01-test-charter.md
+
+  Next steps:
+    1. Edit the Charter to fill in Context, Scope, Files to modify, Verification, Risks, Tasks.
+    2. Set the trigger field in frontmatter to a concrete observable signal.
+    3. Set originating_ailogs or originating_spec in frontmatter (or leave both absent if standalone).
+    4. When you start executing: change frontmatter status from `declared` to `in-progress`.
+```
+
+#### `devtrail charter list [--status declared|in-progress|closed|all] [--origin ailog|spec|any] [path]`
+
+Enumerate Charters as a table.
+
+| Argument/Flag | Default | Description |
+|---------------|---------|-------------|
+| `path` | `.` | Target project directory |
+| `--status` | `all` | Filter by lifecycle status |
+| `--origin` | `any` (no filter) | Filter by origin type: `ailog`, `spec`, or `any` |
+
+Files that fail to parse are reported as warnings to stderr without failing the command — the table lists what it can.
+
+**Example:**
+
+```bash
+$ devtrail charter list
+  NN  STATUS       EFFORT  ORIGIN                 TITLE
+  01  declared     M       AILOG-2026-04-28-021   Per-service anomaly thresholds
+  02  in-progress  XS      —                      Baseline recompute
+  03  closed       L       specs/001/spec.md      Wire payment provider
+```
+
+#### `devtrail charter status [CHARTER-ID] [--path <dir>]`
+
+With an ID: print the full Charter detail (frontmatter, file location, body section list, Phase 2 placeholders). Without an ID: print the 5 most recent Charters by NN descending.
+
+| Argument/Flag | Default | Description |
+|---------------|---------|-------------|
+| `CHARTER-ID` | — | Charter identifier. Accepts the full `charter_id` (`CHARTER-01-test`), the `CHARTER-NN` prefix (`CHARTER-01`), or just the numeric NN (`01` or `1`). Numeric matching is permissive across zero-padding. |
+| `--path` | `.` | Target project directory. Use a flag (rather than positional) so it cannot be confused with the optional `CHARTER-ID` positional. |
+
+**Examples:**
+
+```bash
+# Most recent 5
+$ devtrail charter status
+
+# Detail for a specific Charter (any of these resolves to CHARTER-02-baseline-recompute)
+$ devtrail charter status CHARTER-02-baseline-recompute
+$ devtrail charter status CHARTER-02
+$ devtrail charter status 2
 ```
 
 ---
@@ -696,7 +797,7 @@ Show version, authorship, and license information.
 $ devtrail about
 DevTrail CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.3.0
+  Framework version: fw-4.4.0
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/devtrail

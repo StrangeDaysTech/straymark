@@ -12,7 +12,7 @@
 
 1. [安装](#安装)
 2. [版本管理](#版本管理)
-3. [命令](#命令) — init, update, remove, status, repair, validate, new, compliance, metrics, analyze, audit, explore, about
+3. [命令](#命令) — init, update, remove, status, repair, validate, new, charter, compliance, metrics, analyze, audit, explore, about
 4. [环境变量](#环境变量)
 5. [退出码](#退出码)
 
@@ -48,8 +48,8 @@ DevTrail 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.3.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.5.3` | `devtrail` 二进制文件 |
+| Framework | `fw-` | `fw-4.4.0` | 模板（12 种类型）、治理文档、指令 |
+| CLI | `cli-` | `cli-3.6.0` | `devtrail` 二进制文件 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
 
@@ -86,7 +86,7 @@ devtrail status   # 显示完整的安装状态，包括版本
 
 ```bash
 $ devtrail init .
-✔ Downloaded DevTrail fw-4.3.0
+✔ Downloaded DevTrail fw-4.4.0
 ✔ Created .devtrail/ directory structure
 ✔ Created DEVTRAIL.md
 ✔ Configured AI agent directives
@@ -108,7 +108,7 @@ Next: git add .devtrail/ DEVTRAIL.md && git commit -m "chore: adopt DevTrail"
 ```bash
 $ devtrail update
 Updating framework...
-✔ Framework updated to fw-4.3.0
+✔ Framework updated to fw-4.4.0
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -125,7 +125,7 @@ Updating CLI...
 
 ```bash
 $ devtrail update-framework
-✔ Framework updated to fw-4.3.0
+✔ Framework updated to fw-4.4.0
 ```
 
 ---
@@ -209,7 +209,7 @@ $ devtrail status
   Project
   ┌───────────┬──────────────────────────┐
   │ Path      │ /home/user/my-project    │
-  │ Framework │ fw-4.3.0                 │
+  │ Framework │ fw-4.4.0                 │
   │ CLI       │ cli-3.5.2                │
   │ Language  │ en                       │
   └───────────┴──────────────────────────┘
@@ -266,7 +266,7 @@ Repairing DevTrail in /home/user/my-project
 → Restoring 1 missing directory...
 ✓ Restored .devtrail/templates/
 → Downloading framework to restore missing files...
-  Using version: fw-4.3.0
+  Using version: fw-4.4.0
 ✓ Restored 16 file(s) from framework
 → Updating checksums...
 
@@ -275,7 +275,7 @@ Repairing DevTrail in /home/user/my-project
 
 ---
 
-### `devtrail validate [path] [--fix] [--staged]`
+### `devtrail validate [path] [--fix] [--staged] [--include-charters]`
 
 验证 DevTrail 文档的合规性和正确性。
 
@@ -286,6 +286,7 @@ Repairing DevTrail in /home/user/my-project
 | `path` | `.`（当前目录） | 目标项目目录 |
 | `--fix` | — | 自动修复简单问题（例如为高风险文档添加缺失的 `review_required: true`） |
 | `--staged` | — | 仅验证已暂存（git add）的文件。适合 pre-commit 钩子。 |
+| `--include-charters` | — | 同时根据章程 JSON Schema 和引用完整性（`originating_ailogs` 中的 ID 解析；`originating_spec` 路径存在）验证 `docs/charters/` 中的章程。Opt-in，默认 `false`，确保未使用章程模式的项目不受影响。目前仅在非 `--staged` 模式下生效；staged 模式的章程验证将在 cli-3.7.0 中加入。 |
 
 **检查项目：**
 
@@ -352,6 +353,57 @@ $ devtrail new -t ailog --title "Implement JWT authentication"
     1. Edit the document to fill in details
     2. Commit: git add .devtrail/07-ai-audit/agent-logs/AILOG-2026-04-01-001-implement-jwt-authentication.md
 ```
+
+---
+
+### `devtrail charter <子命令>`
+
+管理**章程（Charter）**：事前声明、事后审计的有界工作单元。一个章程将声明性范围（要修改的文件、风险、可执行的验证命令）与事后审计锚点（漂移检测、多模型审计）配对。章程位于 `docs/charters/NN-slug.md`（项目根目录级别，**不在** `.devtrail/` 之下）。
+
+> **命名历史。**在使该模式定型的 Sentinel `/plan-audit` 实验中（2026 年 4 月，6 个周期），章程被称为 *Plans*。DevTrail CLI 从此版本开始使用 **Charter** 以避免与 GitHub SpecKit 的 `plan.md` 命名冲突。Sentinel 的历史文件刻意保留 "Plan" 命名。完整的概念范围与重命名理由见 `Propuesta/que-es-un-charter.md`。
+
+**子命令：**
+
+- `devtrail charter new` — 从框架模板创建新的章程
+- `devtrail charter list` — 用可选过滤器枚举章程
+- `devtrail charter status` — 显示章程详情，或最近的 5 个章程
+
+CLI 路线图的第 2 阶段将增加 `charter close`（交互式遥测）和 `charter drift`（文件与提交的漂移检查）。第 3 阶段将增加 `charter audit`（多模型外部审计）。
+
+#### `devtrail charter new [-t XS|S|M|L] [--from-ailog <id> | --from-spec <path>] [--title <title>] [path]`
+
+从框架模板将章程创建到 `docs/charters/NN-slug.md`。如果未传入 `--title`，会以交互方式提示。两个来源标志在 clap 级别互斥。
+
+| 参数/标志 | 默认值 | 描述 |
+|-----------|--------|------|
+| `path` | `.`（当前目录） | 目标项目目录 |
+| `--type`, `-t` | `M` | 工作量估计。`XS`、`S`、`M`、`L` 之一。 |
+| `--title` | — | 章程标题。用于构造 slug 和文件名。缺失时提示。 |
+| `--from-ailog` | — | 来源 AILOG ID（如 `AILOG-2026-04-28-021`）。在前置元数据中预填充 `originating_ailogs`。**与 `--from-spec` 互斥。** |
+| `--from-spec` | — | SpecKit 规范文件路径（如 `specs/001-feature/spec.md`）。在前置元数据中预填充 `originating_spec`。创建时会校验路径存在性。**与 `--from-ailog` 互斥。** |
+
+未传入任何来源标志时，`originating_ailogs` 和 `originating_spec` 在生成的前置元数据中均保持注释状态——章程"无显式来源"地创建，由用户在状态变为 `in-progress` 之前手动填写。
+
+#### `devtrail charter list [--status declared|in-progress|closed|all] [--origin ailog|spec|any] [path]`
+
+以表格形式枚举章程。
+
+| 参数/标志 | 默认值 | 描述 |
+|-----------|--------|------|
+| `path` | `.` | 目标项目目录 |
+| `--status` | `all` | 按生命周期状态过滤 |
+| `--origin` | `any`（无过滤） | 按来源类型过滤：`ailog`、`spec` 或 `any` |
+
+无法解析的文件作为警告输出到 stderr，不会中断命令——表格显示能列出的内容。
+
+#### `devtrail charter status [CHARTER-ID] [--path <dir>]`
+
+带 ID：打印完整的章程详情（前置元数据、文件位置、正文章节列表、第 2 阶段功能占位符）。无 ID：按 NN 降序打印最近的 5 个章程。
+
+| 参数/标志 | 默认值 | 描述 |
+|-----------|--------|------|
+| `CHARTER-ID` | — | 章程标识符。接受完整的 `charter_id`（`CHARTER-01-test`）、`CHARTER-NN` 前缀（`CHARTER-01`），或仅数字 NN（`01` 或 `1`）。数字匹配对零填充宽容。 |
+| `--path` | `.` | 目标项目目录。使用标志（而非位置参数）以避免与可选位置参数 `CHARTER-ID` 混淆。 |
 
 ---
 
@@ -689,7 +741,7 @@ $ devtrail explore --lang es             # 会话内切换到西班牙语
 $ devtrail about
 DevTrail CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.3.0
+  Framework version: fw-4.4.0
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/devtrail
