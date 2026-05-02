@@ -27,6 +27,15 @@ on:
     paths:
       - '.devtrail/**'
 
+# Single source of truth for the DocType prefixes the workflow recognizes.
+# Adding a new DocType requires updating BOTH this list and
+# `cli/src/document.rs::DocType::ALL_PREFIXES`. Keep them in sync.
+# Files whose basename does not start with one of these prefixes followed by
+# `-` are treated as framework / governance / template files and are silently
+# skipped from the per-document checks (no manual exclude list needed).
+env:
+  DOC_TYPE_PREFIXES: "AILOG|AIDEC|ADR|ETH|REQ|TES|INC|TDE|SEC|MCARD|SBOM|DPIA|PIPIA|CACFILE|TC260RA|AILABEL"
+
 jobs:
   validate-docs:
     name: Validate Documentation
@@ -71,23 +80,28 @@ jobs:
           echo "📋 Validating file naming convention..."
           ERRORS=0
 
-          # Canonical source of valid types: cli/src/document.rs::DocType::ALL_PREFIXES
-          VALID_PATTERN="^(ADR|REQ|TES|OPS|INC|TDE|AILOG|AIDEC|ETH|DOC|SEC|MCARD|SBOM|DPIA)-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3}-[a-z0-9-]+\.md$"
-          EXCLUDED="PRINCIPLES.md|DOCUMENTATION-POLICY.md|AGENT-RULES.md|TEMPLATE-.*\.md|README.md|QUICK-REFERENCE.md|INDEX.md|GIT-BRANCHING-STRATEGY.md"
+          # Whitelist approach: only files whose basename starts with one of
+          # the known DocType prefixes are validated. Framework / governance /
+          # template files (e.g., AGENT-RULES.md, AI-KPIS.md, NIST-AI-RMF-*)
+          # don't match any prefix and are silently skipped — no manual
+          # exclude list to maintain.
+          PREFIX_RE="^(${DOC_TYPE_PREFIXES})-"
+          VALID_PATTERN="^(${DOC_TYPE_PREFIXES})-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3}-[a-z0-9-]+\.md$"
 
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             filename=$(basename "$file")
 
-            # Skip excluded files
-            if echo "$filename" | grep -qE "$EXCLUDED"; then
-              echo "  ⊘ Excluded: $filename"
+            # Skip files that are not adopter-created typed documents.
+            if ! echo "$filename" | grep -qE "$PREFIX_RE"; then
+              echo "  ⊘ Skipped (framework / non-typed): $filename"
               continue
             fi
 
-            # Validate naming convention
+            # File starts with a DocType prefix — validate the full pattern.
             if ! echo "$filename" | grep -qE "$VALID_PATTERN"; then
               echo "  ✗ Invalid naming: $filename"
               echo "    Expected: [TYPE]-[YYYY-MM-DD]-[NNN]-[description].md"
+              echo "    Valid TYPEs: ${DOC_TYPE_PREFIXES//|/, }"
               ERRORS=$((ERRORS + 1))
             else
               echo "  ✓ $filename"
@@ -110,14 +124,14 @@ jobs:
           echo "📋 Validating metadata..."
           ERRORS=0
 
-          EXCLUDED="PRINCIPLES.md|DOCUMENTATION-POLICY.md|AGENT-RULES.md|TEMPLATE-.*\.md|README.md|QUICK-REFERENCE.md|INDEX.md|GIT-BRANCHING-STRATEGY.md"
+          PREFIX_RE="^(${DOC_TYPE_PREFIXES})-"
           REQUIRED_FIELDS="id title status created"
 
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             filename=$(basename "$file")
 
-            # Skip excluded files
-            if echo "$filename" | grep -qE "$EXCLUDED"; then
+            # Only validate adopter-created typed documents.
+            if ! echo "$filename" | grep -qE "$PREFIX_RE"; then
               continue
             fi
 
@@ -153,13 +167,13 @@ jobs:
           echo "📋 Validating risk_level and review_required..."
           ERRORS=0
 
-          EXCLUDED="PRINCIPLES.md|DOCUMENTATION-POLICY.md|AGENT-RULES.md|TEMPLATE-.*\.md|README.md|QUICK-REFERENCE.md|INDEX.md|GIT-BRANCHING-STRATEGY.md"
+          PREFIX_RE="^(${DOC_TYPE_PREFIXES})-"
 
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             filename=$(basename "$file")
 
-            # Skip excluded files
-            if echo "$filename" | grep -qE "$EXCLUDED"; then
+            # Only validate adopter-created typed documents.
+            if ! echo "$filename" | grep -qE "$PREFIX_RE"; then
               continue
             fi
 
@@ -314,12 +328,12 @@ jobs:
           echo "📋 Checking compliance: high-risk documents must reference an ETH..."
           ERRORS=0
 
-          EXCLUDED="PRINCIPLES.md|DOCUMENTATION-POLICY.md|AGENT-RULES.md|TEMPLATE-.*\.md|README.md|QUICK-REFERENCE.md|INDEX.md|GIT-BRANCHING-STRATEGY.md"
+          PREFIX_RE="^(${DOC_TYPE_PREFIXES})-"
 
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             filename=$(basename "$file")
 
-            if echo "$filename" | grep -qE "$EXCLUDED"; then
+            if ! echo "$filename" | grep -qE "$PREFIX_RE"; then
               continue
             fi
 
@@ -347,12 +361,12 @@ jobs:
         run: |
           echo "📋 Checking EU AI Act compliance..."
 
-          EXCLUDED="PRINCIPLES.md|DOCUMENTATION-POLICY.md|AGENT-RULES.md|TEMPLATE-.*\.md|README.md|QUICK-REFERENCE.md|INDEX.md|GIT-BRANCHING-STRATEGY.md"
+          PREFIX_RE="^(${DOC_TYPE_PREFIXES})-"
 
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             filename=$(basename "$file")
 
-            if echo "$filename" | grep -qE "$EXCLUDED"; then
+            if ! echo "$filename" | grep -qE "$PREFIX_RE"; then
               continue
             fi
 
@@ -391,7 +405,9 @@ jobs:
           echo "📊 Generating governance metrics..."
 
           DEVTRAIL_DIR=".devtrail"
-          TYPES=("AILOG" "AIDEC" "ADR" "ETH" "REQ" "TES" "INC" "TDE" "SEC" "MCARD" "SBOM" "DPIA")
+          # Derive the types array from the workflow-level env var so we never
+          # have to maintain it in two places.
+          IFS='|' read -ra TYPES <<< "$DOC_TYPE_PREFIXES"
 
           # Header
           echo "## DevTrail Governance Metrics" >> "$GITHUB_STEP_SUMMARY"

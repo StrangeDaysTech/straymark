@@ -7,6 +7,27 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.4.1 — `docs-validation.yml` workflow recognizes all DocTypes and recent governance files
+
+### Fixed (Framework)
+
+- `dist/.github/workflows/docs-validation.yml` had three pre-existing divergences that surfaced once Charters Phase 1 made adopters revisit the framework:
+  - **`VALID_PATTERN` regex** missed the four China-specific DocTypes (`PIPIA`, `CACFILE`, `TC260RA`, `AILABEL`) that shipped earlier and incorrectly listed two stale prefixes (`OPS`, `DOC`) that aren't real DocType variants. A China-region adopter creating `PIPIA-2026-01-15-001-foo.md` would have the workflow reject it as "Invalid naming".
+  - **`TYPES` array in the `governance-metrics` job** was a 12-element list missing the same four China DocTypes. The metrics summary on `$GITHUB_STEP_SUMMARY` always reported zero PIPIA/CACFILE/TC260RA/AILABEL counts, even when those documents existed.
+  - **`EXCLUDED` regex** (referenced in 5 places) listed only 8 framework files but the framework now ships ~18 additional governance / reference files at the root of `00-governance/` and `03-implementation/` (C4-DIAGRAM-GUIDE, MANAGEMENT-REVIEW-TEMPLATE, AI-KPIS, AI-LIFECYCLE-TRACKER, AI-RISK-CATALOG, AI-GOVERNANCE-POLICY, CHINA-REGULATORY-FRAMEWORK, CAC-FILING-GUIDE, GB-45438-LABELING-GUIDE, PIPL-PIPIA-GUIDE, ISO-25010-2023-REFERENCE, OBSERVABILITY-GUIDE, TC260-IMPLEMENTATION-GUIDE, the four NIST-AI-RMF guides). When an adopter ran `devtrail update-framework` on a tracked checkout, the workflow flagged each of these as "Invalid naming" and the job failed.
+
+### Changed (Framework)
+
+- The workflow now uses a **whitelist approach** instead of the blacklist. A new top-level `env: DOC_TYPE_PREFIXES` enumerates the 16 canonical DocType prefixes (in sync with `cli/src/document.rs::DocType::ALL_PREFIXES`); per-step checks skip files whose basename does not start with one of those prefixes. Framework / governance / template files are silently skipped with no manual exclude list to maintain. The `governance-metrics` job derives its `TYPES` array from the same env var.
+- `cli/src/document.rs::ALL_PREFIXES` gains a doc-comment pointing at the workflow's env var, and the workflow's env var has a comment pointing back. Adding a new DocType still requires updating both sides, but the bidirectional pointer makes the obligation discoverable from either entry point.
+
+### Notes
+
+- This is a Framework-only patch. CLI behavior is unchanged; `cli-3.6.0` is unaffected. Existing adopters can pick up the fix with `devtrail update-framework`.
+- Charter validation in CI is intentionally still out of scope for this workflow — the `--include-charters` flag on `devtrail validate` is opt-in and the workflow's path filter (`.devtrail/**`) does not cover `docs/charters/`. Adding Charter validation to CI is queued for cli-3.7.0 along with `--include-charters --staged` integration.
+
+---
+
 ## Framework 4.4.0 / CLI 3.6.0 — Charters as a first-class entity
 
 The first user-visible step of the post-Sentinel roadmap (`Propuesta/devtrail-cli-roadmap.md` Fase 1). Crystallizes the Charter pattern — bounded, auditable units of work declared ex-ante and validated ex-post — that emerged from the 6-cycle Sentinel `/plan-audit` experiment. The artifact was historically called "Plan" in Sentinel; renamed to **Charter** to disambiguate from GitHub SpecKit's `plan.md`. Sentinel's historical files preserve "Plan"; everything DevTrail ships from this release on uses "Charter".

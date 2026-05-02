@@ -71,7 +71,13 @@ impl DocType {
         }
     }
 
-    /// All valid prefixes
+    /// All valid prefixes.
+    ///
+    /// Adding a DocType? Update BOTH this array and the
+    /// `DOC_TYPE_PREFIXES` env var at the top of
+    /// `dist/.github/workflows/docs-validation.yml`. The CI workflow uses
+    /// that env var as its single source of truth for valid type prefixes,
+    /// but it cannot import from Rust — the two must be kept in manual sync.
     pub const ALL_PREFIXES: &'static [&'static str] = &[
         "AILOG", "AIDEC", "ADR", "ETH", "REQ", "TES", "INC", "TDE",
         "SEC", "MCARD", "SBOM", "DPIA",

@@ -149,7 +149,7 @@ DevTrail 为每个组件使用独立的版本标签：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.4.0` | 模板（12 种类型）、治理文档、指令 |
+| Framework | `fw-` | `fw-4.4.1` | 模板（12 种类型）、治理文档、指令 |
 | CLI | `cli-` | `cli-3.6.0` | `devtrail` 二进制文件 |
 
 使用 `devtrail status` 或 `devtrail about` 查看已安装的版本。
@@ -181,7 +181,7 @@ DevTrail 为每个组件使用独立的版本标签：
 ```bash
 # 从 GitHub 下载最新的框架发布 ZIP
 # 前往 https://github.com/StrangeDaysTech/devtrail/releases
-# 下载最新的 fw-* 发布（例如 fw-4.4.0）
+# 下载最新的 fw-* 发布（例如 fw-4.4.1）
 
 # 解压并复制到你的项目
 unzip devtrail-fw-*.zip -d your-project/
