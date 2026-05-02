@@ -2,7 +2,7 @@
 
 # DevTrail
 
-**Plataforma de Gobernanza de IA para Desarrollo de Software Responsable**
+**La disciplina cognitiva que tus proyectos asistidos por IA necesitan**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../../../LICENSE)
 [![Crates.io](https://img.shields.io/crates/v/devtrail-cli.svg)](https://crates.io/crates/devtrail-cli)
@@ -11,9 +11,11 @@
 [![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
 
 [Inicio Rápido](#inicio-rápido) •
+[¿Para quién es?](#para-quién-es-devtrail) •
+[Principios de Diseño](#principios-de-diseño) •
 [Características](#características) •
-[Documentación](#documentación) •
-[Contribuir](#contribuir)
+[Compliance](#compliance) •
+[Documentación](#documentación)
 
 **Idiomas**: [English](../../../README.md) | Español | [简体中文](../zh-CN/README.md)
 
@@ -23,19 +25,54 @@
 
 ## El Problema
 
-A medida que la IA se vuelve parte integral del desarrollo de software, las organizaciones enfrentan tres presiones convergentes:
+Los agentes de IA generan código rápido. No generan código coherente. Después de suficientes turnos, un agente pierde el hilo: re-introduce patrones que el equipo había rechazado, acumula deuda técnica oculta y produce trabajo que compila pero no encaja con el grano del sistema. Cuanto más rápido va el agente, más difícil es ver esa deuda — hasta que una regresión, un incidente o una refactorización la sacan a la superficie.
 
-- **Cumplimiento regulatorio**: El EU AI Act es obligatorio desde agosto 2026. ISO/IEC 42001 es el estándar internacional para gobernanza de IA. Los equipos necesitan evidencia documentada.
-- **Brecha de gobernanza**: No hay forma estructurada de demostrar que las decisiones de IA están gobernadas, auditables y en cumplimiento — cada cambio de IA sin documentar es una responsabilidad.
-- **Riesgo operacional**: ¿Quién hizo este cambio? ¿Qué alternativas se consideraron? ¿Fue apropiada la supervisión humana? Sin respuestas, el desarrollo asistido por IA es una caja negra.
+Los ingenieros senior que orquestan estos agentes no necesitan *más* autonomía del agente. Necesitan lo opuesto: una forma de externalizar el alcance, las decisiones y los riesgos a un ritmo al que se pueda someter al agente — para que ejecute contra restricciones en lugar de inventarse las propias.
 
 ## La Solución
 
-DevTrail es una **plataforma de gobernanza de IA alineada con ISO 42001** que asegura que cada cambio significativo — ya sea hecho por humano o IA — esté documentado, atribuido y sea auditable.
+DevTrail es un **framework + CLI** que externaliza la disciplina cognitiva del trabajo de ingeniería de software senior — alcance explícito, decisiones declaradas, riesgos nombrados, alternativas registradas, rastros auditables — en archivos versionados que viven junto al código.
 
-> **"Ningún cambio significativo sin un rastro documentado — y prueba de gobernanza."**
+> **"Ningún cambio significativo sin un rastro documentado — y un espacio de decisión acotado para el agente."**
 
-Los equipos que adoptan DevTrail producen evidencia compatible con **certificación ISO/IEC 42001**, **cumplimiento del EU AI Act** y gestión de riesgos **NIST AI RMF** — mientras mejoran la calidad y trazabilidad del desarrollo.
+Como efecto secundario, la disciplina produce evidencia compatible con **ISO/IEC 42001**, **EU AI Act**, **NIST AI RMF** y (opt-in) la pila regulatoria china de IA/datos. Pero la meta es la calidad de ingeniería primero; el cumplimiento es lo que cae como subproducto cuando la disciplina es real.
+
+---
+
+## ¿Para quién es DevTrail?
+
+El usuario primario de DevTrail es el **ingeniero senior orquestando agentes de IA sobre un sistema no trivial** — alguien con criterio técnico fuerte que usa agentes para abordar trabajo que no podría hacer solo de forma realista, y que necesita disciplina cognitiva externalizada para que el agente no introduzca caos sistémico.
+
+Si esa persona eres tú, los flujos, defaults y lenguaje de DevTrail están afinados para ti.
+
+DevTrail también sirve a tres audiencias secundarias, sobre esa base — nunca a su costa:
+
+- **Tech leads y arquitectos** estandarizando cómo trabaja su equipo con asistentes de IA.
+- **Compliance officers y auditores** que necesitan evidencia de desarrollo de IA gobernado (ISO 42001, EU AI Act, NIST AI RMF, PIPL, TC260, …).
+- **Adoptantes en entornos regulados** (finanzas, salud, sector público, China) que necesitan trazabilidad integrada en el flujo en lugar de reconstruida después del hecho.
+
+DevTrail **no** intenta ser: un gateway de LLM, un evaluador de modelos, una capa de productividad estilo *"código 10× más rápido"* ni un sustituto del juicio del ingeniero. Ver [Límites Honestos](#límites-honestos) abajo.
+
+---
+
+## Principios de Diseño
+
+Las decisiones de producto de DevTrail se anclan en doce principios explícitos. Están ordenados por jerarquía: cuando dos entran en conflicto, gana el que viene antes.
+
+1. **La herramienta sirve al oficio, no al producto.** La métrica es si el ingeniero produce trabajo del que se siente orgulloso — no adopción, retención ni revenue.
+2. **El usuario primario es el ingeniero senior orquestando agentes.** No el VP, no el CISO, no el compliance officer.
+3. **Open source estricto, sin asteriscos en el núcleo.** Framework, CLI y TUI son MIT, sin features capadas que empujen al pago.
+4. **El cumplimiento regulatorio es un side effect, no el producto.** ISO 42001, EU AI Act, NIST AI RMF son frames útiles; no son la meta.
+5. **Schema-driven antes que feature-driven.** Las entidades centrales (Stage Closure Bundle, Charter, Document) se definen primero como schemas versionados, las features después.
+6. **Disciplina cognitiva sobre productividad bruta.** DevTrail compite contra el caos que el código rápido con IA genera en proyectos serios — no contra la velocidad misma.
+7. **Local-first, Cloud como amplificador.** El CLI funciona completo, sin red. Cloud puede agregar valor (agregación cross-repo, evidencia firmada) pero nunca capa el núcleo.
+8. **La memoria del proyecto vive en el repo, no en una base de datos externa.** AILOGs, ADRs, AIDECs, Charters y bundles son archivos versionados junto al código, en markdown + JSON Schema.
+9. **Simplicidad sobre capacidad.** Cuando dos diseños cumplen el objetivo, gana el más simple. Los patrones cristalizan después de validarse en proyectos reales, no antes.
+10. **Honestidad sobre lo que la herramienta no hace.** Sin evaluación de modelos, sin gateway de LLM, sin certificación automática de compliance, sin reemplazar al juicio del ingeniero.
+11. **La comunidad cuida la herramienta, no al revés.** Las contribuciones y el feedback se toman en serio sin volverse democracia.
+12. **La velocidad del producto es la velocidad del aprendizaje.** Sin cristalización prematura; los schemas marcados `v0` hasta validarse contra un segundo dominio.
+
+El documento completo, con anotaciones empíricas de los ciclos de validación, vive en [`Propuesta/devtrail-design-principles.md`](https://github.com/StrangeDaysTech/devtrail/blob/main/Propuesta/devtrail-design-principles.md).
 
 ---
 
@@ -59,19 +96,6 @@ Doce tipos de documentos que cubren el ciclo de vida completo del desarrollo:
 | **MCARD** | Tarjetas de Modelo/Sistema | Documentación de modelos de IA |
 | **SBOM** | Lista de Materiales de Software | Inventario de componentes de IA |
 | **DPIA** | Evaluación de Impacto en Protección de Datos | Análisis de impacto en privacidad |
-
-### 📐 Alineación con Estándares
-
-| Estándar | Integración con DevTrail |
-|----------|--------------------------|
-| **ISO/IEC 42001:2023** | Estándar vertebral — gobernanza de Sistemas de Gestión de IA |
-| **EU AI Act** | Clasificación de riesgo, reporte de incidentes, transparencia |
-| **NIST AI RMF / 600-1** | 12 categorías de riesgo GenAI en ETH/AILOG |
-| **ISO/IEC 25010:2023** | Modelo de calidad de software en REQ/ADR |
-| **ISO/IEC/IEEE 29148:2018** | Ingeniería de requisitos en REQ |
-| **ISO/IEC/IEEE 29119-3:2021** | Documentación de pruebas en TES |
-| **GDPR** | Protección de datos en ETH/DPIA |
-| **OpenTelemetry** | Observabilidad (opcional) |
 
 ### 🤖 Soporte para Agentes IA
 
@@ -97,16 +121,64 @@ Salvaguardas incorporadas que aseguran que los humanos mantengan el control:
 - **Disparadores de revisión**: Baja confianza o alto riesgo → revisión obligatoria
 - **Revisiones éticas**: Preocupaciones de privacidad y sesgo marcadas para decisión humana
 
-### ✅ Automatización de Compliance
+### ✅ Herramientas CLI
 
-Herramientas CLI integradas para gobernanza:
+Comandos integrados que convierten la disciplina en feedback accionable:
 
-- **`devtrail validate`** — 13 reglas de validación para corrección documental
-- **`devtrail compliance`** — Puntuación de cumplimiento regulatorio (EU AI Act, ISO 42001, NIST AI RMF)
+- **`devtrail charter <new|list|status>`** — Unidades acotadas de trabajo declaradas ex-ante, auditadas ex-post (la unidad de ejecución del agente)
+- **`devtrail validate`** — 25+ reglas de validación para corrección documental (12 específicas de China son scope-aware); `--include-charters` extiende a `docs/charters/`
 - **`devtrail metrics`** — KPIs de gobernanza, tasas de revisión, distribución de riesgo, tendencias
 - **`devtrail analyze`** — Análisis de complejidad de código (cognitiva + ciclomática) impulsado por [arborist-metrics](https://github.com/StrangeDaysTech/arborist), nuestra librería open-source en Rust para métricas de código multi-lenguaje
 - **`devtrail audit`** — Reportes de auditoría con línea temporal, mapas de trazabilidad y exportación HTML
+- **`devtrail compliance`** — Puntuación de cumplimiento regulatorio como side effect del trabajo documentado (EU AI Act, ISO 42001, NIST AI RMF; seis frameworks chinos opt-in vía `--region china`)
+- **`devtrail explore`** — TUI interactivo para navegar el grafo de documentación del proyecto
 - **Hooks pre-commit** + **GitHub Actions** para validación CI/CD
+
+---
+
+## Límites Honestos
+
+DevTrail **no** hace lo siguiente:
+
+- evaluar, comparar o rankear LLMs;
+- actuar como gateway o capa de routing de LLMs;
+- prevenir alucinaciones ni garantizar la corrección del agente;
+- certificar automáticamente cumplimiento regulatorio — produce evidencia, no certificaciones;
+- reemplazar el juicio de un ingeniero senior.
+
+Si tu problema es uno de esos, DevTrail no es la herramienta.
+
+---
+
+## Compliance
+
+La disciplina que DevTrail externaliza — alcance explícito, decisiones declaradas, riesgos nombrados, alternativas registradas — produce, como efecto secundario, evidencia que mapea limpiamente a los principales marcos de gobernanza de IA. Por eso el cumplimiento se posiciona como *consecuencia de hacer bien el trabajo de ingeniería*, no como el producto en sí (Principio #4).
+
+### Alineación con estándares
+
+| Estándar | Integración con DevTrail |
+|----------|--------------------------|
+| **ISO/IEC 42001:2023** | Estándar vertebral — gobernanza de Sistemas de Gestión de IA |
+| **EU AI Act** | Clasificación de riesgo, reporte de incidentes, transparencia |
+| **NIST AI RMF / 600-1** | 12 categorías de riesgo GenAI en ETH/AILOG |
+| **ISO/IEC 25010:2023** | Modelo de calidad de software en REQ/ADR |
+| **ISO/IEC/IEEE 29148:2018** | Ingeniería de requisitos en REQ |
+| **ISO/IEC/IEEE 29119-3:2021** | Documentación de pruebas en TES |
+| **GDPR** | Protección de datos en ETH/DPIA |
+| **OpenTelemetry** | Observabilidad (opcional) |
+
+### Cobertura regulatoria de China — opt-in vía `regional_scope: china`
+
+| Estándar | Integración con DevTrail |
+|----------|--------------------------|
+| **TC260 AI Safety Governance Framework v2.0** | Cinco niveles de riesgo (TC260RA) |
+| **PIPL — Personal Information Protection Law** | Personal Information Protection Impact Assessment (PIPIA), retención ≥ 3 años |
+| **GB 45438-2025** *(obligatorio)* | Etiquetado de contenido generado por IA — explícito + implícito (AILABEL) |
+| **CAC Algorithm Filing** | Registro de algoritmo, proceso de doble registro (CACFILE) |
+| **GB/T 45652-2025** | Seguridad de datos de pre-entrenamiento y fine-tuning (SBOM/MCARD) |
+| **CSL 2026** | Reporte de incidentes de ciberseguridad (ventanas 1h / 4h+72h+30d) en INC |
+
+DevTrail cubre seis regulaciones chinas de IA / datos como **scope regional opt-in**. Activa añadiendo `regional_scope: china` en `.devtrail/config.yml`; los proyectos sin esa configuración no se ven afectados. Cuando se activa, cuatro tipos de documento específicos de China (PIPIA, CACFILE, TC260RA, AILABEL) quedan disponibles, doce reglas de validación comienzan a aplicar las nuevas referencias cruzadas, y `devtrail compliance --region china` produce un score por marco. Las guías detalladas viven bajo `.devtrail/00-governance/` (`CHINA-REGULATORY-FRAMEWORK.md`, `TC260-IMPLEMENTATION-GUIDE.md`, `PIPL-PIPIA-GUIDE.md`, `CAC-FILING-GUIDE.md`, `GB-45438-LABELING-GUIDE.md`). El [README en chino](../zh-CN/README.md#中国法规支持) tiene la versión completa para adoptantes que operan en China continental.
 
 ---
 
@@ -149,7 +221,7 @@ DevTrail usa tags de versión independientes para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Incluye |
 |------------|---------------|---------|---------|
-| Framework | `fw-` | `fw-4.4.2` | Plantillas (12 tipos), gobernanza, directivas |
+| Framework | `fw-` | `fw-4.5.1` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
 | CLI | `cli-` | `cli-3.6.1` | El binario `devtrail` |
 
 Verifica las versiones instaladas con `devtrail status` o `devtrail about`.
@@ -181,7 +253,7 @@ Ver [Referencia CLI](adopters/CLI-REFERENCE.md) para uso detallado.
 ```bash
 # Descargar el último release ZIP del framework desde GitHub
 # Ve a https://github.com/StrangeDaysTech/devtrail/releases
-# y descarga el último release fw-* (ej. fw-4.4.2)
+# y descarga el último release fw-* (ej. fw-4.5.1)
 
 # Extraer y copiar a tu proyecto
 unzip devtrail-fw-*.zip -d tu-proyecto/
@@ -464,19 +536,6 @@ Todas las implementaciones de skills son **funcionalmente idénticas**—solo di
 
 ---
 
-## Alineación con Estándares
-
-DevTrail se alinea con:
-
-- **ADR** (Architecture Decision Records) - Soporte nativo
-- **IEEE 830** - Estructura de documentación de requisitos
-- **ISO/IEC 25010** - Atributos de calidad en ADRs
-- **GDPR** - Documentación de impacto de privacidad (ETH)
-- **EU AI Act** - Transparencia de IA y supervisión humana
-- **NIST AI RMF** - Documentación de riesgos
-
----
-
 ## Contribuir
 
 ¡Damos la bienvenida a contribuciones! Ver [CONTRIBUTING.md](CONTRIBUTING.md) para guías.
@@ -507,7 +566,7 @@ Nuestro ecosistema open-source:
 
 | Proyecto | Descripción |
 |----------|-------------|
-| **[DevTrail](https://github.com/StrangeDaysTech/devtrail)** | Plataforma de gobernanza de IA para desarrollo de software responsable |
+| **[DevTrail](https://github.com/StrangeDaysTech/devtrail)** | La disciplina cognitiva que tus proyectos asistidos por IA necesitan |
 | **[arborist-metrics](https://github.com/StrangeDaysTech/arborist)** | Librería de análisis de complejidad de código multi-lenguaje para Rust — [crates.io](https://crates.io/crates/arborist-metrics) |
 
 [Sitio Web](https://strangedays.tech) • [GitHub](https://github.com/StrangeDaysTech)
@@ -518,7 +577,7 @@ Nuestro ecosistema open-source:
 
 <div align="center">
 
-**DevTrail** — Porque cada cambio cuenta una historia.
+**DevTrail** — Disciplina de ingeniería, externalizada. Compliance, como side effect.
 
 [Volver arriba](#devtrail)
 

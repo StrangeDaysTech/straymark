@@ -24,45 +24,56 @@
 
 ## ¿Qué es DevTrail?
 
-DevTrail es una **plataforma de gobernanza de IA alineada con ISO 42001** para equipos de desarrollo de software. Proporciona:
+DevTrail es un **framework + CLI** que externaliza la disciplina cognitiva del trabajo de ingeniería de software senior — alcance explícito, decisiones declaradas, riesgos nombrados, alternativas registradas, rastros auditables — en archivos versionados que viven junto al código. La intención es acotar el espacio de decisión del agente para que el trabajo asistido por IA se mantenga coherente a través de muchos turnos en lugar de derivar hacia deuda técnica oculta.
+
+Proporciona:
 
 - **12 tipos de documentos estructurados** cubriendo el ciclo de vida completo del desarrollo y la IA
-- **Automatización de cumplimiento regulatorio** — EU AI Act, ISO 42001, NIST AI RMF con scoring y trazas de auditoría
+- **Charter** como unidad de ejecución del agente — trabajo acotado declarado ex-ante, auditado ex-post
 - **Responsabilidad de agentes IA** mediante identificación obligatoria, seguimiento de confianza y límites de autonomía
-- **Supervisión humana** a través de flujos de trabajo de revisión requeridos para cambios críticos y de alto riesgo
+- **Supervisión humana** a través de flujos de revisión requeridos para cambios críticos y de alto riesgo
 - **Trazabilidad** conectando requisitos → diseño → implementación → pruebas → incidentes
+- **Evidencia regulatoria** — como side effect, los artefactos producidos mapean limpiamente a EU AI Act, ISO 42001, NIST AI RMF y (opt-in) PIPL/TC260/GB-45438/CAC
 
 ### Principio Fundamental
 
-> **"Ningún cambio significativo sin un rastro documentado — y prueba de gobernanza."**
+> **"Ningún cambio significativo sin un rastro documentado — y un espacio de decisión acotado para el agente."**
 
-DevTrail asegura que cada cambio significativo — ya sea hecho por humano o IA — esté documentado, atribuido y sea auditable. Los equipos que adoptan DevTrail producen evidencia compatible con **certificación ISO/IEC 42001** y **cumplimiento del EU AI Act**.
+DevTrail asegura que cada cambio significativo — ya sea hecho por humano o IA — esté documentado, atribuido y sea auditable. La disciplina produce evidencia compatible con **ISO/IEC 42001**, **EU AI Act** y **NIST AI RMF** — pero la meta es la calidad de ingeniería primero; el cumplimiento es lo que cae como subproducto cuando la disciplina es real (ver Principio #4 en [`Propuesta/devtrail-design-principles.md`](https://github.com/StrangeDaysTech/devtrail/blob/main/Propuesta/devtrail-design-principles.md)).
 
 ### ¿Por Qué Ahora?
 
-El **EU AI Act es obligatorio desde agosto 2026**. ISO/IEC 42001 es el estándar internacional para Sistemas de Gestión de IA. Las organizaciones que usan IA en desarrollo necesitan gobernanza documentada — no como un nice-to-have, sino como requisito regulatorio. DevTrail operacionaliza estos requisitos desde el primer día.
+Los agentes de IA generan código rápido. No generan código coherente. Después de suficientes turnos, un agente pierde el hilo: re-introduce patrones rechazados por el equipo, acumula deuda técnica oculta y produce trabajo que compila pero no encaja con el grano del sistema. Cuanto más rápido va el agente, más difícil es ver esa deuda — hasta que una regresión, un incidente o una refactorización la sacan a la superficie.
+
+En paralelo, el piso regulatorio sube — el **EU AI Act es obligatorio desde agosto 2026** e **ISO/IEC 42001** es ahora el estándar internacional para Sistemas de Gestión de IA. Adoptar DevTrail aborda primero el problema de ingeniería; la evidencia regulatoria se produce como subproducto de la disciplina, lista cuando un auditor la pida.
 
 ### Lo que DevTrail NO Es
 
 - No es un generador de documentación — proporciona estructura, plantillas y reglas de gobernanza
 - No es un reemplazo para comentarios de código o documentación de API
 - No es una herramienta de gestión de proyectos o sistema de control de versiones
-- No es una implementación completa de ISO 42001 — produce evidencia compatible dentro de su alcance
+- No es un gateway de LLM, un evaluador de modelos ni un filtro de alucinaciones
+- No es una certificación ISO 42001 completa — produce evidencia compatible dentro de su alcance, no la certificación misma
+- No es un sustituto del juicio de un ingeniero senior
 
 ---
 
 ## ¿Para Quién Es?
 
+### Usuario primario
+
+El usuario primario de DevTrail es el **ingeniero senior orquestando agentes de IA sobre un sistema no trivial** — alguien con criterio técnico fuerte que usa agentes para abordar trabajo que no podría hacer solo de forma realista, y que necesita disciplina cognitiva externalizada para que el agente no introduzca caos sistémico. Los flujos, defaults y lenguaje del framework están afinados para esa persona; las audiencias secundarias se sirven sobre esa base, nunca a su costa.
+
 ### Usuarios Objetivo
 
 | Tipo de Usuario | Razones de Adopción |
 |-----------------|---------------------|
-| **Equipos usando asistentes de codificación IA** | Demostrar gobernanza para auditorías regulatorias y aseguramiento de calidad |
-| **Sistemas de IA de alto riesgo** | El EU AI Act exige gestión de riesgos documentada y transparencia |
-| **Organizaciones buscando ISO 42001** | DevTrail produce evidencia lista para certificación |
-| **Industrias reguladas** (finanzas, salud, UE) | Cumplimiento regulatorio obligatorio desde agosto 2026 |
-| **Desarrolladores Individuales** | Rastrear decisiones y cambios asistidos por IA con estructura |
-| **Mantenedores Open Source** | Documentar decisiones de contribución de forma transparente |
+| **Ingenieros senior orquestando agentes de IA** | Externalizar alcance/decisiones/riesgos para que el agente se mantenga dentro de los rieles a través de muchos turnos |
+| **Tech leads y arquitectos** | Estandarizar cómo trabaja el equipo con asistentes de IA; preservar memoria institucional de decisiones |
+| **Desarrolladores individuales en proyectos serios** | Rastrear decisiones y cambios asistidos por IA con estructura, sin inventarla cada vez |
+| **Mantenedores Open Source** | Documentar decisiones de contribución de forma transparente y revisable |
+| **Equipos en entornos regulados** (finanzas, salud, UE, China) | Trazabilidad integrada en el flujo en lugar de reconstruida para auditorías |
+| **Organizaciones buscando ISO 42001 / EU AI Act readiness** | Producir evidencia lista para certificación como side effect del trabajo de ingeniería normal |
 
 ### Entornos de Desarrollo Compatibles
 
@@ -92,39 +103,41 @@ DevTrail funciona con cualquier metodología de desarrollo:
 
 ## Beneficios
 
-### Para Cumplimiento Regulatorio
+### Para Disciplina de Ingeniería (la intención primaria)
 
 | Beneficio | Descripción |
 |-----------|-------------|
-| **Listo para EU AI Act** | Plantillas de clasificación de riesgo, reporte de incidentes y transparencia integradas |
-| **Compatible con ISO 42001** | La estructura de documentación se alinea con requisitos de auditoría de certificación |
-| **Mapeado a NIST AI RMF** | 12 categorías de riesgo GenAI y funciones de gobernanza cubiertas explícitamente |
-| **Trazas de Auditoría Completas** | `devtrail audit` genera reportes exportables de línea temporal y trazabilidad |
-| **Scoring de Cumplimiento** | `devtrail compliance` proporciona análisis de brechas regulatorias basado en porcentajes |
-
-### Para Equipos de Desarrollo
-
-| Beneficio | Descripción |
-|-----------|-------------|
-| **Memoria Institucional** | Las decisiones sobreviven a cambios de personal |
-| **Aceleración de Onboarding** | Nuevos miembros entienden el "por qué" a través de ADRs y AIDECs |
-| **Reducción de Retrabajo** | El contexto preservado previene errores repetidos |
-| **Responsabilidad Clara** | Saber quién (o qué) hizo cada cambio |
+| **Espacio de decisión acotado para el agente** | Los Charters declaran alcance/decisiones/riesgos ex-ante para que el agente ejecute contra restricciones en lugar de inventarlas |
+| **Coherencia a través de muchos turnos** | La memoria del proyecto vive en archivos versionados; el agente (y el siguiente mantenedor) puede reconstruir contexto sin depender de una sesión de chat |
+| **Memoria institucional** | Las decisiones sobreviven a cambios de personal, rotación de agentes y churn de tooling |
+| **Aceleración de onboarding** | Los nuevos miembros (humanos o agentes) entienden el *por qué* a través de ADRs y AIDECs, no solo el *qué* a través del código |
+| **Reducción de retrabajo** | El contexto preservado previene errores repetidos cuando el alcance se reabre meses después |
+| **Responsabilidad clara** | Saber quién (o qué agente) hizo cada cambio, con qué confianza |
 
 ### Para Desarrollo Asistido por IA
 
 | Beneficio | Descripción |
 |-----------|-------------|
 | **Transparencia de IA** | Cada acción de IA se registra con niveles de confianza |
-| **Supervisión Humana** | Decisiones críticas requieren aprobación humana |
-| **Salvaguardas Éticas** | Documentos ETH y DPIA aseguran uso responsable de IA |
-| **Métricas de Gobernanza** | `devtrail metrics` rastrea tasas de revisión, distribución de riesgo y tendencias |
+| **Supervisión humana** | Decisiones críticas requieren aprobación humana |
+| **Salvaguardas éticas** | Documentos ETH y DPIA marcan preocupaciones para decisión humana |
+| **Métricas de gobernanza** | `devtrail metrics` rastrea tasas de revisión, distribución de riesgo y tendencias |
+
+### Para Cumplimiento Regulatorio (como side effect)
+
+| Beneficio | Descripción |
+|-----------|-------------|
+| **Listo para EU AI Act** | Plantillas de clasificación de riesgo, reporte de incidentes y transparencia integradas |
+| **Compatible con ISO 42001** | La estructura de documentación se alinea con requisitos de auditoría de certificación |
+| **Mapeado a NIST AI RMF** | 12 categorías de riesgo GenAI y funciones de gobernanza cubiertas explícitamente |
+| **Trazas de auditoría completas** | `devtrail audit` genera reportes exportables de línea temporal y trazabilidad |
+| **Scoring de cumplimiento** | `devtrail compliance` proporciona análisis de brechas regulatorias basado en porcentajes |
 
 ---
 
 ## Cumplimiento de Estándares
 
-DevTrail se alinea con y soporta cumplimiento para:
+La disciplina que DevTrail externaliza — alcance explícito, decisiones declaradas, riesgos nombrados, alternativas registradas — produce, como efecto secundario, evidencia que mapea limpiamente a los principales marcos de ingeniería y de gobernanza de IA. Las tablas a continuación describen *cómo* los artefactos de DevTrail se alinean con cada estándar; la meta es el trabajo de ingeniería, la alineación es lo que cae como subproducto:
 
 ### Estándares de Ingeniería de Software
 
@@ -217,7 +230,7 @@ El CLI automáticamente:
 
 1. **Descargar el último release**
 
-   Ve a [GitHub Releases](https://github.com/StrangeDaysTech/devtrail/releases) y descarga el último release `fw-*` (ej. `fw-4.4.2`).
+   Ve a [GitHub Releases](https://github.com/StrangeDaysTech/devtrail/releases) y descarga el último release `fw-*` (ej. `fw-4.5.1`).
 
 2. **Extraer en tu proyecto**
    ```bash

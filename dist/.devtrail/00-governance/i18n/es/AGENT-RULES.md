@@ -270,4 +270,4 @@ Cuando un cambio modifica endpoints de API:
 
 ---
 
-*DevTrail v4.4.2 | [Strange Days Tech](https://strangedays.tech)*
+*DevTrail v4.5.1 | [Strange Days Tech](https://strangedays.tech)*

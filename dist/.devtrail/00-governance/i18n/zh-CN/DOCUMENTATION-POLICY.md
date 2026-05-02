@@ -2,16 +2,19 @@
 
 **语言**: [English](../../DOCUMENTATION-POLICY.md) | [Español](../es/DOCUMENTATION-POLICY.md) | 简体中文
 
-## 治理框架
+## 本策略为何存在
 
-本策略将 DevTrail 文档与 **ISO/IEC 42001:2023**（AI 管理系统的核心标准）对齐，并实施以下标准：
+DevTrail 将资深软件工程工作的认知纪律——明确的范围、声明的决策、命名的风险、记录的备选方案、可审计的轨迹——外化为与代码并存的版本化文件。本策略定义了使这种纪律可被审计的文档类型、元数据和治理规则。
 
+作为产出这些文物的副作用，项目会积累与主流 AI 治理框架清晰映射的证据：
+
+- **ISO/IEC 42001:2023** — AI 管理系统的核心标准
 - **EU AI Act**（2026年8月生效）— 风险分类、透明度、事件报告
 - **NIST AI RMF 1.0 + AI 600-1** — AI 风险管理功能和生成式 AI 配置文件
 - **ISO/IEC 23894:2023** — AI 风险管理框架
 - **GDPR** — 数据保护和隐私影响评估
 
-所有文档类型、元数据字段和治理规则共同构成满足这些监管框架的证据。完整标准参考请见第 8 节。
+本策略首先是为工程工作而写；当工作以纪律方式被记录时，合规便是自然而然的副产品。完整标准参考请见第 8 节，产品层面的论据则见上游仓库的 `Propuesta/devtrail-design-principles.md`。
 
 ---
 
@@ -249,4 +252,4 @@ draft ──────► accepted ──────► deprecated
 
 ---
 
-*DevTrail v4.4.2 | [Strange Days Tech](https://strangedays.tech)*
+*DevTrail v4.5.1 | [Strange Days Tech](https://strangedays.tech)*

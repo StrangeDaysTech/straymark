@@ -270,4 +270,4 @@ confidence: high | medium | low
 
 ---
 
-*DevTrail v4.4.2 | [Strange Days Tech](https://strangedays.tech)*
+*DevTrail v4.5.1 | [Strange Days Tech](https://strangedays.tech)*
