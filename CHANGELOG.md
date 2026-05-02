@@ -7,6 +7,20 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.6.1 — `devtrail charter new` "Next steps" output renumbers correctly when origin is set
+
+### Fixed (CLI)
+
+- `devtrail charter new` "Next steps" output skipped from step `2.` to step `4.` when `--from-ailog` or `--from-spec` was passed. The conditional origin-step (step 3 in the no-origin path) was suppressed correctly, but the remaining steps had hardcoded numbers (`println!("    1. ...")`, `println!("    2. ...")`, `println!("    4. ...")`) that did not re-sequence. Adopters following `--from-ailog` or `--from-spec` saw a numbering gap that hinted at a missing step. Reported as F1 of `AILOG-2026-05-02-028` in Sentinel during the first end-to-end execution of CHARTER-01 (format v4 atomic Charter closure pattern).
+- The fix extracts the step list into a pure function `next_steps(from_ailog, from_spec) -> Vec<String>` that builds the steps as data and applies dynamic numbering via `enumerate()`. Four unit tests verify the behavior across all three origin paths and guard against regression to the hardcoded form.
+
+### Notes
+
+- Editorial / cosmetic fix only. No behavior change beyond the printed output. No schema changes. Existing Charters created with cli-3.6.0 are unaffected.
+- This is the first CLI patch driven directly by an empirical Charter-execution finding (Sentinel `AILOG-2026-05-02-028` §cli-3.6.0 frictions encountered §F1). It validates the disposition rule established by `CHARTER-01` of Sentinel: bug-class frictions with obvious fix paths flow upstream as patches without ceremony, while observation-class frictions accumulate in the AILOG until 3+ patterns emerge.
+
+---
+
 ## Framework 4.4.2 — atomic Charter closure pattern (format v4)
 
 First Charter-driven release. Originating Charter: `sentinel/docs/charters/01-format-v4-atomic-charter-closure-pattern.md` (Sentinel repo). Originating decision: AIDEC-2026-05-02-001 (Sentinel `.devtrail/07-ai-audit/decisions/`), which formalized the canon gap discovered via PLAN-07 of Sentinel (closed 2026-05-02): the step "update the Plan-doc post-merge if the AILOG documented divergencias" was mentioned in TEMPLATE.md and `docs/plans/README.md §Cómo cerrar un plan` but had no systematic trigger — implementer relied on memory, drift remediation lagged the main PR by days when memory failed.
