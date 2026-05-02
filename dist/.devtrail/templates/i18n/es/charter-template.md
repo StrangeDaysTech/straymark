@@ -2,7 +2,7 @@
 charter_id: CHARTER-NN
 status: declared
 effort_estimate: M
-trigger: "[1 línea: qué señal observable justifica ejecutar este Charter ahora]"
+trigger: "[1 línea: qué señal concreta — evento observable, decisión declarada, umbral métrico, o hito de infraestructura — justifica ejecutar este Charter ahora]"
 # Establece exactamente uno de los siguientes dos cuando el Charter tenga un origen conocido.
 # Ambos ausentes es válido para un Charter creado sin origen explícito (debe llenarse antes
 # de que el status pase a in-progress).
@@ -105,7 +105,11 @@ curl -X PUT "https://${SERVICE_HOST}/api/v1/.../..." \
 con su mitigación documentada. Convención: si durante la ejecución emerge un riesgo
 NUEVO no anticipado, documentarlo en el AILOG bajo `## Risk` como
 `R<N+1> (nuevo, no en Charter)` — Gemini y otros auditores externos validan estos
-cross-document.]
+cross-document.
+
+Cada mitigación debe especificar: (a) trigger o threshold concreto (no "eventualmente"),
+(b) acción comprometida, (c) qué pasa si la mitigación misma falla, (d) dónde se
+captura el follow-up si el riesgo destapa lecciones para un ciclo posterior.]
 
 - **R1 — [descripción del riesgo]**: [probabilidad/severidad].
   Mitigación: [acción concreta tomada en la implementación].
@@ -131,26 +135,47 @@ cross-document.]
 
 ## Cierre del Charter
 
-Al cerrar este Charter (post-merge):
+Al cerrar este Charter:
 
-1. **Charter drift check** (automatizado cuando entregue Fase 2 + revisión manual):
+1. **Atomic update (format v4)**: si el drift check (Tasks #7) reportó cualquier drift
+   no capturado ya en el AILOG, editar `## Archivos a modificar` y/o añadir un bloque
+   `## Closing notes` en **este mismo commit/PR**, antes de submitir. No diferir a un
+   housekeeping PR post-merge. El patrón atomic-update es la forma canónica de mantener
+   el Charter coherente con la ejecución; diferirlo deja el Charter stale y confunde a
+   lectores futuros (PLAN-07 de Sentinel demostró el failure mode que este step previene).
+
+2. **Post-merge drift check** (automatizado cuando entregue Fase 2 + revisión manual):
    - Correr `devtrail charter drift CHARTER-NN origin/main..HEAD` (Fase 2) o el
      script de Sentinel equivalente, y validar que el output esté limpio o que
      todos los drifts estén documentados en el AILOG.
-   - Adicionalmente, revisar el AILOG generado por la implementación. Si declara
-     divergencias respecto a este Charter (ubicación de cambios, scope expansion,
-     riesgos `R<N>` nuevos no anticipados, etc.) actualizar este Charter doc para
-     reflejar la ejecución real. Patrón validado en 5/5 ciclos del experimento
-     `/plan-audit` de Sentinel: los AILOGs documentan divergencias pero los
-     Charters quedan stale si nadie los actualiza explícitamente.
+   - Esto atrapa el caso raro donde drift se introduce post-merge (squash mangling,
+     amendments admin, etc.) y el step atomic en #1 no pudo aplicar.
 
-2. **Mover la fila** en `docs/charters/README.md` a `## Cerrados` y referenciar el PR.
+3. **Mover la fila** en `docs/charters/README.md` a `## Cerrados` y referenciar el PR.
 
-3. **Status del frontmatter** pasa de `in-progress` a `closed` (y opcionalmente
+4. **Status del frontmatter** pasa de `in-progress` a `closed` (y opcionalmente
    se añade `closed_at: YYYY-MM-DD` — el schema permite campos adicionales arbitrarios).
 
-4. **No borrar** este archivo — el historial de planning importa tanto como el AILOG
+5. **No borrar** este archivo — el historial de planning importa tanto como el AILOG
    de ejecución.
+
+## Closing notes
+
+> Añadir esta sección SOLO cuando el drift check (Tasks #7) reportó drift que el
+> implementor eligió remediar atómicamente (en lugar de rehacer la implementación
+> para coincidir con `## Archivos a modificar` exactamente). Cada bullet: qué cambió
+> respecto a la declaración, por qué, referencia al AILOG que documentó la decisión.
+> Omitir la sección entera si no hubo drift — un `## Closing notes` vacío es ruido.
+>
+> Ejemplos históricos en Sentinel: PLAN-05 (`docs/plans/05-per-service-anomaly-thresholds.md`)
+> §Notas de cierre — archivos removidos porque la implementación eligió otro punto
+> de inyección; PLAN-07 (`docs/plans/07-fix-distribution-aligner.md`) §Notas de
+> cierre — archivo removido porque el live test resultó agnóstico al cambio. Ambos
+> demuestran el patrón en uso productivo.
+
+- `[path/archivo-de-declaración.ext]` [removido | reubicado a X | repurposed]:
+  [1-2 líneas explicando qué hizo la implementación en lugar de eso y por qué la
+  declaración original ya no es precisa]. Referencia: AILOG-YYYY-MM-DD-NNN §[sección].
 
 ---
 
@@ -181,10 +206,15 @@ Sentinel, no estructural).
    Charter contra emergencia en el AILOG. Validado 4/4 ciclos donde emergieron
    riesgos nuevos.
 
-5. La sección `## Cierre del Charter` recuerda explícitamente actualizar el Charter
-   doc post-merge si el AILOG documentó divergencias. Razón: 5/5 ciclos mostraron
-   drift entre Charter declarado y ejecución real; sin un trigger explícito, el
-   Charter queda stale y los lectores futuros interpretan divergencias como fallos.
+5. La sección `## Cierre del Charter` requiere que el implementor actualice el
+   Charter doc atómicamente (mismo PR del fix) cuando Tasks #7 detecta drift, no en
+   un housekeeping PR separado post-merge. El bloque `## Closing notes` es el lugar
+   canónico para documentar cada edición atomic (qué cambió respecto a `## Archivos
+   a modificar`, por qué, referencia al AILOG). Razón: PLAN-07 de Sentinel demostró
+   que sin un step atomic-update explícito, la remediación de drift puede demorar
+   días respecto al PR principal, dejando el Charter stale y confundiendo a lectores
+   futuros — AIDEC-2026-05-02-001 de Sentinel formalizó el gap y propuso format v4
+   (este template lo encarna).
 
 6. Auto-checklist drift (`devtrail charter drift`, Fase 2 del CLI roadmap; Sentinel
    tenía `scripts/check-plan-drift.sh`) corre en pre-commit (Tasks #7) y al cierre

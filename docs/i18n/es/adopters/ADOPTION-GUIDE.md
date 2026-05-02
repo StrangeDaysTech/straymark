@@ -217,7 +217,7 @@ El CLI automáticamente:
 
 1. **Descargar el último release**
 
-   Ve a [GitHub Releases](https://github.com/StrangeDaysTech/devtrail/releases) y descarga el último release `fw-*` (ej. `fw-4.4.1`).
+   Ve a [GitHub Releases](https://github.com/StrangeDaysTech/devtrail/releases) y descarga el último release `fw-*` (ej. `fw-4.4.2`).
 
 2. **Extraer en tu proyecto**
    ```bash

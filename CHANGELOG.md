@@ -7,6 +7,35 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.4.2 — atomic Charter closure pattern (format v4)
+
+First Charter-driven release. Originating Charter: `sentinel/docs/charters/01-format-v4-atomic-charter-closure-pattern.md` (Sentinel repo). Originating decision: AIDEC-2026-05-02-001 (Sentinel `.devtrail/07-ai-audit/decisions/`), which formalized the canon gap discovered via PLAN-07 of Sentinel (closed 2026-05-02): the step "update the Plan-doc post-merge if the AILOG documented divergencias" was mentioned in TEMPLATE.md and `docs/plans/README.md §Cómo cerrar un plan` but had no systematic trigger — implementer relied on memory, drift remediation lagged the main PR by days when memory failed.
+
+This release ports the Sentinel-internal fix upstream as **format v4** of the Charter template. Editorial only — no schema changes, no breaking changes, adopters do not need to migrate existing Charters.
+
+### Changed (Framework)
+
+- **`dist/.devtrail/templates/charter-template.md`** (EN) gains five updates:
+  1. **Step 1 of `## Charter Closure` becomes "Atomic update (format v4)"**: if the drift check (Tasks #7) reported drift not already in the AILOG, edit `## Files to modify` and/or add a `## Closing notes` block in the **same commit/PR**, before submitting. No housekeeping PR deferral.
+  2. **New top-level `## Closing notes` section** near the end of the body (not inside the HTML comment), with template structure and references to PLAN-05 and PLAN-07 of Sentinel as historical examples. Designed to be omitted entirely when no drift was detected — empty `## Closing notes` is noise.
+  3. **Convention #5** in the comment block rewritten to require atomic update at Tasks #7 time, not post-merge housekeeping. Cites PLAN-07 as the empirical case that demonstrated the failure mode and AIDEC-2026-05-02-001 as the formalization.
+  4. **Trigger placeholder** broadened: `[1-line: what observable signal...]` → `[1-line: what concrete signal — observable event, declared decision, metric threshold, or infrastructure milestone — justifies executing this Charter now]`. Surfaced during the originating Charter review — Charters derived from AIDECs/ADRs have declarative triggers, not observable ones, and the previous wording pushed authors to invent pseudo-observable signals.
+  5. **`## Risks` placeholder** gains a guidance comment: "Each mitigation should specify: (a) concrete trigger or threshold, (b) action committed, (c) what happens if the mitigation itself fails, (d) where follow-up insights are captured." Surfaced during R4 review of the originating Charter — without guidance, authors leave these four properties implicit, which a human reviewer catches but a solo implementer does not.
+- **`dist/.devtrail/templates/i18n/es/charter-template.md`** (ES) mirrors the same five changes in Spanish.
+- **`Propuesta/que-es-un-charter.md`** gains a new §1.3 "Atomic Charter closure (format v4)" describing the pattern and its empirical origin.
+
+### Also (governance hygiene)
+
+- **Promotes 4 files from `Propuesta/` to public git history**: `que-es-un-charter.md`, `devtrail-cli-roadmap.md`, `devtrail-thesis-validation.md`, `devtrail-design-principles.md`. These were referenced from shipped docs (CHANGELOG, CLI-REFERENCE EN/ES/zh-CN) since fw-4.4.0 but had never been committed — adopters following the links got 404. Discovered during the originating Charter's execution. The other 3 `Propuesta/` files (`devtrail-charter-telemetry.md`, `devtrail-cloud-proposal.md`, `devtrail-studio-vision.md`) remain local-only because no shipped doc references them.
+
+### Notes
+
+- This release ships **no breaking changes**. Existing Charters created with fw-4.4.0 / fw-4.4.1 remain valid. Adopters pick up format v4 via `devtrail update-framework`; the new step in `## Charter Closure` and the new `## Closing notes` section apply to Charters created from this template version forward.
+- Format v4 is **editorial only** — no `charter.schema.v0.json` changes. Items deferred to schema v0.x evolutions (e.g., `status: blocked` enum, `trigger_kind` field) await empirical data from 3+ real Charters before being designed; the format v4 Charter §Out of scope captures the deferral explicitly.
+- Cross-repo Charter pattern (this Charter being executed in Sentinel while implementing changes in the DevTrail repo) is **not codified** in the template — it was a coyuntural arrangement for empirical Phase 1 validation, not a pattern to inherit to adopters. Most adopters keep code and governance in the same repo. The asymmetry is documented in the originating Charter's R1/R4 as a historical note, not a promoted variant.
+
+---
+
 ## Framework 4.4.1 — `docs-validation.yml` workflow recognizes all DocTypes and recent governance files
 
 ### Fixed (Framework)
