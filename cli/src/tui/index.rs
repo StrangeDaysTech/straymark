@@ -206,6 +206,27 @@ impl DocIndex {
             });
         }
 
+        // Synthetic "Charters" group at the end. Charters live at
+        // <project_root>/docs/charters/, NOT under .devtrail/. We append them
+        // as a 10th-style pseudo-group so the existing NavSelection tree
+        // model handles them without modification. The group is added only
+        // when at least one Charter exists — adopters who don't use the
+        // pattern see no empty stub.
+        let project_root = devtrail_dir.parent().unwrap_or(devtrail_dir);
+        let charter_files = scan_charters(project_root, &mut relations);
+        if !charter_files.is_empty() {
+            total_docs += charter_files.len();
+            groups.push(DocGroup {
+                // Sentinel name with underscore prefix so it cannot collide
+                // with a real GROUP_DEFS entry that always uses NN-name.
+                name: "_charters".to_string(),
+                label: t("Charters", language).to_string(),
+                path: project_root.join("docs").join("charters"),
+                subgroups: Vec::new(),
+                files: charter_files,
+            });
+        }
+
         Self {
             groups,
             relations,
@@ -496,6 +517,66 @@ fn fallback_meta(path: &Path, content: Option<&str>) -> ScannedMeta {
     }
 }
 
+/// Build TUI-compatible `DocEntry` records for all Charters in a project.
+/// Reuses `crate::charter` for discovery/parsing so the schema and the TUI
+/// stay aligned on what "a Charter" means. Each entry carries the
+/// `charter_id` as its `id` so hyperlinks via `find_by_ref` resolve, and a
+/// "CH" badge so the nav tree distinguishes Charters from governance docs.
+fn scan_charters(project_root: &Path, relations: &mut RelationIndex) -> Vec<DocEntry> {
+    let paths = crate::charter::discover_charters(project_root);
+    let mut entries = Vec::with_capacity(paths.len());
+    for path in paths {
+        let filename = path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("")
+            .to_string();
+
+        let entry = match crate::charter::parse_charter(&path) {
+            Ok(charter) => {
+                let title = crate::charter::display_title(&charter);
+                let id = charter.frontmatter.charter_id.clone();
+                if !id.is_empty() {
+                    relations
+                        .id_to_path
+                        .insert(id.clone(), path.to_path_buf());
+                }
+                DocEntry {
+                    filename,
+                    path: path.clone(),
+                    title,
+                    id,
+                    doc_type: "CH".to_string(),
+                    tags: Vec::new(),
+                    created: String::new(),
+                    has_frontmatter: true,
+                }
+            }
+            Err(_) => {
+                // Charter has malformed frontmatter — show it anyway as a
+                // degraded entry so the user can find and fix it from the TUI.
+                let stem = path
+                    .file_stem()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or("")
+                    .to_string();
+                DocEntry {
+                    filename,
+                    path: path.clone(),
+                    title: humanize_filename(&stem),
+                    id: String::new(),
+                    doc_type: "CH".to_string(),
+                    tags: Vec::new(),
+                    created: String::new(),
+                    has_frontmatter: false,
+                }
+            }
+        };
+        entries.push(entry);
+    }
+    entries
+}
+
 fn quick_scan_frontmatter(path: &Path, relations: &mut RelationIndex) -> ScannedMeta {
     let content = match std::fs::read_to_string(path) {
         Ok(c) => c,
@@ -665,6 +746,104 @@ mod tests {
             governance_group.files[0].path,
             governance.join("AGENT-RULES.md")
         );
+    }
+
+    #[test]
+    fn build_appends_charters_synthetic_group_when_present() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let project_root = tmp.path();
+        let devtrail_dir = project_root.join(".devtrail");
+        std::fs::create_dir_all(&devtrail_dir).unwrap();
+        let charters_dir = project_root.join("docs").join("charters");
+        std::fs::create_dir_all(&charters_dir).unwrap();
+        std::fs::write(
+            charters_dir.join("01-real.md"),
+            "---\n\
+             charter_id: CHARTER-01-real\n\
+             status: declared\n\
+             effort_estimate: M\n\
+             trigger: \"x\"\n\
+             ---\n\n\
+             # Charter: Real Title\n\nbody\n",
+        )
+        .unwrap();
+        std::fs::write(
+            charters_dir.join("02-broken.md"),
+            "no frontmatter at all\n",
+        )
+        .unwrap();
+
+        let index = DocIndex::build(&devtrail_dir, "en");
+        // The synthetic group is appended after the GROUP_DEFS entries.
+        let charters_group = index
+            .groups
+            .iter()
+            .find(|g| g.name == "_charters")
+            .expect("synthetic charters group present");
+        assert_eq!(charters_group.label, "Charters");
+        assert_eq!(charters_group.files.len(), 2);
+
+        let real = charters_group
+            .files
+            .iter()
+            .find(|e| e.filename == "01-real.md")
+            .unwrap();
+        assert_eq!(real.id, "CHARTER-01-real");
+        assert_eq!(real.title, "Real Title");
+        assert_eq!(real.doc_type, "CH");
+
+        // Charters with broken frontmatter still appear (degraded entry) so
+        // the user can find and fix them from the TUI.
+        let broken = charters_group
+            .files
+            .iter()
+            .find(|e| e.filename == "02-broken.md")
+            .unwrap();
+        assert_eq!(broken.doc_type, "CH");
+        assert!(!broken.has_frontmatter);
+
+        // Charter id is indexed in relations so find_by_ref resolves it.
+        assert_eq!(
+            index.relations.id_to_path.get("CHARTER-01-real"),
+            Some(&charters_dir.join("01-real.md"))
+        );
+    }
+
+    #[test]
+    fn build_skips_charters_group_when_no_charters_exist() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let devtrail_dir = tmp.path().join(".devtrail");
+        std::fs::create_dir_all(&devtrail_dir).unwrap();
+        // No docs/charters/ directory.
+
+        let index = DocIndex::build(&devtrail_dir, "en");
+        assert!(
+            index.groups.iter().all(|g| g.name != "_charters"),
+            "no synthetic Charters group should be present when none exist"
+        );
+    }
+
+    #[test]
+    fn build_charters_label_localizes_to_zh_cn() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let project_root = tmp.path();
+        let devtrail_dir = project_root.join(".devtrail");
+        std::fs::create_dir_all(&devtrail_dir).unwrap();
+        let charters_dir = project_root.join("docs").join("charters");
+        std::fs::create_dir_all(&charters_dir).unwrap();
+        std::fs::write(
+            charters_dir.join("01-x.md"),
+            "---\ncharter_id: CHARTER-01-x\nstatus: declared\neffort_estimate: M\ntrigger: x\n---\n\n# Charter: X\n",
+        )
+        .unwrap();
+
+        let index = DocIndex::build(&devtrail_dir, "zh-CN");
+        let charters_group = index
+            .groups
+            .iter()
+            .find(|g| g.name == "_charters")
+            .expect("synthetic charters group present");
+        assert_eq!(charters_group.label, "章程");
     }
 
     #[test]

@@ -7,6 +7,36 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.4.0 / CLI 3.6.0 — Charters as a first-class entity
+
+The first user-visible step of the post-Sentinel roadmap (`Propuesta/devtrail-cli-roadmap.md` Fase 1). Crystallizes the Charter pattern — bounded, auditable units of work declared ex-ante and validated ex-post — that emerged from the 6-cycle Sentinel `/plan-audit` experiment. The artifact was historically called "Plan" in Sentinel; renamed to **Charter** to disambiguate from GitHub SpecKit's `plan.md`. Sentinel's historical files preserve "Plan"; everything DevTrail ships from this release on uses "Charter".
+
+### Added (Framework)
+
+- **Charter template** at `dist/.devtrail/templates/charter-template.md` (EN + ES, ports Sentinel's `TEMPLATE.md v3` with the 6 validated format conventions: Local/Production verification split, time-based effort, structured sub-sections, R<N+1> emergent risks, Charter Closure section, auto-checklist drift). Localized parallel under `templates/i18n/es/`.
+- **Charter JSON Schema** at `dist/.devtrail/schemas/charter.schema.v0.json` (Draft 2020-12, marked `experimental`). Required fields: `charter_id`, `status` (`declared`/`in-progress`/`closed`), `effort_estimate` (`XS`/`S`/`M`/`L`), `trigger`. Mutually-exclusive optional fields: `originating_ailogs` array or `originating_spec` path. The `v0` suffix and additional-properties:true posture leave room for evolution; v1.0 stable requires a second-domain adopter (see `Propuesta/devtrail-thesis-validation.md` §6).
+- **Two anonymized canonical examples** at `dist/docs/examples/charters/CHARTER-01-anomaly-thresholds.md` (M-effort feature) and `CHARTER-02-baseline-recompute.md` (XS-effort admin endpoint), derived from Sentinel PLAN-05 / PLAN-06 with identifiers anonymized but structural conventions preserved.
+
+### Added (CLI)
+
+- **`devtrail charter new`** scaffolds a Charter from the framework template into `docs/charters/NN-slug.md`. Three origin paths supported, mutually exclusive at the clap level: `--from-ailog AILOG-YYYY-MM-DD-NNN` (post-MVP / maintenance mode — the Sentinel case), `--from-spec specs/.../spec.md` (greenfield mode driven by SpecKit), or neither (Charter scaffolded without an explicit origin, to be filled in manually before status moves to `in-progress`). `--type XS|S|M|L` defaults to `M`. Sequential numbering is project-local; concurrency on parallel branches is documented as a known v0 limitation.
+- **`devtrail charter list [--status declared|in-progress|closed|all] [--origin ailog|spec|any]`** enumerates Charters as a tight table (NN, STATUS, EFFORT, ORIGIN, TITLE) with width-adaptive columns. Files that fail to parse are reported as warnings to stderr; the command lists what it can.
+- **`devtrail charter status [CHARTER-ID] [--path <dir>]`** with an ID resolves the full charter_id, the `CHARTER-NN` prefix, or just the numeric NN; numeric matching is permissive across zero-padding (`10` matches both `CHARTER-10` and `CHARTER-010`). Without an ID, prints the 5 most recent Charters by NN descending. Status output flags Phase 2 features (`charter close`, `charter drift`) as not yet available.
+- **`devtrail validate --include-charters`** validates `docs/charters/*.md` against the Charter schema (shape, enums, mutual exclusion of origin types) plus referential integrity (`originating_ailogs` IDs resolve to AILOG files; `originating_spec` path exists). Default `false` so projects that don't yet use Charters keep working unchanged. Schema-level errors emit hint-rich messages; missing schema emits a single warning rather than failing per-Charter. Currently honored only in the all-mode path; `--staged` integration is queued for cli-3.7.0.
+- **`devtrail explore` Charters view (TUI)**: a synthetic "Charters" group is appended to the navigation tree when at least one Charter exists. Charter files render with a `CH` badge, are searchable / sortable like governance docs, and the `charter_id` resolves through `find_by_ref` so a related-link from any document can navigate to a Charter. Group label translates to `Charters` (es loanword) / `章程` (zh-CN).
+
+### Changed (CLI)
+
+- **`devtrail validate`** gains the `--include-charters` opt-in flag described above. No change to the existing pipeline when the flag is absent.
+
+### Notes
+
+- The Charter pattern is empirically validated in **a single project (Sentinel) on a single domain (Go backend)**. Per principle #12 of `Propuesta/devtrail-design-principles.md`, the schema, template, and tooling ship as `v0` / experimental. Stabilization to `v1.0` requires validation in a second domain (frontend, ML pipeline, infra-as-code) — see `Propuesta/devtrail-thesis-validation.md` §6 for the full N≈2-3 argument.
+- Phase 2 of the CLI roadmap (`Propuesta/devtrail-cli-roadmap.md` §4) adds `charter close` (interactive telemetry capture at Charter cierre) and `charter drift` (file-vs-commit drift check, port of Sentinel's `check-plan-drift.sh`). Phase 3 adds `charter audit` (multi-model external audit with inter-family heterogeneity constraint).
+- This release ships **no breaking changes**. Existing adopters can update via `devtrail update-cli` and `devtrail update-framework`; their existing flow remains identical until they opt into the Charter commands.
+
+---
+
 ## CLI 3.5.3 — `devtrail update` no longer leaks package internals into adopter projects
 
 ### Fixed (CLI)

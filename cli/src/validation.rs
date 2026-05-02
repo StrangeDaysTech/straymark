@@ -72,6 +72,162 @@ fn china_in_scope(devtrail_dir: &Path) -> bool {
     config.has_region("china")
 }
 
+/// Validate all Charters in a project against the Charter JSON Schema and
+/// referential integrity rules:
+/// - Schema (shape, enums, required fields, mutual exclusion of origin types).
+/// - `originating_ailogs` IDs resolve to real AILOG files under
+///   `.devtrail/07-ai-audit/agent-logs/`.
+/// - `originating_spec` path exists relative to the project root.
+///
+/// Returns the result + number of Charters considered (parsed + parse-failed).
+/// If the schema file itself cannot be loaded, emits a single warning and
+/// skips schema-level checks; referential integrity is still attempted.
+pub fn validate_charters(project_root: &Path, devtrail_dir: &Path) -> (ValidationResult, usize) {
+    let mut result = ValidationResult::default();
+
+    // Try to load the schema. Missing schema is a warning, not a hard failure
+    // (the project may have been initialized before the schema shipped, or
+    // the file may have been removed).
+    let schema = match crate::charter_schema::CharterSchema::load(devtrail_dir) {
+        Ok(s) => Some(s),
+        Err(e) => {
+            result.warnings.push(ValidationIssue {
+                file: devtrail_dir.join(crate::charter_schema::SCHEMA_RELATIVE_PATH),
+                rule: "CHARTER-SCHEMA-MISSING".to_string(),
+                message: format!("Charter schema not loadable: {e}"),
+                severity: Severity::Warning,
+                fix_hint: Some(
+                    "Run `devtrail repair` to restore framework files.".to_string(),
+                ),
+            });
+            None
+        }
+    };
+
+    let paths = crate::charter::discover_charters(project_root);
+    let charter_count = paths.len();
+
+    for path in &paths {
+        // Step 1: read raw YAML frontmatter (without typed deserialization).
+        // This preserves schema-level errors (bad enum, missing required) so
+        // the schema validator sees them and emits rich hints, rather than
+        // letting a typed-parse failure mask the actual cause.
+        let raw_yaml = match crate::charter::read_frontmatter_yaml(path) {
+            Ok(y) => y,
+            Err(e) => {
+                result.errors.push(ValidationIssue {
+                    file: path.clone(),
+                    rule: "CHARTER-PARSE".to_string(),
+                    message: format!("Failed to read Charter: {e}"),
+                    severity: Severity::Error,
+                    fix_hint: Some(
+                        "Check that the file has valid YAML frontmatter between --- delimiters."
+                            .to_string(),
+                    ),
+                });
+                continue;
+            }
+        };
+
+        // Step 2: schema validation. Catches shape errors (enum mismatch,
+        // missing required, mutual exclusion of origin types) with friendly
+        // hints from `crate::charter_schema::hint_for`.
+        if let Some(schema) = &schema {
+            for issue in schema.validate(&raw_yaml, path) {
+                result.errors.push(issue);
+            }
+        }
+
+        // Step 3: typed parse for referential-integrity checks. If schema
+        // validation already caught problems, the typed parse may also fail —
+        // in that case we skip ref checks (cannot trust the structure) but
+        // we don't double-report (errors already in result via schema).
+        let typed: Option<crate::charter::CharterFrontmatter> =
+            serde_yaml::from_value(raw_yaml).ok();
+        let typed = match typed {
+            Some(t) => t,
+            None => continue,
+        };
+
+        // CHARTER-AILOG-REF: every originating AILOG ID must resolve to a file.
+        if let Some(ailogs) = &typed.originating_ailogs {
+            for ailog_id in ailogs {
+                if !ailog_exists(devtrail_dir, ailog_id) {
+                    result.errors.push(ValidationIssue {
+                        file: path.clone(),
+                        rule: "CHARTER-AILOG-REF".to_string(),
+                        message: format!(
+                            "originating_ailogs references missing AILOG: {}",
+                            ailog_id
+                        ),
+                        severity: Severity::Error,
+                        fix_hint: Some(format!(
+                            "Either create the AILOG (e.g., `devtrail new --doc-type ailog`) or \
+                             remove '{}' from originating_ailogs if it was a typo.",
+                            ailog_id
+                        )),
+                    });
+                }
+            }
+        }
+
+        // CHARTER-SPEC-REF: the originating_spec path must exist.
+        if let Some(spec_path) = &typed.originating_spec {
+            let abs = project_root.join(spec_path);
+            if !abs.exists() {
+                result.errors.push(ValidationIssue {
+                    file: path.clone(),
+                    rule: "CHARTER-SPEC-REF".to_string(),
+                    message: format!(
+                        "originating_spec references missing file: {}",
+                        spec_path
+                    ),
+                    severity: Severity::Error,
+                    fix_hint: Some(
+                        "Pass a path that exists under the project root (e.g., \
+                         specs/001-feature/spec.md), or remove originating_spec if it was a typo."
+                            .to_string(),
+                    ),
+                });
+            }
+        }
+    }
+
+    (result, charter_count)
+}
+
+/// True if an AILOG file matching the given ID exists under
+/// `.devtrail/07-ai-audit/agent-logs/`. The match is by filename prefix:
+/// `AILOG-2026-04-28-021` matches `AILOG-2026-04-28-021-anything.md` but not
+/// `AILOG-2026-04-28-0210-something.md` (boundary: next char must be `-` or
+/// `.md` extension).
+fn ailog_exists(devtrail_dir: &Path, ailog_id: &str) -> bool {
+    let agent_logs = devtrail_dir.join("07-ai-audit").join("agent-logs");
+    if !agent_logs.exists() {
+        return false;
+    }
+    let id = ailog_id.trim_end_matches(".md");
+    let entries = match std::fs::read_dir(&agent_logs) {
+        Ok(e) => e,
+        Err(_) => return false,
+    };
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let name = match name.to_str() {
+            Some(s) => s,
+            None => continue,
+        };
+        if let Some(rest) = name.strip_prefix(id) {
+            // Boundary: either the file extension follows immediately or a
+            // dash separator before the slug.
+            if rest == ".md" || rest.starts_with('-') {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 /// Validate all documents found under a .devtrail/ directory
 pub fn validate_all(devtrail_dir: &Path) -> (ValidationResult, usize) {
     let paths = document::discover_documents(devtrail_dir);

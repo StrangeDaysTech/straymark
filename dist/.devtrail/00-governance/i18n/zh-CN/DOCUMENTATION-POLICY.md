@@ -249,4 +249,4 @@ draft ──────► accepted ──────► deprecated
 
 ---
 
-*DevTrail v4.3.0 | [Strange Days Tech](https://strangedays.tech)*
+*DevTrail v4.4.0 | [Strange Days Tech](https://strangedays.tech)*

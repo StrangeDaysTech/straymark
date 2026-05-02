@@ -12,7 +12,7 @@
 
 1. [Instalación](#instalación)
 2. [Versionado](#versionado)
-3. [Comandos](#comandos) — init, update, remove, status, repair, validate, new, compliance, metrics, analyze, audit, explore, about
+3. [Comandos](#comandos) — init, update, remove, status, repair, validate, new, charter, compliance, metrics, analyze, audit, explore, about
 4. [Variables de Entorno](#variables-de-entorno)
 5. [Códigos de Salida](#códigos-de-salida)
 
@@ -48,8 +48,8 @@ DevTrail usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.3.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.5.3` | El binario `devtrail` |
+| Framework | `fw-` | `fw-4.4.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| CLI | `cli-` | `cli-3.6.0` | El binario `devtrail` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
 
@@ -86,7 +86,7 @@ Inicializa DevTrail en un directorio de proyecto.
 
 ```bash
 $ devtrail init .
-✔ Downloaded DevTrail fw-4.3.0
+✔ Downloaded DevTrail fw-4.4.0
 ✔ Created .devtrail/ directory structure
 ✔ Created DEVTRAIL.md
 ✔ Configured AI agent directives
@@ -107,7 +107,7 @@ Si `.devtrail/` no existe en el directorio actual, la actualización del framewo
 ```bash
 $ devtrail update
 Updating framework...
-✔ Framework updated to fw-4.3.0
+✔ Framework updated to fw-4.4.0
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -124,7 +124,7 @@ Actualiza solo los archivos del framework. Busca el último release `fw-*` en Gi
 
 ```bash
 $ devtrail update-framework
-✔ Framework updated to fw-4.3.0
+✔ Framework updated to fw-4.4.0
 ```
 
 ---
@@ -203,7 +203,7 @@ $ devtrail status
 DevTrail Status
 ───────────────
 Path:              /home/user/my-project
-Framework version: fw-4.3.0
+Framework version: fw-4.4.0
 CLI version:       cli-3.5.2
 Language:          en
 Structure:         ✔ Complete
@@ -256,7 +256,7 @@ Repairing DevTrail in /home/user/mi-proyecto
 
 ---
 
-### `devtrail validate [path] [--fix] [--staged]`
+### `devtrail validate [path] [--fix] [--staged] [--include-charters]`
 
 Valida documentos DevTrail verificando cumplimiento y corrección.
 
@@ -267,6 +267,7 @@ Valida documentos DevTrail verificando cumplimiento y corrección.
 | `path` | `.` (directorio actual) | Directorio del proyecto |
 | `--fix` | — | Corregir automáticamente problemas simples |
 | `--staged` | — | Validar solo archivos staged en Git (ideal para hooks pre-commit) |
+| `--include-charters` | — | Validar también los Charters en `docs/charters/` contra el JSON Schema y la integridad referencial (los IDs en `originating_ailogs` resuelven; el path en `originating_spec` existe). Opt-in, default `false` para no afectar a proyectos que no usan el patrón. Por ahora solo se honra fuera de `--staged`; la validación de Charters en modo staged llega en cli-3.7.0. |
 
 **Reglas de validación:**
 
@@ -322,6 +323,70 @@ $ devtrail new -t ailog --title "Refactorizar módulo de pagos"
     1. Edit the document to fill in details
     2. Commit: git add .devtrail/07-ai-audit/agent-logs/AILOG-2026-04-01-001-refactorizar-modulo-de-pagos.md
 ```
+
+---
+
+### `devtrail charter <subcomando>`
+
+Gestiona **Charters**: unidades acotadas y auditables de trabajo, declaradas ex-ante y validadas ex-post. Un Charter empareja scope declarativo (archivos a tocar, riesgos, comandos de verificación ejecutables) con el ancla de auditoría ex-post (drift detection, auditoría multi-modelo). Los Charters viven en `docs/charters/NN-slug.md` (a nivel del project root, **no** bajo `.devtrail/`).
+
+> **Nota histórica.** En el experimento Sentinel `/plan-audit` que cristalizó este patrón (abril 2026, 6 ciclos), los Charters se llamaban *Plans*. El CLI DevTrail usa **Charter** going-forward para evitar la colisión nominal con el `plan.md` de GitHub SpecKit. Los archivos históricos de Sentinel preservan "Plan" deliberadamente. El alcance conceptual completo y la justificación del rename viven en `Propuesta/que-es-un-charter.md`.
+
+**Subcomandos:**
+
+- `devtrail charter new` — crea un nuevo Charter desde el template del framework
+- `devtrail charter list` — enumera Charters con filtros opcionales
+- `devtrail charter status` — muestra detalle de un Charter, o los 5 más recientes
+
+La Fase 2 del CLI roadmap añadirá `charter close` (telemetría interactiva) y `charter drift` (chequeo de drift archivo-vs-commit). La Fase 3 añadirá `charter audit` (auditoría externa multi-modelo).
+
+#### `devtrail charter new [-t XS|S|M|L] [--from-ailog <id> | --from-spec <path>] [--title <titulo>] [path]`
+
+Crea un Charter desde el template del framework en `docs/charters/NN-slug.md`. Si no se pasa `--title`, se solicita interactivamente. Los dos flags de origen son mutuamente excluyentes a nivel de clap.
+
+| Argumento/Flag | Default | Descripción |
+|----------------|---------|-------------|
+| `path` | `.` (directorio actual) | Directorio del proyecto |
+| `--type`, `-t` | `M` | Estimación de esfuerzo. Uno de `XS`, `S`, `M`, `L`. |
+| `--title` | — | Título del Charter. Se usa para construir el slug y el nombre de archivo. Solicita prompt si está ausente. |
+| `--from-ailog` | — | ID del AILOG origen (p.ej. `AILOG-2026-04-28-021`). Pre-popula `originating_ailogs` en el frontmatter. **Mutuamente excluyente con `--from-spec`.** |
+| `--from-spec` | — | Path a un spec.md de SpecKit (p.ej. `specs/001-feature/spec.md`). Pre-popula `originating_spec` en el frontmatter. El path se verifica al crear. **Mutuamente excluyente con `--from-ailog`.** |
+
+Cuando ningún flag de origen se pasa, ambos `originating_ailogs` y `originating_spec` quedan comentados en el frontmatter generado — el Charter se crea "sin origen explícito" y el usuario lo llena antes de mover el status a `in-progress`.
+
+**Ejemplos:**
+
+```bash
+# Standalone (sin origen) — prompt interactivo de título
+$ devtrail charter new --type M
+
+# Modo mantenimiento / post-MVP — Charter rooteado en un AILOG existente
+$ devtrail charter new -t S --from-ailog AILOG-2026-04-28-021 --title "thresholds por servicio"
+
+# Modo greenfield — Charter implementando un spec de SpecKit
+$ devtrail charter new -t L --from-spec specs/001-pagos/spec.md --title "integrar provider de pagos"
+```
+
+#### `devtrail charter list [--status declared|in-progress|closed|all] [--origin ailog|spec|any] [path]`
+
+Enumera Charters como tabla.
+
+| Argumento/Flag | Default | Descripción |
+|----------------|---------|-------------|
+| `path` | `.` | Directorio del proyecto |
+| `--status` | `all` | Filtra por status del ciclo de vida |
+| `--origin` | `any` (sin filtro) | Filtra por tipo de origen: `ailog`, `spec`, o `any` |
+
+Los archivos que no parsean se reportan como warnings en stderr sin abortar el comando — la tabla muestra lo que puede.
+
+#### `devtrail charter status [CHARTER-ID] [--path <dir>]`
+
+Con un ID: imprime el detalle completo del Charter (frontmatter, ubicación del archivo, lista de secciones del cuerpo, placeholders de Fase 2). Sin ID: imprime los 5 Charters más recientes por NN descendente.
+
+| Argumento/Flag | Default | Descripción |
+|----------------|---------|-------------|
+| `CHARTER-ID` | — | Identificador del Charter. Acepta el `charter_id` completo (`CHARTER-01-test`), el prefijo `CHARTER-NN` (`CHARTER-01`), o solo el NN numérico (`01` o `1`). El match numérico es permisivo respecto al zero-padding. |
+| `--path` | `.` | Directorio del proyecto. Es flag (no positional) para evitar colisión con el positional opcional `CHARTER-ID`. |
 
 ---
 
@@ -568,7 +633,7 @@ Muestra información de versión, autoría y licencia.
 $ devtrail about
 DevTrail CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.3.0
+  Framework version: fw-4.4.0
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/devtrail

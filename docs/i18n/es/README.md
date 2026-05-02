@@ -149,8 +149,8 @@ DevTrail usa tags de versión independientes para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Incluye |
 |------------|---------------|---------|---------|
-| Framework | `fw-` | `fw-4.3.0` | Plantillas (12 tipos), gobernanza, directivas |
-| CLI | `cli-` | `cli-3.5.3` | El binario `devtrail` |
+| Framework | `fw-` | `fw-4.4.0` | Plantillas (12 tipos), gobernanza, directivas |
+| CLI | `cli-` | `cli-3.6.0` | El binario `devtrail` |
 
 Verifica las versiones instaladas con `devtrail status` o `devtrail about`.
 
@@ -165,7 +165,8 @@ Verifica las versiones instaladas con `devtrail status` o `devtrail about`.
 | `devtrail remove [--full]` | Eliminar DevTrail del proyecto |
 | `devtrail status [path]` | Mostrar estado de la instalación y estadísticas |
 | `devtrail repair [path]` | Restaurar directorios y archivos del framework faltantes |
-| `devtrail validate [path]` | Validar documentos por cumplimiento y corrección |
+| `devtrail validate [path]` | Validar documentos por cumplimiento y corrección (use `--include-charters` para validar también `docs/charters/`) |
+| `devtrail charter <subcomando>` | Gestionar Charters: `new`, `list`, `status` (unidades acotadas de trabajo declaradas ex-ante, auditadas ex-post) |
 | `devtrail compliance [path]` | Verificar cumplimiento regulatorio (EU AI Act, ISO 42001, NIST) |
 | `devtrail metrics [path]` | Mostrar métricas de gobernanza y estadísticas |
 | `devtrail analyze [path]` | Analizar complejidad de código (métricas cognitiva + ciclomática) |
@@ -180,7 +181,7 @@ Ver [Referencia CLI](adopters/CLI-REFERENCE.md) para uso detallado.
 ```bash
 # Descargar el último release ZIP del framework desde GitHub
 # Ve a https://github.com/StrangeDaysTech/devtrail/releases
-# y descarga el último release fw-* (ej. fw-4.3.0)
+# y descarga el último release fw-* (ej. fw-4.4.0)
 
 # Extraer y copiar a tu proyecto
 unzip devtrail-fw-*.zip -d tu-proyecto/

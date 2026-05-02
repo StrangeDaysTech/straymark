@@ -149,8 +149,8 @@ DevTrail 为每个组件使用独立的版本标签：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.3.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.5.3` | `devtrail` 二进制文件 |
+| Framework | `fw-` | `fw-4.4.0` | 模板（12 种类型）、治理文档、指令 |
+| CLI | `cli-` | `cli-3.6.0` | `devtrail` 二进制文件 |
 
 使用 `devtrail status` 或 `devtrail about` 查看已安装的版本。
 
@@ -165,7 +165,8 @@ DevTrail 为每个组件使用独立的版本标签：
 | `devtrail remove [--full]` | 从项目中移除 DevTrail |
 | `devtrail status [path]` | 显示安装状态和文档统计 |
 | `devtrail repair [path]` | 恢复缺失的目录和框架文件 |
-| `devtrail validate [path]` | 验证文档的合规性和正确性 |
+| `devtrail validate [path]` | 验证文档的合规性和正确性（使用 `--include-charters` 同时验证 `docs/charters/`） |
+| `devtrail charter <子命令>` | 管理章程：`new`、`list`、`status`（事前声明、事后审计的有界工作单元） |
 | `devtrail compliance [path]` | 检查法规合规（EU AI Act、ISO 42001、NIST） |
 | `devtrail metrics [path]` | 显示治理指标和文档统计 |
 | `devtrail analyze [path]` | 分析代码复杂度（认知复杂度 + 圈复杂度指标） |
@@ -180,7 +181,7 @@ DevTrail 为每个组件使用独立的版本标签：
 ```bash
 # 从 GitHub 下载最新的框架发布 ZIP
 # 前往 https://github.com/StrangeDaysTech/devtrail/releases
-# 下载最新的 fw-* 发布（例如 fw-4.3.0）
+# 下载最新的 fw-* 发布（例如 fw-4.4.0）
 
 # 解压并复制到你的项目
 unzip devtrail-fw-*.zip -d your-project/

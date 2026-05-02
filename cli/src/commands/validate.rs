@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use crate::utils;
 use crate::validation::{self, Severity, ValidationIssue};
 
-pub fn run(path: &str, fix: bool, staged: bool) -> Result<()> {
+pub fn run(path: &str, fix: bool, staged: bool, include_charters: bool) -> Result<()> {
     let resolved = match utils::resolve_project_root(path) {
         Some(r) => r,
         None => {
@@ -32,7 +32,9 @@ pub fn run(path: &str, fix: bool, staged: bool) -> Result<()> {
     let target = resolved.path;
     let devtrail_dir = target.join(".devtrail");
 
-    // --staged mode: validate only git-staged .devtrail/ documents
+    // --staged mode: validate only git-staged .devtrail/ documents.
+    // Charter validation in --staged mode is a Phase 2 enhancement; in v0
+    // the flag is honored only in the all-mode path below.
     if staged {
         return run_staged(&target, &devtrail_dir);
     }
@@ -44,7 +46,14 @@ pub fn run(path: &str, fix: bool, staged: bool) -> Result<()> {
     println!();
 
     // Run validation
-    let (result, doc_count) = validation::validate_all(&devtrail_dir);
+    let (mut result, mut doc_count) = validation::validate_all(&devtrail_dir);
+
+    if include_charters {
+        let (charter_result, charter_count) =
+            validation::validate_charters(&target, &devtrail_dir);
+        result.merge(charter_result);
+        doc_count += charter_count;
+    }
 
     if doc_count == 0 {
         utils::info("No documents found to validate.");
@@ -62,7 +71,13 @@ pub fn run(path: &str, fix: bool, staged: bool) -> Result<()> {
     if fix {
         apply_fixes(&devtrail_dir);
         // Re-validate after fixes
-        let (result, doc_count) = validation::validate_all(&devtrail_dir);
+        let (mut result, mut doc_count) = validation::validate_all(&devtrail_dir);
+        if include_charters {
+            let (charter_result, charter_count) =
+                validation::validate_charters(&target, &devtrail_dir);
+            result.merge(charter_result);
+            doc_count += charter_count;
+        }
         print_results(&result, doc_count);
         return exit_with_code(&result);
     }

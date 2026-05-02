@@ -41,6 +41,10 @@ pub fn t<'a>(en: &'a str, lang: &str) -> &'a str {
         ("Security", "zh-CN") => "安全",
         ("AI Models", "es") => "Modelos IA",
         ("AI Models", "zh-CN") => "AI 模型",
+        // Charter-related labels: "Charters" stays as a loanword in ES to match
+        // the rest of the bilingual technical vocabulary (Plan→Charter rename).
+        ("Charters", "es") => "Charters",
+        ("Charters", "zh-CN") => "章程",
 
         // ── Subgroup labels ───────────────────────────────────────────
         ("Exceptions", "es") => "Excepciones",

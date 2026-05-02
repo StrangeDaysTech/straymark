@@ -206,8 +206,8 @@ DevTrail uses independent version tags for each component:
 
 | Component | Tag prefix | Example | Includes |
 |-----------|-----------|---------|----------|
-| Framework | `fw-` | `fw-4.3.0` | Templates (12 types), governance, directives |
-| CLI | `cli-` | `cli-3.5.3` | The `devtrail` binary |
+| Framework | `fw-` | `fw-4.4.0` | Templates (12 types), governance, directives, Charter template + schema |
+| CLI | `cli-` | `cli-3.6.0` | The `devtrail` binary |
 
 Check installed versions with `devtrail status` or `devtrail about`.
 
@@ -222,7 +222,8 @@ Check installed versions with `devtrail status` or `devtrail about`.
 | `devtrail remove [--full]` | Remove DevTrail from project |
 | `devtrail status [path]` | Show installation health and doc stats |
 | `devtrail repair [path]` | Restore missing directories and framework files |
-| `devtrail validate [path]` | Validate documents for compliance and correctness |
+| `devtrail validate [path]` | Validate documents for compliance and correctness (use `--include-charters` to also check `docs/charters/`) |
+| `devtrail charter <subcommand>` | Manage Charters: `new`, `list`, `status` (bounded units of work declared ex-ante, audited ex-post) |
 | `devtrail compliance [path]` | Check regulatory compliance (EU AI Act, ISO 42001, NIST) |
 | `devtrail metrics [path]` | Show governance metrics and documentation statistics |
 | `devtrail analyze [path]` | Analyze code complexity (cognitive + cyclomatic metrics) |
@@ -237,7 +238,7 @@ See [CLI Reference](https://github.com/StrangeDaysTech/devtrail/blob/main/docs/a
 ```bash
 # Download the latest framework release ZIP from GitHub
 # Go to https://github.com/StrangeDaysTech/devtrail/releases
-# and download the latest fw-* release (e.g., fw-4.3.0)
+# and download the latest fw-* release (e.g., fw-4.4.0)
 
 # Extract and copy to your project
 unzip devtrail-fw-*.zip -d your-project/
