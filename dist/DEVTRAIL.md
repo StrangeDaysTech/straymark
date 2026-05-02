@@ -6,15 +6,20 @@
 
 ---
 
-## Governance Context
+## Why these rules exist
 
-These rules operationalize **ISO/IEC 42001:2023** (AI Management System) — DevTrail's vertebral standard. Following them produces documented evidence compatible with:
+DevTrail externalizes the cognitive discipline of senior software engineering — explicit scope, declared decisions, named risks, recorded alternatives, audited trails — into versioned files that live alongside the code. The intent is to constrain the agent's decision space so AI-assisted work stays coherent across many turns instead of drifting into hidden technical debt.
 
+As a side effect of doing the engineering work this way, the artifacts produced map cleanly onto the major AI governance frameworks. The rules are written for the engineering work first; the compliance evidence is what falls out when the work is done with discipline.
+
+**Frameworks the resulting evidence aligns with:**
+
+- **ISO/IEC 42001:2023** (AI Management System) — vertebral standard for governance structure
 - **EU AI Act** (Regulation 2024/1689) — risk classification, transparency, incident reporting
 - **NIST AI RMF 1.0 + 600-1** — risk management functions and generative AI risk profiles
 - **GDPR** — data protection impact assessments and privacy safeguards
 
-**Optional**: when `.devtrail/config.yml` declares `regional_scope: china`, the framework additionally produces evidence for:
+**Optional regional scope** — when `.devtrail/config.yml` declares `regional_scope: china`, the framework additionally produces evidence for:
 
 - **TC260 AI Safety Governance Framework v2.0** — risk grading (TC260RA)
 - **PIPL** (Personal Information Protection Law) — PIPIA, retention ≥ 3 years
@@ -23,13 +28,13 @@ These rules operationalize **ISO/IEC 42001:2023** (AI Management System) — Dev
 - **GB/T 45652-2025** — pre-training & fine-tuning data security
 - **CSL 2026** — cybersecurity incident reporting (1h / 4h+72h+30d windows)
 
-> See `AI-GOVERNANCE-POLICY.md` for the full ISO 42001 Annex A control mapping and `CHINA-REGULATORY-FRAMEWORK.md` for the China coverage matrix.
+> See `AI-GOVERNANCE-POLICY.md` for the ISO 42001 Annex A control mapping and `CHINA-REGULATORY-FRAMEWORK.md` for the China coverage matrix. The product-level rationale lives in [`Propuesta/devtrail-design-principles.md`](https://github.com/StrangeDaysTech/devtrail/blob/main/Propuesta/devtrail-design-principles.md).
 
 ---
 
 ## 1. Fundamental Principle
 
-> **"No significant change without a documented trace."**
+> **"No significant change without a documented trace — and a constrained decision space for the agent."**
 
 ---
 

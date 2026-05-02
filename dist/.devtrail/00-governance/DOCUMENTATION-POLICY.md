@@ -2,16 +2,19 @@
 
 **Languages**: English | [Español](i18n/es/DOCUMENTATION-POLICY.md) | [简体中文](i18n/zh-CN/DOCUMENTATION-POLICY.md)
 
-## Governance Framework
+## Why this policy exists
 
-This policy aligns DevTrail documentation with **ISO/IEC 42001:2023** (vertebral standard for AI Management Systems) and operationalizes:
+DevTrail externalizes the cognitive discipline of senior software engineering — explicit scope, declared decisions, named risks, recorded alternatives, audited trails — into versioned files alongside the code. This policy defines the document types, metadata, and governance rules that make that discipline auditable.
 
+As a side effect of producing those artifacts, the project accumulates evidence that maps cleanly onto the major AI governance frameworks:
+
+- **ISO/IEC 42001:2023** — vertebral standard for AI Management Systems
 - **EU AI Act** (effective August 2026) — risk classification, transparency, incident reporting
 - **NIST AI RMF 1.0 + AI 600-1** — AI risk management functions and generative AI profiles
 - **ISO/IEC 23894:2023** — AI risk management framework
 - **GDPR** — data protection and privacy impact assessments
 
-All document types, metadata fields, and governance rules contribute to evidence that satisfies these regulatory frameworks. See Section 8 for the complete standards reference.
+The policy is written for the engineering work first; compliance is what falls out when the work is documented with discipline. See Section 8 for the complete standards reference and the upstream repo's `Propuesta/devtrail-design-principles.md` for the product-level rationale.
 
 ---
 
@@ -257,4 +260,4 @@ See also [ADR-2025-01-20-001] for architectural context.
 
 ---
 
-*DevTrail v4.4.2 | [Strange Days Tech](https://strangedays.tech)*
+*DevTrail v4.5.0 | [Strange Days Tech](https://strangedays.tech)*

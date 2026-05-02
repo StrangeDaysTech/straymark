@@ -2,7 +2,7 @@
 name = "devtrail-cli"
 version = "3.6.1"
 edition = "2021"
-description = "CLI tool for DevTrail - Documentation Governance for AI-Assisted Development"
+description = "CLI for DevTrail — the cognitive discipline your AI-assisted projects need"
 license = "MIT"
 repository = "https://github.com/StrangeDaysTech/devtrail"
 homepage = "https://strangedays.tech"

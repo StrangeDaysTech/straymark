@@ -7,6 +7,36 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.5.0 — repositioning: engineering-discipline-first, compliance as side effect (EN canonical docs)
+
+This release does not add features; it realigns the canonical English-language positioning to match how DevTrail is actually used and the explicit hierarchy of `Propuesta/devtrail-design-principles.md`. The previous framing led with compliance ("AI Governance Platform for Responsible Software Development") which inverted Principle #4 — *regulatory compliance is a side effect, not the product* — and Principle #2 — *the primary user is the senior engineer orchestrating agents, not the compliance officer*. This release restates the product in those terms.
+
+Scope of this release is **EN canonical only**. Spanish and Simplified Chinese translations are deferred to a follow-up release (`fw-4.5.x`) so the EN positioning ships in a focused, reviewable PR; until then, ES and zh-CN docs continue to reflect the prior framing.
+
+### Changed (Framework)
+
+- **`README.md`** (EN) rewritten:
+  - New headline: *"The cognitive discipline your AI-assisted projects need"* (was: *"AI Governance Platform for Responsible Software Development"*).
+  - **`## The Problem`** reframed around how AI agents lose coherence over many turns and accumulate hidden technical debt — not around regulatory pressure.
+  - **`## The Solution`** reframed as a *framework + CLI that externalizes the cognitive discipline of senior software engineering work* into versioned files alongside the code. Compliance is presented as the side effect when the discipline is real.
+  - **New `## Who is DevTrail for`** persona section: primary user is the senior engineer orchestrating agents; tech leads, compliance officers, and adopters in regulated environments are explicit secondary audiences (never at the primary user's expense). Anti-positioning bullets enumerate what DevTrail is *not* trying to be.
+  - **New `## Design Principles`** section: the 12 principles summarized one-line each, with a link to the full polished document at `Propuesta/devtrail-design-principles.md` for the empirically-annotated v0.2.2 version.
+  - **New `## Honest Limits`** top-level section operationalizing Principle #10 (*honesty about what the tool does not do*).
+  - **`## Compliance`** is now a single dedicated section (the previous *Standards Alignment* + *China Regulatory Compliance* fragments are unified) with an opening paragraph that frames compliance as a *consequence of doing the engineering work well*, not as the product.
+  - The Features subsection *Compliance Automation* is renamed to *CLI Tooling* and now leads with `devtrail charter` as the unit of agent execution.
+- **`dist/DEVTRAIL.md`**: opening *Governance Context* section replaced with *Why these rules exist* — leads with externalizing senior-engineering cognitive discipline; lists the regulatory frameworks as evidence the artifacts align with, not as the goal. The *Fundamental Principle* is broadened from *"No significant change without a documented trace"* to *"No significant change without a documented trace — and a constrained decision space for the agent."*
+- **`dist/.devtrail/00-governance/DOCUMENTATION-POLICY.md`**: opening *Governance Framework* section replaced with *Why this policy exists*. Same engineering-first framing as `DEVTRAIL.md`. The standards list is preserved verbatim and remains authoritative; only the positioning around it changes.
+- **`cli/Cargo.toml`** description updated from *"CLI tool for DevTrail - Documentation Governance for AI-Assisted Development"* to *"CLI for DevTrail — the cognitive discipline your AI-assisted projects need"* (visible on crates.io).
+- **`Propuesta/devtrail-design-principles.md`** polished (v0.2.1 → v0.2.2): internal Sentinel-specific references generalized for public readability (PR #70). Now linked publicly from `README.md` and `DEVTRAIL.md`.
+
+### Notes
+
+- **No schema changes.** No template changes. No CLI behavior changes. Adopters who pick up fw-4.5.0 via `devtrail update-framework` get the new English `DEVTRAIL.md` + `00-governance/` files; their project-level `.devtrail/config.yml` and existing documents are unaffected.
+- **i18n parity gap is intentional and time-bounded.** The Spanish and Simplified Chinese governance docs (`i18n/es/`, `i18n/zh-CN/`) and the `docs/i18n/es/`, `docs/i18n/zh-CN/` README + CLI-REFERENCE retain their fw-4.4.2 language and version footer until the i18n catch-up release. Their `*DevTrail v4.4.2*` footers are correct for their content; only the EN canonical surface advances to v4.5.0 in this release.
+- **Why minor and not patch.** This release changes the *meaning* the canonical docs project to readers — the headline of the README, the opening of `DEVTRAIL.md`, the opening of `DOCUMENTATION-POLICY.md`. By Keep a Changelog conventions and DevTrail's own semver discipline (CLAUDE.md), repositioning of canonical surface is *changed* (minor), not *fixed* (patch). Schema and template stability is unaffected.
+
+---
+
 ## CLI 3.6.1 — `devtrail charter new` "Next steps" output renumbers correctly when origin is set
 
 ### Fixed (CLI)
