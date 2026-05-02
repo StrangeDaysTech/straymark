@@ -2,16 +2,19 @@
 
 **Idiomas**: [English](../../DOCUMENTATION-POLICY.md) | Español | [简体中文](../zh-CN/DOCUMENTATION-POLICY.md)
 
-## Marco de Gobernanza
+## Por qué existe esta política
 
-Esta política alinea la documentación de DevTrail con **ISO/IEC 42001:2023** (estándar vertebral para Sistemas de Gestión de IA) y operacionaliza:
+DevTrail externaliza la disciplina cognitiva del trabajo de ingeniería de software senior — alcance explícito, decisiones declaradas, riesgos nombrados, alternativas registradas, rastros auditables — en archivos versionados que viven junto al código. Esta política define los tipos de documento, metadatos y reglas de gobernanza que hacen que esa disciplina sea auditable.
 
+Como efecto secundario de producir esos artefactos, el proyecto acumula evidencia que mapea limpiamente a los principales marcos de gobernanza de IA:
+
+- **ISO/IEC 42001:2023** — estándar vertebral para Sistemas de Gestión de IA
 - **EU AI Act** (efectivo agosto 2026) — clasificación de riesgo, transparencia, reporte de incidentes
 - **NIST AI RMF 1.0 + AI 600-1** — funciones de gestión de riesgos de IA y perfiles de IA generativa
 - **ISO/IEC 23894:2023** — marco de gestión de riesgos de IA
 - **GDPR** — evaluaciones de impacto en protección de datos y privacidad
 
-Todos los tipos de documentos, campos de metadatos y reglas de gobernanza contribuyen a evidencia que satisface estos marcos regulatorios. Ver Sección 8 para la referencia completa de estándares.
+La política está escrita primero para el trabajo de ingeniería; el cumplimiento es lo que cae como subproducto cuando el trabajo se documenta con disciplina. Ver Sección 8 para la referencia completa de estándares y `Propuesta/devtrail-design-principles.md` (en el repositorio upstream) para el racional a nivel de producto.
 
 ---
 
@@ -249,4 +252,4 @@ Ver también [ADR-2025-01-20-001] para contexto arquitectónico.
 
 ---
 
-*DevTrail v4.4.2 | [Strange Days Tech](https://strangedays.tech)*
+*DevTrail v4.5.1 | [Strange Days Tech](https://strangedays.tech)*

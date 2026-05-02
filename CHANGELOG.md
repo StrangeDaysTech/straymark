@@ -7,6 +7,29 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.5.1 — i18n catch-up + ADOPTION-GUIDE reframe (ES + zh-CN follow up to fw-4.5.0)
+
+Completes the repositioning shipped in `fw-4.5.0` for the Spanish and Simplified Chinese surfaces, and reframes `docs/adopters/ADOPTION-GUIDE.md` (English) — which had been overlooked in `fw-4.5.0` and was still leading with the *"ISO 42001-aligned AI governance platform"* framing. After this release, the canonical engineering-discipline-first positioning is consistent across all three languages.
+
+### Changed (Framework)
+
+- **`docs/adopters/ADOPTION-GUIDE.md`** (EN): same reframe pattern as `README.md` and `DEVTRAIL.md` in fw-4.5.0 — opening *What is DevTrail?*, *Why Now?*, *Who is it for?*, *Benefits*, *Standards Compliance* sections rewritten engineering-first; *What DevTrail is NOT* extended; *Benefits* table reordered (engineering discipline first, AI-assisted development second, regulatory compliance third); a new *Primary user* paragraph mirrors the README persona section.
+- **`docs/i18n/es/README.md`**: full ES translation of the fw-4.5.0 EN reframe — new headline (*"La disciplina cognitiva que tus proyectos asistidos por IA necesitan"*), reframed *El Problema* / *La Solución*, new *¿Para quién es DevTrail?*, *Principios de Diseño*, *Límites Honestos*, and *Compliance* sections; the previously redundant *Alineación con Estándares* trailer block is removed (now lives inside *Compliance*); a brief *Cobertura regulatoria de China* table is added with a link to the zh-CN README for adopters operating in mainland China; final tagline updated.
+- **`docs/i18n/es/adopters/ADOPTION-GUIDE.md`**: ES translation of the EN ADOPTION-GUIDE reframe.
+- **`dist/.devtrail/00-governance/i18n/es/DOCUMENTATION-POLICY.md`**: opening *Marco de Gobernanza* section replaced with *Por qué existe esta política* (mirror of the EN reframe).
+- **`docs/i18n/zh-CN/README.md`**: full zh-CN translation of the fw-4.5.0 EN reframe — new headline (*"你的 AI 辅助项目所需的认知纪律"*), reframed *问题* / *解决方案*, new *DevTrail 的适用人群*, *设计原则*, *诚实的边界*, and *合规性* sections (with the existing detailed Chinese opt-in subsection now nested under *合规性*); final tagline updated.
+- **`docs/i18n/zh-CN/adopters/ADOPTION-GUIDE.md`**: zh-CN translation of the EN ADOPTION-GUIDE reframe.
+- **`dist/.devtrail/00-governance/i18n/zh-CN/DOCUMENTATION-POLICY.md`**: opening *治理框架* section replaced with *本策略为何存在* (mirror of the EN reframe).
+- **Version footers / examples bumped to `v4.5.1` / `fw-4.5.1`** across the EN canonical surface and i18n: `dist/dist-manifest.yml`; `dist/.devtrail/QUICK-REFERENCE.md`; `dist/.devtrail/00-governance/{QUICK-REFERENCE,AGENT-RULES,DOCUMENTATION-POLICY,C4-DIAGRAM-GUIDE}.md` (EN); `dist/.devtrail/00-governance/i18n/{es,zh-CN}/{QUICK-REFERENCE,AGENT-RULES,DOCUMENTATION-POLICY,C4-DIAGRAM-GUIDE}.md` (8 files); `README.md`, `docs/i18n/es/README.md`, `docs/i18n/zh-CN/README.md` (3 versioning tables); `docs/adopters/CLI-REFERENCE.md` and the ES + zh-CN counterparts (3 files, 7 example outputs each); `docs/adopters/ADOPTION-GUIDE.md` and the ES + zh-CN counterparts.
+
+### Notes
+
+- **No schema changes, no template changes, no CLI behavior changes.** This release is documentation-and-positioning only; adopters who pick it up via `devtrail update-framework` get the new EN, ES, and zh-CN governance docs and the new `dist-manifest.yml` version stamp.
+- **i18n parity restored.** After this release, `README.md`, `DEVTRAIL.md`, `DOCUMENTATION-POLICY.md`, and `ADOPTION-GUIDE.md` carry the same engineering-discipline-first framing in EN, ES, and zh-CN. Operational governance files (`AGENT-RULES.md`, `QUICK-REFERENCE.md`, `C4-DIAGRAM-GUIDE.md`) had no positioning content to reframe — only their version footers were bumped.
+- **GitHub repository description and topics updated** to match the new positioning (one-line description and topic list refreshed via `gh repo edit`).
+
+---
+
 ## Framework 4.5.0 — repositioning: engineering-discipline-first, compliance as side effect (EN canonical docs)
 
 This release does not add features; it realigns the canonical English-language positioning to match how DevTrail is actually used and the explicit hierarchy of `Propuesta/devtrail-design-principles.md`. The previous framing led with compliance ("AI Governance Platform for Responsible Software Development") which inverted Principle #4 — *regulatory compliance is a side effect, not the product* — and Principle #2 — *the primary user is the senior engineer orchestrating agents, not the compliance officer*. This release restates the product in those terms.

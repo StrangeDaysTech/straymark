@@ -2,7 +2,7 @@
 
 # DevTrail
 
-**负责任软件开发的 AI 治理平台**
+**你的 AI 辅助项目所需的认知纪律**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../../../LICENSE)
 [![Crates.io](https://img.shields.io/crates/v/devtrail-cli.svg)](https://crates.io/crates/devtrail-cli)
@@ -11,9 +11,11 @@
 [![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
 
 [快速开始](#快速开始) •
+[适用人群](#devtrail-的适用人群) •
+[设计原则](#设计原则) •
 [功能特性](#功能特性) •
-[文档](#文档) •
-[贡献](#贡献)
+[合规性](#合规性) •
+[文档](#文档)
 
 **语言**: [English](../../../README.md) | [Español](../es/README.md) | 简体中文
 
@@ -23,19 +25,54 @@
 
 ## 问题
 
-随着 AI 日益成为软件开发的核心，组织面临三方面的压力：
+AI Agent 写代码很快。但写出的代码并不连贯。经过足够多的轮次后，Agent 会失去主线：重新引入团队已经否决的模式、积累隐藏的技术债务、产出可以编译但与系统肌理不匹配的工作。Agent 越快，这些债务越难被察觉——直到一次回归、一次事故或一次重构把它们暴露出来。
 
-- **法规合规**：EU AI Act 将于 2026 年 8 月起强制执行。ISO/IEC 42001 现已成为 AI 治理的国际标准。团队需要有据可查的证据。
-- **治理缺口**：没有结构化的方法来证明 AI 决策受到治理、可审计且合规——每一个未记录的 AI 变更都是潜在风险。
-- **运营风险**：谁做了这个变更？考虑了哪些替代方案？人工监督是否适当？没有答案，AI 辅助开发就是一个黑箱。
+编排这些 Agent 的资深工程师并不需要*更多*的 Agent 自主权。他们需要的恰恰相反：一种以 Agent 可被约束的节奏将范围、决策和风险显性外化的方式——让 Agent 在约束之下执行，而不是自己发明约束。
 
 ## 解决方案
 
-DevTrail 是一个**符合 ISO 42001 的 AI 治理平台**，确保每一个有意义的变更——无论是人工还是 AI 做出的——都被记录、归属和可审计。
+DevTrail 是一个**框架 + CLI**，将资深软件工程工作的认知纪律——明确的范围、声明的决策、命名的风险、记录的备选方案、可审计的轨迹——外化为与代码并存的版本化文件。
 
-> **"没有记录的痕迹和治理证明，就不应有重大变更。"**
+> **"没有记录痕迹的重大变更不应发生——并且 Agent 的决策空间应受约束。"**
 
-采用 DevTrail 的团队能产出兼容 **ISO/IEC 42001 认证**、**EU AI Act 合规**和 **NIST AI RMF** 风险管理的证据——同时提升开发质量和可追溯性。
+作为副作用，这一纪律会产出与 **ISO/IEC 42001**、**EU AI Act**、**NIST AI RMF** 以及（按选项启用的）中国 AI/数据法规栈兼容的证据。但目标首先是工程质量；当纪律真正落地时，合规便是自然而然的副产品。
+
+---
+
+## DevTrail 的适用人群
+
+DevTrail 的主要用户是**在非平凡系统上编排 AI Agent 的资深工程师**——具备扎实技术判断力、借助 Agent 完成自己单独无法实际完成的工作、并需要外化的认知纪律以防止 Agent 引入系统性混乱的人。
+
+如果你符合这个画像，DevTrail 的流程、默认值和语言都是为你量身打造的。
+
+DevTrail 还服务于三类次要受众，建立在主用户基础之上——绝不以牺牲主用户为代价：
+
+- **技术负责人和架构师**：标准化团队与 AI 助手的协作方式。
+- **合规官和审计师**：需要受治理 AI 开发的证据（ISO 42001、EU AI Act、NIST AI RMF、PIPL、TC260……）。
+- **受监管环境的采用者**（金融、医疗、公共部门、中国）：将可追溯性内建到工作流，而非事后补建。
+
+DevTrail **并不**试图成为：LLM 网关、模型评估器、"代码 10 倍快"的生产力外壳，或工程判断的替代品。详见下文 [诚实的边界](#诚实的边界)。
+
+---
+
+## 设计原则
+
+DevTrail 的产品决策基于十二条明确的原则。它们按层级排序：当两条原则发生冲突时，靠前的胜出。
+
+1. **工具服务于手艺，而非产品自身。** 衡量标准是工程师是否能产出令自己自豪的工作——而不是采用率、留存或营收。
+2. **主要用户是编排 Agent 的资深工程师。** 不是 VP，不是 CISO，也不是合规官。
+3. **核心严格开源，毫无附加条件。** Framework、CLI 和 TUI 均为 MIT 许可，没有为推动付费而被阉割的功能。
+4. **法规合规是副作用，而非产品目标。** ISO 42001、EU AI Act、NIST AI RMF 是有用的框架；它们不是目标。
+5. **Schema 驱动优先于功能驱动。** 核心实体（Stage Closure Bundle、Charter、Document）首先以版本化 schema 定义，然后再构建功能。
+6. **认知纪律优先于原始生产力。** DevTrail 对抗的是 AI 快速产出代码在严肃项目中带来的混乱——而不是速度本身。
+7. **Local-first，Cloud 作为放大器。** CLI 完全离线可用。Cloud 可以增加价值（跨仓聚合、签名证据），但绝不会成为核心的门槛。
+8. **项目记忆存活于仓库中，而非外部数据库。** AILOG、ADR、AIDEC、Charter 和 Bundle 是与代码并存的版本化文件，使用 markdown + JSON Schema。
+9. **简洁优先于能力。** 当两种设计满足同一目标时，更简单的胜出。模式在真实项目中得到验证后才结晶化，不在之前。
+10. **诚实地说明工具不做什么。** 不评估模型、不做 LLM 网关、不自动认证合规、不替代工程判断。
+11. **社区维护工具，而非反过来。** 贡献和反馈被认真对待，但不会变成民主决策。
+12. **产品的速度等于学习的速度。** 不过早结晶化；schema 标记为 `v0`，直到在第二个领域得到验证。
+
+完整文档（包含来自验证周期的实证注解）见 [`Propuesta/devtrail-design-principles.md`](https://github.com/StrangeDaysTech/devtrail/blob/main/Propuesta/devtrail-design-principles.md)。
 
 ---
 
@@ -59,19 +96,6 @@ DevTrail 是一个**符合 ISO 42001 的 AI 治理平台**，确保每一个有�
 | **MCARD** | 模型/系统卡片 | AI 模型文档 |
 | **SBOM** | 软件物料清单 | AI 组件清单 |
 | **DPIA** | 数据保护影响评估 | 隐私影响分析 |
-
-### 📐 标准对齐
-
-| 标准 | DevTrail 集成 |
-|------|---------------|
-| **ISO/IEC 42001:2023** | 核心标准——AI 管理系统治理 |
-| **EU AI Act** | 风险分类、事件报告、透明度 |
-| **NIST AI RMF / 600-1** | ETH/AILOG 中的 12 个 GenAI 风险类别 |
-| **ISO/IEC 25010:2023** | REQ/ADR 中的软件质量模型 |
-| **ISO/IEC/IEEE 29148:2018** | REQ 中的需求工程 |
-| **ISO/IEC/IEEE 29119-3:2021** | TES 中的测试文档 |
-| **GDPR** | ETH/DPIA 中的数据保护 |
-| **OpenTelemetry** | 可观测性（可选） |
 
 ### 🤖 AI Agent 支持
 
@@ -97,16 +121,82 @@ DevTrail 是一个**符合 ISO 42001 的 AI 治理平台**，确保每一个有�
 - **审查触发**：低置信度或高风险 → 强制审查
 - **伦理审查**：隐私和偏见问题标记为需人工决策
 
-### ✅ 合规自动化
+### ✅ CLI 工具集
 
-内置 CLI 治理工具：
+将纪律转化为可执行反馈的内置命令：
 
-- **`devtrail validate`** — 13 条验证规则，确保文档正确性
-- **`devtrail compliance`** — 法规合规评分（EU AI Act、ISO 42001、NIST AI RMF）
+- **`devtrail charter <new|list|status>`** — 事前声明、事后审计的有界工作单元（Agent 执行的单位）
+- **`devtrail validate`** — 25+ 条文档正确性验证规则（其中 12 条针对中国法规、按 scope 启用）；`--include-charters` 可同时检查 `docs/charters/`
 - **`devtrail metrics`** — 治理 KPI、审查率、风险分布、趋势
 - **`devtrail analyze`** — 代码复杂度分析（认知复杂度 + 圈复杂度），由 [arborist-metrics](https://github.com/StrangeDaysTech/arborist) 驱动——我们的开源 Rust 多语言代码度量库
 - **`devtrail audit`** — 审计跟踪报告，含时间线、可追溯性映射和 HTML 导出
+- **`devtrail compliance`** — 作为已记录工作的副作用产出法规合规评分（EU AI Act、ISO 42001、NIST AI RMF；六项中国框架通过 `--region china` 按选项启用）
+- **`devtrail explore`** — 用于浏览项目文档图谱的交互式 TUI
 - **Pre-commit 钩子** + **GitHub Actions** 用于 CI/CD 验证
+
+---
+
+## 诚实的边界
+
+DevTrail **不会**：
+
+- 评估、对比或排名 LLM；
+- 充当 LLM 网关或路由层；
+- 防止幻觉或保证 Agent 正确性；
+- 自动颁发法规合规认证——它产出证据，而不是认证；
+- 替代资深工程师的判断。
+
+如果你的问题属于以上任一类，DevTrail 不是合适的工具。
+
+---
+
+## 合规性
+
+DevTrail 外化的纪律——明确的范围、声明的决策、命名的风险、记录的备选方案——作为副作用，会产出与主流 AI 治理框架清晰映射的证据。因此，合规性被定位为*认真做工程工作的结果*，而非产品本身（原则 #4）。
+
+### 标准对齐
+
+| 标准 | DevTrail 集成 |
+|------|---------------|
+| **ISO/IEC 42001:2023** | 核心标准——AI 管理系统治理 |
+| **EU AI Act** | 风险分类、事件报告、透明度 |
+| **NIST AI RMF / 600-1** | ETH/AILOG 中的 12 个 GenAI 风险类别 |
+| **ISO/IEC 25010:2023** | REQ/ADR 中的软件质量模型 |
+| **ISO/IEC/IEEE 29148:2018** | REQ 中的需求工程 |
+| **ISO/IEC/IEEE 29119-3:2021** | TES 中的测试文档 |
+| **GDPR** | ETH/DPIA 中的数据保护 |
+| **OpenTelemetry** | 可观测性（可选） |
+
+### 中国法规支持
+
+DevTrail 现在以 **opt-in**（自愿启用）的方式覆盖六项中国 AI / 数据法规：**TC260《人工智能安全治理框架 v2.0》**（五级风险分级）、**《个人信息保护法》(PIPL)** 及其配套的 **PIPIA**（个人信息保护影响评估，留存 ≥ 3 年）、**强制性国家标准 GB 45438-2025**《网络安全技术 人工智能生成合成内容标识方法》（显式 + 隐式标识）、**CAC 算法备案**（包括省级 + 国家级双重备案）、**GB/T 45652-2025** 预训练与微调数据安全，以及自 2026-01-01 生效的 **《网络安全法》修订** 与《国家网络安全事件报告管理办法》（1 小时 / 4 小时 + 72 小时评估 + 30 天事后审查的报告窗口）。
+
+#### 启用方式
+
+在 `.devtrail/config.yml` 中添加：
+
+```yaml
+regional_scope:
+  - global   # NIST + ISO 42001（始终可用）
+  - eu       # EU AI Act + GDPR
+  - china    # 启用上述六项中国法规
+```
+
+#### 启用后获得
+
+- **4 个中国专属文档类型**：`PIPIA`、`CACFILE`、`TC260RA`、`AILABEL`（均经 `devtrail new` 生成，模板已翻译为中文，位于 `.devtrail/templates/i18n/zh-CN/`）。
+- **6 个合规检查器**：通过 `devtrail compliance --region china` 一次性运行，或单独运行 `--standard china-tc260 | china-pipl | china-gb45438 | china-cac | china-gb45652 | china-csl`。
+- **12 条新的验证规则**（`CROSS-004…011`、`TYPE-003…006`）：自动校验跨文档引用一致性，例如：`cac_filing_required: true` 必须关联 CACFILE；`csl_severity_level: particularly_serious` 必须配合 `csl_report_deadline_hours: 1`；PIPIA 的 `pipl_retention_until` 必须至少为 `created` + 3 年。
+- **5 份中文治理指南**，位于 `.devtrail/00-governance/i18n/zh-CN/`：`CHINA-REGULATORY-FRAMEWORK.md`、`TC260-IMPLEMENTATION-GUIDE.md`、`PIPL-PIPIA-GUIDE.md`、`CAC-FILING-GUIDE.md`、`GB-45438-LABELING-GUIDE.md`。
+
+#### 适用人群
+
+- 在中国大陆运营 AI 服务的团队，需办理 CAC 算法备案或对外提供生成式 AI。
+- 处理中国大陆个人信息（尤其是敏感个人信息）、需进行 PIPIA 的处理者。
+- 涉及跨境数据传输，须依据 PIPL 第 38-40 条选择安全评估、认证或标准合同机制的组织。
+- 采用 ISO/IEC 42001 全球治理框架并希望在中国境内补充本地合规证据的企业。
+
+不在 `regional_scope` 中包含 `china` 的项目完全不受影响——这是完全向后兼容的扩展。
 
 ---
 
@@ -149,7 +239,7 @@ DevTrail 为每个组件使用独立的版本标签：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.4.2` | 模板（12 种类型）、治理文档、指令 |
+| Framework | `fw-` | `fw-4.5.1` | 模板（12 种类型）、治理文档、指令、Charter 模板 + schema |
 | CLI | `cli-` | `cli-3.6.1` | `devtrail` 二进制文件 |
 
 使用 `devtrail status` 或 `devtrail about` 查看已安装的版本。
@@ -181,7 +271,7 @@ DevTrail 为每个组件使用独立的版本标签：
 ```bash
 # 从 GitHub 下载最新的框架发布 ZIP
 # 前往 https://github.com/StrangeDaysTech/devtrail/releases
-# 下载最新的 fw-* 发布（例如 fw-4.4.2）
+# 下载最新的 fw-* 发布（例如 fw-4.5.1）
 
 # 解压并复制到你的项目
 unzip devtrail-fw-*.zip -d your-project/
@@ -497,7 +587,7 @@ your-project/
 
 | 项目 | 描述 |
 |------|------|
-| **[DevTrail](https://github.com/StrangeDaysTech/devtrail)** | 负责任软件开发的 AI 治理平台 |
+| **[DevTrail](https://github.com/StrangeDaysTech/devtrail)** | 你的 AI 辅助项目所需的认知纪律 |
 | **[arborist-metrics](https://github.com/StrangeDaysTech/arborist)** | Rust 多语言代码复杂度分析库 — [crates.io](https://crates.io/crates/arborist-metrics) |
 
 [网站](https://strangedays.tech) • [GitHub](https://github.com/StrangeDaysTech)
@@ -508,7 +598,7 @@ your-project/
 
 <div align="center">
 
-**DevTrail** — AI 治理，有据可查。
+**DevTrail** — 工程纪律，外化于代码。合规，作为副作用。
 
 [⬆ 回到顶部](#devtrail)
 
