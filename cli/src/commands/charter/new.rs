@@ -119,15 +119,37 @@ pub fn run(
     utils::success(&format!("Created: {}", rel_path));
     println!();
     println!("  {}", "Next steps:".bold());
-    println!("    1. Edit the Charter to fill in Context, Scope, Files to modify, Verification, Risks, Tasks.");
-    println!("    2. Set the trigger field in frontmatter to a concrete observable signal.");
-    if from_ailog.is_none() && from_spec.is_none() {
-        println!("    3. Set originating_ailogs or originating_spec in frontmatter (or leave both absent if standalone).");
+    for line in next_steps(from_ailog, from_spec) {
+        println!("    {}", line);
     }
-    println!("    4. When you start executing: change frontmatter status from `declared` to `in-progress`.");
     println!();
 
     Ok(())
+}
+
+/// Build the "Next steps" guidance shown after `charter new` succeeds. Pure
+/// function — exposed for unit testing. Steps are numbered dynamically so
+/// suppressing the conditional origin-step does not leave a numbering gap
+/// (the bug fixed in cli-3.6.1, originally reported as F1 of
+/// AILOG-2026-05-02-028 in Sentinel).
+fn next_steps(from_ailog: Option<&str>, from_spec: Option<&str>) -> Vec<String> {
+    let mut steps: Vec<&str> = vec![
+        "Edit the Charter to fill in Context, Scope, Files to modify, Verification, Risks, Tasks.",
+        "Set the trigger field in frontmatter to a concrete observable signal.",
+    ];
+    if from_ailog.is_none() && from_spec.is_none() {
+        steps.push(
+            "Set originating_ailogs or originating_spec in frontmatter (or leave both absent if standalone).",
+        );
+    }
+    steps.push(
+        "When you start executing: change frontmatter status from `declared` to `in-progress`.",
+    );
+    steps
+        .into_iter()
+        .enumerate()
+        .map(|(i, s)| format!("{}. {}", i + 1, s))
+        .collect()
 }
 
 /// Apply all placeholder substitutions to the template body. Returns the
@@ -363,5 +385,59 @@ Body content.
         let long = "a".repeat(100);
         let s = slugify(&long);
         assert!(s.len() <= 50);
+    }
+
+    #[test]
+    fn next_steps_no_origin_has_4_sequential_numbered_lines() {
+        let steps = next_steps(None, None);
+        assert_eq!(steps.len(), 4);
+        assert!(steps[0].starts_with("1. "));
+        assert!(steps[1].starts_with("2. "));
+        assert!(steps[2].starts_with("3. "));
+        assert!(steps[3].starts_with("4. "));
+    }
+
+    #[test]
+    fn next_steps_with_from_ailog_re_sequences_without_gap() {
+        // Regression test for cli-3.6.0 F1: when --from-ailog is passed, the
+        // origin-step is suppressed and the remaining steps must renumber to
+        // 1/2/3, NOT skip from 2 to 4 leaving a gap.
+        let steps = next_steps(Some("AILOG-2026-04-28-021"), None);
+        assert_eq!(steps.len(), 3);
+        assert!(steps[0].starts_with("1. "));
+        assert!(steps[1].starts_with("2. "));
+        assert!(steps[2].starts_with("3. "));
+        // Verify step 2 is the trigger (not the suppressed origin step) and
+        // step 3 is the in-progress one (not stuck at "4.").
+        assert!(steps[1].contains("trigger"));
+        assert!(steps[2].contains("in-progress"));
+    }
+
+    #[test]
+    fn next_steps_with_from_spec_re_sequences_without_gap() {
+        let steps = next_steps(None, Some("specs/001-test/spec.md"));
+        assert_eq!(steps.len(), 3);
+        assert!(steps[0].starts_with("1. "));
+        assert!(steps[2].starts_with("3. "));
+        assert!(steps[2].contains("in-progress"));
+    }
+
+    #[test]
+    fn next_steps_no_step_starts_with_4_when_origin_is_set() {
+        // Defensive: even if the steps grow, when an origin is set, no line
+        // should ever emit a "4. " prefix (because the conditional step is
+        // suppressed and renumbering applies). This guards against regressions
+        // that re-introduce hardcoded numbers.
+        for (ailog, spec) in [
+            (Some("AILOG-2026-04-28-021"), None),
+            (None, Some("specs/x/spec.md")),
+        ] {
+            let steps = next_steps(ailog, spec);
+            assert!(
+                !steps.iter().any(|s| s.starts_with("4. ")),
+                "no step should be numbered 4 when origin is set; got {:?}",
+                steps
+            );
+        }
     }
 }
