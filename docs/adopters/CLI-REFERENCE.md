@@ -556,7 +556,7 @@ Detect file-vs-commit drift at Charter close. Wraps the framework's `.devtrail/s
 |---|---|---|
 | `CHARTER-ID` | — | Same resolution rules as `charter status` |
 | `--range` | `HEAD~1..HEAD` | Git revision range to check |
-| `--no-ailog-suppress` | false | Disable AILOG-aware suppression (show every declared-omitted path) |
+| `--no-ailog-suppress` *(cli-3.8.1+ always emits a confirming INFO line)* | false | Disable AILOG-aware suppression (show every declared-omitted path). When passed, the CLI always prints an `INFO: AILOG-aware suppression bypassed (would have suppressed: N path(s)…)` line — including when N=0 — so that the diagnostic mode is visible in output even on a clean run. |
 | `--path` | `.` | Target project directory |
 
 **Exit codes:** `0` if no drift (or only AILOG-suppressed); `1` if there's unaccounted drift; `2` for usage errors (Charter not found, bash missing, etc.).

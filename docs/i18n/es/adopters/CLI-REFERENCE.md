@@ -64,15 +64,16 @@ devtrail status   # Muestra estado completo de la instalación incluyendo versio
 
 ## Comandos
 
-### `devtrail init [path]`
+### `devtrail init [path] [--hooks]`
 
 Inicializa DevTrail en un directorio de proyecto.
 
-**Argumentos:**
+**Argumentos y flags:**
 
-| Argumento | Por defecto | Descripción |
-|-----------|-------------|-------------|
+| Argumento/Flag | Por defecto | Descripción |
+|----------------|-------------|-------------|
 | `path` | `.` (directorio actual) | Directorio del proyecto destino |
+| `--hooks` *(cli-3.7.0+)* | off | Tras `init`, instala el hook pre-PR del framework (`.devtrail/hooks/pre-pr.sh`) como `.git/hooks/pre-push`. Ejecuta `devtrail charter drift` automáticamente antes de cada push. Opt-in por principio #6 (disciplina cognitiva > productividad cruda). Se rehúsa a sobreescribir un `pre-push` ya existente; se omite silenciosamente si no es un repositorio git. |
 
 **Qué hace:**
 
@@ -81,6 +82,7 @@ Inicializa DevTrail en un directorio de proyecto.
 3. Crea `DEVTRAIL.md` con las reglas de gobernanza
 4. Configura archivos de directivas de agentes IA (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`, etc.)
 5. Copia workflows de CI/CD
+6. *(`--hooks`)* instala el hook pre-PR
 
 **Ejemplo:**
 
@@ -256,7 +258,7 @@ Repairing DevTrail in /home/user/mi-proyecto
 
 ---
 
-### `devtrail validate [path] [--fix] [--staged] [--include-charters]`
+### `devtrail validate [path] [--fix] [--staged] [--include-charters] [--check-pending-reviews [--max-pending-days N]]`
 
 Valida documentos DevTrail verificando cumplimiento y corrección.
 
@@ -268,6 +270,8 @@ Valida documentos DevTrail verificando cumplimiento y corrección.
 | `--fix` | — | Corregir automáticamente problemas simples |
 | `--staged` | — | Validar solo archivos staged en Git (ideal para hooks pre-commit) |
 | `--include-charters` | — | Validar también los Charters en `docs/charters/` contra el JSON Schema y la integridad referencial (los IDs en `originating_ailogs` resuelven; el path en `originating_spec` existe). Opt-in, default `false` para no afectar a proyectos que no usan el patrón. Por ahora solo se honra fuera de `--staged`; la validación de Charters en modo staged llega en cli-3.8.1. |
+| `--check-pending-reviews` *(cli-3.7.0+)* | off | Lista documentos con `review_required: true` y sin `review_outcome` cuya antigüedad supere `--max-pending-days`. **Solo warn** — nunca falla el exit code de validate; útil para dashboards de CI sobre el backlog de aprobaciones. |
+| `--max-pending-days` *(cli-3.7.0+)* | `14` | Umbral en días para `--check-pending-reviews`. |
 
 **Reglas de validación:**
 
@@ -326,6 +330,56 @@ $ devtrail new -t ailog --title "Refactorizar módulo de pagos"
 
 ---
 
+### `devtrail approve <doc-id> --outcome <outcome> --reviewer <id> [--at YYYY-MM-DD] [--notes "..."] [--path <dir>]`
+
+*Disponible desde **cli-3.7.0** + **fw-4.6.0**. `--quiet` y warning de alto riesgo añadidos en cli-3.8.0.*
+
+Registra una aprobación humana formal sobre un documento con `review_required: true`. Escribe los tres campos de aprobación en el frontmatter (`reviewed_by`, `reviewed_at`, `review_outcome`) **y** añade la sección canónica `## Approval` al cuerpo en una edición atómica. Implementa la señal de cierre canonizada en `DOCUMENTATION-POLICY.md §3.5`.
+
+| Argumento/Flag | Default | Descripción |
+|----------------|---------|-------------|
+| `<doc-id>` | — | ID del documento. Acepta el prefijo (`AIDEC-2026-05-02-001`) o el ID completo con slug (`AIDEC-2026-05-02-001-foo`). |
+| `--outcome` | — | Uno de `approved`, `revisions_requested`, `rejected`. Solicita prompt en TTY si está ausente. |
+| `--reviewer` | — | Identidad del revisor: email, GitHub handle, o DID. Solicita prompt en TTY si está ausente. |
+| `--at` | hoy | Fecha de aprobación (`YYYY-MM-DD`). |
+| `--notes` | — | Notas opcionales del revisor (anexadas en la sección del cuerpo). |
+| `--path` | `.` | Directorio del proyecto. |
+
+**Comportamiento:**
+
+- Advierte (no falla) si el documento no tiene `review_required: true` — el sign-off retroactivo es un caso real.
+- **Mutación de frontmatter** (latest-wins): reemplaza los `reviewed_by/_at/outcome` existentes; si no existen, los inserta tras `review_required:`. Implementa la convención multi-revisor de §3.5: el frontmatter mantiene la *última* aprobación.
+- **Mutación del cuerpo** (cronológica): añade un nuevo bloque `## Approval` antes de cualquier firma de plantilla final. Re-ejecutar `approve` preserva los bloques anteriores, así el cuerpo muestra el historial completo de revisiones.
+- `review_required: true` **no** se cambia a `false` tras la aprobación — permanece como registro histórico de por qué fue necesario revisar.
+
+**Ejemplos:**
+
+```bash
+# Driven por flags (CI / scripts)
+$ devtrail approve AIDEC-2026-05-02-001 \
+    --outcome approved \
+    --reviewer pepe@example.com \
+    --notes "Revisado contra ADR-007. LGTM."
+
+  ✔ AIDEC-2026-05-02-001 marked as approved.
+    Reviewer: pepe@example.com
+    Date:     2026-05-02
+    File:     .devtrail/07-ai-audit/decisions/AIDEC-2026-05-02-001-foo.md
+
+# Ciclo iterativo: revisions_requested → re-aprobación
+$ devtrail approve AIDEC-... --outcome revisions_requested --reviewer reviewer@x.io
+# (autor itera)
+$ devtrail approve AIDEC-... --outcome approved --reviewer reviewer@x.io
+# Frontmatter muestra la última (approved); el cuerpo conserva AMBOS bloques cronológicamente.
+
+# Visibilidad del backlog
+$ devtrail validate --check-pending-reviews --max-pending-days 14
+```
+
+> Ver `dist/.devtrail/00-governance/DOCUMENTATION-POLICY.md` §3.5 "Recording Approval" para la definición canónica del flujo (semántica de cierre, formato del cuerpo, convención multi-revisor).
+
+---
+
 ### `devtrail charter <subcomando>`
 
 Gestiona **Charters**: unidades acotadas y auditables de trabajo, declaradas ex-ante y validadas ex-post. Un Charter empareja scope declarativo (archivos a tocar, riesgos, comandos de verificación ejecutables) con el ancla de auditoría ex-post (drift detection, auditoría multi-modelo). Los Charters viven en `docs/charters/NN-slug.md` (a nivel del project root, **no** bajo `.devtrail/`).
@@ -337,8 +391,9 @@ Gestiona **Charters**: unidades acotadas y auditables de trabajo, declaradas ex-
 - `devtrail charter new` — crea un nuevo Charter desde el template del framework
 - `devtrail charter list` — enumera Charters con filtros opcionales
 - `devtrail charter status` — muestra detalle de un Charter, o los 5 más recientes
-
-La Fase 2 del CLI roadmap añadirá `charter close` (telemetría interactiva) y `charter drift` (chequeo de drift archivo-vs-commit). La Fase 3 añadirá `charter audit` (auditoría externa multi-modelo).
+- `devtrail charter close` *(cli-3.7.0+)* — registra la telemetría post-ejecución y mueve el Charter a `closed`
+- `devtrail charter drift` *(cli-3.7.0+)* — chequea drift archivo-vs-commit con supresión AILOG-aware
+- `devtrail charter audit` *(cli-3.8.0+)* — orquesta una revisión externa multi-modelo (orchestration-only, ver más abajo)
 
 #### `devtrail charter new [-t XS|S|M|L] [--from-ailog <id> | --from-spec <path>] [--title <titulo>] [path]`
 
@@ -381,12 +436,208 @@ Los archivos que no parsean se reportan como warnings en stderr sin abortar el c
 
 #### `devtrail charter status [CHARTER-ID] [--path <dir>]`
 
-Con un ID: imprime el detalle completo del Charter (frontmatter, ubicación del archivo, lista de secciones del cuerpo, placeholders de Fase 2). Sin ID: imprime los 5 Charters más recientes por NN descendente.
+Con un ID: imprime el detalle completo del Charter (frontmatter, ubicación del archivo, lista de secciones del cuerpo). Sin ID: imprime los 5 Charters más recientes por NN descendente.
 
 | Argumento/Flag | Default | Descripción |
 |----------------|---------|-------------|
 | `CHARTER-ID` | — | Identificador del Charter. Acepta el `charter_id` completo (`CHARTER-01-test`), el prefijo `CHARTER-NN` (`CHARTER-01`), o solo el NN numérico (`01` o `1`). El match numérico es permisivo respecto al zero-padding. |
 | `--path` | `.` | Directorio del proyecto. Es flag (no positional) para evitar colisión con el positional opcional `CHARTER-ID`. |
+
+#### `devtrail charter close <CHARTER-ID> [--from-template] [--non-interactive] [--path <dir>]`
+
+Registra la telemetría post-ejecución y mueve el status del Charter a `closed`. La telemetría se escribe en `.devtrail/charters/CHARTER-NN.telemetry.yaml` (archivo lateral, **no** embebido en el frontmatter del Charter — el frontmatter es declarativo ex-ante; la telemetría es voluminosa ex-post). El shape se valida contra `.devtrail/schemas/charter-telemetry.schema.v0.json`.
+
+Dos modos:
+
+| Modo | Combinación de flags | Cuándo usar |
+|---|---|---|
+| **Interactivo** (default) | (ninguno) | Recorre el schema campo por campo con prompts. Tiempo objetivo: 5–10 min. |
+| **From template** | `--from-template` | Copia el esqueleto YAML junto al Charter para edición manual. Pre-llena `charter_id`, título, `closed_at`. |
+| **From template, scripted** | `--from-template --non-interactive` | Uso CI / batch. Omite todos los prompts; idempotente al re-ejecutar. |
+
+| Argumento/Flag | Default | Descripción |
+|---|---|---|
+| `CHARTER-ID` | — | Mismas reglas de resolución que `charter status`. |
+| `--from-template` | false | Copia el esqueleto del template en lugar de correr el flujo interactivo. |
+| `--non-interactive` | false | Omite todos los prompts. Requiere `--from-template`. |
+| `--path` | `.` | Directorio del proyecto. |
+
+**Ejemplo:**
+
+```bash
+$ devtrail charter close CHARTER-01
+
+  Closing CHARTER-01-test-charter
+    Title: Test charter
+  Press Enter to accept defaults; type to override.
+
+  ── Trigger ──
+  Declared trigger kind › event_trigger
+  Declared trigger description › first false-positive ticket
+  Fired at (YYYY-MM-DD) [2026-05-02]:
+  ...
+
+  ✔ Charter CHARTER-01 closed.
+    Telemetry: .devtrail/charters/CHARTER-01.telemetry.yaml
+    Status updated: in-progress/declared → closed
+```
+
+#### `devtrail charter drift <CHARTER-ID> [--range <REV..REV>] [--no-ailog-suppress] [--path <dir>]`
+
+Detecta drift archivo-vs-commit al cierre del Charter. Envuelve el script del framework `.devtrail/scripts/check-charter-drift.sh` (cero falsos positivos validados empíricamente en PLAN-05 retrospectivo + PLAN-06 prospectivo en Sentinel). El valor agregado del CLI sobre el script crudo es la **AILOG-awareness**: los paths reportados como "declarados pero no modificados" se silencian cuando aparecen en la sección `## Risk` / `## Riesgos` / `## 风险` de algún AILOG referenciado por `originating_ailogs` del Charter. Usa `--no-ailog-suppress` para deshabilitarlo.
+
+| Argumento/Flag | Default | Descripción |
+|---|---|---|
+| `CHARTER-ID` | — | Mismas reglas de resolución que `charter status`. |
+| `--range` | `HEAD~1..HEAD` | Rango de revisiones git a chequear. |
+| `--no-ailog-suppress` *(cli-3.8.1+ siempre emite una línea INFO de confirmación)* | false | Deshabilita la supresión AILOG-aware (muestra todo path declarado-omitido). Cuando se pasa el flag, el CLI siempre imprime una línea `INFO: AILOG-aware suppression bypassed (would have suppressed: N path(s)…)` — incluso cuando N=0 — para que el modo diagnóstico sea visible en la salida aun en una corrida limpia. |
+| `--path` | `.` | Directorio del proyecto. |
+
+**Códigos de salida:** `0` si no hay drift (o solo AILOG-suprimido); `1` si hay drift no contabilizado; `2` para errores de uso (Charter no encontrado, bash ausente, etc.).
+
+**Ejemplo:**
+
+```bash
+$ devtrail charter drift CHARTER-01 --range origin/main..HEAD
+=== Charter drift check ===
+  Charter: docs/charters/01-test.md
+  Range:   origin/main..HEAD
+  Declared: 5 files
+  Modified: 3 files
+
+WARNING: Declared in Charter but NOT modified (1 files):
+  - src/services/policy/repository.go
+
+AILOG-suppressed: 1 path(s)
+  - src/services/policy/repository.go [documented in AILOG-2026-05-02-001]
+
+OK all declared-omitted paths are documented in AILOGs — drift accepted.
+```
+
+> **Nota de plataforma.** El chequeo de drift delega en `bash`. En Linux/macOS/WSL/Git Bash funciona out-of-the-box. En Windows nativo sin WSL, instalar Git Bash; un fallback puro Rust está en el roadmap pero no en fw-4.6.x.
+
+#### Soporte de wildcards en paths declarados *(fw-4.7.1+)*
+
+El chequeo de drift resuelve dos formas de wildcard en `## Files to modify`:
+
+| Forma | Ejemplo | Caso de uso |
+|---|---|---|
+| Elipsis | `` `.devtrail/07-ai-audit/agent-logs/AILOG-...md` `` | Cualquier path modificado con ese prefijo satisface el wildcard. Usado históricamente cuando un número desconocido de AILOGs serían creados durante la ejecución. |
+| Glob | `` `AILOG-*.md` `` o `` `src/services/foo-*.rs` `` | Cualquier path modificado que matchee el glob (`*` → `.*`) satisface el wildcard. Usado para declaraciones bulk de Charter donde un set parametrizado es tocado. Añadido en fw-4.7.1 tras la fricción surgida en Sentinel CHARTER-04 ([issue #81](https://github.com/StrangeDaysTech/devtrail/issues/81)). |
+
+Ambas formas se manejan en ambas direcciones: un wildcard declarado suprime tanto warnings de "declarado pero no modificado" (cuando al menos un archivo matching fue modificado) como warnings de "modificado pero no declarado" (cuando un path modificado matchea un wildcard declarado).
+
+#### Por diseño: rutas de gobernanza siempre están en scope
+
+Los paths bajo `docs/charters/*` y `.devtrail/07-ai-audit/*` **nunca** se reportan como "modificado pero no declarado". Es opinionated por diseño — esos paths son siempre legítimos cuando el Charter mismo o el AILOG de ejecución son tocados. Validado empíricamente en Sentinel CHARTER-04: un `git add -A` accidental stageó archivos no-tracked del usuario (`.claude/skills/`, `cmd/sentinel/sentinel`); la regla suprimió correctamente el ruido de gobernanza sin esconder la expansión genuina de archivos del proyecto ([issue #81 W2](https://github.com/StrangeDaysTech/devtrail/issues/81#issuecomment-update)).
+
+Si corres un Charter cuyo scope explícito es churn de gobernanza (p.ej. un Charter de aprobación bulk que toca solo `.devtrail/07-ai-audit/`), el chequeo reportará 0 archivos modificados y necesitarás verificar el scope leyendo el AILOG. Un flag `--strict-scope` que deshabilite la regla "siempre en scope" está sobre la mesa para una minor futura si un adopter real reporta la asimetría como fricción.
+
+#### `devtrail charter audit <CHARTER-ID> [--range <REV..REV>] [--calibrate | --finalize] [--path <dir>]`
+
+*Disponible desde **cli-3.8.0** + **fw-4.7.0** (Fase 3 v0).*
+
+Orquesta una revisión externa multi-modelo de la ejecución de un Charter. **Orchestration-only** — el CLI prepara prompts, valida outputs contra el schema, e imprime findings listos para pegar en la telemetría del Charter. **NO invoca APIs de LLM.** El operador corre los prompts en su auditor de elección (Copilot, Gemini, Claude, etc.) y guarda las respuestas en paths canónicos.
+
+Tres pasos, cada uno invocable independientemente:
+
+| Paso | Flag | Qué pasa |
+|---|---|---|
+| 1. PREPARE | (default) | Resuelve los prompts `auditor-primary` y `auditor-secondary` contra el Charter + git diff + AILOGs originadores. Los escribe bajo `audit/charters/<CHARTER-ID>/prompts/`. |
+| 2. CALIBRATE | `--calibrate` | Lee `auditor-primary.md` y `auditor-secondary.md` (el operador debe guardarlos entre pasos 1 y 2). Los valida contra `audit-output.schema.v0.json`. Resuelve el prompt del calibrador con ambas respuestas embebidas. |
+| 3. FINALIZE | `--finalize` | Lee la respuesta del calibrador. Valida los 3 outputs. Imprime un bloque YAML `external_audit` listo para pegar en la telemetría del Charter. |
+
+| Argumento/Flag | Default | Descripción |
+|---|---|---|
+| `<CHARTER-ID>` | — | Mismas reglas de resolución que `charter status`. |
+| `--range` | `HEAD~1..HEAD` | Rango git que los auditores revisarán. |
+| `--calibrate` | off | Corre el paso 2. Mutuamente excluyente con `--finalize`. |
+| `--finalize` | off | Corre el paso 3. Mutuamente excluyente con `--calibrate`. |
+| `--path` | `.` | Directorio del proyecto. |
+
+##### Recomendación de heterogeneidad (no enforced en v0)
+
+Por la justificación de diseño (`devtrail-cli-roadmap.md` §5.2), el par de auditores debería ser de **familias de modelo distintas**: uno Anthropic + uno Google + uno OpenAI, en cualquier combinación, nunca dos de la misma familia. La heterogeneidad inter-familia es lo que hace que la convergencia en findings sea de alta señal — auditores de la misma familia comparten blind spots.
+
+El calibrador-reconciliador PUEDE ser de cualquier familia (incluida la del implementador) porque su tarea es definicional (aplicar el schema sobre veredictos ya producidos), no de descubrimiento. La heterogeneidad importa para el par auditor, no para el calibrador.
+
+v0 documenta esta recomendación pero no la auto-detecta ni enforza. Un flag `--implementer-family X` con rechazo de configuraciones monocromáticas es candidato v1 cuando un adopter reporte un caso real.
+
+##### Layout producido
+
+```
+audit/charters/CHARTER-NN/
+├── prompts/
+│   ├── auditor-primary.prompt.md      # resuelto por el paso 1, lo que se envió
+│   ├── auditor-secondary.prompt.md    # resuelto por el paso 1
+│   └── calibrator-reconciler.prompt.md  # resuelto por el paso 2
+├── auditor-primary.md                 # el operador pega la respuesta del auditor 1
+├── auditor-secondary.md               # el operador pega la respuesta del auditor 2
+└── calibrator-reconciler.md           # el operador pega la respuesta del calibrador
+```
+
+El subdirectorio `prompts/` persiste lo que se envió a cada auditor *antes* de la API call (cierra [RFC #82](https://github.com/StrangeDaysTech/devtrail/issues/82) sobre visibilidad de auditoría). Los adopters pueden `git add` el directorio entero `audit/` para un audit trail completamente versionado, o `.gitignore` si prefieren un ciclo efímero.
+
+**Ejemplo:**
+
+```bash
+$ devtrail charter audit CHARTER-05
+  Step 1/3: PREPARE (CHARTER-05)
+  ✔ Wrote audit/charters/CHARTER-05/prompts/auditor-primary.prompt.md
+  ✔ Wrote audit/charters/CHARTER-05/prompts/auditor-secondary.prompt.md
+
+  Next:
+    1. Paste each prompt into your auditor of choice (use a model
+       of a different family per auditor — see CLI-REFERENCE).
+    2. Save the auditor responses to:
+         audit/charters/CHARTER-05/auditor-primary.md
+         audit/charters/CHARTER-05/auditor-secondary.md
+    3. Run: devtrail charter audit CHARTER-05 --calibrate
+
+# (el operador corre auditor 1 en Copilot, guarda respuesta. Corre auditor 2
+# en Gemini, guarda respuesta.)
+
+$ devtrail charter audit CHARTER-05 --calibrate
+  Step 2/3: CALIBRATE (CHARTER-05)
+  ✔ Validated audit/charters/CHARTER-05/auditor-primary.md
+  ✔ Validated audit/charters/CHARTER-05/auditor-secondary.md
+  ✔ Wrote audit/charters/CHARTER-05/prompts/calibrator-reconciler.prompt.md
+
+  Next:
+    1. Run the calibrator prompt in a model of your choice (calibrator
+       may be of any family).
+    2. Save the response to: audit/charters/CHARTER-05/calibrator-reconciler.md
+    3. Run: devtrail charter audit CHARTER-05 --finalize
+
+# (el operador corre el calibrador en Claude, guarda respuesta.)
+
+$ devtrail charter audit CHARTER-05 --finalize
+  Step 3/3: FINALIZE (CHARTER-05)
+  ✔ Validated audit/charters/CHARTER-05/auditor-primary.md (5 findings)
+  ✔ Validated audit/charters/CHARTER-05/auditor-secondary.md (4 findings)
+  ✔ Validated audit/charters/CHARTER-05/calibrator-reconciler.md
+
+  Charter audit complete.
+
+  external_audit YAML — paste into telemetry:
+    - auditor: "copilot-v1.0.37"
+      findings_total: 5
+      findings_by_category:
+        hallucination: 0
+        implementation_gap: 2
+        real_debt: 2
+        false_positive: 1
+      audit_quality: "high"
+      audit_notes: "see audit/charters/<charter-id>/auditor-primary.md"
+    - auditor: "gemini-cli-v1.5"
+      findings_total: 4
+      findings_by_category: ...
+
+  Calibrator summary (copy to outcome.scope_change_notes if relevant):
+    audit/charters/CHARTER-05/calibrator-reconciler.md
+```
+
+> **¿Por qué orchestration-only?** Implementar 3 HTTP clients (OpenAI / Google / Anthropic) son 1-2 semanas + mantenimiento perpetuo cuando las APIs cambian. La Fase 3 v0 es experimental — el valor del CLI es el canon (forma del prompt + schema de output + integración con telemetría), no la API call. v1 puede agregar HTTP clients cuando un adopter reporte una necesidad real; hasta entonces el patrón humano-en-el-loop coincide con el `/plan-audit` empírico de Sentinel que motivó la Fase 3.
 
 ---
 

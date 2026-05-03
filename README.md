@@ -138,7 +138,7 @@ Built-in commands that turn the discipline into actionable feedback:
 - **`devtrail analyze`** — Code complexity analysis (cognitive + cyclomatic) powered by [arborist-metrics](https://github.com/StrangeDaysTech/arborist), our open-source Rust library for multi-language code metrics
 - **`devtrail audit`** — Audit trail reports with timeline, traceability maps, and HTML export
 - **`devtrail compliance`** — Regulatory compliance scoring as a side effect of the documented work (EU AI Act, ISO 42001, NIST AI RMF; six Chinese frameworks opt-in via `--region china`)
-- **`devtrail explore`** — Interactive TUI for navigating the project's documentation graph
+- **`devtrail explore`** — Interactive TUI for navigating the project's documentation graph, including a Charter view (lifecycle status, origin AILOG/spec, file location)
 - **Pre-commit hooks** + **GitHub Actions** for CI/CD validation
 
 ---

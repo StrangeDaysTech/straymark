@@ -64,15 +64,16 @@ devtrail status   # 显示完整的安装状态，包括版本
 
 ## 命令
 
-### `devtrail init [path]`
+### `devtrail init [path] [--hooks]`
 
 在项目目录中初始化 DevTrail。
 
-**参数：**
+**参数和标志：**
 
-| 参数 | 默认值 | 描述 |
-|------|--------|------|
+| 参数/标志 | 默认值 | 描述 |
+|-----------|--------|------|
 | `path` | `.`（当前目录） | 目标项目目录 |
+| `--hooks` *(cli-3.7.0+)* | off | 在 `init` 后将框架的 pre-PR 钩子（`.devtrail/hooks/pre-pr.sh`）安装为 `.git/hooks/pre-push`。每次 push 之前自动运行 `devtrail charter drift`。Opt-in，遵循原则 #6（认知纪律 > 原始生产力）。如果已存在 `pre-push` 钩子则拒绝覆盖；非 git 仓库时静默跳过。 |
 
 **功能：**
 
@@ -81,6 +82,7 @@ devtrail status   # 显示完整的安装状态，包括版本
 3. 创建包含治理规则的 `DEVTRAIL.md`
 4. 配置 AI Agent 指令文件（`CLAUDE.md`、`GEMINI.md`、`.cursorrules` 等）
 5. 复制 CI/CD 工作流
+6. *(`--hooks`)* 安装 pre-PR 钩子
 
 **示例：**
 
@@ -275,7 +277,7 @@ Repairing DevTrail in /home/user/my-project
 
 ---
 
-### `devtrail validate [path] [--fix] [--staged] [--include-charters]`
+### `devtrail validate [path] [--fix] [--staged] [--include-charters] [--check-pending-reviews [--max-pending-days N]]`
 
 验证 DevTrail 文档的合规性和正确性。
 
@@ -287,6 +289,8 @@ Repairing DevTrail in /home/user/my-project
 | `--fix` | — | 自动修复简单问题（例如为高风险文档添加缺失的 `review_required: true`） |
 | `--staged` | — | 仅验证已暂存（git add）的文件。适合 pre-commit 钩子。 |
 | `--include-charters` | — | 同时根据章程 JSON Schema 和引用完整性（`originating_ailogs` 中的 ID 解析；`originating_spec` 路径存在）验证 `docs/charters/` 中的章程。Opt-in，默认 `false`，确保未使用章程模式的项目不受影响。目前仅在非 `--staged` 模式下生效；staged 模式的章程验证将在 cli-3.8.1 中加入。 |
+| `--check-pending-reviews` *(cli-3.7.0+)* | off | 列出所有 `review_required: true` 且没有 `review_outcome`、年龄超过 `--max-pending-days` 的文档。**仅警告** — 永不影响 validate 的退出码；适合用于 CI 仪表板上的审批积压视图。 |
+| `--max-pending-days` *(cli-3.7.0+)* | `14` | `--check-pending-reviews` 的天数阈值。 |
 
 **检查项目：**
 
@@ -356,6 +360,56 @@ $ devtrail new -t ailog --title "Implement JWT authentication"
 
 ---
 
+### `devtrail approve <doc-id> --outcome <outcome> --reviewer <id> [--at YYYY-MM-DD] [--notes "..."] [--path <dir>]`
+
+*自 **cli-3.7.0** + **fw-4.6.0** 起可用。`--quiet` 与高风险警告于 cli-3.8.0 加入。*
+
+在带 `review_required: true` 的文档上记录正式的人工审批。原子地写入三个 frontmatter 审批字段（`reviewed_by`、`reviewed_at`、`review_outcome`）**并**追加规范的 `## Approval` 正文段落。实现 `DOCUMENTATION-POLICY.md §3.5` 中规范化的关闭信号。
+
+| 参数/标志 | 默认值 | 描述 |
+|-----------|--------|------|
+| `<doc-id>` | — | 文档 ID。接受裸前缀（`AIDEC-2026-05-02-001`）或带 slug 的完整 ID（`AIDEC-2026-05-02-001-foo`）。 |
+| `--outcome` | — | 之一：`approved`、`revisions_requested`、`rejected`。TTY 中缺失时提示。 |
+| `--reviewer` | — | 评审者身份：邮箱、GitHub handle 或 DID。TTY 中缺失时提示。 |
+| `--at` | 今天 | 审批日期（`YYYY-MM-DD`）。 |
+| `--notes` | — | 评审者可选备注（追加到正文段落）。 |
+| `--path` | `.` | 目标项目目录。 |
+
+**行为：**
+
+- 如果文档没有 `review_required: true`，发出警告（不失败）— 追溯式签核是真实用例。
+- **Frontmatter 修改**（最新优先）：替换已存在的 `reviewed_by/_at/outcome`；不存在时插入到 `review_required:` 之后。实现 §3.5 的多评审者约定：frontmatter 持有*最新*审批。
+- **正文修改**（按时间顺序）：在任何模板尾签之前追加新的 `## Approval` 块。重新运行 `approve` 保留之前的块，因此正文显示完整的评审历史。
+- 审批后**不会**将 `review_required: true` 切换为 `false` — 它作为为何需要评审的历史记录保留。
+
+**示例：**
+
+```bash
+# Flag 驱动（CI / 脚本）
+$ devtrail approve AIDEC-2026-05-02-001 \
+    --outcome approved \
+    --reviewer pepe@example.com \
+    --notes "Reviewed against ADR-007. LGTM."
+
+  ✔ AIDEC-2026-05-02-001 marked as approved.
+    Reviewer: pepe@example.com
+    Date:     2026-05-02
+    File:     .devtrail/07-ai-audit/decisions/AIDEC-2026-05-02-001-foo.md
+
+# 迭代评审周期：revisions_requested → 重新批准
+$ devtrail approve AIDEC-... --outcome revisions_requested --reviewer reviewer@x.io
+# (作者迭代)
+$ devtrail approve AIDEC-... --outcome approved --reviewer reviewer@x.io
+# Frontmatter 显示最新（approved）；正文按时间顺序保留两个块。
+
+# 积压可见性
+$ devtrail validate --check-pending-reviews --max-pending-days 14
+```
+
+> 完整流程定义（关闭语义、正文格式、多评审者约定）见 `dist/.devtrail/00-governance/DOCUMENTATION-POLICY.md` §3.5 "Recording Approval"。
+
+---
+
 ### `devtrail charter <子命令>`
 
 管理**章程（Charter）**：事前声明、事后审计的有界工作单元。一个章程将声明性范围（要修改的文件、风险、可执行的验证命令）与事后审计锚点（漂移检测、多模型审计）配对。章程位于 `docs/charters/NN-slug.md`（项目根目录级别，**不在** `.devtrail/` 之下）。
@@ -367,8 +421,9 @@ $ devtrail new -t ailog --title "Implement JWT authentication"
 - `devtrail charter new` — 从框架模板创建新的章程
 - `devtrail charter list` — 用可选过滤器枚举章程
 - `devtrail charter status` — 显示章程详情，或最近的 5 个章程
-
-CLI 路线图的第 2 阶段将增加 `charter close`（交互式遥测）和 `charter drift`（文件与提交的漂移检查）。第 3 阶段将增加 `charter audit`（多模型外部审计）。
+- `devtrail charter close` *(cli-3.7.0+)* — 记录执行后遥测并将章程移至 `closed`
+- `devtrail charter drift` *(cli-3.7.0+)* — 检查文件 vs 提交的漂移，带 AILOG 感知抑制
+- `devtrail charter audit` *(cli-3.8.0+)* — 编排多模型外部审计（仅编排，详见下文）
 
 #### `devtrail charter new [-t XS|S|M|L] [--from-ailog <id> | --from-spec <path>] [--title <title>] [path]`
 
@@ -398,12 +453,207 @@ CLI 路线图的第 2 阶段将增加 `charter close`（交互式遥测）和 `c
 
 #### `devtrail charter status [CHARTER-ID] [--path <dir>]`
 
-带 ID：打印完整的章程详情（前置元数据、文件位置、正文章节列表、第 2 阶段功能占位符）。无 ID：按 NN 降序打印最近的 5 个章程。
+带 ID：打印完整的章程详情（前置元数据、文件位置、正文章节列表）。无 ID：按 NN 降序打印最近的 5 个章程。
 
 | 参数/标志 | 默认值 | 描述 |
 |-----------|--------|------|
 | `CHARTER-ID` | — | 章程标识符。接受完整的 `charter_id`（`CHARTER-01-test`）、`CHARTER-NN` 前缀（`CHARTER-01`），或仅数字 NN（`01` 或 `1`）。数字匹配对零填充宽容。 |
 | `--path` | `.` | 目标项目目录。使用标志（而非位置参数）以避免与可选位置参数 `CHARTER-ID` 混淆。 |
+
+#### `devtrail charter close <CHARTER-ID> [--from-template] [--non-interactive] [--path <dir>]`
+
+记录执行后遥测并将章程状态移至 `closed`。遥测被写入 `.devtrail/charters/CHARTER-NN.telemetry.yaml`（独立文件，**不**嵌入到章程的 frontmatter — frontmatter 是事前声明性的；遥测是事后大量数据）。形状根据 `.devtrail/schemas/charter-telemetry.schema.v0.json` 验证。
+
+两种模式：
+
+| 模式 | 标志组合 | 何时使用 |
+|---|---|---|
+| **交互式**（默认） | （无） | 按 schema 字段逐项 prompt。目标时间：5–10 分钟。 |
+| **From template** | `--from-template` | 在章程旁复制 YAML 骨架供手动编辑。预填 `charter_id`、标题、`closed_at`。 |
+| **From template, scripted** | `--from-template --non-interactive` | CI / 批量使用。完全跳过 prompts；重运行幂等。 |
+
+| 参数/标志 | 默认值 | 描述 |
+|---|---|---|
+| `CHARTER-ID` | — | 与 `charter status` 相同的解析规则。 |
+| `--from-template` | false | 复制模板骨架而非运行交互式流程。 |
+| `--non-interactive` | false | 跳过所有 prompt。需要 `--from-template`。 |
+| `--path` | `.` | 目标项目目录。 |
+
+**示例：**
+
+```bash
+$ devtrail charter close CHARTER-01
+
+  Closing CHARTER-01-test-charter
+    Title: Test charter
+  Press Enter to accept defaults; type to override.
+
+  ── Trigger ──
+  Declared trigger kind › event_trigger
+  Declared trigger description › first false-positive ticket
+  Fired at (YYYY-MM-DD) [2026-05-02]:
+  ...
+
+  ✔ Charter CHARTER-01 closed.
+    Telemetry: .devtrail/charters/CHARTER-01.telemetry.yaml
+    Status updated: in-progress/declared → closed
+```
+
+#### `devtrail charter drift <CHARTER-ID> [--range <REV..REV>] [--no-ailog-suppress] [--path <dir>]`
+
+在章程关闭时检测文件 vs 提交漂移。封装框架的 `.devtrail/scripts/check-charter-drift.sh`（在 Sentinel PLAN-05 回顾性 + PLAN-06 前瞻性中实证验证零误报）。CLI 在原始脚本之上的附加价值是 **AILOG 感知**：报告为"已声明但未修改"的路径，如果出现在被章程 `originating_ailogs` 引用的任何 AILOG 的 `## Risk` / `## Riesgos` / `## 风险` 节中，则被静默。使用 `--no-ailog-suppress` 来禁用。
+
+| 参数/标志 | 默认值 | 描述 |
+|---|---|---|
+| `CHARTER-ID` | — | 与 `charter status` 相同的解析规则。 |
+| `--range` | `HEAD~1..HEAD` | 要检查的 git 修订范围。 |
+| `--no-ailog-suppress` *(cli-3.8.1+ 始终输出确认 INFO 行)* | false | 禁用 AILOG 感知抑制（显示每条已声明但被遗漏的路径）。传入此标志时，CLI 始终打印 `INFO: AILOG-aware suppression bypassed (would have suppressed: N path(s)…)` 行 — 即使 N=0 — 以便诊断模式即使在干净运行时也在输出中可见。 |
+| `--path` | `.` | 目标项目目录。 |
+
+**退出码：** `0` 没有漂移（或仅 AILOG 抑制）；`1` 存在未计入的漂移；`2` 用法错误（章程未找到、bash 缺失等）。
+
+**示例：**
+
+```bash
+$ devtrail charter drift CHARTER-01 --range origin/main..HEAD
+=== Charter drift check ===
+  Charter: docs/charters/01-test.md
+  Range:   origin/main..HEAD
+  Declared: 5 files
+  Modified: 3 files
+
+WARNING: Declared in Charter but NOT modified (1 files):
+  - src/services/policy/repository.go
+
+AILOG-suppressed: 1 path(s)
+  - src/services/policy/repository.go [documented in AILOG-2026-05-02-001]
+
+OK all declared-omitted paths are documented in AILOGs — drift accepted.
+```
+
+> **平台说明。** 漂移检查委托给 `bash`。在 Linux/macOS/WSL/Git Bash 上开箱即用。Windows 原生且无 WSL 时需安装 Git Bash；纯 Rust fallback 在路线图上但不在 fw-4.6.x 中。
+
+#### 已声明路径的通配符支持 *(fw-4.7.1+)*
+
+漂移检查在 `## Files to modify` 中解析两种通配符形式：
+
+| 形式 | 示例 | 用例 |
+|---|---|---|
+| 省略号 | `` `.devtrail/07-ai-audit/agent-logs/AILOG-...md` `` | 任何带该前缀的修改路径满足通配符。历史上用于执行期间会创建未知数量 AILOG 的情况。 |
+| Glob | `` `AILOG-*.md` `` 或 `` `src/services/foo-*.rs` `` | 任何匹配该 glob（`*` → `.*`）的修改路径满足通配符。用于参数化集合被触动的批量章程声明。在 fw-4.7.1 中加入，源于 Sentinel CHARTER-04 暴露的摩擦（[issue #81](https://github.com/StrangeDaysTech/devtrail/issues/81)）。 |
+
+两种形式都双向处理：声明的通配符既抑制"已声明但未修改"警告（当至少一个匹配文件被修改时），也抑制"已修改但未声明"警告（当一个修改路径匹配某个已声明通配符时）。
+
+#### 设计：治理路径始终在 scope 内
+
+`docs/charters/*` 和 `.devtrail/07-ai-audit/*` 下的路径**永远不会**被报告为"已修改但未声明"。这是有意的设计 — 当章程本身或执行的 AILOG 被触动时，这些路径总是合法的。在 Sentinel CHARTER-04 中实证验证：一次意外的 `git add -A` 暂存了无关的用户未跟踪文件（`.claude/skills/`、`cmd/sentinel/sentinel`）；该规则正确抑制了治理噪声而没有掩盖真正的项目文件扩展（[issue #81 W2](https://github.com/StrangeDaysTech/devtrail/issues/81#issuecomment-update)）。
+
+如果你运行的章程显式 scope 是治理 churn（例如仅触动 `.devtrail/07-ai-audit/` 的批量批准章程），漂移检查将报告 0 个修改文件，你需要通过阅读 AILOG 来验证 scope。一个 `--strict-scope` 标志（禁用"始终在 scope"规则）在桌面上，用于未来 minor 版本，前提是真实的 adopter 报告这种不对称为摩擦。
+
+#### `devtrail charter audit <CHARTER-ID> [--range <REV..REV>] [--calibrate | --finalize] [--path <dir>]`
+
+*自 **cli-3.8.0** + **fw-4.7.0** 起可用（Phase 3 v0）。*
+
+编排章程执行的多模型外部审计。**仅编排** — CLI 准备 prompts、根据 schema 验证 outputs，并打印可粘贴到章程遥测中的 findings。**它不调用 LLM API。** 操作员在自己选择的审计器（Copilot、Gemini、Claude 等）中运行 prompts，并将响应保存到规范路径。
+
+三步，每步可独立调用：
+
+| 步骤 | 标志 | 发生什么 |
+|---|---|---|
+| 1. PREPARE | （默认） | 根据章程 + git diff + 来源 AILOGs 解析 `auditor-primary` 和 `auditor-secondary` prompts。写入到 `audit/charters/<CHARTER-ID>/prompts/` 之下。 |
+| 2. CALIBRATE | `--calibrate` | 读取 `auditor-primary.md` 和 `auditor-secondary.md`（操作员必须在步骤 1 和 2 之间保存它们）。根据 `audit-output.schema.v0.json` 验证。解析 calibrator prompt 并嵌入两个响应。 |
+| 3. FINALIZE | `--finalize` | 读取 calibrator 响应。验证全部 3 个 outputs。打印一个 YAML 格式的 `external_audit` 数组块，可粘贴到章程遥测中。 |
+
+| 参数/标志 | 默认值 | 描述 |
+|---|---|---|
+| `<CHARTER-ID>` | — | 与 `charter status` 相同的解析规则。 |
+| `--range` | `HEAD~1..HEAD` | 审计员将审查的 git 修订范围。 |
+| `--calibrate` | off | 运行步骤 2。与 `--finalize` 互斥。 |
+| `--finalize` | off | 运行步骤 3。与 `--calibrate` 互斥。 |
+| `--path` | `.` | 项目目录。 |
+
+##### 异质性建议（在 v0 中不强制）
+
+按照设计理由（`devtrail-cli-roadmap.md` §5.2），auditor pair 应该是**不同模型族**：一个 Anthropic + 一个 Google + 一个 OpenAI，任意组合，永远不要两个同族。跨族异质性是使 findings 上的趋同成为高信号的原因 — 同族审计员共享盲点。
+
+Calibrator-reconciler 可以是任何家族（包括实现者的家族），因为它的任务是定义性的（在已产生的判定上应用 schema），而非发现性。异质性对 auditor pair 重要，对 calibrator 不重要。
+
+v0 文档化此建议但不自动检测或强制。一个 `--implementer-family X` 标志（拒绝单色配置）是 v1 候选项，等到 adopter 报告真实情况。
+
+##### 产生的布局
+
+```
+audit/charters/CHARTER-NN/
+├── prompts/
+│   ├── auditor-primary.prompt.md      # 由步骤 1 解析，被发送的内容
+│   ├── auditor-secondary.prompt.md    # 由步骤 1 解析
+│   └── calibrator-reconciler.prompt.md  # 由步骤 2 解析
+├── auditor-primary.md                 # 操作员粘贴 auditor 1 的响应
+├── auditor-secondary.md               # 操作员粘贴 auditor 2 的响应
+└── calibrator-reconciler.md           # 操作员粘贴 calibrator 的响应
+```
+
+`prompts/` 子目录持久化 API 调用*之前*发送给每个 auditor 的内容（关闭关于审计可见性的 [RFC #82](https://github.com/StrangeDaysTech/devtrail/issues/82)）。Adopters 可以 `git add` 整个 `audit/` 目录得到完全版本化的审计轨迹，或 `.gitignore` 它（如果偏好周期是临时的）。
+
+**示例：**
+
+```bash
+$ devtrail charter audit CHARTER-05
+  Step 1/3: PREPARE (CHARTER-05)
+  ✔ Wrote audit/charters/CHARTER-05/prompts/auditor-primary.prompt.md
+  ✔ Wrote audit/charters/CHARTER-05/prompts/auditor-secondary.prompt.md
+
+  Next:
+    1. Paste each prompt into your auditor of choice (use a model
+       of a different family per auditor — see CLI-REFERENCE).
+    2. Save the auditor responses to:
+         audit/charters/CHARTER-05/auditor-primary.md
+         audit/charters/CHARTER-05/auditor-secondary.md
+    3. Run: devtrail charter audit CHARTER-05 --calibrate
+
+# (操作员在 Copilot 中运行 auditor 1，保存响应。在 Gemini 中运行 auditor 2，保存响应。)
+
+$ devtrail charter audit CHARTER-05 --calibrate
+  Step 2/3: CALIBRATE (CHARTER-05)
+  ✔ Validated audit/charters/CHARTER-05/auditor-primary.md
+  ✔ Validated audit/charters/CHARTER-05/auditor-secondary.md
+  ✔ Wrote audit/charters/CHARTER-05/prompts/calibrator-reconciler.prompt.md
+
+  Next:
+    1. Run the calibrator prompt in a model of your choice (calibrator
+       may be of any family).
+    2. Save the response to: audit/charters/CHARTER-05/calibrator-reconciler.md
+    3. Run: devtrail charter audit CHARTER-05 --finalize
+
+# (操作员在 Claude 中运行 calibrator，保存响应。)
+
+$ devtrail charter audit CHARTER-05 --finalize
+  Step 3/3: FINALIZE (CHARTER-05)
+  ✔ Validated audit/charters/CHARTER-05/auditor-primary.md (5 findings)
+  ✔ Validated audit/charters/CHARTER-05/auditor-secondary.md (4 findings)
+  ✔ Validated audit/charters/CHARTER-05/calibrator-reconciler.md
+
+  Charter audit complete.
+
+  external_audit YAML — paste into telemetry:
+    - auditor: "copilot-v1.0.37"
+      findings_total: 5
+      findings_by_category:
+        hallucination: 0
+        implementation_gap: 2
+        real_debt: 2
+        false_positive: 1
+      audit_quality: "high"
+      audit_notes: "see audit/charters/<charter-id>/auditor-primary.md"
+    - auditor: "gemini-cli-v1.5"
+      findings_total: 4
+      findings_by_category: ...
+
+  Calibrator summary (copy to outcome.scope_change_notes if relevant):
+    audit/charters/CHARTER-05/calibrator-reconciler.md
+```
+
+> **为什么仅编排？** 实现 3 个 HTTP 客户端（OpenAI / Google / Anthropic）需要 1-2 周 + 当 API 变化时的永久维护。Phase 3 v0 是实验性的 — CLI 的价值是 canon（prompt 形状 + output schema + 与遥测的集成），而非 API 调用本身。当 adopter 报告真实需求时，v1 可能加入 HTTP 客户端；在此之前，人在环模式与激发 Phase 3 的 Sentinel 实证 `/plan-audit` 模式相符。
 
 ---
 
