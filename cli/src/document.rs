@@ -190,6 +190,14 @@ pub struct Frontmatter {
     pub agent: Option<String>,
     pub confidence: Option<String>,
     pub review_required: Option<bool>,
+    /// Reviewer identity (email | github-handle | DID). Set by `devtrail approve`
+    /// and by `## 3.5 Recording Approval` of the framework's documentation policy.
+    pub reviewed_by: Option<String>,
+    /// Date of formal approval (must be >= `created`).
+    pub reviewed_at: Option<String>,
+    /// Closure signal — one of: `approved | revisions_requested | rejected`.
+    /// Presence of this field is the canonical "human has reviewed" signal.
+    pub review_outcome: Option<String>,
     pub risk_level: Option<String>,
     pub eu_ai_act_risk: Option<String>,
     pub nist_genai_risks: Option<Vec<String>>,

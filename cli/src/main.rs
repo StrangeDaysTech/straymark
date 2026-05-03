@@ -156,6 +156,28 @@ enum Commands {
     },
     /// Show version, author, and license information
     About,
+    /// Record a formal human approval on a `review_required: true` document.
+    /// Writes the reviewed_by/reviewed_at/review_outcome frontmatter fields
+    /// and appends the canonical `## Approval` body section in one edit.
+    Approve {
+        /// Document ID (e.g., AIDEC-2026-05-02-001 or with slug)
+        doc_id: String,
+        /// Outcome of the review
+        #[arg(long, value_parser = ["approved", "revisions_requested", "rejected"])]
+        outcome: Option<String>,
+        /// Reviewer identity: email | github-handle | DID
+        #[arg(long)]
+        reviewer: Option<String>,
+        /// Approval date (default: today, format YYYY-MM-DD)
+        #[arg(long)]
+        at: Option<String>,
+        /// Optional reviewer notes (appended in the body section)
+        #[arg(long)]
+        notes: Option<String>,
+        /// Project directory (default: current directory)
+        #[arg(long = "path", default_value = ".")]
+        path: String,
+    },
     /// Analyze code complexity using cognitive and cyclomatic metrics
     #[cfg(feature = "analyze")]
     Analyze {
@@ -315,6 +337,21 @@ fn main() {
         Commands::Status { path } => commands::status::run(&path),
         Commands::Repair { path } => commands::repair::run(&path),
         Commands::About => commands::about::run(),
+        Commands::Approve {
+            doc_id,
+            outcome,
+            reviewer,
+            at,
+            notes,
+            path,
+        } => commands::approve::run(
+            &path,
+            &doc_id,
+            outcome.as_deref(),
+            reviewer.as_deref(),
+            at.as_deref(),
+            notes.as_deref(),
+        ),
         #[cfg(feature = "analyze")]
         Commands::Analyze {
             path,
