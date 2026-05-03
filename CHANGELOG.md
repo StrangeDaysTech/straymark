@@ -7,6 +7,75 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.7.1 / CLI 3.8.1 — O3 resolved (`--no-ailog-suppress` always emits INFO line)
+
+Closes the last `pending design discussion` carried forward from issue #81:
+**O3** — when `devtrail charter drift --no-ailog-suppress` was passed and there
+was nothing for the AILOG-aware filter to suppress (N=0), the output was
+**byte-identical** to the default. Operators couldn't tell whether the
+suppression logic ran and found nothing, or whether the flag was wired
+incorrectly.
+
+Resolution voted by Sentinel CHARTER-06 telemetry on issue #91 (option (c)
+"--no-ailog-suppress only", with the N=0 confirming-line extension):
+
+- Default mode stays silent at N=0 — no new noise in the common case.
+- `--no-ailog-suppress` always emits at least one line confirming dispatch:
+  - At N=0: `INFO: AILOG-aware suppression bypassed (would have suppressed: 0 paths)`
+  - At N>0: `INFO: AILOG-aware suppression bypassed (would have suppressed: N path(s) listed above as drift)` followed by a per-path list with the AILOG ID that documents the risk.
+
+The asymmetry matches the `git diff --stat` shape — silent default, signal on
+explicit opt-in. Operators with dispatch suspicion now have a one-flag debug
+path that always says something.
+
+### Fixed (CLI)
+
+- **`devtrail charter drift --no-ailog-suppress`** — emits a confirming
+  `INFO:` line at end of output regardless of N. The line names the count
+  and (when N>0) lists each path that would have been suppressed with its
+  documenting AILOG ID. Default mode (suppression on) is unchanged: silent
+  at N=0, existing `AILOG-suppressed: N path(s)` block at N>0.
+
+  Implementation: `compute_ailog_suppressions` now runs unconditionally so
+  the count is available regardless of whether suppression is applied. The
+  flag controls only whether the suppression mutates the rendered drift
+  list.
+
+### Tests
+
+- 3 new integration tests:
+  - `charter_drift_no_ailog_suppress_emits_info_line_when_n_zero` (the
+    primary case the issue is about).
+  - `charter_drift_no_ailog_suppress_emits_info_line_when_n_nonzero`
+    (count + per-path listing).
+  - `charter_drift_default_stays_silent_when_n_zero` (negative test:
+    confirms we did NOT add noise to the common case).
+- 414/414 tests pass (3 new on top of 411 from cli-3.8.0).
+
+### Empirical signal that drove this decision
+
+Sentinel CHARTER-06 was constructed deliberately to exercise the
+N>0 path (`subscriber.go` declared in the Charter, named in
+AILOG-2026-05-03-034's `## Risk` section, not modified during execution).
+The captured outputs confirmed the byte-identical-at-N=0 ambiguity and
+voted for option (c) with a one-line N=0 confirmation. Full telemetry is
+on issue #91.
+
+A secondary observation from the same run — that paths in the WARNING
+block don't carry an inline `[suppressed]` annotation, forcing the reader
+to scan top-to-bottom to know a WARNING was OK'd — is **not bundled here**.
+It's a UX polish item flagged for separate validation; tracked in a
+follow-up issue rather than rolled into this patch to keep the change
+surgical.
+
+### What's NOT in this release
+
+- Inline `[suppressed]` annotation on WARNING block items (separate issue).
+- HTTP API clients for `charter audit` (Phase 3 v1).
+- Inter-family heterogeneity auto-enforcement.
+
+---
+
 ## Framework 4.7.0 / CLI 3.8.0 — Phase 3 (multi-model external audit, orchestration-only) + open frictions F2/F5/F7
 
 The first feature-bearing release since Phase 2 (fw-4.6.0/cli-3.7.0). Lands the
