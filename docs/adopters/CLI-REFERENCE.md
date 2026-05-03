@@ -48,8 +48,8 @@ DevTrail uses **independent version tags** for each component:
 
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
-| Framework | `fw-` | `fw-4.6.2` | Templates (12 types), governance docs, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.7.2` | The `devtrail` binary |
+| Framework | `fw-` | `fw-4.7.0` | Templates (12 types), governance docs, directives, Charter template + schema |
+| CLI | `cli-` | `cli-3.8.0` | The `devtrail` binary |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
 
@@ -88,7 +88,7 @@ Initialize DevTrail in a project directory.
 
 ```bash
 $ devtrail init .
-✔ Downloaded DevTrail fw-4.6.2
+✔ Downloaded DevTrail fw-4.7.0
 ✔ Created .devtrail/ directory structure
 ✔ Created DEVTRAIL.md
 ✔ Configured AI agent directives
@@ -110,7 +110,7 @@ If `.devtrail/` does not exist in the current directory, the framework update is
 ```bash
 $ devtrail update
 Updating framework...
-✔ Framework updated to fw-4.6.2
+✔ Framework updated to fw-4.7.0
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -127,7 +127,7 @@ Update only the framework files. Looks for the latest `fw-*` release on GitHub.
 
 ```bash
 $ devtrail update-framework
-✔ Framework updated to fw-4.6.2
+✔ Framework updated to fw-4.7.0
 ```
 
 ---
@@ -211,7 +211,7 @@ $ devtrail status
   Project
   ┌───────────┬──────────────────────────┐
   │ Path      │ /home/user/my-project    │
-  │ Framework │ fw-4.6.2                 │
+  │ Framework │ fw-4.7.0                 │
   │ CLI       │ cli-3.5.2                │
   │ Language  │ en                       │
   └───────────┴──────────────────────────┘
@@ -268,7 +268,7 @@ Repairing DevTrail in /home/user/my-project
 → Restoring 1 missing directory...
 ✓ Restored .devtrail/templates/
 → Downloading framework to restore missing files...
-  Using version: fw-4.6.2
+  Using version: fw-4.7.0
 ✓ Restored 16 file(s) from framework
 → Updating checksums...
 
@@ -321,7 +321,7 @@ $ devtrail validate --fix
 
 ### `devtrail approve <doc-id> --outcome <outcome> --reviewer <id> [--at YYYY-MM-DD] [--notes "..."] [--path <dir>]`
 
-*Available since **cli-3.7.2** + **fw-4.6.2**.*
+*Available since **cli-3.8.0** + **fw-4.7.0**.*
 
 Record a formal human approval on a `review_required: true` document. Writes the three approval frontmatter fields (`reviewed_by`, `reviewed_at`, `review_outcome`) **and** appends the canonical `## Approval` body section in one atomic edit. Implements the closure signal canonized in `DOCUMENTATION-POLICY.md §3.5`.
 
@@ -421,10 +421,9 @@ Manage **Charters**: bounded, auditable units of work declared ex-ante and valid
 - `devtrail charter new` — scaffold a new Charter from the framework template
 - `devtrail charter list` — enumerate Charters with optional filters
 - `devtrail charter status` — show Charter detail, or the most recent 5 Charters
-- `devtrail charter close` — record post-execution telemetry and bump status to `closed` *(Phase 2, fw-4.6.2+)*
-- `devtrail charter drift` — detect file-vs-commit drift with AILOG-aware suppression *(Phase 2, fw-4.6.2+)*
-
-Phase 3 will add `charter audit` (multi-model external audit).
+- `devtrail charter close` — record post-execution telemetry and bump status to `closed` *(Phase 2, fw-4.6.0+)*
+- `devtrail charter drift` — detect file-vs-commit drift with AILOG-aware suppression *(Phase 2, fw-4.6.0+)*
+- `devtrail charter audit` — orchestrate a multi-model external review (3-step prepare/calibrate/finalize) *(Phase 3, fw-4.7.0+)*
 
 #### `devtrail charter new [-t XS|S|M|L] [--from-ailog <id> | --from-spec <path>] [--title <title>] [path]`
 
@@ -583,14 +582,14 @@ OK all declared-omitted paths are documented in AILOGs — drift accepted.
 
 > **Platform note.** The drift check delegates to `bash`. On Linux/macOS/WSL/Git Bash this works out of the box. On Windows native without WSL, install Git Bash; a pure-Rust fallback is on the roadmap but not in fw-4.6.x.
 
-#### Wildcard support in declared paths *(fw-4.6.2+)*
+#### Wildcard support in declared paths *(fw-4.7.0+)*
 
 The drift check resolves two forms of wildcard in `## Files to modify`:
 
 | Form | Example | Use case |
 |---|---|---|
 | Ellipsis | `` `.devtrail/07-ai-audit/agent-logs/AILOG-...md` `` | Any modified path with that prefix satisfies the wildcard. Used historically when an unknown number of AILOGs would be created during execution. |
-| Glob | `` `AILOG-*.md` `` or `` `src/services/foo-*.rs` `` | Any modified path matching the glob (`*` → `.*`) satisfies the wildcard. Used for bulk Charter declarations where a parameterized set is touched. Added in fw-4.6.2 after the friction surfaced in Sentinel CHARTER-04 ([issue #81](https://github.com/StrangeDaysTech/devtrail/issues/81)). |
+| Glob | `` `AILOG-*.md` `` or `` `src/services/foo-*.rs` `` | Any modified path matching the glob (`*` → `.*`) satisfies the wildcard. Used for bulk Charter declarations where a parameterized set is touched. Added in fw-4.7.0 after the friction surfaced in Sentinel CHARTER-04 ([issue #81](https://github.com/StrangeDaysTech/devtrail/issues/81)). |
 
 Both forms are handled in both directions: a declared wildcard suppresses both "declared but not modified" warnings (when at least one matching file was modified) and "modified but not declared" warnings (when a modified path matches a declared wildcard).
 
@@ -598,7 +597,113 @@ Both forms are handled in both directions: a declared wildcard suppresses both "
 
 Paths under `docs/charters/*` and `.devtrail/07-ai-audit/*` are **never** reported as "modified but not declared". This is opinionated by design — those paths are always legitimate when the Charter itself or the AILOG of execution is touched. Empirically validated in Sentinel CHARTER-04: a stray `git add -A` staged unrelated user-untracked files (`.claude/skills/`, `cmd/sentinel/sentinel`); the rule correctly suppressed the governance noise without hiding the genuine project-file expansion ([issue #81 W2](https://github.com/StrangeDaysTech/devtrail/issues/81#issuecomment-update)).
 
-If you're running a Charter whose explicit scope is governance churn (e.g., a bulk approval Charter touching only `.devtrail/07-ai-audit/`), the drift check will report 0 modified files and you'll need to verify scope by reading the AILOG. A `--strict-scope` flag that disables the always-in-scope rule is on the table for cli-3.8.0 if a real adopter reports the asymmetry as a friction.
+If you're running a Charter whose explicit scope is governance churn (e.g., a bulk approval Charter touching only `.devtrail/07-ai-audit/`), the drift check will report 0 modified files and you'll need to verify scope by reading the AILOG. A `--strict-scope` flag that disables the always-in-scope rule is on the table for a future minor if a real adopter reports the asymmetry as a friction.
+
+#### `devtrail charter audit <CHARTER-ID> [--range <REV..REV>] [--calibrate | --finalize] [--path <dir>]`
+
+*Available since **cli-3.8.0** + **fw-4.7.0** (Phase 3 v0).*
+
+Orchestrate a multi-model external review of a Charter's execution. **Orchestration-only** — the CLI prepares prompts, validates outputs against the schema, and prints findings ready to paste into Charter telemetry. **It does NOT invoke LLM APIs.** The operator runs the prompts in their auditor of choice (Copilot, Gemini, Claude, etc.) and saves responses to canonical paths.
+
+Three steps, each invokable independently:
+
+| Step | Flag | What happens |
+|---|---|---|
+| 1. PREPARE | (default) | Resolves `auditor-primary` and `auditor-secondary` prompts against the Charter + git diff + originating AILOGs. Writes them under `audit/charters/<CHARTER-ID>/prompts/`. |
+| 2. CALIBRATE | `--calibrate` | Reads `auditor-primary.md` and `auditor-secondary.md` (operator must save these between steps 1 and 2). Validates them against `audit-output.schema.v0.json`. Resolves the calibrator prompt with both responses embedded. |
+| 3. FINALIZE | `--finalize` | Reads the calibrator response. Validates all 3 outputs. Prints a YAML-formatted `external_audit` array block ready to paste into the Charter telemetry. |
+
+| Argument/Flag | Default | Description |
+|---|---|---|
+| `<CHARTER-ID>` | — | Same resolution rules as `charter status` |
+| `--range` | `HEAD~1..HEAD` | Git revision range the auditors will review |
+| `--calibrate` | off | Run step 2. Mutually exclusive with `--finalize`. |
+| `--finalize` | off | Run step 3. Mutually exclusive with `--calibrate`. |
+| `--path` | `.` | Project directory |
+
+### Heterogeneity recommendation (not enforced in v0)
+
+Per the design rationale (`devtrail-cli-roadmap.md` §5.2), the auditor pair should be of **different model families**: one Anthropic + one Google + one OpenAI, in any combination, never two of the same family. Cross-family heterogeneity is what makes convergence on findings high-signal — same-family auditors share blind spots.
+
+The calibrator-reconciler MAY be of any family (including the implementer's family) because its task is definitional (apply the schema to already-produced verdicts), not discovery. Heterogeneity matters for the auditor pair, not the calibrator.
+
+v0 documents this recommendation but does not auto-detect or enforce it. A `--implementer-family X` flag with rejection of monochromatic configurations is a v1 candidate when an adopter reports a real case.
+
+### Layout produced
+
+```
+audit/charters/CHARTER-NN/
+├── prompts/
+│   ├── auditor-primary.prompt.md      # resolved by step 1, what was sent
+│   ├── auditor-secondary.prompt.md    # resolved by step 1
+│   └── calibrator-reconciler.prompt.md  # resolved by step 2
+├── auditor-primary.md                 # operator pastes auditor 1 response
+├── auditor-secondary.md               # operator pastes auditor 2 response
+└── calibrator-reconciler.md           # operator pastes calibrator response
+```
+
+The `prompts/` subdirectory persists what was sent to each auditor *before* the API call (closes [RFC #82](https://github.com/StrangeDaysTech/devtrail/issues/82) on audit visibility). Adopters can `git add` the entire `audit/` directory for a fully version-controlled audit trail, or `.gitignore` it if they prefer the cycle to be ephemeral.
+
+**Example:**
+
+```bash
+$ devtrail charter audit CHARTER-05
+  Step 1/3: PREPARE (CHARTER-05)
+  ✔ Wrote audit/charters/CHARTER-05/prompts/auditor-primary.prompt.md
+  ✔ Wrote audit/charters/CHARTER-05/prompts/auditor-secondary.prompt.md
+
+  Next:
+    1. Paste each prompt into your auditor of choice (use a model
+       of a different family per auditor — see CLI-REFERENCE).
+    2. Save the auditor responses to:
+         audit/charters/CHARTER-05/auditor-primary.md
+         audit/charters/CHARTER-05/auditor-secondary.md
+    3. Run: devtrail charter audit CHARTER-05 --calibrate
+
+# (operator runs auditor 1 in Copilot, saves response. Runs auditor 2
+# in Gemini, saves response.)
+
+$ devtrail charter audit CHARTER-05 --calibrate
+  Step 2/3: CALIBRATE (CHARTER-05)
+  ✔ Validated audit/charters/CHARTER-05/auditor-primary.md
+  ✔ Validated audit/charters/CHARTER-05/auditor-secondary.md
+  ✔ Wrote audit/charters/CHARTER-05/prompts/calibrator-reconciler.prompt.md
+
+  Next:
+    1. Run the calibrator prompt in a model of your choice (calibrator
+       may be of any family).
+    2. Save the response to: audit/charters/CHARTER-05/calibrator-reconciler.md
+    3. Run: devtrail charter audit CHARTER-05 --finalize
+
+# (operator runs calibrator in Claude, saves response.)
+
+$ devtrail charter audit CHARTER-05 --finalize
+  Step 3/3: FINALIZE (CHARTER-05)
+  ✔ Validated audit/charters/CHARTER-05/auditor-primary.md (5 findings, prompt: prompts/auditor-primary.prompt.md)
+  ✔ Validated audit/charters/CHARTER-05/auditor-secondary.md (4 findings, prompt: prompts/auditor-secondary.prompt.md)
+  ✔ Validated audit/charters/CHARTER-05/calibrator-reconciler.md
+
+  Charter audit complete.
+
+  external_audit YAML — paste into telemetry:
+    - auditor: "copilot-v1.0.37"
+      findings_total: 5
+      findings_by_category:
+        hallucination: 0
+        implementation_gap: 2
+        real_debt: 2
+        false_positive: 1
+      audit_quality: "high"
+      audit_notes: "see audit/charters/<charter-id>/auditor-primary.md"
+    - auditor: "gemini-cli-v1.5"
+      findings_total: 4
+      findings_by_category: ...
+
+  Calibrator summary (copy to outcome.scope_change_notes if relevant):
+    audit/charters/CHARTER-05/calibrator-reconciler.md
+```
+
+> **Why orchestration-only?** Implementing 3 HTTP clients (OpenAI / Google / Anthropic) is 1-2 weeks + perpetual maintenance when APIs change. Phase 3 v0 is experimental — the CLI's value is the canon (prompt shape + output schema + telemetry integration), not the API call. v1 may add HTTP clients when an adopter reports a real need; until then the human-in-the-loop shape matches Sentinel's empirical `/plan-audit` pattern that motivated Phase 3 in the first place.
 
 ---
 
@@ -943,7 +1048,7 @@ Show version, authorship, and license information.
 $ devtrail about
 DevTrail CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.6.2
+  Framework version: fw-4.7.0
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/devtrail

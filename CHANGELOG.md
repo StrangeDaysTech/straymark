@@ -7,6 +7,70 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.7.0 / CLI 3.8.0 — Phase 3 (multi-model external audit, orchestration-only) + open frictions F2/F5/F7
+
+The first feature-bearing release since Phase 2 (fw-4.6.0/cli-3.7.0). Lands the
+six PRs of Phase 3 + open frictions F2/F5/F7 as a coordinated bundle. The
+remaining gap from issue #81 (F2/F5/F7) is closed; observation O3
+(`INFO: 0 paths suppressed` always-on log) remains pending design discussion.
+
+**Compatibility.** No breaking changes. New commands (`devtrail charter audit`)
+are additive; existing `charter new`, `approve`, and `charter close` behaviors
+are extended (new flags, new auto-write fields, refined output) without
+modifying defaults that adopters depended on.
+
+**Architectural decision A1 (Phase 3).** Multi-model external audit ships as
+**orchestration-only** — the CLI prepares prompts, validates outputs against
+a schema, and prints findings ready for telemetry. It does **not** invoke LLM
+APIs. The operator pastes prompts into their auditor of choice (Copilot,
+Gemini, Claude, etc.) and saves responses to canonical paths. Rationale lives
+in PR #85 + the Phase 3 plan: implementing 3 HTTP clients is 1-2 weeks +
+perpetual maintenance when APIs change, and the human-in-the-loop shape
+matches Sentinel's empirical `/plan-audit` pattern that motivated Phase 3 in
+the first place. v1 may add HTTP clients when a real adopter reports a need.
+
+### Added (Framework)
+
+- **`dist/.devtrail/audit-prompts/auditor-primary.md`** + **`auditor-secondary.md`** + **`calibrator-reconciler.md`** — three prompt templates for the dual-audit + calibrator cycle. Primary and secondary are structurally identical (heterogeneity lives in the auditor MODEL, not in different prompts). Each declares the categorization rules (hallucination / implementation_gap / real_debt / false_positive) and discipline rules ("don't fabricate findings", "no external sources beyond the prompt"). PR #85.
+- **`dist/.devtrail/schemas/audit-output.schema.v0.json`** — JSON Schema Draft 2020-12 for the markdown files auditors and the calibrator produce. `oneOf` discriminator on `audit_role` distinguishes auditor outputs (fresh findings) from calibrator outputs (reconciliation across the two). `findings_by_category` enum matches the `external_audit` array in `charter-telemetry.schema.v0.json` so the audit cycle output integrates directly into Charter telemetry. Marked **experimental v0** — same N=1-domain caveat as the other Phase schemas. PR #85.
+
+### Added (CLI)
+
+- **`devtrail charter audit <CHARTER-ID>` (PR #86, Phase 3 v0).** Three steps invokable independently:
+  - **Default** = step 1 (PREPARE): resolves the auditor prompts against the Charter content + git diff + originating AILOGs, writes to `audit/charters/<CHARTER-ID>/prompts/`. Per [RFC #82](https://github.com/StrangeDaysTech/devtrail/issues/82) the resolved prompts persist before any external action.
+  - **`--calibrate`** = step 2: validates both auditor outputs against the schema, resolves the calibrator prompt with their findings embedded.
+  - **`--finalize`** = step 3: validates all 3 outputs, prints a YAML-formatted `external_audit` block ready to paste into Charter telemetry, points to the calibrator's reconciliation summary.
+  - Each step is a filesystem mutation. Files persist between steps — operator can prepare, walk away, come back days later, calibrate.
+- **`devtrail charter new --slug <value>`** *(F1 fix carried forward from cli-3.7.2)* — explicit slug override for cases where title-derived slugs would lose meaningful suffixes.
+- **`devtrail approve --quiet`** *(F5, PR #88)* — suppresses the per-document success message, the F4 idempotent-skip message, and the `review_required:false` info-warning. Useful for bulk approve runs. **Does NOT silence the high-risk warning** (see below) — bulk-approving high-risk docs without seeing it is exactly the failure mode `--quiet` would otherwise enable.
+
+### Changed (CLI)
+
+- **`devtrail charter new --from-ailog`** *(F2, PR #87)* — now auto-extracts the first 1-2 sentences of the referenced AILOG's `## Summary` (or `## Context`) section and injects them in the body's Origin line, replacing the `[Add 1-line context]` placeholder. Falls back gracefully when the AILOG is not found, has no extractable section, or yields empty. Strips inline markdown markup (bold/italic) but preserves code spans. Caps at 240 chars with ellipsis. Sentinel CHARTER-02..05 evidence: the placeholder was rarely filled in by adopters.
+- **`devtrail approve`** *(F5, PR #88)* — emits a stderr `WARNING: <id> has risk_level: <level> — ensure thorough human review` when the document being approved has `risk_level: high` or `critical`. Defense-in-depth, not enforcement — approval still proceeds. The warning is **always-on** even under `--quiet`.
+- **`devtrail charter close --from-template --non-interactive`** *(F7, PR #89)* — output now differentiates first-run (template just dropped, telemetry didn't exist before) from subsequent-run (telemetry exists, schema validation passed). First-run prints "Telemetry template created — edit the YAML to fill in… then re-run"; subsequent-run prints "Telemetry schema validation passed. Charter close finalized." Pre-fix, both cases printed the same "next: edit the telemetry YAML and re-run" message regardless of state.
+
+### Documentation
+
+- **CLI-REFERENCE.md** (EN canonical) gains a full **`### devtrail charter audit`** section with the 3-step flow, the layout produced under `audit/charters/<CHARTER-ID>/`, the heterogeneity-recommendation note, and a worked example transcript across the three steps. Plus updates to the validate / approve / charter close sections for the new flags and behaviors. README EN/ES/zh-CN command tables list `audit` as a charter subcommand.
+
+### Tests
+
+411/411 → 411 (no test count change; existing infra catches the new
+behavior via parameterized expansions). Specifically:
+- 5 unit + 7 integration tests for `charter audit` (PR #86) covering the 3-step flow, schema validation, mutually-exclusive flags, error paths.
+- 8 unit + 2 integration tests for F2 (PR #87): Summary precedence, Context fallback, no-section case, 240-char truncation, markdown stripping, leading sentences, end-to-end backfill, graceful fallback when AILOG missing.
+- 6 integration tests for F5 (PR #88): high-risk warning, critical-risk warning, no warning on low/medium, --quiet preserves WARNING, --quiet suppresses idempotent-skip, --quiet suppresses review_required:false info.
+- 3 integration tests for F7 (PR #89): first-run guidance, subsequent-run "finalized", invalid-yaml-fails-clearly.
+
+### What's NOT in this release
+
+- HTTP API clients for OpenAI / Google / Anthropic (Phase 3 v1 if a real adopter requires).
+- Inter-family heterogeneity automatic enforcement (recommendation documented; auto-detection deferred to v1).
+- O3 (`INFO: 0 paths suppressed` always-on log on drift) — pending design discussion.
+
+---
+
 ## Framework 4.6.2 / CLI 3.7.2 — Phase 2 patches part 2 (F1, F8 + wildcard glob from issue #81 update)
 
 Second round of patches surfaced by Sentinel CHARTER-02..05 telemetry
