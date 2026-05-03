@@ -7,6 +7,56 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.6.0 / CLI 3.7.0 — Phase 2: telemetry, drift, approval workflow
+
+The first feature-bearing release since the repositioning (fw-4.5.x). Phase 2 of `Propuesta/devtrail-cli-roadmap.md` lands as 7 bisect-safe PRs (#73–#79), grouped here for reviewers. The release closes the empirical loop the Sentinel experiment opened: telemetry at Charter close, drift detection at Charter close, and a canonical approval signal for `review_required: true` documents (resolving issue #67).
+
+**Compatibility.** No breaking changes. Existing Charters, AILOGs, AIDECs, and templates remain valid. New CLI commands and framework artifacts are additive; new template fields ship as commented YAML so existing documents continue to validate. Adopters pick up the changes via `devtrail update-framework` + `devtrail update-cli`.
+
+### Added (Framework)
+
+- **`dist/.devtrail/schemas/charter-telemetry.schema.v0.json`** — JSON Schema Draft 2020-12 for the post-execution telemetry recorded at Charter close. Derived from `Propuesta/devtrail-charter-telemetry.md` v0.3 with the 4 fields refined by Sentinel: `external_audit` as array (dual-audit calibration), `outcome.scope_change_notes` with F1...FN encoding, `agent_quality.r_n_plus_one_emergent_count`, `qualitative.format_iteration`. Marked **experimental v0** — same N=1-domain caveat as `charter.schema.v0.json`. (PR #73)
+- **`dist/.devtrail/templates/charter-telemetry-template.yaml`** — commented YAML skeleton mirroring the schema. Used by `devtrail charter close --from-template` as the starting point for manual edits. (PR #73)
+- **`dist/.devtrail/scripts/check-charter-drift.sh`** — bash script (~165 lines) ported from Sentinel `scripts/check-plan-drift.sh`. Detects declared-but-not-modified files and undocumented scope expansion. Validated empirically with zero false positives across PLAN-05 retrospective + PLAN-06 prospective in Sentinel. Path surface adapted (`docs/plans/` → `docs/charters/`) and section heading detection extended to EN/ES/zh-CN. (PR #73)
+- **`dist/.devtrail/hooks/pre-pr.sh`** — opt-in pre-push hook that runs `devtrail charter drift` automatically on Charters with `status: in-progress`. Per principle #6 (cognitive discipline > raw productivity), the hook is virtuous when consented to and never installed by default. Manual install: `cp .devtrail/hooks/pre-pr.sh .git/hooks/pre-push`. CLI flag: `devtrail init --hooks`. (PR #79)
+- **Approval workflow canonization** (PR #76, closes issue #67): 3 optional frontmatter fields (`reviewed_by`, `reviewed_at`, `review_outcome`) added to all 11 templates that need formal approval (AIDEC, ETH, MCARD, ADR, DPIA, INC, SEC + China: PIPIA, CACFILE, TC260RA, AILABEL) across EN, ES, and zh-CN — **33 template files**. Fields ship as commented YAML so existing documents continue to validate. The presence of `review_outcome` is the canonical "human has reviewed" signal; `review_required: true` remains as historical record after approval (it's not toggled to `false`).
+
+### Changed (Framework)
+
+- **`dist/.devtrail/00-governance/DOCUMENTATION-POLICY.md`** (EN + ES + zh-CN):
+  - §2 Optional Fields extended with `reviewed_by`, `reviewed_at`, `review_outcome`.
+  - New §3.5 "Recording Approval" section explaining closure semantics, body section format (compatible with existing `## Approval` tables in 7 templates), the multi-reviewer convention for v1 (chronological body blocks; structured array deferred), and the CLI tooling.
+
+### Added (CLI)
+
+- **`devtrail charter close <CHARTER-ID>`** (PR #74) — record post-execution telemetry and bump status to `closed`. Two modes:
+  - **Interactive** (default): walks the schema field by field — trigger, effort, agent quality, outcome, qualitative — rendering YAML directly so the output is stable, comment-free, and validated against the schema before disk write. Target time: 5–10 min.
+  - **`--from-template [--non-interactive]`**: copies the YAML skeleton next to the Charter for manual editing (CI / scripted use). Pre-fills `charter_id`, title, and `closed_at`. Idempotent.
+  - Telemetry storage: `.devtrail/charters/CHARTER-NN.telemetry.yaml` (lateral file, not embedded in Charter frontmatter — per roadmap §A2: frontmatter is declarative ex-ante, telemetry is voluminous ex-post).
+- **`devtrail charter drift <CHARTER-ID>`** (PR #75) — wraps `check-charter-drift.sh` with **AILOG-awareness**: paths reported as "declared but not modified" are silenced when they appear in the `## Risk` / `## Riesgos` / `## 风险` section of any AILOG referenced by the Charter's `originating_ailogs`. This is mitigation R2 of the Sentinel experiment — friction was virtuous when emitting cross-agent signal, ceremony when alerting on already-documented risks. Flags: `--range REV..REV` (default `HEAD~1..HEAD`), `--no-ailog-suppress` (disable suppression), `--path DIR`. Bash delegation only; pure-Rust fallback for Windows-without-bash deferred until requested.
+- **`devtrail approve <doc-id>`** (PR #77) — record a formal human approval. Writes the three approval frontmatter fields and appends the canonical `## Approval` body section in one atomic edit. Flag-driven for CI (`--outcome <approved|revisions_requested|rejected> --reviewer <id> [--at YYYY-MM-DD] [--notes "..."]`); falls back to interactive prompts on TTY when flags are absent. Resolves any DocType by canonical prefix, supports re-approval (latest-wins in frontmatter, both blocks preserved chronologically in body for the multi-reviewer convention).
+- **`devtrail validate --check-pending-reviews [--max-pending-days N]`** (PR #78) — surfaces documents with `review_required: true` and no `review_outcome` older than the threshold. **Warn-only** (never errors): per principle #6, useful for CI dashboards of the approval backlog without blocking unrelated PRs. Default threshold: 14 days.
+- **`devtrail init --hooks`** (PR #79) — copies `.devtrail/hooks/pre-pr.sh` to `.git/hooks/pre-push` after init. Refuses to overwrite existing hooks; skips silently if not a git repo.
+
+### Changed (CLI)
+
+- New shared module `cli/src/prompts.rs` — interactive helpers (string, u32, bool, enum, comma-separated array, multiline) with `require_interactive()` guard, used by `charter close` and `approve`.
+- New `cli/src/telemetry_schema.rs` — JSON Schema validator for telemetry YAML, mirroring `charter_schema.rs`.
+- New `cli/src/charter_schema.rs::yaml_to_json_value` — exposed as `pub` (renamed from private `yaml_to_json`) so `telemetry_schema` and other future schema validators can reuse the conversion without duplication.
+- `cli/src/document.rs::Frontmatter` — added `reviewed_by`, `reviewed_at`, `review_outcome` as `Option<String>` so `validate --check-pending-reviews` can read them.
+
+### Notes
+
+- **No schema changes to `charter.schema.v0.json`** — Phase 2 is additive in the Charter ecosystem, not breaking.
+- **Empirical validation gate** — Sentinel's PLAN-05 + PLAN-06 fixtures (zero false positives) are the contractual reference for `charter drift`. The integration tests in PR #75 reproduce the equivalent shape against a real git repo. The Sentinel-side telemetry artifacts (5 PLAN-NN.telemetry.yaml files) are the cross-validation set for the schema crystallized here.
+- **i18n parity** — DOCUMENTATION-POLICY §3.5 ships in all three languages this release; CLI-REFERENCE EN gets the new command sections in this release, ES + zh-CN command-section translations are deferred to fw-4.6.x (the EN canonical surface advances first, ES + zh-CN translations of the command tables stay at the current command list with a brief note).
+
+### Test plan summary
+
+**382/382 tests pass** across 15 test groups: 4 hook-install unit tests, 6 approve integration tests, 4 drift integration tests, 5 charter-close integration tests, 4 pending-review integration tests, plus the existing 359 covering the rest of the CLI. Manual smoke of the interactive `charter close` flow remains an open item before tag.
+
+---
+
 ## Framework 4.5.1 — i18n catch-up + ADOPTION-GUIDE reframe (ES + zh-CN follow up to fw-4.5.0)
 
 Completes the repositioning shipped in `fw-4.5.0` for the Spanish and Simplified Chinese surfaces, and reframes `docs/adopters/ADOPTION-GUIDE.md` (English) — which had been overlooked in `fw-4.5.0` and was still leading with the *"ISO 42001-aligned AI governance platform"* framing. After this release, the canonical engineering-discipline-first positioning is consistent across all three languages.

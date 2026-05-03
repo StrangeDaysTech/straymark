@@ -48,8 +48,8 @@ DevTrail uses **independent version tags** for each component:
 
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
-| Framework | `fw-` | `fw-4.5.1` | Templates (12 types), governance docs, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.6.1` | The `devtrail` binary |
+| Framework | `fw-` | `fw-4.6.0` | Templates (12 types), governance docs, directives, Charter template + schema |
+| CLI | `cli-` | `cli-3.7.0` | The `devtrail` binary |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
 
@@ -64,15 +64,16 @@ devtrail status   # Shows full installation health including versions
 
 ## Commands
 
-### `devtrail init [path]`
+### `devtrail init [path] [--hooks]`
 
 Initialize DevTrail in a project directory.
 
-**Arguments:**
+**Arguments and flags:**
 
-| Argument | Default | Description |
-|----------|---------|-------------|
+| Argument/Flag | Default | Description |
+|---|---|---|
 | `path` | `.` (current directory) | Target project directory |
+| `--hooks` *(cli-3.7.0+)* | off | After init, install the framework's pre-PR hook (`.devtrail/hooks/pre-pr.sh`) as `.git/hooks/pre-push`. Runs `devtrail charter drift` automatically before each push. Opt-in per principle #6 (cognitive discipline > raw productivity). Refuses to overwrite an existing `pre-push` hook; skips silently if not a git repo. |
 
 **What it does:**
 
@@ -81,12 +82,13 @@ Initialize DevTrail in a project directory.
 3. Creates `DEVTRAIL.md` with governance rules
 4. Configures AI agent directive files (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`, etc.)
 5. Copies CI/CD workflows
+6. *(`--hooks`)* installs the pre-PR hook
 
 **Example:**
 
 ```bash
 $ devtrail init .
-✔ Downloaded DevTrail fw-4.5.1
+✔ Downloaded DevTrail fw-4.6.0
 ✔ Created .devtrail/ directory structure
 ✔ Created DEVTRAIL.md
 ✔ Configured AI agent directives
@@ -108,7 +110,7 @@ If `.devtrail/` does not exist in the current directory, the framework update is
 ```bash
 $ devtrail update
 Updating framework...
-✔ Framework updated to fw-4.5.1
+✔ Framework updated to fw-4.6.0
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -125,7 +127,7 @@ Update only the framework files. Looks for the latest `fw-*` release on GitHub.
 
 ```bash
 $ devtrail update-framework
-✔ Framework updated to fw-4.5.1
+✔ Framework updated to fw-4.6.0
 ```
 
 ---
@@ -209,7 +211,7 @@ $ devtrail status
   Project
   ┌───────────┬──────────────────────────┐
   │ Path      │ /home/user/my-project    │
-  │ Framework │ fw-4.5.1                 │
+  │ Framework │ fw-4.6.0                 │
   │ CLI       │ cli-3.5.2                │
   │ Language  │ en                       │
   └───────────┴──────────────────────────┘
@@ -266,7 +268,7 @@ Repairing DevTrail in /home/user/my-project
 → Restoring 1 missing directory...
 ✓ Restored .devtrail/templates/
 → Downloading framework to restore missing files...
-  Using version: fw-4.5.1
+  Using version: fw-4.6.0
 ✓ Restored 16 file(s) from framework
 → Updating checksums...
 
@@ -275,7 +277,7 @@ Repairing DevTrail in /home/user/my-project
 
 ---
 
-### `devtrail validate [path] [--fix] [--staged] [--include-charters]`
+### `devtrail validate [path] [--fix] [--staged] [--include-charters] [--check-pending-reviews [--max-pending-days N]]`
 
 Validate DevTrail documents for compliance and correctness.
 
@@ -286,7 +288,9 @@ Validate DevTrail documents for compliance and correctness.
 | `path` | `.` (current directory) | Target project directory |
 | `--fix` | — | Automatically fix simple issues (e.g., missing `review_required: true` for high-risk docs) |
 | `--staged` | — | Validate only staged (git-added) files. Ideal for pre-commit hooks. |
-| `--include-charters` | — | Also validate Charters in `docs/charters/` against the Charter JSON Schema and referential integrity (originating AILOG IDs resolve, originating spec paths exist). Opt-in so projects that don't yet use the Charter pattern are unaffected. Currently honored only without `--staged` — Charter validation in staged mode lands in cli-3.7.0. |
+| `--include-charters` | — | Also validate Charters in `docs/charters/` against the Charter JSON Schema and referential integrity (originating AILOG IDs resolve, originating spec paths exist). Opt-in so projects that don't yet use the Charter pattern are unaffected. |
+| `--check-pending-reviews` *(cli-3.7.0+)* | off | List documents with `review_required: true` and no `review_outcome` older than `--max-pending-days`. **Warn-only** — never fails the validate exit code; useful for CI dashboards of the approval backlog. |
+| `--max-pending-days` *(cli-3.7.0+)* | `14` | Threshold in days for `--check-pending-reviews` |
 
 **What it checks:**
 
@@ -312,6 +316,56 @@ $ devtrail validate --fix
   Auto-fixing 2 issue(s)...
   ✓ Fixed 2 issue(s)
 ```
+
+---
+
+### `devtrail approve <doc-id> --outcome <outcome> --reviewer <id> [--at YYYY-MM-DD] [--notes "..."] [--path <dir>]`
+
+*Available since **cli-3.7.0** + **fw-4.6.0**.*
+
+Record a formal human approval on a `review_required: true` document. Writes the three approval frontmatter fields (`reviewed_by`, `reviewed_at`, `review_outcome`) **and** appends the canonical `## Approval` body section in one atomic edit. Implements the closure signal canonized in `DOCUMENTATION-POLICY.md §3.5`.
+
+| Argument/Flag | Default | Description |
+|---|---|---|
+| `<doc-id>` | — | Document ID. Accepts the bare prefix (`AIDEC-2026-05-02-001`) or full ID with slug (`AIDEC-2026-05-02-001-foo`). |
+| `--outcome` | — | One of `approved`, `revisions_requested`, `rejected`. Prompts on TTY if absent. |
+| `--reviewer` | — | Reviewer identity: email, GitHub handle, or DID. Prompts on TTY if absent. |
+| `--at` | today | Approval date (`YYYY-MM-DD`) |
+| `--notes` | — | Optional reviewer notes (appended in the body section) |
+| `--path` | `.` | Target project directory |
+
+**Behavior:**
+
+- Warns (does not fail) if the document doesn't have `review_required: true` — retroactive sign-off is a real use case.
+- **Frontmatter mutation** (latest-wins): replaces existing `reviewed_by/_at/outcome` if present; otherwise inserts after `review_required:`. This implements the multi-reviewer convention from §3.5: frontmatter holds the *latest* approval.
+- **Body mutation** (chronological): appends a new `## Approval` block before any trailing template signature. Re-running `approve` preserves earlier blocks so the body shows the full review history.
+- `review_required: true` is **not** toggled to `false` after approval — it remains as historical record of why review was needed.
+
+**Examples:**
+
+```bash
+# Flag-driven (CI / scripts)
+$ devtrail approve AIDEC-2026-05-02-001 \
+    --outcome approved \
+    --reviewer pepe@example.com \
+    --notes "Reviewed against ADR-007. LGTM."
+
+  ✔ AIDEC-2026-05-02-001 marked as approved.
+    Reviewer: pepe@example.com
+    Date:     2026-05-02
+    File:     .devtrail/07-ai-audit/decisions/AIDEC-2026-05-02-001-foo.md
+
+# Iterative review cycle: revisions_requested → re-approve
+$ devtrail approve AIDEC-... --outcome revisions_requested --reviewer reviewer@x.io
+# (author iterates)
+$ devtrail approve AIDEC-... --outcome approved --reviewer reviewer@x.io
+# Frontmatter shows the latest (approved); body shows BOTH blocks chronologically.
+
+# Backlog visibility
+$ devtrail validate --check-pending-reviews --max-pending-days 14
+```
+
+> See `dist/.devtrail/00-governance/DOCUMENTATION-POLICY.md` §3.5 "Recording Approval" for the canonical workflow definition (closure semantics, body format, multi-reviewer convention).
 
 ---
 
@@ -367,8 +421,10 @@ Manage **Charters**: bounded, auditable units of work declared ex-ante and valid
 - `devtrail charter new` — scaffold a new Charter from the framework template
 - `devtrail charter list` — enumerate Charters with optional filters
 - `devtrail charter status` — show Charter detail, or the most recent 5 Charters
+- `devtrail charter close` — record post-execution telemetry and bump status to `closed` *(Phase 2, fw-4.6.0+)*
+- `devtrail charter drift` — detect file-vs-commit drift with AILOG-aware suppression *(Phase 2, fw-4.6.0+)*
 
-Phase 2 of the CLI roadmap will add `charter close` (interactive telemetry) and `charter drift` (file-vs-commit drift check). Phase 3 adds `charter audit` (multi-model external audit).
+Phase 3 will add `charter audit` (multi-model external audit).
 
 #### `devtrail charter new [-t XS|S|M|L] [--from-ailog <id> | --from-spec <path>] [--title <title>] [path]`
 
@@ -453,6 +509,79 @@ $ devtrail charter status CHARTER-02-baseline-recompute
 $ devtrail charter status CHARTER-02
 $ devtrail charter status 2
 ```
+
+#### `devtrail charter close <CHARTER-ID> [--from-template] [--non-interactive] [--path <dir>]`
+
+Record the post-execution telemetry and bump the Charter's status to `closed`. Telemetry is written to `.devtrail/charters/CHARTER-NN.telemetry.yaml` (lateral file, **not** embedded in Charter frontmatter — frontmatter is declarative ex-ante; telemetry is voluminous ex-post). The shape is validated against `.devtrail/schemas/charter-telemetry.schema.v0.json`.
+
+Two modes:
+
+| Mode | Flag combination | When to use |
+|---|---|---|
+| **Interactive** (default) | (none) | Walks the schema field by field with prompts. Target time: 5–10 min. |
+| **From template** | `--from-template` | Copies the YAML skeleton next to the Charter for manual editing. Pre-fills `charter_id`, title, `closed_at`. |
+| **From template, scripted** | `--from-template --non-interactive` | CI / batch use. Skips prompts entirely; idempotent on re-run. |
+
+| Argument/Flag | Default | Description |
+|---|---|---|
+| `CHARTER-ID` | — | Same resolution rules as `charter status` |
+| `--from-template` | false | Copy the template skeleton instead of running the interactive flow |
+| `--non-interactive` | false | Skip all prompts. Requires `--from-template`. |
+| `--path` | `.` | Target project directory |
+
+**Example:**
+
+```bash
+$ devtrail charter close CHARTER-01
+
+  Closing CHARTER-01-test-charter
+    Title: Test charter
+  Press Enter to accept defaults; type to override.
+
+  ── Trigger ──
+  Declared trigger kind › event_trigger
+  Declared trigger description › first false-positive ticket
+  Fired at (YYYY-MM-DD) [2026-05-02]:
+  ...
+
+  ✔ Charter CHARTER-01 closed.
+    Telemetry: .devtrail/charters/CHARTER-01.telemetry.yaml
+    Status updated: in-progress/declared → closed
+```
+
+#### `devtrail charter drift <CHARTER-ID> [--range <REV..REV>] [--no-ailog-suppress] [--path <dir>]`
+
+Detect file-vs-commit drift at Charter close. Wraps the framework's `.devtrail/scripts/check-charter-drift.sh` (zero false positives validated empirically across PLAN-05 retrospective + PLAN-06 prospective in Sentinel). The CLI value-add over the raw script is **AILOG-awareness**: paths reported as "declared but not modified" are silenced when they appear in the `## Risk` / `## Riesgos` / `## 风险` section of any AILOG referenced by the Charter's `originating_ailogs`. Use `--no-ailog-suppress` to disable.
+
+| Argument/Flag | Default | Description |
+|---|---|---|
+| `CHARTER-ID` | — | Same resolution rules as `charter status` |
+| `--range` | `HEAD~1..HEAD` | Git revision range to check |
+| `--no-ailog-suppress` | false | Disable AILOG-aware suppression (show every declared-omitted path) |
+| `--path` | `.` | Target project directory |
+
+**Exit codes:** `0` if no drift (or only AILOG-suppressed); `1` if there's unaccounted drift; `2` for usage errors (Charter not found, bash missing, etc.).
+
+**Example:**
+
+```bash
+$ devtrail charter drift CHARTER-01 --range origin/main..HEAD
+=== Charter drift check ===
+  Charter: docs/charters/01-test.md
+  Range:   origin/main..HEAD
+  Declared: 5 files
+  Modified: 3 files
+
+WARNING: Declared in Charter but NOT modified (1 files):
+  - src/services/policy/repository.go
+
+AILOG-suppressed: 1 path(s)
+  - src/services/policy/repository.go [documented in AILOG-2026-05-02-001]
+
+OK all declared-omitted paths are documented in AILOGs — drift accepted.
+```
+
+> **Platform note.** The drift check delegates to `bash`. On Linux/macOS/WSL/Git Bash this works out of the box. On Windows native without WSL, install Git Bash; a pure-Rust fallback is on the roadmap but not in fw-4.6.0.
 
 ---
 
@@ -797,7 +926,7 @@ Show version, authorship, and license information.
 $ devtrail about
 DevTrail CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.5.1
+  Framework version: fw-4.6.0
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/devtrail

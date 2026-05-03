@@ -188,4 +188,4 @@ risk_level: low | medium | high | critical
 
 ---
 
-*DevTrail v4.5.1 | [Strange Days Tech](https://strangedays.tech)*
+*DevTrail v4.6.0 | [Strange Days Tech](https://strangedays.tech)*

@@ -131,8 +131,9 @@ Built-in safeguards ensure humans stay in control:
 
 Built-in commands that turn the discipline into actionable feedback:
 
-- **`devtrail charter <new|list|status>`** — Bounded units of work declared ex-ante, audited ex-post (the unit of agent execution)
-- **`devtrail validate`** — 25+ validation rules for document correctness (12 China-specific are scope-aware); `--include-charters` extends to `docs/charters/`
+- **`devtrail charter <new|list|status|close|drift>`** — Bounded units of work declared ex-ante, audited ex-post (the unit of agent execution). `close` records post-execution telemetry; `drift` detects file-vs-commit drift with AILOG-aware suppression.
+- **`devtrail approve <doc-id>`** — Record a formal human approval (writes `reviewed_by` / `reviewed_at` / `review_outcome` and the `## Approval` body section in one edit; closes the gap canonized in DOCUMENTATION-POLICY §3.5)
+- **`devtrail validate`** — 25+ validation rules for document correctness (12 China-specific are scope-aware); `--include-charters` extends to `docs/charters/`; `--check-pending-reviews` lists approval backlog (warn-only)
 - **`devtrail metrics`** — Governance KPIs, review rates, risk distribution, trends
 - **`devtrail analyze`** — Code complexity analysis (cognitive + cyclomatic) powered by [arborist-metrics](https://github.com/StrangeDaysTech/arborist), our open-source Rust library for multi-language code metrics
 - **`devtrail audit`** — Audit trail reports with timeline, traceability maps, and HTML export
@@ -258,8 +259,8 @@ DevTrail uses independent version tags for each component:
 
 | Component | Tag prefix | Example | Includes |
 |-----------|-----------|---------|----------|
-| Framework | `fw-` | `fw-4.5.1` | Templates (12 types), governance, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.6.1` | The `devtrail` binary |
+| Framework | `fw-` | `fw-4.6.0` | Templates (12 types), governance, directives, Charter template + schema |
+| CLI | `cli-` | `cli-3.7.0` | The `devtrail` binary |
 
 Check installed versions with `devtrail status` or `devtrail about`.
 
@@ -274,8 +275,9 @@ Check installed versions with `devtrail status` or `devtrail about`.
 | `devtrail remove [--full]` | Remove DevTrail from project |
 | `devtrail status [path]` | Show installation health and doc stats |
 | `devtrail repair [path]` | Restore missing directories and framework files |
-| `devtrail validate [path]` | Validate documents for compliance and correctness (use `--include-charters` to also check `docs/charters/`) |
-| `devtrail charter <subcommand>` | Manage Charters: `new`, `list`, `status` (bounded units of work declared ex-ante, audited ex-post) |
+| `devtrail validate [path]` | Validate documents for compliance and correctness (use `--include-charters` for Charters, `--check-pending-reviews` for approval backlog) |
+| `devtrail charter <subcommand>` | Manage Charters: `new`, `list`, `status`, `close` (record telemetry), `drift` (file-vs-commit drift with AILOG-awareness) |
+| `devtrail approve <doc-id>` | Record a formal human approval on a `review_required: true` document (frontmatter + canonical body section) |
 | `devtrail compliance [path]` | Check regulatory compliance (EU AI Act, ISO 42001, NIST) |
 | `devtrail metrics [path]` | Show governance metrics and documentation statistics |
 | `devtrail analyze [path]` | Analyze code complexity (cognitive + cyclomatic metrics) |
@@ -290,7 +292,7 @@ See [CLI Reference](https://github.com/StrangeDaysTech/devtrail/blob/main/docs/a
 ```bash
 # Download the latest framework release ZIP from GitHub
 # Go to https://github.com/StrangeDaysTech/devtrail/releases
-# and download the latest fw-* release (e.g., fw-4.5.1)
+# and download the latest fw-* release (e.g., fw-4.6.0)
 
 # Extract and copy to your project
 unzip devtrail-fw-*.zip -d your-project/
