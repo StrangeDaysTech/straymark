@@ -56,7 +56,7 @@ impl CharterSchema {
         yaml_value: &serde_yaml::Value,
         file_path: &Path,
     ) -> Vec<ValidationIssue> {
-        let json_value = match yaml_to_json(yaml_value) {
+        let json_value = match yaml_to_json_value(yaml_value) {
             Ok(v) => v,
             Err(e) => {
                 return vec![ValidationIssue {
@@ -148,7 +148,10 @@ fn hint_for(err: &jsonschema::ValidationError) -> Option<String> {
 /// of JSON so the conversion is direct for the constructs the schema expects.
 /// YAML-only constructs (non-string mapping keys, tagged values not handled
 /// here) cause a typed error.
-fn yaml_to_json(v: &serde_yaml::Value) -> Result<Value> {
+///
+/// Public so that `telemetry_schema` and other future schema validators can
+/// reuse the conversion without duplicating it.
+pub fn yaml_to_json_value(v: &serde_yaml::Value) -> Result<Value> {
     Ok(match v {
         serde_yaml::Value::Null => Value::Null,
         serde_yaml::Value::Bool(b) => Value::Bool(*b),
@@ -169,7 +172,7 @@ fn yaml_to_json(v: &serde_yaml::Value) -> Result<Value> {
         serde_yaml::Value::Sequence(seq) => {
             let mut arr = Vec::with_capacity(seq.len());
             for item in seq {
-                arr.push(yaml_to_json(item)?);
+                arr.push(yaml_to_json_value(item)?);
             }
             Value::Array(arr)
         }
@@ -185,11 +188,11 @@ fn yaml_to_json(v: &serde_yaml::Value) -> Result<Value> {
                         ));
                     }
                 };
-                obj.insert(key, yaml_to_json(val)?);
+                obj.insert(key, yaml_to_json_value(val)?);
             }
             Value::Object(obj)
         }
-        serde_yaml::Value::Tagged(t) => yaml_to_json(&t.value)?,
+        serde_yaml::Value::Tagged(t) => yaml_to_json_value(&t.value)?,
     })
 }
 
@@ -435,7 +438,7 @@ list: [1, 2, 3]
 nested: { a: 1, b: 2 }
 "#,
         );
-        let j = yaml_to_json(&v).unwrap();
+        let j = yaml_to_json_value(&v).unwrap();
         let obj = j.as_object().unwrap();
         assert_eq!(obj.get("str").unwrap().as_str(), Some("hello"));
         assert_eq!(obj.get("int").unwrap().as_i64(), Some(42));
@@ -448,7 +451,7 @@ nested: { a: 1, b: 2 }
         let mut map = serde_yaml::Mapping::new();
         map.insert(serde_yaml::Value::Number(1.into()), serde_yaml::Value::String("v".into()));
         let v = serde_yaml::Value::Mapping(map);
-        let err = yaml_to_json(&v).unwrap_err();
+        let err = yaml_to_json_value(&v).unwrap_err();
         assert!(err.to_string().contains("not a string"));
     }
 }

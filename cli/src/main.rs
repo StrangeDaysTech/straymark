@@ -15,7 +15,9 @@ mod inject;
 mod manifest;
 mod metrics_engine;
 mod platform;
+mod prompts;
 mod self_update;
+mod telemetry_schema;
 #[cfg(feature = "tui")]
 mod tui;
 mod utils;
@@ -232,6 +234,23 @@ enum CharterCommands {
         #[arg(long = "path", default_value = ".")]
         path: String,
     },
+    /// Record post-execution telemetry and bump status to `closed`
+    Close {
+        /// Charter identifier (CHARTER-NN, CHARTER-NN-slug, or just NN)
+        charter_id: String,
+        /// Copy the telemetry template next to the Charter for manual editing
+        /// instead of running the interactive flow. Combine with
+        /// --non-interactive for CI / scripted use.
+        #[arg(long)]
+        from_template: bool,
+        /// Skip prompts. Requires --from-template (the schema cannot be
+        /// validated until the user has filled in the YAML).
+        #[arg(long, requires = "from_template")]
+        non_interactive: bool,
+        /// Project directory (default: current directory)
+        #[arg(long = "path", default_value = ".")]
+        path: String,
+    },
 }
 
 fn main() {
@@ -310,6 +329,12 @@ fn main() {
             CharterCommands::Status { charter_id, path } => {
                 commands::charter::status::run(&path, charter_id.as_deref())
             }
+            CharterCommands::Close {
+                charter_id,
+                from_template,
+                non_interactive,
+                path,
+            } => commands::charter::close::run(&path, &charter_id, from_template, non_interactive),
         },
     };
 
