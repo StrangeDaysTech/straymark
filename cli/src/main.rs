@@ -39,6 +39,12 @@ enum Commands {
         /// Target directory (default: current directory)
         #[arg(default_value = ".")]
         path: String,
+        /// After init, install the framework's pre-PR hook (runs
+        /// `devtrail charter drift` automatically before `git push`).
+        /// Opt-in per principle #6 — friction with consent. Requires the
+        /// project to be a git repository.
+        #[arg(long)]
+        hooks: bool,
     },
     /// Update both framework and CLI to the latest version
     Update {
@@ -308,7 +314,7 @@ fn main() {
     let cli = Cli::parse();
 
     let result = match cli.command {
-        Commands::Init { path } => commands::init::run(&path),
+        Commands::Init { path, hooks } => commands::init::run(&path, hooks),
         Commands::Update { method } => commands::update::run(&method),
         Commands::UpdateFramework => commands::update_framework::run(),
         Commands::UpdateCli { method } => commands::update_cli::run(&method),
