@@ -12,6 +12,15 @@ fn setup_devtrail(dir: &Path) {
 }
 
 fn write_aidec(dir: &Path, id: &str, review_required: bool) -> std::path::PathBuf {
+    write_aidec_with_risk(dir, id, review_required, "medium")
+}
+
+fn write_aidec_with_risk(
+    dir: &Path,
+    id: &str,
+    review_required: bool,
+    risk_level: &str,
+) -> std::path::PathBuf {
     let path = dir.join(format!(
         ".devtrail/07-ai-audit/decisions/{}-test-decision.md",
         id
@@ -25,7 +34,7 @@ created: 2026-04-23
 agent: test-v1.0
 confidence: high
 review_required: {rq}
-risk_level: medium
+risk_level: {risk}
 ---
 
 # AIDEC: Test decision
@@ -41,7 +50,8 @@ Body.
 <!-- Template: DevTrail | https://strangedays.tech -->
 "#,
         id = id,
-        rq = if review_required { "true" } else { "false" }
+        rq = if review_required { "true" } else { "false" },
+        risk = risk_level,
     );
     std::fs::write(&path, body).unwrap();
     path
@@ -309,4 +319,184 @@ fn approve_invalid_outcome_rejected_by_clap() {
         .assert()
         .failure()
         .stderr(predicate::str::contains("invalid value"));
+}
+
+// ── F5 (cli-3.8.0): high-risk warning + --quiet ──────────────────────
+
+#[test]
+fn approve_warns_on_high_risk_document() {
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    write_aidec_with_risk(dir.path(), "AIDEC-2026-05-03-001", true, "high");
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "approve",
+            "AIDEC-2026-05-03-001",
+            "--outcome",
+            "approved",
+            "--reviewer",
+            "pepe@example.com",
+            "--at",
+            "2026-05-03",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("WARNING"))
+        .stderr(predicate::str::contains("risk_level: high"))
+        .stderr(predicate::str::contains("thorough human review"));
+}
+
+#[test]
+fn approve_warns_on_critical_risk_document() {
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    write_aidec_with_risk(dir.path(), "AIDEC-2026-05-03-002", true, "critical");
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "approve",
+            "AIDEC-2026-05-03-002",
+            "--outcome",
+            "approved",
+            "--reviewer",
+            "pepe@example.com",
+            "--at",
+            "2026-05-03",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("risk_level: critical"));
+}
+
+#[test]
+fn approve_no_warning_for_low_or_medium_risk() {
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    write_aidec_with_risk(dir.path(), "AIDEC-2026-05-03-003", true, "low");
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "approve",
+            "AIDEC-2026-05-03-003",
+            "--outcome",
+            "approved",
+            "--reviewer",
+            "pepe@example.com",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("risk_level").not());
+}
+
+#[test]
+fn approve_quiet_suppresses_normal_output_but_keeps_high_risk_warning() {
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    write_aidec_with_risk(dir.path(), "AIDEC-2026-05-03-004", true, "high");
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "approve",
+            "AIDEC-2026-05-03-004",
+            "--outcome",
+            "approved",
+            "--reviewer",
+            "pepe@example.com",
+            "--at",
+            "2026-05-03",
+            "--quiet",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        // Normal success message is suppressed.
+        .stdout(predicate::str::contains("marked as").not())
+        // But the high-risk warning still surfaces — that's the whole point
+        // of F5 not being silenceable by --quiet.
+        .stderr(predicate::str::contains("WARNING"))
+        .stderr(predicate::str::contains("risk_level: high"));
+}
+
+#[test]
+fn approve_quiet_suppresses_idempotent_skip_message() {
+    // Re-approving an already-approved document under --quiet should still
+    // be an idempotent no-op, but with no console output.
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    write_aidec(dir.path(), "AIDEC-2026-05-03-005", true);
+
+    // First approval — verbose so we know the file is set up.
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "approve",
+            "AIDEC-2026-05-03-005",
+            "--outcome",
+            "approved",
+            "--reviewer",
+            "first@example.com",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    // Second invocation — quiet, should produce no stdout.
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "approve",
+            "AIDEC-2026-05-03-005",
+            "--outcome",
+            "approved",
+            "--reviewer",
+            "first@example.com",
+            "--quiet",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty());
+}
+
+#[test]
+fn approve_quiet_suppresses_review_required_false_warning() {
+    // The "document does not have review_required:true" info-warning IS
+    // silenceable by --quiet (it documents an unusual-but-allowed pattern).
+    // High-risk warning is NOT silenceable; this test only covers the
+    // info-warning path.
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    write_aidec(dir.path(), "AIDEC-2026-05-03-006", false);
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "approve",
+            "AIDEC-2026-05-03-006",
+            "--outcome",
+            "approved",
+            "--reviewer",
+            "pepe@example.com",
+            "--quiet",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("review_required").not())
+        .stdout(predicate::str::is_empty());
 }

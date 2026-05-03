@@ -196,6 +196,14 @@ enum Commands {
         /// on an already-approved document is a no-op (cli-3.7.1+).
         #[arg(long)]
         force: bool,
+        /// Suppress the per-document success and idempotent-skip messages.
+        /// Useful for bulk approve runs (the operator just wants the
+        /// exit code). High-risk warnings (`risk_level: high|critical`)
+        /// are NOT silenceable by this flag — bulk-approving high-risk
+        /// docs without seeing the warning is exactly the failure mode
+        /// the warning exists to prevent (cli-3.8.0+, F5 of issue #81).
+        #[arg(long)]
+        quiet: bool,
         /// Project directory (default: current directory)
         #[arg(long = "path", default_value = ".")]
         path: String,
@@ -406,6 +414,7 @@ fn main() {
             at,
             notes,
             force,
+            quiet,
             path,
         } => commands::approve::run(
             &path,
@@ -415,6 +424,7 @@ fn main() {
             at.as_deref(),
             notes.as_deref(),
             force,
+            quiet,
         ),
         #[cfg(feature = "analyze")]
         Commands::Analyze {

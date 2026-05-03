@@ -30,6 +30,7 @@ pub fn run(
     at: Option<&str>,
     notes: Option<&str>,
     force: bool,
+    quiet: bool,
 ) -> Result<()> {
     let resolved = utils::resolve_project_root(path)
         .ok_or_else(|| anyhow!("DevTrail not installed. Run 'devtrail init' first."))?;
@@ -40,34 +41,31 @@ pub fn run(
     let doc_path = find_document_by_id(&devtrail_dir, doc_id)?;
 
     // F4 (cli-3.7.1): detect existing approval before resolving any prompts.
-    // Re-applying approve to an already-approved document silently overwrote
-    // the frontmatter and appended a duplicate `## Approval` block. Now the
-    // default is to skip with a clear message and exit Ok; `--force` is the
-    // explicit gate for the legitimate cases (revisions_requested → approved
-    // iteration, multi-reviewer hand-off).
     if let Ok(parsed) = document::parse_document(&doc_path) {
         if let (Some(prev_outcome), Some(prev_reviewer)) = (
             parsed.frontmatter.review_outcome.as_deref(),
             parsed.frontmatter.reviewed_by.as_deref(),
         ) {
             if !force {
-                let prev_at = parsed
-                    .frontmatter
-                    .reviewed_at
-                    .as_deref()
-                    .unwrap_or("(unknown date)");
-                println!(
-                    "{} {} already has approval on file ({} by `{}` on {}).",
-                    "✓".green().bold(),
-                    doc_id.bold(),
-                    prev_outcome.bold(),
-                    prev_reviewer,
-                    prev_at
-                );
-                println!(
-                    "  Pass {} to overwrite or amend (e.g., revisions_requested → approved).",
-                    "--force".cyan()
-                );
+                if !quiet {
+                    let prev_at = parsed
+                        .frontmatter
+                        .reviewed_at
+                        .as_deref()
+                        .unwrap_or("(unknown date)");
+                    println!(
+                        "{} {} already has approval on file ({} by `{}` on {}).",
+                        "✓".green().bold(),
+                        doc_id.bold(),
+                        prev_outcome.bold(),
+                        prev_reviewer,
+                        prev_at
+                    );
+                    println!(
+                        "  Pass {} to overwrite or amend (e.g., revisions_requested → approved).",
+                        "--force".cyan()
+                    );
+                }
                 return Ok(());
             }
         }
@@ -93,14 +91,29 @@ pub fn run(
     let raw = std::fs::read_to_string(&doc_path)
         .with_context(|| format!("Failed to read {}", doc_path.display()))?;
 
-    // Warn if the doc didn't actually need review (approving an unrequired
-    // doc is unusual but allowed — common case is retroactive sign-off).
+    // F5 (cli-3.8.0): warnings about review_required:false and risk_level.
+    // The high/critical risk warning is INTENTIONALLY not silenceable by
+    // --quiet — bulk-approving high-risk documents without seeing it is
+    // exactly the failure mode --quiet would otherwise enable. The
+    // `review_required: false` info-warning IS silenceable since it just
+    // documents an unusual-but-allowed retroactive sign-off pattern.
     if let Ok(parsed) = document::parse_document(&doc_path) {
-        if !parsed.frontmatter.review_required.unwrap_or(false) {
+        if !parsed.frontmatter.review_required.unwrap_or(false) && !quiet {
             eprintln!(
                 "{} document does not have `review_required: true`; recording approval anyway.",
                 "warning:".yellow().bold()
             );
+        }
+        if let Some(risk) = parsed.frontmatter.risk_level.as_deref() {
+            if matches!(risk, "high" | "critical") {
+                // Always surface — even under --quiet.
+                eprintln!(
+                    "{} {} has `risk_level: {}` — ensure thorough human review (per AGENT-RULES.md §4).",
+                    "WARNING:".red().bold(),
+                    doc_id.bold(),
+                    risk.bold()
+                );
+            }
         }
     }
 
@@ -108,15 +121,17 @@ pub fn run(
     std::fs::write(&doc_path, &updated)
         .with_context(|| format!("Failed to write {}", doc_path.display()))?;
 
-    println!(
-        "{} {} marked as {}.",
-        "✔".green().bold(),
-        doc_id.bold(),
-        outcome.bold()
-    );
-    println!("  Reviewer: {}", reviewer);
-    println!("  Date:     {}", at);
-    println!("  File:     {}", doc_path.display());
+    if !quiet {
+        println!(
+            "{} {} marked as {}.",
+            "✔".green().bold(),
+            doc_id.bold(),
+            outcome.bold()
+        );
+        println!("  Reviewer: {}", reviewer);
+        println!("  Date:     {}", at);
+        println!("  File:     {}", doc_path.display());
+    }
     Ok(())
 }
 
