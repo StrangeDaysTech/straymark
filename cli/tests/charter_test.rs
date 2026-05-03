@@ -983,6 +983,96 @@ fn charter_new_slug_flag_normalizes_through_slugifier() {
     assert!(charters_dir.join("01-upper-and-special.md").exists());
 }
 
+// ── F2 (cli-3.8.0): AILOG context backfill in --from-ailog ──────────
+
+#[test]
+fn charter_new_from_ailog_backfills_origin_with_summary() {
+    let dir = TempDir::new().unwrap();
+    setup_devtrail_with_charter_template(dir.path());
+
+    // Write an AILOG that the Charter will reference.
+    let agent_logs = dir.path().join(".devtrail/07-ai-audit/agent-logs");
+    std::fs::create_dir_all(&agent_logs).unwrap();
+    let ailog_body = r#"---
+id: AILOG-2026-04-28-021
+title: Implement async handler
+agent: claude-code
+confidence: high
+review_required: false
+---
+
+# AILOG: async handler
+
+## Summary
+
+Migrated the privacy handler to async after profiling showed 200ms blocking
+on DB queries. Added integration test that exercises the new path.
+
+## Context
+
+Original handler was synchronous and blocked on DB I/O.
+"#;
+    std::fs::write(
+        agent_logs.join("AILOG-2026-04-28-021-async-handler.md"),
+        ailog_body,
+    )
+    .unwrap();
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .arg("charter")
+        .arg("new")
+        .arg("--title")
+        .arg("Follow-up async refactor")
+        .arg("--from-ailog")
+        .arg("AILOG-2026-04-28-021")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    let path = dir.path().join("docs/charters/01-follow-up-async-refactor.md");
+    let content = std::fs::read_to_string(&path).unwrap();
+
+    // Origin line embeds the extracted Summary lead.
+    assert!(
+        content.contains("Migrated the privacy handler to async"),
+        "Origin line should embed extracted Summary, got:\n{content}"
+    );
+    // Placeholder is gone.
+    assert!(!content.contains("[Add 1-line context"), "{content}");
+    // Frontmatter still has the AILOG reference.
+    assert!(content.contains("originating_ailogs: [AILOG-2026-04-28-021]"));
+}
+
+#[test]
+fn charter_new_from_ailog_falls_back_when_ailog_not_found() {
+    // F2 graceful fallback: if --from-ailog references an AILOG that doesn't
+    // exist (typoed ID, or AILOG lives in a different repo), the body Origin
+    // line keeps the original placeholder instead of failing.
+    let dir = TempDir::new().unwrap();
+    setup_devtrail_with_charter_template(dir.path());
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .arg("charter")
+        .arg("new")
+        .arg("--title")
+        .arg("Refers to missing AILOG")
+        .arg("--from-ailog")
+        .arg("AILOG-2026-04-28-999")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    let path = dir.path().join("docs/charters/01-refers-to-missing-ailog.md");
+    let content = std::fs::read_to_string(&path).unwrap();
+    assert!(content.contains("originating_ailogs: [AILOG-2026-04-28-999]"));
+    assert!(
+        content.contains("[Add 1-line context"),
+        "fallback placeholder should remain when AILOG not found, got:\n{content}"
+    );
+}
+
 #[test]
 fn charter_new_empty_slug_flag_falls_back_to_title() {
     // An empty --slug "" should be ignored (not treated as a hard error),

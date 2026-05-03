@@ -12,7 +12,7 @@
 use anyhow::{anyhow, bail, Context, Result};
 use colored::Colorize;
 use dialoguer::{theme::ColorfulTheme, Input};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::charter::next_charter_number;
 use crate::config::DevTrailConfig;
@@ -95,6 +95,13 @@ pub fn run(
     let charter_id = format!("CHARTER-{:02}-{}", nn, slug);
     let filename = format!("{:02}-{}.md", nn, slug);
 
+    // F2 (cli-3.8.0): when --from-ailog resolves to a real AILOG file in
+    // the repo, extract its `## Summary` (or `## Context`) leading sentences
+    // and inject them in the body's Origin line. Best-effort — if the AILOG
+    // can't be found or has no extractable section, fall back to the
+    // `[Add 1-line context]` placeholder.
+    let ailog_context = from_ailog.and_then(|id| extract_ailog_context(project_root, id));
+
     // Substitute placeholders. The template uses unique tokens for each
     // substitution so plain `String::replace` is safe and predictable.
     let content = apply_substitutions(
@@ -104,6 +111,7 @@ pub fn run(
         &title,
         from_ailog,
         from_spec,
+        ailog_context,
     );
 
     // Write to docs/charters/.
@@ -163,6 +171,11 @@ fn next_steps(from_ailog: Option<&str>, from_spec: Option<&str>) -> Vec<String> 
 
 /// Apply all placeholder substitutions to the template body. Returns the
 /// substituted content. Pure function — exposed for unit testing.
+///
+/// `ailog_context` is the extracted first 1-2 sentences of the referenced
+/// AILOG's `## Summary` or `## Context` section, when `from_ailog` resolves
+/// to an actual file in the project. `None` (or empty) → fall back to the
+/// `[Add 1-line context]` placeholder. Added in cli-3.8.0 (F2).
 fn apply_substitutions(
     template: &str,
     charter_id: &str,
@@ -170,6 +183,7 @@ fn apply_substitutions(
     title: &str,
     from_ailog: Option<&str>,
     from_spec: Option<&str>,
+    ailog_context: Option<String>,
 ) -> String {
     let mut content = template.to_string();
 
@@ -197,15 +211,39 @@ fn apply_substitutions(
             "# originating_ailogs: [AILOG-YYYY-MM-DD-NNN]",
             &format!("originating_ailogs: [{}]", ailog_id),
         );
+        // F2 (cli-3.8.0): if the referenced AILOG can be resolved and its
+        // body contains a `## Summary` or `## Context` section, extract the
+        // first 1-2 sentences and inject them in the Origin line. Falls back
+        // to the original `[Add 1-line context]` placeholder when extraction
+        // fails so adopters who reference AILOGs that don't yet exist (or
+        // live outside this repo) still get a usable scaffold.
+        let extracted = ailog_context.unwrap_or_default();
+        let (en_origin, es_origin) = if extracted.is_empty() {
+            (
+                format!(
+                    "Follow-up of {}. [Add 1-line context about why this Charter exists now.]",
+                    ailog_id
+                ),
+                format!(
+                    "Follow-up de {}. [Añadir 1 línea de contexto sobre por qué este Charter existe ahora.]",
+                    ailog_id
+                ),
+            )
+        } else {
+            (
+                format!("Follow-up of {}. {}", ailog_id, extracted),
+                format!("Follow-up de {}. {}", ailog_id, extracted),
+            )
+        };
         // Replace the prose Origin placeholder with a concrete reference (EN).
         content = content.replace(
             "[human-readable summary; the machine-readable form is `originating_ailogs` or `originating_spec` in frontmatter]",
-            &format!("Follow-up of {}. [Add 1-line context about why this Charter exists now.]", ailog_id),
+            &en_origin,
         );
         // ES variant.
         content = content.replace(
             "[resumen humano; la forma machine-readable es `originating_ailogs` u `originating_spec` en el frontmatter]",
-            &format!("Follow-up de {}. [Añadir 1 línea de contexto sobre por qué este Charter existe ahora.]", ailog_id),
+            &es_origin,
         );
     } else if let Some(spec_path) = from_spec {
         content = content.replace(
@@ -254,6 +292,161 @@ fn validate_spec_path(project_root: &Path, spec_path: &str) -> Result<()> {
 }
 
 /// Slugify a title for use in a Charter filename. Mirrors the implementation
+/// Extract the leading 1-2 sentences of the referenced AILOG's `## Summary`
+/// or `## Context` section, sanitized for inclusion in the Charter body's
+/// Origin line. Returns `None` when the AILOG can't be found, has no
+/// `## Summary` / `## Context` section, or yields an empty extraction.
+///
+/// F2 (cli-3.8.0): the `--from-ailog` flag previously left a literal
+/// `[Add 1-line context]` placeholder in the body. Empirical evidence
+/// across CHARTER-02..05 of Sentinel showed adopters rarely fill it,
+/// resulting in scaffolds that perpetuate the placeholder. Auto-extraction
+/// from the referenced AILOG produces a useful first draft without the
+/// operator needing to re-read the AILOG to summarize it.
+fn extract_ailog_context(project_root: &Path, ailog_id: &str) -> Option<String> {
+    let agent_logs = project_root
+        .join(".devtrail")
+        .join("07-ai-audit")
+        .join("agent-logs");
+    if !agent_logs.exists() {
+        return None;
+    }
+    let prefix: String = ailog_id
+        .split('-')
+        .take(5)
+        .collect::<Vec<_>>()
+        .join("-");
+    let path = walk_for_ailog(&agent_logs, &prefix)?;
+    let body = std::fs::read_to_string(&path).ok()?;
+    extract_section_lead(&body)
+}
+
+fn walk_for_ailog(dir: &Path, prefix: &str) -> Option<PathBuf> {
+    let entries = std::fs::read_dir(dir).ok()?;
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            if let Some(found) = walk_for_ailog(&path, prefix) {
+                return Some(found);
+            }
+            continue;
+        }
+        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+            if name.starts_with(prefix) && name.ends_with(".md") {
+                return Some(path);
+            }
+        }
+    }
+    None
+}
+
+/// Find `## Summary` (or `## Context` as fallback), extract the first
+/// non-empty paragraph, return up to two sentences. Caps the length at
+/// 240 characters to keep the Origin line readable. Strips bold/italic
+/// markdown markers but preserves backtick code spans.
+fn extract_section_lead(body: &str) -> Option<String> {
+    const MAX_CHARS: usize = 240;
+    let paragraph = find_section_paragraph(body, &["## Summary", "## Context"])?;
+    let cleaned = strip_inline_markup(&paragraph);
+    let sentences = leading_sentences(&cleaned, 2);
+    let trimmed = sentences.trim().to_string();
+    if trimmed.is_empty() {
+        return None;
+    }
+    if trimmed.chars().count() > MAX_CHARS {
+        let truncated: String = trimmed.chars().take(MAX_CHARS).collect();
+        // Round to the last whitespace inside the limit, append ellipsis.
+        let cut = truncated.rfind(char::is_whitespace).unwrap_or(MAX_CHARS);
+        return Some(format!("{}…", truncated[..cut].trim_end()));
+    }
+    Some(trimmed)
+}
+
+fn find_section_paragraph(body: &str, headers: &[&str]) -> Option<String> {
+    for header in headers {
+        let mut in_section = false;
+        let mut paragraph = String::new();
+        for line in body.lines() {
+            if line.trim_start().starts_with("## ") {
+                if in_section {
+                    break;
+                }
+                in_section = line.trim() == *header;
+                continue;
+            }
+            if !in_section {
+                continue;
+            }
+            if line.trim().is_empty() {
+                if !paragraph.is_empty() {
+                    break;
+                }
+                continue;
+            }
+            if !paragraph.is_empty() {
+                paragraph.push(' ');
+            }
+            paragraph.push_str(line.trim());
+        }
+        if !paragraph.is_empty() {
+            return Some(paragraph);
+        }
+    }
+    None
+}
+
+fn strip_inline_markup(s: &str) -> String {
+    // Strip bold (**x** or __x__) and italic (*x* or _x_) markers but leave
+    // their content. Backticks are preserved (code spans are useful).
+    let mut out = String::with_capacity(s.len());
+    let chars: Vec<char> = s.chars().collect();
+    let mut i = 0;
+    while i < chars.len() {
+        // Handle ** and __ (bold).
+        if i + 1 < chars.len()
+            && ((chars[i] == '*' && chars[i + 1] == '*')
+                || (chars[i] == '_' && chars[i + 1] == '_'))
+        {
+            i += 2;
+            continue;
+        }
+        // Handle single * or _ (italic).
+        if chars[i] == '*' || chars[i] == '_' {
+            i += 1;
+            continue;
+        }
+        out.push(chars[i]);
+        i += 1;
+    }
+    out
+}
+
+fn leading_sentences(s: &str, n: usize) -> String {
+    let mut sentences = Vec::new();
+    let mut buf = String::new();
+    let chars: Vec<char> = s.chars().collect();
+    let mut i = 0;
+    while i < chars.len() {
+        buf.push(chars[i]);
+        if chars[i] == '.' || chars[i] == '!' || chars[i] == '?' {
+            // Sentence boundary requires terminator + (whitespace or end).
+            let next = chars.get(i + 1).copied();
+            if next.is_none() || next.is_some_and(|c| c.is_whitespace()) {
+                sentences.push(buf.trim().to_string());
+                buf.clear();
+                if sentences.len() >= n {
+                    break;
+                }
+            }
+        }
+        i += 1;
+    }
+    if sentences.is_empty() && !buf.trim().is_empty() {
+        sentences.push(buf.trim().to_string());
+    }
+    sentences.join(" ")
+}
+
 /// in `commands::new::slugify` (kept private there — duplicated here to avoid
 /// touching the existing command in this PR; consolidate to `utils` later).
 ///
@@ -341,6 +534,7 @@ Body content.
             "Test Charter",
             None,
             None,
+            None,
         );
         assert!(out.contains("charter_id: CHARTER-01-test-charter"));
         assert!(out.contains("# Charter: Test Charter"));
@@ -359,12 +553,42 @@ Body content.
             "X",
             Some("AILOG-2026-04-28-021"),
             None,
+            None,
         );
         assert!(out.contains("originating_ailogs: [AILOG-2026-04-28-021]"));
         // The other origin stays commented as a placeholder.
         assert!(out.contains("# originating_spec: specs/001-feature/spec.md"));
         // Prose Origin line gets a concrete reference.
         assert!(out.contains("Follow-up of AILOG-2026-04-28-021"));
+        // Without ailog_context, the placeholder remains.
+        assert!(out.contains("[Add 1-line context"));
+    }
+
+    #[test]
+    fn from_ailog_with_context_replaces_placeholder() {
+        // F2 (cli-3.8.0): when ailog_context is provided (the caller resolved
+        // the AILOG and extracted its summary), the body Origin line embeds
+        // it instead of the [Add 1-line context] placeholder.
+        let out = apply_substitutions(
+            TEMPLATE,
+            "CHARTER-03-x",
+            "M",
+            "X",
+            Some("AILOG-2026-04-28-021"),
+            None,
+            Some(
+                "Migrated handler to async after profiling showed 200ms blocking on DB."
+                    .to_string(),
+            ),
+        );
+        assert!(
+            out.contains(
+                "Follow-up of AILOG-2026-04-28-021. Migrated handler to async after profiling showed 200ms blocking on DB."
+            ),
+            "got:\n{out}"
+        );
+        // Placeholder is gone.
+        assert!(!out.contains("[Add 1-line context"));
     }
 
     #[test]
@@ -376,6 +600,7 @@ Body content.
             "X",
             None,
             Some("specs/001-test/spec.md"),
+            None,
         );
         assert!(out.contains("originating_spec: specs/001-test/spec.md"));
         assert!(out.contains("# originating_ailogs: [AILOG-YYYY-MM-DD-NNN]"));
@@ -385,10 +610,96 @@ Body content.
     #[test]
     fn effort_substitution_handles_all_buckets() {
         for e in ["XS", "S", "M", "L"] {
-            let out = apply_substitutions(TEMPLATE, "CHARTER-01-x", e, "X", None, None);
+            let out = apply_substitutions(TEMPLATE, "CHARTER-01-x", e, "X", None, None, None);
             assert!(out.contains(&format!("effort_estimate: {}", e)));
             assert!(out.contains(&format!("Effort: {} (~[N] min)", e)));
         }
+    }
+
+    // ── F2 (cli-3.8.0): AILOG context extraction helpers ────────────────
+
+    #[test]
+    fn extract_section_lead_finds_summary_first() {
+        let body = r#"---
+id: AILOG-x
+---
+
+# AILOG: foo
+
+## Summary
+
+The agent did X by doing Y. Some second sentence here.
+
+## Context
+
+Longer context that should not be picked when Summary exists.
+"#;
+        let extracted = extract_section_lead(body).unwrap();
+        assert!(
+            extracted.starts_with("The agent did X by doing Y."),
+            "got: {extracted}"
+        );
+    }
+
+    #[test]
+    fn extract_section_lead_falls_back_to_context() {
+        let body = r#"---
+id: x
+---
+
+# AILOG
+
+## Context
+
+This is context. Short and sweet.
+
+## Outcome
+
+ignored.
+"#;
+        let extracted = extract_section_lead(body).unwrap();
+        assert!(extracted.starts_with("This is context."), "got: {extracted}");
+    }
+
+    #[test]
+    fn extract_section_lead_returns_none_when_neither_section_present() {
+        let body = "# AILOG\n\n## Outcome\n\nbla.\n";
+        assert!(extract_section_lead(body).is_none());
+    }
+
+    #[test]
+    fn extract_section_lead_truncates_at_240_chars() {
+        let long = "X".repeat(500);
+        let body = format!("## Summary\n\n{long}\n");
+        let extracted = extract_section_lead(&body).unwrap();
+        assert!(
+            extracted.chars().count() <= 241,
+            "got len {}",
+            extracted.chars().count()
+        );
+        assert!(extracted.ends_with('…'));
+    }
+
+    #[test]
+    fn extract_section_lead_strips_inline_markup() {
+        let body = "## Summary\n\nThe **agent** _did_ a `thing`. Another sentence.\n";
+        let extracted = extract_section_lead(body).unwrap();
+        assert!(!extracted.contains("**"));
+        assert!(!extracted.contains("__"));
+        // Backticks preserved.
+        assert!(extracted.contains("`thing`"), "got: {extracted}");
+    }
+
+    #[test]
+    fn leading_sentences_takes_first_two() {
+        let s = "First. Second. Third. Fourth.";
+        assert_eq!(leading_sentences(s, 2), "First. Second.");
+    }
+
+    #[test]
+    fn leading_sentences_handles_no_terminator() {
+        let s = "single sentence with no period";
+        assert_eq!(leading_sentences(s, 2), "single sentence with no period");
     }
 
     #[test]
