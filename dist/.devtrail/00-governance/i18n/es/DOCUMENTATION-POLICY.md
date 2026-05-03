@@ -98,6 +98,9 @@ related:
 | `observability_scope` | Nivel de instrumentación OTel: `none \| basic \| full` | Cuando el cambio involucra instrumentación de observabilidad |
 | `api_spec_path` | Ruta al archivo de especificación OpenAPI/AsyncAPI | En documentos REQ cuando el requisito involucra interfaces de API |
 | `api_changes` | Lista de endpoints de API afectados | En documentos ADR cuando la decisión modifica APIs públicas |
+| `reviewed_by` | Identidad del revisor humano (email, usuario de GitHub o DID) | Lo establece el revisor al aprobar formalmente un documento `review_required: true` |
+| `reviewed_at` | Fecha de la aprobación formal (`YYYY-MM-DD`, debe ser ≥ `created`) | Se establece junto con `reviewed_by` |
+| `review_outcome` | Señal de cierre: `approved \| revisions_requested \| rejected` | Se establece junto con `reviewed_by`. Su presencia es la señal canónica de "un humano ya revisó" — ver §3.5 abajo |
 
 ### Convención de Tags
 
@@ -158,6 +161,51 @@ draft ──────► accepted ──────► deprecated
 | `accepted` | Aprobado y vigente |
 | `deprecated` | Obsoleto, pero se mantiene como referencia |
 | `superseded` | Reemplazado por otro documento |
+
+---
+
+## 3.5 Registro de Aprobación
+
+`status` registra el estado del ciclo de vida del documento, y `review_required: true` registra que *se necesita revisión humana*. Ningún campo registra que la revisión humana *efectivamente ocurrió*. Esta sección define la señal canónica de cierre para documentos que requieren aprobación formal (AIDEC, ETH, MCARD, ADR, DPIA, INC, SEC y las variantes del scope China — ver AGENT-RULES.md §4 para los disparadores).
+
+### Señal de cierre
+
+Tres campos de frontmatter opcionales, establecidos por el revisor al momento de la aprobación:
+
+```yaml
+reviewed_by: pepe@ejemplo.com           # email | usuario-github | DID
+reviewed_at: 2026-05-02
+review_outcome: approved                # approved | revisions_requested | rejected
+```
+
+Semántica:
+
+- **La presencia de `review_outcome` es la señal de cierre.** Un documento con `review_required: true` y sin `review_outcome` está *pendiente de revisión*.
+- `review_required: true` **no** se cambia a `false` después de la aprobación — permanece como registro histórico de por qué hizo falta revisión en primer lugar.
+- `reviewed_at` debe ser `>= created`. Si `reviewed_by` está presente, `reviewed_at` y `review_outcome` también deben estarlo (validado por `devtrail validate`).
+- `review_outcome: revisions_requested` permite ciclos iterativos de revisión: el documento se actualiza y el revisor eventualmente vuelve a aprobar. La convención es sobreescribir los tres campos con la aprobación más reciente (el frontmatter contiene solo el último estado); la sección body de abajo preserva la historia.
+
+### Sección body (forma canónica en prosa)
+
+Agregar en la posición terminal del cuerpo del documento (p. ej., antes de `## References` en AIDEC/ADR; después de `## Review Schedule` en DPIA; después de `## Post-Mortem Review` en INC). Para los templates que ya incluyen una tabla `## Approval` (ETH, MCARD, SEC, PIPIA, CACFILE, TC260RA, AILABEL), cualquiera de las dos formas es canónica; los campos del frontmatter son la fuente de verdad legible-por-máquina.
+
+```markdown
+## Approval
+
+**Approved**: 2026-05-02 by `pepe@ejemplo.com`.
+
+<Notas opcionales del revisor — observaciones, condiciones, alcance de la
+aprobación. Omitir la sección entera si no hay nada que añadir más allá del
+frontmatter.>
+```
+
+### Flujos multi-revisor (forward-looking)
+
+Para documentos que requieren múltiples revisores (p. ej., ETH con sign-off de legal y de ingeniería), el canon de v1 es agregar bloques adicionales `## Approval` cronológicamente en el body, con el frontmatter reflejando la *última* aprobación. Una forma estructurada con array `review:` (una entrada por revisor) es forward-looking y no es parte de v1 — se añadirá cuando al menos un proyecto adoptante ejercite el flujo multi-revisor con datos reales.
+
+### Tooling del CLI
+
+`devtrail approve <doc-id> --outcome approved --reviewer <id> [--notes "..."] [--at YYYY-MM-DD]` escribe los campos del frontmatter y la sección del body en una sola operación. `devtrail validate --check-pending-reviews [--max-pending-days N]` lista documentos con `review_required: true` más antiguos que `N` días sin `review_outcome` (warn-only, no error). Ver CLI-REFERENCE.md.
 
 ---
 

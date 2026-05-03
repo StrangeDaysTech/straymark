@@ -98,6 +98,9 @@ related:
 | `observability_scope` | OTel instrumentation level: `none \| basic \| full` | When the change involves observability instrumentation |
 | `api_spec_path` | Path to OpenAPI/AsyncAPI specification file | In REQ documents when the requirement involves API interfaces |
 | `api_changes` | List of API endpoints affected | In ADR documents when the decision modifies public APIs |
+| `reviewed_by` | Identity of the human reviewer (email, GitHub handle, or DID) | Set by the reviewer when formally approving a `review_required: true` document |
+| `reviewed_at` | Date of the formal approval (`YYYY-MM-DD`, must be ≥ `created`) | Set with `reviewed_by` |
+| `review_outcome` | Closure signal: `approved \| revisions_requested \| rejected` | Set with `reviewed_by`. Presence is the canonical "human has reviewed" signal — see §4.5 below |
 
 ### Tags Convention
 
@@ -158,6 +161,50 @@ draft ──────► accepted ──────► deprecated
 | `accepted` | Approved and current |
 | `deprecated` | Obsolete, but kept as reference |
 | `superseded` | Replaced by another document |
+
+---
+
+## 3.5 Recording Approval
+
+`status` records the document's lifecycle state, and `review_required: true` records that *human review is needed*. Neither field records that human review *has actually happened*. This section defines the canonical closure signal for documents that need formal approval (AIDEC, ETH, MCARD, ADR, DPIA, INC, SEC and the China-scope variants — see AGENT-RULES.md §4 for the triggers).
+
+### Closure signal
+
+Three optional frontmatter fields, set by the reviewer at approval time:
+
+```yaml
+reviewed_by: pepe@example.com           # email | github-handle | DID
+reviewed_at: 2026-05-02
+review_outcome: approved                # approved | revisions_requested | rejected
+```
+
+Semantics:
+
+- **The presence of `review_outcome` is the closure signal.** A document with `review_required: true` and no `review_outcome` is *pending review*.
+- `review_required: true` is **not** toggled to `false` after approval — it remains as historical record of why review was needed in the first place.
+- `reviewed_at` must be `>= created`. If `reviewed_by` is set, `reviewed_at` and `review_outcome` must also be set (validated by `devtrail validate`).
+- `review_outcome: revisions_requested` allows iterative review cycles: the document is updated, and the reviewer eventually re-approves. The convention is to overwrite the three fields with the latest approval (frontmatter holds only the most recent state); the body section below preserves history.
+
+### Body section (canonical prose form)
+
+Add at the terminal position of the document body (e.g., before `## References` in AIDEC/ADR; after `## Review Schedule` in DPIA; after `## Post-Mortem Review` in INC). For templates that already include a `## Approval` table (ETH, MCARD, SEC, PIPIA, CACFILE, TC260RA, AILABEL), either form is canonical; the frontmatter fields are the machine-readable source of truth.
+
+```markdown
+## Approval
+
+**Approved**: 2026-05-02 by `pepe@example.com`.
+
+<Optional reviewer notes — observations, conditions, scope of approval. Omit
+the entire section if there's nothing to add beyond the frontmatter.>
+```
+
+### Multi-reviewer flows (forward-looking)
+
+For documents that require multiple reviewers (e.g., ETH with both legal and engineering sign-off), the canon for v1 is to append additional `## Approval` blocks chronologically in the body, with the frontmatter reflecting the *latest* approval. A structured `review:` array form (one entry per reviewer) is forward-looking and not part of v1 — it will be added when at least one adopter exercises the multi-reviewer flow with real data.
+
+### CLI tooling
+
+`devtrail approve <doc-id> --outcome approved --reviewer <id> [--notes "..."] [--at YYYY-MM-DD]` writes both the frontmatter fields and the body section in one shot. `devtrail validate --check-pending-reviews [--max-pending-days N]` lists `review_required: true` documents older than `N` days without a `review_outcome` (warn-only, no error). See CLI-REFERENCE.md.
 
 ---
 

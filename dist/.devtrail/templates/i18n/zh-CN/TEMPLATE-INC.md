@@ -6,6 +6,11 @@ created: YYYY-MM-DD
 agent: [agent-name-v1.0]
 confidence: medium
 review_required: true
+
+# --- 审批工作流（可选，审批时填写）---
+# reviewed_by: <审批人标识>             # 邮箱 | github 用户 | DID
+# reviewed_at: YYYY-MM-DD
+# review_outcome: approved             # approved | revisions_requested | rejected
 risk_level: high | critical
 severity: SEV1 | SEV2 | SEV3 | SEV4
 eu_ai_act_applicable: false

@@ -6,6 +6,11 @@ created: YYYY-MM-DD
 agent: [agent-name]
 confidence: low  # DPIA 需要大量人工判断
 review_required: true  # 始终为必须
+
+# --- 审批工作流（可选，审批时填写）---
+# reviewed_by: <审批人标识>             # 邮箱 | github 用户 | DID
+# reviewed_at: YYYY-MM-DD
+# review_outcome: approved             # approved | revisions_requested | rejected
 risk_level: high
 eu_ai_act_risk: not_applicable  # unacceptable | high | limited | minimal | not_applicable
 gdpr_article_35: true  # GDPR 第 35 条触发 DPIA

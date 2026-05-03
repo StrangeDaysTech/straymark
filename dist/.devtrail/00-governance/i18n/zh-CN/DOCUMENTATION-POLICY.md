@@ -98,6 +98,9 @@ related:
 | `observability_scope` | OTel 埋点级别：`none \| basic \| full` | 当变更涉及可观测性埋点时 |
 | `api_spec_path` | OpenAPI/AsyncAPI 规范文件路径 | 在 REQ 文档中，当需求涉及 API 接口时 |
 | `api_changes` | 受影响的 API 端点列表 | 在 ADR 文档中，当决策修改公共 API 时 |
+| `reviewed_by` | 人工审批人的身份（邮箱、GitHub 用户或 DID） | 由审批人在正式批准 `review_required: true` 文档时填写 |
+| `reviewed_at` | 正式批准日期（`YYYY-MM-DD`，必须 ≥ `created`） | 与 `reviewed_by` 一同设置 |
+| `review_outcome` | 闭环信号：`approved \| revisions_requested \| rejected` | 与 `reviewed_by` 一同设置。其存在即为"人工已审"的规范信号——见下方 §3.5 |
 
 ### 标签约定
 
@@ -158,6 +161,50 @@ draft ──────► accepted ──────► deprecated
 | `accepted` | 已批准且为当前有效版本 |
 | `deprecated` | 已废弃，但保留作为参考 |
 | `superseded` | 已被其他文档替代 |
+
+---
+
+## 3.5 审批记录
+
+`status` 记录文档的生命周期状态，`review_required: true` 记录*需要人工审核*。这两个字段都不记录人工审核*实际是否发生*。本节定义了需要正式审批的文档（AIDEC、ETH、MCARD、ADR、DPIA、INC、SEC 以及中国 scope 变体——触发条件见 AGENT-RULES.md §4）的规范闭环信号。
+
+### 闭环信号
+
+三个可选的 frontmatter 字段，由审批人在批准时填写：
+
+```yaml
+reviewed_by: pepe@example.com           # 邮箱 | github 用户 | DID
+reviewed_at: 2026-05-02
+review_outcome: approved                # approved | revisions_requested | rejected
+```
+
+语义：
+
+- **`review_outcome` 的存在即为闭环信号。** 一份 `review_required: true` 且无 `review_outcome` 的文档处于*待审核*状态。
+- 批准之后**不**将 `review_required: true` 改为 `false` —— 它作为"为何最初需要审核"的历史记录保留下来。
+- `reviewed_at` 必须 `>= created`。如果 `reviewed_by` 已设置，`reviewed_at` 与 `review_outcome` 也必须设置（由 `devtrail validate` 校验）。
+- `review_outcome: revisions_requested` 支持迭代审核循环：文档被更新，审批人最终再次批准。约定是用最新一次的审批覆盖三个字段（frontmatter 仅保留最新状态）；下方 body 章节保留历史。
+
+### Body 章节（规范的散文形式）
+
+添加在文档正文的末位（例如：AIDEC/ADR 的 `## References` 之前；DPIA 的 `## Review Schedule` 之后；INC 的 `## Post-Mortem Review` 之后）。对于已包含 `## Approval` 表格形式的模板（ETH、MCARD、SEC、PIPIA、CACFILE、TC260RA、AILABEL），任一形式都是规范的；frontmatter 字段才是机器可读的真相源。
+
+```markdown
+## Approval
+
+**Approved**: 2026-05-02 by `pepe@example.com`.
+
+<可选的审批人备注——观察、条件、批准范围。如果没有需要补充于 frontmatter
+之外的内容，可整节省略。>
+```
+
+### 多审批人流程（前瞻性）
+
+对于需要多审批人的文档（如 ETH 同时需要法务和工程的 sign-off），v1 的规范是在 body 中按时间顺序追加多个 `## Approval` 块，frontmatter 反映*最新*一次的批准。结构化的 `review:` 数组形式（每个审批人一条）属于前瞻性，不在 v1 中——会等到至少一个真实采用项目以真实数据演练多审批人流程后再加入。
+
+### CLI 工具
+
+`devtrail approve <doc-id> --outcome approved --reviewer <id> [--notes "..."] [--at YYYY-MM-DD]` 一次性写入 frontmatter 字段与 body 章节。`devtrail validate --check-pending-reviews [--max-pending-days N]` 列出 `review_required: true` 且早于 `N` 天但仍无 `review_outcome` 的文档（warn-only，不报错）。详见 CLI-REFERENCE.md。
 
 ---
 

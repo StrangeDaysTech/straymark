@@ -6,6 +6,11 @@ created: YYYY-MM-DD
 agent: [agent-name]
 confidence: low  # PIPIA 需要大量人工判断
 review_required: true  # 《个人信息保护法》第55条规定的强制性评估
+
+# --- 审批工作流（可选，审批时填写）---
+# reviewed_by: <审批人标识>             # 邮箱 | github 用户 | DID
+# reviewed_at: YYYY-MM-DD
+# review_outcome: approved             # approved | revisions_requested | rejected
 risk_level: high
 pipl_applicable: true
 pipl_article_55_trigger: sensitive_data  # sensitive_data | automated_decision | third_party_disclosure | cross_border | public_disclosure | other
