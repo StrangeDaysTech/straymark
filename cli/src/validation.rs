@@ -260,6 +260,69 @@ pub fn validate_all(devtrail_dir: &Path) -> (ValidationResult, usize) {
 
 /// Validate a specific set of document paths (used for --staged mode).
 /// Skips orphan document checking since that is not meaningful for partial validation.
+/// Surface documents whose `review_required: true` is older than a threshold
+/// and still has no `review_outcome`. Per DOCUMENTATION-POLICY §3.5: warn-only,
+/// never errors. Adopters opt in via `devtrail validate --check-pending-reviews`.
+///
+/// Returns one `ValidationIssue` per pending document, all `Severity::Warning`.
+pub fn check_pending_reviews(devtrail_dir: &Path, max_pending_days: i64) -> Vec<ValidationIssue> {
+    use chrono::{Local, NaiveDate};
+
+    let mut issues = Vec::new();
+    let today = Local::now().date_naive();
+    let paths = document::discover_documents(devtrail_dir);
+
+    for path in paths {
+        let doc = match document::parse_document(&path) {
+            Ok(d) => d,
+            Err(_) => continue, // parse errors surface via the regular validate path
+        };
+        if !doc.frontmatter.review_required.unwrap_or(false) {
+            continue;
+        }
+        if doc.frontmatter.review_outcome.is_some() {
+            continue; // already reviewed
+        }
+        let created = match doc
+            .frontmatter
+            .created
+            .as_deref()
+            .and_then(|s| NaiveDate::parse_from_str(s.trim(), "%Y-%m-%d").ok())
+        {
+            Some(d) => d,
+            None => continue, // missing/invalid created date is a separate validate rule
+        };
+        let age_days = (today - created).num_days();
+        if age_days < max_pending_days {
+            continue;
+        }
+        let id = doc
+            .frontmatter
+            .id
+            .clone()
+            .unwrap_or_else(|| {
+                path.file_stem()
+                    .and_then(|s| s.to_str())
+                    .map(String::from)
+                    .unwrap_or_default()
+            });
+        issues.push(ValidationIssue {
+            file: path,
+            rule: "REVIEW-PENDING".to_string(),
+            message: format!(
+                "{} has `review_required: true` and no `review_outcome` ({} days since creation)",
+                id, age_days
+            ),
+            severity: Severity::Warning,
+            fix_hint: Some(format!(
+                "Run `devtrail approve {} --outcome <approved|revisions_requested|rejected> --reviewer <id>` once a human has reviewed.",
+                id
+            )),
+        });
+    }
+    issues
+}
+
 pub fn validate_paths(paths: &[PathBuf], devtrail_dir: &Path) -> (ValidationResult, usize) {
     let mut result = ValidationResult::default();
     let mut doc_count = 0;

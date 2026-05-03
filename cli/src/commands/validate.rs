@@ -6,7 +6,14 @@ use std::path::PathBuf;
 use crate::utils;
 use crate::validation::{self, Severity, ValidationIssue};
 
-pub fn run(path: &str, fix: bool, staged: bool, include_charters: bool) -> Result<()> {
+pub fn run(
+    path: &str,
+    fix: bool,
+    staged: bool,
+    include_charters: bool,
+    check_pending_reviews: bool,
+    max_pending_days: i64,
+) -> Result<()> {
     let resolved = match utils::resolve_project_root(path) {
         Some(r) => r,
         None => {
@@ -55,6 +62,12 @@ pub fn run(path: &str, fix: bool, staged: bool, include_charters: bool) -> Resul
         doc_count += charter_count;
     }
 
+    if check_pending_reviews {
+        for issue in validation::check_pending_reviews(&devtrail_dir, max_pending_days) {
+            result.warnings.push(issue);
+        }
+    }
+
     if doc_count == 0 {
         utils::info("No documents found to validate.");
         println!(
@@ -77,6 +90,11 @@ pub fn run(path: &str, fix: bool, staged: bool, include_charters: bool) -> Resul
                 validation::validate_charters(&target, &devtrail_dir);
             result.merge(charter_result);
             doc_count += charter_count;
+        }
+        if check_pending_reviews {
+            for issue in validation::check_pending_reviews(&devtrail_dir, max_pending_days) {
+                result.warnings.push(issue);
+            }
         }
         print_results(&result, doc_count);
         return exit_with_code(&result);
