@@ -89,6 +89,15 @@ enum Commands {
         /// projects that don't yet use the Charter pattern.
         #[arg(long)]
         include_charters: bool,
+        /// Surface documents with `review_required: true` and no
+        /// `review_outcome` that are older than --max-pending-days. Warn-only
+        /// (never fails the validate exit code); useful for CI dashboards of
+        /// the approval backlog. See DOCUMENTATION-POLICY.md §3.5.
+        #[arg(long)]
+        check_pending_reviews: bool,
+        /// Threshold for --check-pending-reviews (default: 14 days).
+        #[arg(long, default_value_t = 14)]
+        max_pending_days: i64,
     },
     /// Check regulatory compliance (EU, NIST, ISO; China standards opt-in via regional_scope)
     Compliance {
@@ -309,7 +318,16 @@ fn main() {
             fix,
             staged,
             include_charters,
-        } => commands::validate::run(&path, fix, staged, include_charters),
+            check_pending_reviews,
+            max_pending_days,
+        } => commands::validate::run(
+            &path,
+            fix,
+            staged,
+            include_charters,
+            check_pending_reviews,
+            max_pending_days,
+        ),
         Commands::Audit {
             path,
             from,

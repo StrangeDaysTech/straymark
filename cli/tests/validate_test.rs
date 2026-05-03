@@ -451,6 +451,163 @@ fn test_validate_staged_no_git_repo() {
         .stderr(predicates::str::contains("git"));
 }
 
+// ── --check-pending-reviews (Phase 2 / fw-4.6.0) ─────────────────────────
+
+/// Today minus N days as a YYYY-MM-DD string.
+fn days_ago(n: i64) -> String {
+    use chrono::{Duration, Local};
+    (Local::now().date_naive() - Duration::days(n))
+        .format("%Y-%m-%d")
+        .to_string()
+}
+
+#[test]
+fn test_check_pending_reviews_flags_old_pending_aidec() {
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+
+    let created = days_ago(30);
+    create_doc(
+        dir.path(),
+        "07-ai-audit/decisions",
+        "AIDEC-2026-04-01-001-old.md",
+        &format!(
+            r#"id: AIDEC-2026-04-01-001
+title: Old decision
+status: accepted
+created: {created}
+agent: test
+confidence: high
+review_required: true
+risk_level: medium"#,
+            created = created
+        ),
+    );
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "validate",
+            "--check-pending-reviews",
+            "--max-pending-days",
+            "14",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        // Warn-only: success exit code even with the warning.
+        .success()
+        .stdout(predicate::str::contains("REVIEW-PENDING"))
+        .stdout(predicate::str::contains("AIDEC-2026-04-01-001"));
+}
+
+#[test]
+fn test_check_pending_reviews_silent_when_outcome_set() {
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+
+    let created = days_ago(30);
+    create_doc(
+        dir.path(),
+        "07-ai-audit/decisions",
+        "AIDEC-2026-04-01-002-approved.md",
+        &format!(
+            r#"id: AIDEC-2026-04-01-002
+title: Approved decision
+status: accepted
+created: {created}
+agent: test
+confidence: high
+review_required: true
+reviewed_by: pepe@example.com
+reviewed_at: {created}
+review_outcome: approved
+risk_level: medium"#,
+            created = created
+        ),
+    );
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "validate",
+            "--check-pending-reviews",
+            "--max-pending-days",
+            "14",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("REVIEW-PENDING").not());
+}
+
+#[test]
+fn test_check_pending_reviews_threshold_respected() {
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+
+    let recent = days_ago(5); // newer than the default 14-day threshold
+    create_doc(
+        dir.path(),
+        "07-ai-audit/decisions",
+        "AIDEC-2026-05-01-001-recent.md",
+        &format!(
+            r#"id: AIDEC-2026-05-01-001
+title: Recent decision
+status: accepted
+created: {created}
+agent: test
+confidence: high
+review_required: true
+risk_level: medium"#,
+            created = recent
+        ),
+    );
+
+    // Default max-pending-days = 14, doc is 5 days old → no warning.
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args(["validate", "--check-pending-reviews"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("REVIEW-PENDING").not());
+}
+
+#[test]
+fn test_check_pending_reviews_skipped_without_flag() {
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+
+    let created = days_ago(30);
+    create_doc(
+        dir.path(),
+        "07-ai-audit/decisions",
+        "AIDEC-2026-04-01-003-stale.md",
+        &format!(
+            r#"id: AIDEC-2026-04-01-003
+title: Stale decision
+status: accepted
+created: {created}
+agent: test
+confidence: high
+review_required: true
+risk_level: medium"#,
+            created = created
+        ),
+    );
+
+    // Without --check-pending-reviews, the warning does not appear.
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("REVIEW-PENDING").not());
+}
+
+// ── --staged ─────────────────────────────────────────────────────────────
+
 #[test]
 fn test_validate_staged_no_staged_docs() {
     let dir = tempfile::TempDir::new().unwrap();
