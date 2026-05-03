@@ -132,7 +132,7 @@ DevTrail 的产品决策基于十二条明确的原则。它们按层级排序�
 - **`devtrail analyze`** — 代码复杂度分析（认知复杂度 + 圈复杂度），由 [arborist-metrics](https://github.com/StrangeDaysTech/arborist) 驱动——我们的开源 Rust 多语言代码度量库
 - **`devtrail audit`** — 审计跟踪报告，含时间线、可追溯性映射和 HTML 导出
 - **`devtrail compliance`** — 作为已记录工作的副作用产出法规合规评分（EU AI Act、ISO 42001、NIST AI RMF；六项中国框架通过 `--region china` 按选项启用）
-- **`devtrail explore`** — 用于浏览项目文档图谱的交互式 TUI
+- **`devtrail explore`** — 用于浏览项目文档图谱的交互式 TUI，包含章程视图（生命周期状态、来源 AILOG/spec、文件位置）
 - **Pre-commit 钩子** + **GitHub Actions** 用于 CI/CD 验证
 
 ---
