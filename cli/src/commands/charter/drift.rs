@@ -89,16 +89,27 @@ pub fn run(
     let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
     let raw_exit = output.status.code().unwrap_or(-1);
 
-    // Parse the script output to identify declared-but-not-modified paths so
-    // we can apply AILOG-suppression. Scope-expansion ("Modified but NOT
-    // declared") is informational and not suppressed — those paths are not
-    // in the Charter's declared list and rarely overlap with documented
-    // risks.
+    // Parse the script output to identify declared-but-not-modified paths.
+    // Scope-expansion ("Modified but NOT declared") is informational and not
+    // suppressed — those paths are not in the Charter's declared list and
+    // rarely overlap with documented risks.
     let omitted = extract_omitted_paths(&stdout);
-    let suppressions: Vec<(String, String)> = if no_ailog_suppress || omitted.is_empty() {
+
+    // O3 (cli-3.8.1, issue #91): always compute what AILOG-aware suppression
+    // would have done, regardless of the flag. The flag only controls
+    // whether to APPLY that suppression to the rendered output. This lets us
+    // emit a confirming INFO line when --no-ailog-suppress is passed (the
+    // operator opted into the diagnostic mode and deserves visible signal,
+    // even when N=0).
+    let would_have_suppressed: Vec<(String, String)> = if omitted.is_empty() {
         Vec::new()
     } else {
         compute_ailog_suppressions(project_root, &charter, &omitted)?
+    };
+    let suppressions: Vec<(String, String)> = if no_ailog_suppress {
+        Vec::new()
+    } else {
+        would_have_suppressed.clone()
     };
     let suppressed_paths: std::collections::HashSet<String> =
         suppressions.iter().map(|(p, _)| p.clone()).collect();
@@ -124,6 +135,35 @@ pub fn run(
         );
         for (path, ailog_id) in &suppressions {
             println!("  - {} [documented in {}]", path, ailog_id.dimmed());
+        }
+    }
+
+    // O3 (cli-3.8.1): when --no-ailog-suppress is passed, always emit at
+    // least one line confirming dispatch — closes the "default and
+    // --no-ailog-suppress produce byte-identical output at N=0" ambiguity
+    // reported in Sentinel CHARTER-02 telemetry. Issue #91 vote: option
+    // (c) "--no-ailog-suppress only", with explicit confirmation when N=0.
+    if no_ailog_suppress {
+        println!();
+        let n = would_have_suppressed.len();
+        if n == 0 {
+            println!(
+                "{} AILOG-aware suppression bypassed (would have suppressed: 0 paths)",
+                "INFO:".cyan().bold()
+            );
+        } else {
+            println!(
+                "{} AILOG-aware suppression bypassed (would have suppressed: {} path(s) listed above as drift)",
+                "INFO:".cyan().bold(),
+                n
+            );
+            for (path, ailog_id) in &would_have_suppressed {
+                println!(
+                    "  - {} [would suppress: {}]",
+                    path,
+                    ailog_id.dimmed()
+                );
+            }
         }
     }
 

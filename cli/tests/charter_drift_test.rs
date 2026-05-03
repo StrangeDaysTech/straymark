@@ -279,6 +279,149 @@ review_required: false
         .stdout(predicate::str::contains("Declared in Charter but NOT modified"));
 }
 
+// ── O3 (cli-3.8.1): --no-ailog-suppress always emits INFO line ──────
+
+#[test]
+fn charter_drift_no_ailog_suppress_emits_info_line_when_n_zero() {
+    // O3 (issue #91): when --no-ailog-suppress is passed AND there's
+    // nothing the AILOG-aware filter would have suppressed (N=0), we
+    // still emit one INFO line confirming the flag was honored. Closes
+    // the byte-identical-output ambiguity Sentinel CHARTER-02 reported.
+    if !bash_available() {
+        eprintln!("skipping: bash not available");
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    write_charter_with_files(dir.path(), &["src/foo.rs"], None);
+    std::fs::create_dir_all(dir.path().join("src")).unwrap();
+    std::fs::write(dir.path().join("src/foo.rs"), "// initial\n").unwrap();
+    git(dir.path(), &["init", "-q", "-b", "main"]);
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-q", "-m", "initial"]);
+    std::fs::write(dir.path().join("src/foo.rs"), "// edited\n").unwrap();
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-q", "-m", "edit foo"]);
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "charter",
+            "drift",
+            "CHARTER-01",
+            "--no-ailog-suppress",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "AILOG-aware suppression bypassed (would have suppressed: 0 paths)",
+        ));
+}
+
+#[test]
+fn charter_drift_no_ailog_suppress_emits_info_line_when_n_nonzero() {
+    // When --no-ailog-suppress is passed AND there's something the filter
+    // would have suppressed (N>0), the INFO line names the count and
+    // lists each path that was bypassed (with the AILOG ID that documents
+    // the risk). The drift itself is still surfaced as failure exit.
+    if !bash_available() {
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+
+    let ailog_path = dir
+        .path()
+        .join(".devtrail/07-ai-audit/agent-logs/AILOG-2026-05-03-001-document-bar.md");
+    std::fs::write(
+        &ailog_path,
+        r#"---
+id: AILOG-2026-05-03-001
+title: Document bar
+agent: test
+confidence: high
+risk_level: low
+review_required: false
+---
+
+## Risk
+
+- **R3**: `src/bar.rs` documented as scope-simplified.
+"#,
+    )
+    .unwrap();
+
+    write_charter_with_files(
+        dir.path(),
+        &["src/foo.rs", "src/bar.rs"],
+        Some("AILOG-2026-05-03-001"),
+    );
+    std::fs::create_dir_all(dir.path().join("src")).unwrap();
+    std::fs::write(dir.path().join("src/foo.rs"), "// initial\n").unwrap();
+    std::fs::write(dir.path().join("src/bar.rs"), "// initial\n").unwrap();
+    git(dir.path(), &["init", "-q", "-b", "main"]);
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-q", "-m", "initial"]);
+    std::fs::write(dir.path().join("src/foo.rs"), "// edited\n").unwrap();
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-q", "-m", "edit foo only"]);
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "charter",
+            "drift",
+            "CHARTER-01",
+            "--no-ailog-suppress",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .failure()
+        // INFO line names the count.
+        .stdout(predicate::str::contains(
+            "AILOG-aware suppression bypassed (would have suppressed: 1 path(s)",
+        ))
+        // And lists each would-have-been-suppressed path.
+        .stdout(predicate::str::contains("src/bar.rs"))
+        .stdout(predicate::str::contains("would suppress: AILOG-2026-05-03-001"));
+}
+
+#[test]
+fn charter_drift_default_stays_silent_when_n_zero() {
+    // The flip side of O3: the DEFAULT (suppression on) must NOT emit
+    // an INFO line when there's nothing to suppress. The common-case
+    // output stays minimal — adding ceremony there is what (a)
+    // "always-on" would have done, which we explicitly rejected per
+    // the Sentinel CHARTER-06 vote.
+    if !bash_available() {
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    write_charter_with_files(dir.path(), &["src/foo.rs"], None);
+    std::fs::create_dir_all(dir.path().join("src")).unwrap();
+    std::fs::write(dir.path().join("src/foo.rs"), "// initial\n").unwrap();
+    git(dir.path(), &["init", "-q", "-b", "main"]);
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-q", "-m", "initial"]);
+    std::fs::write(dir.path().join("src/foo.rs"), "// edited\n").unwrap();
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-q", "-m", "edit foo"]);
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args(["charter", "drift", "CHARTER-01", "--path"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("OK No drift detected"))
+        // No INFO line in default mode at N=0.
+        .stdout(predicate::str::contains("AILOG-aware suppression bypassed").not());
+}
+
 #[test]
 fn charter_drift_resolves_glob_wildcards_in_declared_paths() {
     // fw-4.6.2: bulk Charters can declare `prefix*suffix` glob patterns
