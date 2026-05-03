@@ -400,3 +400,156 @@ fn charter_close_idempotent_under_non_interactive() {
         "user edit should be preserved, got:\n{after}"
     );
 }
+
+// ── F7 (cli-3.8.0): output differentiation first-run vs subsequent-run ──
+
+#[test]
+fn charter_close_first_run_prints_template_created_message() {
+    // F7: first --from-template --non-interactive invocation writes the
+    // template skeleton; output should tell the operator to edit and re-run,
+    // NOT pretend the close is finalized.
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    create_charter(dir.path(), "F7 First Run");
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "charter",
+            "close",
+            "CHARTER-01",
+            "--from-template",
+            "--non-interactive",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Telemetry template created"))
+        .stdout(predicate::str::contains("Edit the YAML"))
+        // The "finalized" message is only printed on subsequent runs.
+        .stdout(predicate::str::contains("finalized").not());
+}
+
+#[test]
+fn charter_close_subsequent_run_prints_finalized_message() {
+    // F7: subsequent invocation (telemetry already exists, presumably edited)
+    // should run schema validation and report "finalized" on success.
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    create_charter(dir.path(), "F7 Subsequent Run");
+
+    // First invocation: writes the template.
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "charter",
+            "close",
+            "CHARTER-01",
+            "--from-template",
+            "--non-interactive",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    // Simulate the operator editing the telemetry file with valid content.
+    let telemetry_path = dir
+        .path()
+        .join(".devtrail/charters/CHARTER-01.telemetry.yaml");
+    let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let valid_yaml = format!(
+        r#"charter_telemetry:
+  charter_id: "CHARTER-01"
+  charter_title: "F7 Subsequent Run"
+  closed_at: "{today}"
+  effort:
+    estimated_effort: "M (~1.5h)"
+    actual_effort: "M (~1.5h)"
+  outcome:
+    completed_as_planned: true
+    scope_changes: "ninguno"
+"#
+    );
+    std::fs::write(&telemetry_path, valid_yaml).unwrap();
+
+    // Second invocation: schema validates, output says finalized.
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "charter",
+            "close",
+            "CHARTER-01",
+            "--from-template",
+            "--non-interactive",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("validation passed"))
+        .stdout(predicate::str::contains("finalized"))
+        // The first-run "Edit the YAML" guidance should NOT appear here.
+        .stdout(predicate::str::contains("Edit the YAML").not())
+        .stdout(predicate::str::contains("Telemetry template created").not());
+}
+
+#[test]
+fn charter_close_subsequent_run_with_invalid_yaml_fails_clearly() {
+    // F7: subsequent invocation that fails schema validation should bail
+    // with a clear message, not silently print "finalized".
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    create_charter(dir.path(), "F7 Invalid Telemetry");
+
+    // First invocation drops the template.
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "charter",
+            "close",
+            "CHARTER-01",
+            "--from-template",
+            "--non-interactive",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    // Now break the telemetry file (invalid scope_changes value).
+    let telemetry_path = dir
+        .path()
+        .join(".devtrail/charters/CHARTER-01.telemetry.yaml");
+    std::fs::write(
+        &telemetry_path,
+        r#"charter_telemetry:
+  charter_id: "CHARTER-01"
+  charter_title: "test"
+  closed_at: "2026-05-03"
+  effort:
+    estimated_effort: "M"
+    actual_effort: "M"
+  outcome:
+    completed_as_planned: true
+    scope_changes: "MAJOR_INVALID"
+"#,
+    )
+    .unwrap();
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "charter",
+            "close",
+            "CHARTER-01",
+            "--from-template",
+            "--non-interactive",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("validation"));
+}
