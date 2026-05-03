@@ -251,6 +251,23 @@ enum CharterCommands {
         #[arg(long = "path", default_value = ".")]
         path: String,
     },
+    /// Detect file-vs-commit drift at Charter close (declared-but-not-modified
+    /// files; scope expansion). Suppresses alerts on paths already documented
+    /// as risks in the Charter's originating AILOGs.
+    Drift {
+        /// Charter identifier (CHARTER-NN, CHARTER-NN-slug, or just NN)
+        charter_id: String,
+        /// Git revision range (default: HEAD~1..HEAD)
+        #[arg(long)]
+        range: Option<String>,
+        /// Disable AILOG-aware suppression (show every declared-omitted path
+        /// even if documented in an AILOG).
+        #[arg(long)]
+        no_ailog_suppress: bool,
+        /// Project directory (default: current directory)
+        #[arg(long = "path", default_value = ".")]
+        path: String,
+    },
 }
 
 fn main() {
@@ -335,6 +352,17 @@ fn main() {
                 non_interactive,
                 path,
             } => commands::charter::close::run(&path, &charter_id, from_template, non_interactive),
+            CharterCommands::Drift {
+                charter_id,
+                range,
+                no_ailog_suppress,
+                path,
+            } => commands::charter::drift::run(
+                &path,
+                &charter_id,
+                range.as_deref(),
+                no_ailog_suppress,
+            ),
         },
     };
 
