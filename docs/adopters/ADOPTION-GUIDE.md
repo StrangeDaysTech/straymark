@@ -239,7 +239,7 @@ The CLI automatically:
 
 1. **Download the latest release**
 
-   Go to [GitHub Releases](https://github.com/StrangeDaysTech/devtrail/releases) and download the latest `fw-*` release ZIP (e.g., `fw-4.6.1`).
+   Go to [GitHub Releases](https://github.com/StrangeDaysTech/devtrail/releases) and download the latest `fw-*` release ZIP (e.g., `fw-4.6.2`).
 
 2. **Extract to your project**
    ```bash

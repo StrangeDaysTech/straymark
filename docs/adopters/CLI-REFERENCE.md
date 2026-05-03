@@ -48,8 +48,8 @@ DevTrail uses **independent version tags** for each component:
 
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
-| Framework | `fw-` | `fw-4.6.1` | Templates (12 types), governance docs, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.7.1` | The `devtrail` binary |
+| Framework | `fw-` | `fw-4.6.2` | Templates (12 types), governance docs, directives, Charter template + schema |
+| CLI | `cli-` | `cli-3.7.2` | The `devtrail` binary |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
 
@@ -73,7 +73,7 @@ Initialize DevTrail in a project directory.
 | Argument/Flag | Default | Description |
 |---|---|---|
 | `path` | `.` (current directory) | Target project directory |
-| `--hooks` *(cli-3.7.1+)* | off | After init, install the framework's pre-PR hook (`.devtrail/hooks/pre-pr.sh`) as `.git/hooks/pre-push`. Runs `devtrail charter drift` automatically before each push. Opt-in per principle #6 (cognitive discipline > raw productivity). Refuses to overwrite an existing `pre-push` hook; skips silently if not a git repo. |
+| `--hooks` *(cli-3.7.0+)* | off | After init, install the framework's pre-PR hook (`.devtrail/hooks/pre-pr.sh`) as `.git/hooks/pre-push`. Runs `devtrail charter drift` automatically before each push. Opt-in per principle #6 (cognitive discipline > raw productivity). Refuses to overwrite an existing `pre-push` hook; skips silently if not a git repo. |
 
 **What it does:**
 
@@ -88,7 +88,7 @@ Initialize DevTrail in a project directory.
 
 ```bash
 $ devtrail init .
-✔ Downloaded DevTrail fw-4.6.1
+✔ Downloaded DevTrail fw-4.6.2
 ✔ Created .devtrail/ directory structure
 ✔ Created DEVTRAIL.md
 ✔ Configured AI agent directives
@@ -110,7 +110,7 @@ If `.devtrail/` does not exist in the current directory, the framework update is
 ```bash
 $ devtrail update
 Updating framework...
-✔ Framework updated to fw-4.6.1
+✔ Framework updated to fw-4.6.2
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -127,7 +127,7 @@ Update only the framework files. Looks for the latest `fw-*` release on GitHub.
 
 ```bash
 $ devtrail update-framework
-✔ Framework updated to fw-4.6.1
+✔ Framework updated to fw-4.6.2
 ```
 
 ---
@@ -211,7 +211,7 @@ $ devtrail status
   Project
   ┌───────────┬──────────────────────────┐
   │ Path      │ /home/user/my-project    │
-  │ Framework │ fw-4.6.1                 │
+  │ Framework │ fw-4.6.2                 │
   │ CLI       │ cli-3.5.2                │
   │ Language  │ en                       │
   └───────────┴──────────────────────────┘
@@ -268,7 +268,7 @@ Repairing DevTrail in /home/user/my-project
 → Restoring 1 missing directory...
 ✓ Restored .devtrail/templates/
 → Downloading framework to restore missing files...
-  Using version: fw-4.6.1
+  Using version: fw-4.6.2
 ✓ Restored 16 file(s) from framework
 → Updating checksums...
 
@@ -289,8 +289,8 @@ Validate DevTrail documents for compliance and correctness.
 | `--fix` | — | Automatically fix simple issues (e.g., missing `review_required: true` for high-risk docs) |
 | `--staged` | — | Validate only staged (git-added) files. Ideal for pre-commit hooks. |
 | `--include-charters` | — | Also validate Charters in `docs/charters/` against the Charter JSON Schema and referential integrity (originating AILOG IDs resolve, originating spec paths exist). Opt-in so projects that don't yet use the Charter pattern are unaffected. |
-| `--check-pending-reviews` *(cli-3.7.1+)* | off | List documents with `review_required: true` and no `review_outcome` older than `--max-pending-days`. **Warn-only** — never fails the validate exit code; useful for CI dashboards of the approval backlog. |
-| `--max-pending-days` *(cli-3.7.1+)* | `14` | Threshold in days for `--check-pending-reviews` |
+| `--check-pending-reviews` *(cli-3.7.0+)* | off | List documents with `review_required: true` and no `review_outcome` older than `--max-pending-days`. **Warn-only** — never fails the validate exit code; useful for CI dashboards of the approval backlog. |
+| `--max-pending-days` *(cli-3.7.0+)* | `14` | Threshold in days for `--check-pending-reviews` |
 
 **What it checks:**
 
@@ -321,7 +321,7 @@ $ devtrail validate --fix
 
 ### `devtrail approve <doc-id> --outcome <outcome> --reviewer <id> [--at YYYY-MM-DD] [--notes "..."] [--path <dir>]`
 
-*Available since **cli-3.7.1** + **fw-4.6.1**.*
+*Available since **cli-3.7.2** + **fw-4.6.2**.*
 
 Record a formal human approval on a `review_required: true` document. Writes the three approval frontmatter fields (`reviewed_by`, `reviewed_at`, `review_outcome`) **and** appends the canonical `## Approval` body section in one atomic edit. Implements the closure signal canonized in `DOCUMENTATION-POLICY.md §3.5`.
 
@@ -421,8 +421,8 @@ Manage **Charters**: bounded, auditable units of work declared ex-ante and valid
 - `devtrail charter new` — scaffold a new Charter from the framework template
 - `devtrail charter list` — enumerate Charters with optional filters
 - `devtrail charter status` — show Charter detail, or the most recent 5 Charters
-- `devtrail charter close` — record post-execution telemetry and bump status to `closed` *(Phase 2, fw-4.6.1+)*
-- `devtrail charter drift` — detect file-vs-commit drift with AILOG-aware suppression *(Phase 2, fw-4.6.1+)*
+- `devtrail charter close` — record post-execution telemetry and bump status to `closed` *(Phase 2, fw-4.6.2+)*
+- `devtrail charter drift` — detect file-vs-commit drift with AILOG-aware suppression *(Phase 2, fw-4.6.2+)*
 
 Phase 3 will add `charter audit` (multi-model external audit).
 
@@ -581,7 +581,24 @@ AILOG-suppressed: 1 path(s)
 OK all declared-omitted paths are documented in AILOGs — drift accepted.
 ```
 
-> **Platform note.** The drift check delegates to `bash`. On Linux/macOS/WSL/Git Bash this works out of the box. On Windows native without WSL, install Git Bash; a pure-Rust fallback is on the roadmap but not in fw-4.6.1.
+> **Platform note.** The drift check delegates to `bash`. On Linux/macOS/WSL/Git Bash this works out of the box. On Windows native without WSL, install Git Bash; a pure-Rust fallback is on the roadmap but not in fw-4.6.x.
+
+#### Wildcard support in declared paths *(fw-4.6.2+)*
+
+The drift check resolves two forms of wildcard in `## Files to modify`:
+
+| Form | Example | Use case |
+|---|---|---|
+| Ellipsis | `` `.devtrail/07-ai-audit/agent-logs/AILOG-...md` `` | Any modified path with that prefix satisfies the wildcard. Used historically when an unknown number of AILOGs would be created during execution. |
+| Glob | `` `AILOG-*.md` `` or `` `src/services/foo-*.rs` `` | Any modified path matching the glob (`*` → `.*`) satisfies the wildcard. Used for bulk Charter declarations where a parameterized set is touched. Added in fw-4.6.2 after the friction surfaced in Sentinel CHARTER-04 ([issue #81](https://github.com/StrangeDaysTech/devtrail/issues/81)). |
+
+Both forms are handled in both directions: a declared wildcard suppresses both "declared but not modified" warnings (when at least one matching file was modified) and "modified but not declared" warnings (when a modified path matches a declared wildcard).
+
+#### Designed: governance paths are always in scope
+
+Paths under `docs/charters/*` and `.devtrail/07-ai-audit/*` are **never** reported as "modified but not declared". This is opinionated by design — those paths are always legitimate when the Charter itself or the AILOG of execution is touched. Empirically validated in Sentinel CHARTER-04: a stray `git add -A` staged unrelated user-untracked files (`.claude/skills/`, `cmd/sentinel/sentinel`); the rule correctly suppressed the governance noise without hiding the genuine project-file expansion ([issue #81 W2](https://github.com/StrangeDaysTech/devtrail/issues/81#issuecomment-update)).
+
+If you're running a Charter whose explicit scope is governance churn (e.g., a bulk approval Charter touching only `.devtrail/07-ai-audit/`), the drift check will report 0 modified files and you'll need to verify scope by reading the AILOG. A `--strict-scope` flag that disables the always-in-scope rule is on the table for cli-3.8.0 if a real adopter reports the asymmetry as a friction.
 
 ---
 
@@ -926,7 +943,7 @@ Show version, authorship, and license information.
 $ devtrail about
 DevTrail CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.6.1
+  Framework version: fw-4.6.2
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/devtrail

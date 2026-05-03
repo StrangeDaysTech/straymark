@@ -897,3 +897,110 @@ fn charter_new_does_not_overwrite_existing_file() {
         .success();
     assert!(charters_dir.join("02-foo.md").exists());
 }
+
+// ── F1 (cli-3.7.2): word-boundary slug truncation + --slug override ──
+
+#[test]
+fn charter_new_truncates_long_title_at_word_boundary() {
+    // CHARTER-04 reproduction (issue #81): title that overflowed 50 chars
+    // by 1-2 chars used to produce a mid-word fragment like "…required-t"
+    // (cutting "true" to "t"). The fix truncates at the last `-` boundary.
+    let dir = TempDir::new().unwrap();
+    setup_devtrail_with_charter_template(dir.path());
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .arg("charter")
+        .arg("new")
+        .arg("--title")
+        .arg("Approve retroactivo bulk de docs review_required: true")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    // The slug should not include a partial "true" fragment.
+    let charters_dir = dir.path().join("docs/charters");
+    let entries: Vec<_> = std::fs::read_dir(&charters_dir).unwrap().flatten().collect();
+    assert_eq!(entries.len(), 1);
+    let filename = entries[0]
+        .path()
+        .file_name()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string();
+    assert!(
+        !filename.ends_with("-t.md") && !filename.ends_with("-tr.md") && !filename.ends_with("-tru.md"),
+        "filename must not end with a partial word, got: {filename}"
+    );
+    assert!(filename.contains("required"), "should preserve last full word, got: {filename}");
+}
+
+#[test]
+fn charter_new_slug_flag_overrides_title_derivation() {
+    // CHARTER-05 reproduction (issue #81): the title-derived slug dropped a
+    // meaningful trailing reference (e.g. "-04-f3"). The --slug flag lets
+    // the operator provide an explicit short slug that preserves context.
+    let dir = TempDir::new().unwrap();
+    setup_devtrail_with_charter_template(dir.path());
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .arg("charter")
+        .arg("new")
+        .arg("--title")
+        .arg("Batching ListTimeSeries para N≥500 servicios — Plan 04 F3")
+        .arg("--slug")
+        .arg("batching-listtimeseries-04-f3")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    let charters_dir = dir.path().join("docs/charters");
+    assert!(charters_dir.join("01-batching-listtimeseries-04-f3.md").exists());
+}
+
+#[test]
+fn charter_new_slug_flag_normalizes_through_slugifier() {
+    // The override is normalized through the same slugifier so the operator
+    // cannot smuggle in characters that would break the filename.
+    let dir = TempDir::new().unwrap();
+    setup_devtrail_with_charter_template(dir.path());
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .arg("charter")
+        .arg("new")
+        .arg("--title")
+        .arg("Whatever")
+        .arg("--slug")
+        .arg("UPPER and SPECIAL!!!")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    let charters_dir = dir.path().join("docs/charters");
+    assert!(charters_dir.join("01-upper-and-special.md").exists());
+}
+
+#[test]
+fn charter_new_empty_slug_flag_falls_back_to_title() {
+    // An empty --slug "" should be ignored (not treated as a hard error),
+    // falling back to the title-derived slug.
+    let dir = TempDir::new().unwrap();
+    setup_devtrail_with_charter_template(dir.path());
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .arg("charter")
+        .arg("new")
+        .arg("--title")
+        .arg("Hello World")
+        .arg("--slug")
+        .arg("")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    assert!(dir.path().join("docs/charters/01-hello-world.md").exists());
+}

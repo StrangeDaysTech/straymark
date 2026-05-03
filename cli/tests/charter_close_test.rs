@@ -217,6 +217,103 @@ fn charter_close_syncs_body_status_mirror_line() {
 }
 
 #[test]
+fn charter_close_writes_closed_at_when_absent() {
+    // F8 (cli-3.7.2): every closed Charter should carry a closed_at:
+    // YYYY-MM-DD line in frontmatter. Sentinel CHARTER-02..05 telemetry had
+    // to add it manually 4× consecutively. The CLI now does it on close.
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    create_charter(dir.path(), "Closed At Test");
+    let charter_path = dir.path().join("docs/charters/01-closed-at-test.md");
+    let before = std::fs::read_to_string(&charter_path).unwrap();
+    assert!(!before.contains("closed_at:"), "scaffold should not pre-write closed_at");
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "charter",
+            "close",
+            "CHARTER-01",
+            "--from-template",
+            "--non-interactive",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    let after = std::fs::read_to_string(&charter_path).unwrap();
+    assert!(after.contains("closed_at:"), "closed_at must be written on close, got:\n{after}");
+    // Today's date.
+    let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+    assert!(
+        after.contains(&format!("closed_at: {today}")),
+        "closed_at should be today ({today}), got:\n{after}"
+    );
+    // Closed-at sits adjacent to the bumped status line for readability.
+    let status_pos = after.find("status: closed").expect("status: closed");
+    let closed_at_pos = after.find("closed_at:").expect("closed_at line");
+    let between = &after[status_pos..closed_at_pos];
+    assert!(
+        between.lines().count() <= 2,
+        "closed_at should be on the line right after status: closed, got intervening:\n{between}"
+    );
+}
+
+#[test]
+fn charter_close_replaces_existing_closed_at_with_today() {
+    // If a Charter was previously closed with a stale closed_at (manual
+    // edit, or a re-close after status got reverted), the date should be
+    // refreshed to today rather than left stale.
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+
+    let charter_path = dir.path().join("docs/charters/01-stale.md");
+    let stale = r#"---
+charter_id: CHARTER-01
+status: in-progress
+closed_at: 2020-01-01
+effort_estimate: M
+trigger: "test"
+---
+
+# Charter: Stale
+
+> **Status (mirrored from frontmatter — source of truth is above):** in-progress. Effort: M.
+
+## Files to modify
+
+| File | Change |
+|---|---|
+
+## Tasks
+
+1. ok.
+"#;
+    std::fs::create_dir_all(dir.path().join("docs/charters")).unwrap();
+    std::fs::write(&charter_path, stale).unwrap();
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "charter",
+            "close",
+            "CHARTER-01",
+            "--from-template",
+            "--non-interactive",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    let after = std::fs::read_to_string(&charter_path).unwrap();
+    assert!(!after.contains("closed_at: 2020-01-01"), "stale date should be replaced");
+    let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+    assert!(after.contains(&format!("closed_at: {today}")));
+}
+
+#[test]
 fn charter_close_bumps_status_to_closed() {
     let dir = TempDir::new().unwrap();
     setup_devtrail(dir.path());

@@ -28,6 +28,7 @@ pub fn run(
     from_ailog: Option<&str>,
     from_spec: Option<&str>,
     title_arg: Option<&str>,
+    slug_arg: Option<&str>,
 ) -> Result<()> {
     // clap enforces mutual exclusion via conflicts_with — keep this assertion
     // as a defense against direct programmatic invocation.
@@ -75,12 +76,20 @@ pub fn run(
     })?;
 
     // Build identifiers.
+    // F1 (cli-3.7.2): `--slug` lets the operator override the title-derived
+    // slug when the auto-derivation drops meaningful suffixes (e.g.
+    // `…-plan-04-f3` → cut to `…-plan` because the limit hit). The override
+    // is normalized through the same slugifier so it cannot smuggle in
+    // characters that break the filename.
     let nn = next_charter_number(project_root);
-    let slug = slugify(&title);
+    let slug = match slug_arg {
+        Some(s) if !s.trim().is_empty() => slugify(s),
+        _ => slugify(&title),
+    };
     if slug.is_empty() {
         bail!(
-            "Title '{}' produces an empty slug — titles must contain at least one alphanumeric character",
-            title
+            "{} produces an empty slug — must contain at least one alphanumeric character",
+            if slug_arg.is_some() { "--slug" } else { "Title" }
         );
     }
     let charter_id = format!("CHARTER-{:02}-{}", nn, slug);
@@ -247,6 +256,13 @@ fn validate_spec_path(project_root: &Path, spec_path: &str) -> Result<()> {
 /// Slugify a title for use in a Charter filename. Mirrors the implementation
 /// in `commands::new::slugify` (kept private there — duplicated here to avoid
 /// touching the existing command in this PR; consolidate to `utils` later).
+///
+/// F1 (cli-3.7.2): truncation now respects word boundaries. The previous
+/// implementation cut at the 50-char limit and only trimmed a trailing `-`,
+/// which produced mid-word slugs like `…-required-t` (truncating "true" to "t"
+/// in Sentinel CHARTER-04). The fix is to back up to the last `-` boundary
+/// at-or-before the limit, never producing a partial word fragment. Operators
+/// who want a fully custom slug pass `--slug` to override this function entirely.
 fn slugify(title: &str) -> String {
     let lower = title.to_lowercase();
     let parts: Vec<&str> = lower
@@ -255,11 +271,40 @@ fn slugify(title: &str) -> String {
         .collect();
     let slug = parts.join("-");
     if slug.chars().count() > 50 {
-        let truncated: String = slug.chars().take(50).collect();
-        truncated.trim_end_matches('-').to_string()
+        truncate_slug_at_word_boundary(&slug, 50)
     } else {
         slug
     }
+}
+
+/// Truncate `slug` at-or-before `max_chars`, never splitting a word.
+///
+/// The function works in two cases:
+/// - If `slug[max_chars]` is `-` or end-of-string, then `slug[..max_chars]`
+///   already ends on a complete word — we keep the full prefix (after
+///   trimming any trailing `-`).
+/// - Otherwise, `slug[..max_chars]` ends mid-word; we back up to the last
+///   `-` boundary inside the truncated view and drop the partial token.
+///
+/// Falls back to a hard cut when the truncated view contains no hyphen at
+/// all (single very long token).
+fn truncate_slug_at_word_boundary(slug: &str, max_chars: usize) -> String {
+    let truncated: String = slug.chars().take(max_chars).collect();
+
+    let next_is_boundary = slug
+        .chars()
+        .nth(max_chars)
+        .map(|c| c == '-')
+        .unwrap_or(true);
+    if next_is_boundary {
+        return truncated.trim_end_matches('-').to_string();
+    }
+
+    let cut = match truncated.rfind('-') {
+        Some(idx) => &truncated[..idx],
+        None => truncated.as_str(),
+    };
+    cut.trim_end_matches('-').to_string()
 }
 
 #[cfg(test)]
@@ -385,6 +430,57 @@ Body content.
         let long = "a".repeat(100);
         let s = slugify(&long);
         assert!(s.len() <= 50);
+    }
+
+    // ── F1 (cli-3.7.2): word-boundary truncation ─────────────────────────
+
+    #[test]
+    fn slugify_truncates_at_word_boundary_not_mid_word() {
+        // CHARTER-04 reproduction case from issue #81: title that overflows
+        // 50 chars by 1-2 chars used to produce a mid-word fragment like
+        // "…required-t" (cutting "true" to "t"). Now the truncation backs up
+        // to the last `-` boundary and drops the partial token entirely.
+        let title = "Approve retroactivo bulk de docs review_required: true";
+        let s = slugify(title);
+        assert!(s.len() <= 50, "slug must fit limit, got {}: {s}", s.len());
+        assert!(
+            !s.ends_with("-t") && !s.ends_with("-tr") && !s.ends_with("-tru"),
+            "slug must not end with a partial word fragment, got: {s}"
+        );
+        // Last completed word should be preserved.
+        assert!(s.ends_with("required"), "got: {s}");
+    }
+
+    #[test]
+    fn slugify_handles_no_hyphen_in_truncated_window() {
+        // Single very long token: no hyphens to back up to. We hard-cut.
+        let title = "supercalifragilisticexpialidocious".repeat(3);
+        let s = slugify(&title);
+        assert!(s.len() <= 50);
+        assert!(!s.contains('-'));
+    }
+
+    #[test]
+    fn slugify_strips_trailing_hyphens_after_word_boundary_cut() {
+        // If the cut lands such that a trailing `-` survives, we trim it.
+        let title = "abc-def-ghi-jkl-mno-pqr-stu-vwx-yz1-2345-6789-extra";
+        let s = slugify(title);
+        assert!(!s.ends_with('-'), "got: {s}");
+    }
+
+    #[test]
+    fn truncate_slug_at_word_boundary_helper_is_pure() {
+        // Direct unit test of the helper: cut at last `-` ≤ max_chars.
+        assert_eq!(
+            truncate_slug_at_word_boundary("foo-bar-baz-qux", 11),
+            "foo-bar-baz"
+        );
+        assert_eq!(
+            truncate_slug_at_word_boundary("foo-bar-baz-qux", 10),
+            "foo-bar"
+        );
+        // No hyphen within window → hard cut.
+        assert_eq!(truncate_slug_at_word_boundary("supercalifragilistic", 10), "supercalif");
     }
 
     #[test]

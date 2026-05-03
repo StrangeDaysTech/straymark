@@ -7,6 +7,103 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.6.2 / CLI 3.7.2 — Phase 2 patches part 2 (F1, F8 + wildcard glob from issue #81 update)
+
+Second round of patches surfaced by Sentinel CHARTER-02..05 telemetry
+([issue #81 update](https://github.com/StrangeDaysTech/devtrail/issues/81#issuecomment-update)).
+After fw-4.6.1 / cli-3.7.1 fixed F3 / F4 / F6, executing four more
+Charters in Sentinel re-prioritized the remaining frictions: **F1
+(slug truncation) reproduced 4/4 times consecutively** — was UX
+polish in the original report, now the most consistently reproducing
+friction in the CLI. **F8 (closed_at)** required manual workaround on
+every Charter close (4× consecutive). **Wildcard glob in drift script**
+was a new finding from CHARTER-04 that any future bulk Charter would
+hit. Plus **observation O1** validated empirically as a feature
+(governance paths always-in-scope correctly suppressed governance
+noise without hiding a stray `git add -A` of project files).
+
+**Compatibility.** No breaking changes. New behavior is additive
+(`--slug` flag, automatic `closed_at` writing, glob resolution in drift).
+
+### Fixed (CLI)
+
+- **F1 — `devtrail charter new` mid-word slug truncation.** A title that
+  overflows the 50-char slug limit by 1-2 chars used to produce a partial
+  word fragment (Sentinel CHARTER-04: title ending in `... true` →
+  filename `…-required-t.md`). Two changes:
+  - `slugify` now backs up to the last `-` boundary at-or-before the
+    limit and drops any partial token, never producing a mid-word cut.
+    Conservative: when the next char in the original is a `-` (or
+    end-of-string), the truncated view is already at a complete
+    boundary and is kept verbatim.
+  - New `--slug <value>` flag lets the operator override the
+    title-derived slug entirely (Sentinel CHARTER-05: title with a
+    meaningful `… Plan 04 F3` suffix that otherwise gets lost). The
+    override is normalized through the same slugifier so it cannot
+    smuggle in characters that break the filename.
+
+- **F8 — `devtrail charter close` did not auto-write `closed_at`.** Per
+  Sentinel CHARTER-02..05 telemetry, the field had to be added manually
+  4× consecutively. The CLI now writes `closed_at: <today>` to the
+  frontmatter alongside the `status: closed` bump. If the Charter
+  already had a `closed_at` (e.g., a prior close that was reverted),
+  the value is refreshed to today rather than left stale.
+
+### Fixed (Framework)
+
+- **Drift script wildcard glob resolution.** The bash drift script
+  already supported the historical `prefix...suffix` ellipsis
+  wildcard. Now it also resolves the more conventional
+  `prefix*suffix` glob form: `*` is converted to `.*` for the regex
+  match, and the same logic applies in both directions (declared
+  glob suppresses "declared but not modified" when at least one
+  matching file was modified, and suppresses "modified but not
+  declared" when a modified path matches a declared glob).
+  Sentinel CHARTER-04 declared `AILOG-*.md` for a parameterized bulk
+  set; pre-fix the script extracted the literal string and reported
+  spurious drift.
+
+### Documented (Framework)
+
+- **O1 ("always in scope" rule for governance paths) is a designed
+  feature, not a bug.** Empirically validated in Sentinel CHARTER-04:
+  a stray `git add -A` staged unrelated user-untracked files
+  (`.claude/skills/`, `cmd/sentinel/sentinel`); the rule correctly
+  suppressed governance noise without hiding the genuine project-file
+  expansion. CLI-REFERENCE.md `devtrail charter drift` section now
+  has explicit subsections for "Wildcard support" and "Designed:
+  governance paths are always in scope", with the empirical citation
+  to issue #81 W2. A `--strict-scope` flag that disables the rule
+  remains on the table for cli-3.8.0 if a real adopter reports the
+  asymmetry as friction.
+
+### Tests
+
+- 4 new unit tests for the F1 slug helper (mid-word truncation
+  reproduction, hard-cut fallback for hyphenless slugs, trailing-`-`
+  trim, helper purity).
+- 4 new integration tests for `devtrail charter new` (word-boundary
+  truncation end-to-end, `--slug` override, `--slug` normalized
+  through slugifier, empty `--slug` falls back to title).
+- 2 new integration tests for F8 (`closed_at` auto-write when
+  absent, refresh of stale `closed_at` to today).
+- 1 new integration test for the drift wildcard glob (real git repo,
+  Charter declares `component-*.rs`, all matching modified files
+  satisfy the glob).
+- All 16/16 test groups pass (393 individual tests, 11 new on top of
+  the 382 carried forward from cli-3.7.1).
+
+### What's NOT in this release
+
+- F2 (AILOG context backfill in Origin line) — bundled for cli-3.8.0.
+- F5 (high-risk approve warning + verbose) — bundled for cli-3.8.0.
+- F7 (charter close output differentiation first-run vs revalidation)
+  — bundled for cli-3.8.0.
+- O3 (`INFO: 0 paths suppressed` always-on log) — pending design discussion.
+- Phase 3 (multi-model external audit) — separately scoped.
+
+---
+
 ## Framework 4.6.1 / CLI 3.7.1 — Phase 2 patches (F3, F4, F6 from issue #81)
 
 Empirical validation of fw-4.6.0 / cli-3.7.0 in Sentinel CHARTER-02
