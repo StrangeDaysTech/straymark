@@ -125,7 +125,7 @@ Salvaguardas incorporadas que aseguran que los humanos mantengan el control:
 
 Comandos integrados que convierten la disciplina en feedback accionable:
 
-- **`devtrail charter <new|list|status|close|drift>`** — Unidades acotadas de trabajo declaradas ex-ante, auditadas ex-post (la unidad de ejecución del agente). `close` registra telemetría post-ejecución; `drift` detecta drift archivos-vs-commits con supresión AILOG-aware.
+- **`devtrail charter <new|list|status|close|drift|audit>`** — Unidades acotadas declaradas ex-ante, auditadas ex-post. `close` registra telemetría; `drift` detecta drift archivos-vs-commits con supresión AILOG-aware; `audit` orquesta revisión externa multi-modelo (flujo de 3 pasos prepare/calibrate/finalize, orchestration-only — sin invocación de APIs de LLM).
 - **`devtrail approve <doc-id>`** — Registra una aprobación humana formal (escribe `reviewed_by` / `reviewed_at` / `review_outcome` y la sección body `## Approval` en una sola edición; cierra el gap canonizado en DOCUMENTATION-POLICY §3.5)
 - **`devtrail validate`** — 25+ reglas de validación para corrección documental (12 específicas de China son scope-aware); `--include-charters` extiende a `docs/charters/`; `--check-pending-reviews` lista el backlog de aprobaciones (warn-only)
 - **`devtrail metrics`** — KPIs de gobernanza, tasas de revisión, distribución de riesgo, tendencias
@@ -222,8 +222,8 @@ DevTrail usa tags de versión independientes para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Incluye |
 |------------|---------------|---------|---------|
-| Framework | `fw-` | `fw-4.6.2` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
-| CLI | `cli-` | `cli-3.7.2` | El binario `devtrail` |
+| Framework | `fw-` | `fw-4.7.0` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
+| CLI | `cli-` | `cli-3.8.0` | El binario `devtrail` |
 
 Verifica las versiones instaladas con `devtrail status` o `devtrail about`.
 
@@ -255,7 +255,7 @@ Ver [Referencia CLI](adopters/CLI-REFERENCE.md) para uso detallado.
 ```bash
 # Descargar el último release ZIP del framework desde GitHub
 # Ve a https://github.com/StrangeDaysTech/devtrail/releases
-# y descarga el último release fw-* (ej. fw-4.6.2)
+# y descarga el último release fw-* (ej. fw-4.7.0)
 
 # Extraer y copiar a tu proyecto
 unzip devtrail-fw-*.zip -d tu-proyecto/

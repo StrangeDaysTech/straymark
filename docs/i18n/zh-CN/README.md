@@ -125,7 +125,7 @@ DevTrail 的产品决策基于十二条明确的原则。它们按层级排序�
 
 将纪律转化为可执行反馈的内置命令：
 
-- **`devtrail charter <new|list|status|close|drift>`** — 事前声明、事后审计的有界工作单元（Agent 执行的单位）。`close` 记录执行后遥测；`drift` 以 AILOG-aware 抑制方式检测文件-与-commit 的偏差。
+- **`devtrail charter <new|list|status|close|drift|audit>`** — 事前声明、事后审计的有界工作单元。`close` 记录执行后遥测；`drift` 以 AILOG-aware 抑制方式检测文件-与-commit 的偏差；`audit` 编排多模型外部审查（三步骤 prepare/calibrate/finalize，仅编排——不调用 LLM API）。
 - **`devtrail approve <doc-id>`** — 记录一次正式的人工审批（一次性写入 `reviewed_by` / `reviewed_at` / `review_outcome` 与 `## Approval` body 章节；闭合 DOCUMENTATION-POLICY §3.5 中规范化的缺口）
 - **`devtrail validate`** — 25+ 条文档正确性验证规则（其中 12 条针对中国法规、按 scope 启用）；`--include-charters` 可同时检查 `docs/charters/`；`--check-pending-reviews` 列出审批积压（仅警告）
 - **`devtrail metrics`** — 治理 KPI、审查率、风险分布、趋势
@@ -240,8 +240,8 @@ DevTrail 为每个组件使用独立的版本标签：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.6.2` | 模板（12 种类型）、治理文档、指令、Charter 模板 + schema |
-| CLI | `cli-` | `cli-3.7.2` | `devtrail` 二进制文件 |
+| Framework | `fw-` | `fw-4.7.0` | 模板（12 种类型）、治理文档、指令、Charter 模板 + schema |
+| CLI | `cli-` | `cli-3.8.0` | `devtrail` 二进制文件 |
 
 使用 `devtrail status` 或 `devtrail about` 查看已安装的版本。
 
@@ -273,7 +273,7 @@ DevTrail 为每个组件使用独立的版本标签：
 ```bash
 # 从 GitHub 下载最新的框架发布 ZIP
 # 前往 https://github.com/StrangeDaysTech/devtrail/releases
-# 下载最新的 fw-* 发布（例如 fw-4.6.2）
+# 下载最新的 fw-* 发布（例如 fw-4.7.0）
 
 # 解压并复制到你的项目
 unzip devtrail-fw-*.zip -d your-project/
