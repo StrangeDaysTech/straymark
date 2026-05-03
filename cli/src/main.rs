@@ -251,6 +251,12 @@ enum CharterCommands {
         /// Charter title (used to build the slug and filename)
         #[arg(long)]
         title: Option<String>,
+        /// Explicit slug override (cli-3.7.2+). Use when the title-derived
+        /// slug would lose meaningful context (e.g., a long title with a
+        /// trailing reference like `… Plan 04 F3` whose suffix would be
+        /// truncated). Input is normalized through the slugifier.
+        #[arg(long)]
+        slug: Option<String>,
         /// Project directory (default: current directory)
         #[arg(default_value = ".")]
         path: String,
@@ -399,6 +405,7 @@ fn main() {
                 from_ailog,
                 from_spec,
                 title,
+                slug,
                 path,
             } => commands::charter::new::run(
                 &path,
@@ -406,6 +413,7 @@ fn main() {
                 from_ailog.as_deref(),
                 from_spec.as_deref(),
                 title.as_deref(),
+                slug.as_deref(),
             ),
             CharterCommands::List {
                 status,

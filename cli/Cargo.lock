@@ -572,7 +572,7 @@ dependencies = [
 
 [[package]]
 name = "devtrail-cli"
-version = "3.7.1"
+version = "3.7.2"
 dependencies = [
  "anyhow",
  "arborist-metrics",

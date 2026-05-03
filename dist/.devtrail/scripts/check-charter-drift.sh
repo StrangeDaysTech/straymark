@@ -102,12 +102,18 @@ if [ -z "$modified" ]; then
 fi
 
 # Set diff: declared but not modified.
-# Note: AILOG paths in the Charter often have wildcards (e.g. AILOG-...md), so
-# we compare on basename match too — if the Charter declared an AILOG path with
-# wildcards, any AILOG that matches the prefix is considered "fulfilled".
+#
+# Two wildcard forms are supported in declared paths:
+#   1. Ellipsis form `prefix...suffix` — any modified file with that prefix
+#      satisfies the wildcard. Used historically in AILOG references like
+#      `.devtrail/07-ai-audit/agent-logs/AILOG-...md`.
+#   2. Glob form `prefix*suffix` (added fw-4.6.2): any modified file whose
+#      path matches the glob (`*` → `.*` regex) satisfies the wildcard.
+#      Used for bulk Charter declarations like `AILOG-*.md`. Reported as the
+#      new finding in CHARTER-04 of issue #81.
 declared_omitted=""
 while IFS= read -r decl; do
-  # If declared path has '...', try a prefix match.
+  # 1. Ellipsis wildcard.
   if [[ "$decl" == *...* ]]; then
     prefix="${decl%...*}"
     if echo "$modified" | grep -q "^${prefix}"; then
@@ -116,6 +122,16 @@ while IFS= read -r decl; do
     declared_omitted+="$decl"$'\n'
     continue
   fi
+  # 2. Glob wildcard. Convert `*` → `.*` and escape `.` for the regex match.
+  if [[ "$decl" == *\** ]]; then
+    glob_re=$(printf '%s' "$decl" | sed 's/\./\\./g; s/\*/.*/g')
+    if echo "$modified" | grep -qE "^${glob_re}$"; then
+      continue
+    fi
+    declared_omitted+="$decl"$'\n'
+    continue
+  fi
+  # 3. Literal path.
   if ! echo "$modified" | grep -qx "$decl"; then
     declared_omitted+="$decl"$'\n'
   fi
@@ -132,11 +148,18 @@ while IFS= read -r mod; do
   fi
   if ! echo "$declared" | grep -qx "$mod"; then
     # Also allow if the declared list has a wildcard prefix that matches.
+    # Recognizes both forms: `prefix...suffix` and `prefix*suffix` (fw-4.6.2).
     matched_wildcard=0
     while IFS= read -r decl; do
       if [[ "$decl" == *...* ]]; then
         prefix="${decl%...*}"
         if [[ "$mod" == ${prefix}* ]]; then
+          matched_wildcard=1
+          break
+        fi
+      elif [[ "$decl" == *\** ]]; then
+        glob_re=$(printf '%s' "$decl" | sed 's/\./\\./g; s/\*/.*/g')
+        if echo "$mod" | grep -qE "^${glob_re}$"; then
           matched_wildcard=1
           break
         fi

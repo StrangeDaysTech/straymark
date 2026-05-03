@@ -489,10 +489,22 @@ fn update_charter_status_to_closed(charter: &Charter) -> Result<()> {
         format!("Failed to read Charter file at {}", charter.path.display())
     })?;
 
-    // Replace the first frontmatter `status:` line.
-    let mut updated = String::with_capacity(raw.len());
+    // F8 (cli-3.7.2): also write closed_at: <today> alongside status: closed.
+    // Per Sentinel CHARTER-02..05 telemetry the field had to be added manually
+    // 4× consecutively. Schema permits arbitrary additional fields; the test
+    // suite for fw-4.6.0 confirmed the validator passes through unknown keys.
+    let today = Local::now().format("%Y-%m-%d").to_string();
+
+    // Walk the frontmatter in a single pass:
+    //   - Replace the first `status:` line with `status: closed`.
+    //   - Replace an existing `closed_at:` line with today's date, if present.
+    //   - If `closed_at:` is absent, queue it for insertion right after the
+    //     replaced `status:` line so it sits in a logical place.
+    let mut updated = String::with_capacity(raw.len() + 32);
     let mut in_frontmatter = false;
-    let mut replaced = false;
+    let mut status_replaced = false;
+    let mut closed_at_replaced = false;
+    let mut closed_at_indent: Option<String> = None;
     let mut delim_count = 0;
     for line in raw.lines() {
         if line.trim() == "---" {
@@ -502,21 +514,52 @@ fn update_charter_status_to_closed(charter: &Charter) -> Result<()> {
             updated.push('\n');
             continue;
         }
-        if in_frontmatter && !replaced && line.trim_start().starts_with("status:") {
+        if in_frontmatter && !status_replaced && line.trim_start().starts_with("status:") {
             let leading_ws: String = line.chars().take_while(|c| c.is_whitespace()).collect();
+            closed_at_indent = Some(leading_ws.clone());
             updated.push_str(&format!("{leading_ws}status: closed\n"));
-            replaced = true;
+            status_replaced = true;
+            continue;
+        }
+        if in_frontmatter && !closed_at_replaced && line.trim_start().starts_with("closed_at:") {
+            let leading_ws: String = line.chars().take_while(|c| c.is_whitespace()).collect();
+            updated.push_str(&format!("{leading_ws}closed_at: {today}\n"));
+            closed_at_replaced = true;
             continue;
         }
         updated.push_str(line);
         updated.push('\n');
     }
-    if !replaced {
+    if !status_replaced {
         bail!(
             "Charter at {} has no `status:` line in frontmatter — cannot bump to closed",
             charter.path.display()
         );
     }
+
+    // If closed_at was absent in the original frontmatter, insert it right
+    // after the replaced status line. We rebuild `updated` rather than tracking
+    // an insertion point above, since insertion at arbitrary line indices is
+    // simpler than splicing an index.
+    let updated = if !closed_at_replaced {
+        let indent = closed_at_indent.unwrap_or_default();
+        let needle = format!("{indent}status: closed\n");
+        let insert = format!("{indent}closed_at: {today}\n");
+        match updated.find(&needle) {
+            Some(pos) => {
+                let after = pos + needle.len();
+                let mut out = String::with_capacity(updated.len() + insert.len());
+                out.push_str(&updated[..after]);
+                out.push_str(&insert);
+                out.push_str(&updated[after..]);
+                out
+            }
+            // Defensive — shouldn't happen since we just wrote it.
+            None => updated,
+        }
+    } else {
+        updated
+    };
 
     // Sync the body status mirror line. Best-effort: if the line is absent or
     // has been edited beyond recognition, we leave it alone — the schema has

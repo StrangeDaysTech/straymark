@@ -280,6 +280,67 @@ review_required: false
 }
 
 #[test]
+fn charter_drift_resolves_glob_wildcards_in_declared_paths() {
+    // fw-4.6.2: bulk Charters can declare `prefix*suffix` glob patterns
+    // (e.g. `AILOG-*.md` for parameterized sets). Pre-fix the script
+    // extracted the literal "AILOG-*.md" and reported it as drift; now
+    // it expands `*` to a regex match against the modified files.
+    if !bash_available() {
+        eprintln!("skipping: bash not available");
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+
+    // Build a Charter that declares a glob.
+    let charters_dir = dir.path().join("docs").join("charters");
+    std::fs::create_dir_all(&charters_dir).unwrap();
+    let charter = r#"---
+charter_id: CHARTER-01
+status: declared
+effort_estimate: XS
+trigger: "bulk"
+---
+
+# Charter: glob test
+
+## Files to modify
+
+| File | Change |
+|---|---|
+| `src/handler.rs` | edit |
+| `src/things/component-*.rs` | bulk edit |
+
+## Tasks
+
+1. Run.
+"#;
+    std::fs::write(charters_dir.join("01-glob.md"), charter).unwrap();
+
+    std::fs::create_dir_all(dir.path().join("src/things")).unwrap();
+    std::fs::write(dir.path().join("src/handler.rs"), "// initial\n").unwrap();
+    std::fs::write(dir.path().join("src/things/component-a.rs"), "// initial\n").unwrap();
+    std::fs::write(dir.path().join("src/things/component-b.rs"), "// initial\n").unwrap();
+
+    git(dir.path(), &["init", "-q", "-b", "main"]);
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-q", "-m", "initial"]);
+    std::fs::write(dir.path().join("src/handler.rs"), "// edited\n").unwrap();
+    std::fs::write(dir.path().join("src/things/component-a.rs"), "// edited\n").unwrap();
+    std::fs::write(dir.path().join("src/things/component-b.rs"), "// edited\n").unwrap();
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-q", "-m", "edit all"]);
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args(["charter", "drift", "CHARTER-01", "--path"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("OK No drift detected"));
+}
+
+#[test]
 fn charter_drift_ignores_path_references_in_change_column() {
     // F3 (cli-3.7.1 / fw-4.6.1): the drift script's regex used to extract
     // backtick-quoted paths from ANY column of the table, including the
