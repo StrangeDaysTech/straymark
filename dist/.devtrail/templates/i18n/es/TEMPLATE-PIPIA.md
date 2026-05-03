@@ -6,6 +6,11 @@ created: YYYY-MM-DD
 agent: [agent-name]
 confidence: low  # PIPIA requiere amplio juicio humano
 review_required: true  # Obligatorio bajo PIPL Art. 55
+
+# --- Workflow de aprobación (opcional, llenar al momento de la revisión) ---
+# reviewed_by: <id-revisor>            # email | usuario-github | DID
+# reviewed_at: YYYY-MM-DD
+# review_outcome: approved             # approved | revisions_requested | rejected
 risk_level: high
 pipl_applicable: true
 pipl_article_55_trigger: sensitive_data  # sensitive_data | automated_decision | third_party_disclosure | cross_border | public_disclosure | other

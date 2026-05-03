@@ -6,6 +6,11 @@ created: YYYY-MM-DD
 agent: [agent-name]
 confidence: medium
 review_required: true
+
+# --- 审批工作流（可选，审批时填写）---
+# reviewed_by: <审批人标识>             # 邮箱 | github 用户 | DID
+# reviewed_at: YYYY-MM-DD
+# review_outcome: approved             # approved | revisions_requested | rejected
 risk_level: high
 tc260_application_scenario: null  # 例如:public_service | healthcare | finance | content_generation | social | safety_critical
 tc260_intelligence_level: null    # narrow | foundation | agentic | general

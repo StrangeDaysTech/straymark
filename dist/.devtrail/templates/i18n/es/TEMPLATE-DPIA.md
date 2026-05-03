@@ -6,6 +6,11 @@ created: YYYY-MM-DD
 agent: [agent-name]
 confidence: low  # La DPIA requiere juicio humano extenso
 review_required: true  # Siempre obligatorio
+
+# --- Workflow de aprobación (opcional, llenar al momento de la revisión) ---
+# reviewed_by: <id-revisor>            # email | usuario-github | DID
+# reviewed_at: YYYY-MM-DD
+# review_outcome: approved             # approved | revisions_requested | rejected
 risk_level: high
 eu_ai_act_risk: not_applicable  # unacceptable | high | limited | minimal | not_applicable
 gdpr_article_35: true  # Art. 35 RGPD activa la DPIA

@@ -6,6 +6,11 @@ created: YYYY-MM-DD
 agent: [agent-name]
 confidence: low  # DPIA requires extensive human judgment
 review_required: true  # Always mandatory
+
+# --- Approval workflow (optional, fill at review time) ---
+# reviewed_by: <reviewer-id>           # email | github-handle | DID
+# reviewed_at: YYYY-MM-DD
+# review_outcome: approved             # approved | revisions_requested | rejected
 risk_level: high
 eu_ai_act_risk: not_applicable  # unacceptable | high | limited | minimal | not_applicable
 gdpr_article_35: true  # Art. 35 GDPR triggers DPIA
