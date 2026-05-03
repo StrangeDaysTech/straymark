@@ -47,6 +47,11 @@ pub fn run(
     utils::ensure_dir(&charters_state_dir)?;
     let telemetry_path = telemetry_path_for(&charters_state_dir, &charter);
 
+    // F7 (cli-3.8.0): differentiate first-run vs subsequent-run output.
+    // Pre-existence check happens BEFORE any write so we can report
+    // accurately even though copy_template_for is idempotent.
+    let telemetry_existed_before = telemetry_path.exists();
+
     // Mode dispatch.
     let yaml_text = if from_template {
         copy_template_for(&devtrail_dir, &charter, &telemetry_path, non_interactive)?
@@ -59,9 +64,12 @@ pub fn run(
         telemetry
     };
 
-    // Validate against schema (skip for --from-template + --non-interactive,
-    // since the user hasn't edited the file yet — the template would fail).
-    if !(from_template && non_interactive) {
+    // Validate against schema. F7: on a subsequent --from-template run the
+    // user has presumably edited the file, so we DO validate; only a true
+    // first-run with --non-interactive (where the user hasn't seen the
+    // template yet) skips validation since the placeholders would fail.
+    let is_first_run_template = from_template && non_interactive && !telemetry_existed_before;
+    if !is_first_run_template {
         let schema = TelemetrySchema::load(&devtrail_dir)?;
         let yaml_value: serde_yaml::Value = serde_yaml::from_str(&yaml_text)
             .with_context(|| format!("Telemetry YAML at {} is not valid YAML", telemetry_path.display()))?;
@@ -81,7 +89,15 @@ pub fn run(
     // Bump Charter status to closed.
     update_charter_status_to_closed(&charter)?;
 
-    // Summary.
+    // Summary. F7 (cli-3.8.0): differentiate the three operationally
+    // distinct cases instead of printing identical output for all three:
+    //
+    //  - Interactive flow → telemetry was filled directly via prompts;
+    //    print the standard "closed + telemetry path + status" trio.
+    //  - --from-template, FIRST run: template was just dropped on disk
+    //    with placeholders; user needs to edit + re-run. Tell them so.
+    //  - --from-template, SUBSEQUENT run: schema passed; the file is
+    //    valid telemetry. Charter close is finalized.
     println!(
         "{} Charter {} closed.",
         "✔".green().bold(),
@@ -90,11 +106,27 @@ pub fn run(
     println!("  Telemetry: {}", telemetry_path.display());
     println!("  Status updated: in-progress/declared → closed");
     if from_template && non_interactive {
-        println!(
-            "{} {}",
-            "next:".cyan().bold(),
-            "edit the telemetry YAML and re-run `devtrail charter close --from-template` to revalidate"
-        );
+        if is_first_run_template {
+            println!();
+            println!(
+                "  {} Telemetry template created with prefilled charter_id, title, and closed_at.",
+                "→".blue().bold()
+            );
+            println!(
+                "  {} Edit the YAML to fill in trigger, effort, agent_quality, outcome,",
+                "→".blue().bold()
+            );
+            println!(
+                "    and qualitative sections. Then re-run the same command to validate"
+            );
+            println!("    against the schema and finalize the close.");
+        } else {
+            println!();
+            println!(
+                "  {} Telemetry schema validation passed. Charter close finalized.",
+                "✔".green().bold()
+            );
+        }
     }
     Ok(())
 }
