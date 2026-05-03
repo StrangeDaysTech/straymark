@@ -4,6 +4,7 @@ use colored::Colorize;
 #[cfg(feature = "analyze")]
 mod analysis_engine;
 mod audit_engine;
+mod audit_schema;
 mod charter;
 mod charter_schema;
 mod commands;
@@ -300,6 +301,31 @@ enum CharterCommands {
         #[arg(long = "path", default_value = ".")]
         path: String,
     },
+    /// Orchestrate a multi-model external audit cycle (3-step: prepare,
+    /// calibrate, finalize). Phase 3 v0 is orchestration-only — the CLI
+    /// resolves prompts, validates auditor outputs, and prints findings
+    /// for telemetry. It does NOT invoke LLM APIs; the operator runs the
+    /// prompts in their auditor of choice (Copilot, Gemini, Claude, etc.)
+    /// and saves responses to canonical paths.
+    Audit {
+        /// Charter identifier (CHARTER-NN, CHARTER-NN-slug, or just NN)
+        charter_id: String,
+        /// Git revision range (default: HEAD~1..HEAD)
+        #[arg(long)]
+        range: Option<String>,
+        /// Step 2: read both auditor outputs from
+        /// audit/charters/CHARTER-NN/ and resolve the calibrator prompt.
+        #[arg(long, conflicts_with = "finalize")]
+        calibrate: bool,
+        /// Step 3: validate all 3 outputs against the schema and print the
+        /// external_audit YAML block ready to paste into the Charter
+        /// telemetry.
+        #[arg(long, conflicts_with = "calibrate")]
+        finalize: bool,
+        /// Project directory (default: current directory)
+        #[arg(long = "path", default_value = ".")]
+        path: String,
+    },
     /// Detect file-vs-commit drift at Charter close (declared-but-not-modified
     /// files; scope expansion). Suppresses alerts on paths already documented
     /// as risks in the Charter's originating AILOGs.
@@ -439,6 +465,19 @@ fn main() {
                 &charter_id,
                 range.as_deref(),
                 no_ailog_suppress,
+            ),
+            CharterCommands::Audit {
+                charter_id,
+                range,
+                calibrate,
+                finalize,
+                path,
+            } => commands::charter::audit::run(
+                &path,
+                &charter_id,
+                range.as_deref(),
+                calibrate,
+                finalize,
             ),
         },
     };
