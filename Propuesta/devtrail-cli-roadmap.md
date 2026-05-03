@@ -1,10 +1,57 @@
 # DevTrail CLI — Roadmap hacia la tesis (post-Sentinel)
 
-**Versión:** 0.2 (rename Plan → Charter para evitar colisión con SpecKit)
-**Fecha:** 30 de abril de 2026
+**Versión:** 0.3 (post-implementación de las 3 fases — A1 orchestration-only documentada para Fase 3; RFCs #67/#82/#91 cerradas; frictions F1-F8 + observación O3 resueltos; CHARTER-01/02 + AILOG-01 ejemplos shipped en `dist/docs/examples/`)
+**Fecha:** 3 de mayo de 2026
 **Autor:** Jose Villaseñor Montfort — StrangeDaysTech
 **Propósito:** Traducir los hallazgos validados de Sentinel en una secuencia accionable de cambios al CLI Rust y al framework, manteniendo el principio #12 (cristalización experimental, no estable).
-**Documentos relacionados:** `devtrail-thesis-validation.md` (evidencia que justifica el roadmap), `devtrail-design-principles.md` (anotaciones v0.2 sobre #6, #9, #12), `devtrail-cloud-proposal.md` §4.5 y §8 (Charters en Cloud, Q3), `devtrail-charter-telemetry.md` v0.2 (schema de telemetría refinado), `que-es-un-charter.md` (alcance conceptual del artefacto Charter y coexistencia con SpecKit).
+**Documentos relacionados:** `devtrail-thesis-validation.md` (evidencia que justifica el roadmap), `devtrail-design-principles.md` (anotaciones v0.2 sobre #6, #9, #12), `devtrail-cloud-proposal.md` §4.5 y §8 (Charters en Cloud, Q3), `devtrail-charter-telemetry.md` v0.3 (schema de telemetría refinado), `que-es-un-charter.md` (alcance conceptual del artefacto Charter y coexistencia con SpecKit).
+
+---
+
+## 0. Estado de implementación (al 3 de mayo de 2026)
+
+Las tres fases del roadmap están shippeadas. El gate de cristalización `v0 → v1` (segundo dominio) sigue abierto porque Sentinel es el único adoptante hasta hoy y es Go-backend; el siguiente experimento en un subproyecto de frontend está agendado y abre la puerta a evaluar la promoción a v1 estable.
+
+**Releases shipped:**
+
+| Fase | Release | Issues / RFCs cerradas en este release |
+|---|---|---|
+| 1 — Charters como entidad de primera clase | `fw-4.4.0` / `cli-3.6.0` (PR #65) | — |
+| 1 patches | `fw-4.4.1` (#66), `fw-4.4.2` (#68 format v4 atomic Charter closure), `cli-3.6.1` (#69 charter new numbering F1) | — |
+| Reposicionamiento canónico | `fw-4.5.0` (#71), `fw-4.5.1` (#72 i18n + ADOPTION-GUIDE reframe) | — |
+| 2 — Telemetría + drift + approval workflow | `fw-4.6.0` / `cli-3.7.0` (PR #80) | RFC #67 (canonical approval workflow) |
+| 2 patches part 1 | `fw-4.6.1` / `cli-3.7.1` (PR #83) | F3 / F4 / F6 de issue #81 |
+| 2 patches part 2 | `fw-4.6.2` / `cli-3.7.2` (PR #84) | F1 / F8 + drift wildcard glob |
+| 3 — Auditoría externa multi-modelo (orchestration-only) + open frictions | `fw-4.7.0` / `cli-3.8.0` (PR #90) | RFC #82 (audit visibility) + frictions F2 / F5 / F7 |
+| 3 patches | `fw-4.7.1` / `cli-3.8.1` (PR #92) | Observación O3 (`--no-ailog-suppress` always emits INFO line) |
+
+**Decisiones arquitectónicas que divergen del roadmap original:**
+
+- **A1 (Phase 3): orchestration-only, no HTTP API clients en v0.** El roadmap §5.4 originalmente sugería "soportar OpenAI/Google/Anthropic en v0" con manejo de API keys. La realidad implementada es que el CLI prepara prompts, valida outputs contra schema, e integra con telemetría — pero NO invoca APIs. El operador pega los prompts en su auditor de elección manualmente. Razones documentadas en el commit message de PR #85: implementar 3 clientes HTTP es 1-2 semanas + mantenimiento perpetuo cuando cambian las APIs (premature para una v0 *experimental*); el patrón humano-en-el-loop coincide con `/plan-audit` de Sentinel; cumple principio #10 ("no es un LLM gateway"); cierra RFC #82 por diseño. Los HTTP clients se reabren en v1 cuando un adoptante real lo justifique con datos.
+
+**Diferencias entre §5.5 como escrito y §5.5 como entregado:**
+
+- §5.5 criterio 4 dice "una configuración monocromática es rechazada con error claro; una heterogénea procede sin advertencia". Como shippeado, la heterogeneidad inter-familia es **recomendación documentada** (CLI-REFERENCE.md `devtrail charter audit` section), **no auto-enforcement**. El criterio depende de A1: sin invocación de APIs, el CLI no sabe qué modelo usará el operador, así que no hay punto de inyección donde validar la heterogeneidad. Auto-enforcement queda como gate v1 cuando los HTTP clients se justifiquen.
+
+**Items §6 (mapping Sentinel → CLI) shipped:**
+
+- `dist/docs/examples/charters/CHARTER-01-anomaly-thresholds.md` (anonimizado de PLAN-05 de Sentinel) — ✅
+- `dist/docs/examples/charters/CHARTER-02-baseline-recompute.md` (anonimizado de PLAN-06 de Sentinel) — ✅
+- `dist/docs/examples/ailogs/AILOG-2026-01-15-001-anomaly-detector-introduction.md` (anonimizado del AILOG originador de CHARTER-01) — ✅
+
+Estos viven fuera del manifest de `devtrail init` por diseño (decisión A6 del plan original): adopters los browse en GitHub o vía clone, no se auto-instalan como artefactos del framework.
+
+**Open issues a la fecha:**
+
+- **#93** — UX polish: inline `[suppressed]` annotation en bloque WARNING de drift. Abierto pendiente de validación empírica (próximo cycle de Sentinel).
+
+**Items diferidos a v1 con criterio de salida explícito** (de §8 + de las decisiones de A1):
+
+- HTTP API clients (Phase 3 v1, gated en demanda real de adopter).
+- Auto-enforcement de heterogeneidad inter-familia (Phase 3 v1, dependiente de los HTTP clients).
+- `--strict-scope` flag en drift (gated en fricción reportada por adopter).
+- Forma estructurada multi-revisor `review:` array (gated en flujo multi-actor real).
+- `charter.schema.v1.0` estable (gated en adopter de segundo dominio — el siguiente cycle de Sentinel en frontend toca exactamente este criterio).
 
 ---
 
@@ -76,9 +123,9 @@ DevTrail llamó originalmente a este artefacto "Plan" durante el experimento Sen
 
 ### 3.6 Criterios de salida de la Fase 1
 
-- `devtrail charter new` genera un Charter compatible con `check-plan-drift.sh` (Sentinel) ejecutado manualmente — la compatibilidad sintáctica se preserva aunque cambien los nombres canónicos en el framework. Se valida en ambos modos (`--from-ailog` y `--from-spec`).
-- Al menos 1 adoptante (idealmente fuera de Go) ha creado un Charter completo con `devtrail charter` y reportado sobre la experiencia.
-- Schema `charter.schema.v0.json` no ha requerido breaking changes en 2 ciclos de release.
+- ✅ `devtrail charter new` genera un Charter compatible con `check-plan-drift.sh` (Sentinel) ejecutado manualmente — la compatibilidad sintáctica se preserva aunque cambien los nombres canónicos en el framework. Se valida en ambos modos (`--from-ailog` y `--from-spec`). *Validado empíricamente por Sentinel CHARTER-02..06.*
+- ⏳ Al menos 1 adoptante (idealmente fuera de Go) ha creado un Charter completo con `devtrail charter` y reportado sobre la experiencia. *Sentinel (Go-backend) ha cerrado 6 Charters; el siguiente cycle se realizará en un subproyecto de frontend, abriendo el segundo-dominio.*
+- ✅ Schema `charter.schema.v0.json` no ha requerido breaking changes en 2 ciclos de release. *Cumplido — 0 breaking changes a través de fw-4.4.0 → fw-4.7.1.*
 
 ## 4. Fase 2 — Telemetría y drift-check ejecutable
 
@@ -105,9 +152,9 @@ DevTrail llamó originalmente a este artefacto "Plan" durante el experimento Sen
 
 ### 4.5 Criterios de salida de la Fase 2
 
-- Al menos 2 adoptantes han usado `devtrail charter close` y producido telemetría YAML válida.
-- `devtrail charter drift` mantiene la propiedad de 0 falsos positivos en proyectos adoptantes.
-- AILOG-awareness reduce el triage manual a cero en al menos 1 caso real reportado.
+- ⏳ Al menos 2 adoptantes han usado `devtrail charter close` y producido telemetría YAML válida. *Solo Sentinel hasta hoy (6 telemetrías cerradas: CHARTER-01..06). Se cumple cuando un adopter de segundo dominio cierre al menos 1 Charter.*
+- ✅ `devtrail charter drift` mantiene la propiedad de 0 falsos positivos en proyectos adoptantes. *Validado empíricamente por Sentinel CHARTER-02..06; el único falso positivo histórico (F3 — regex column-1) se cerró en `fw-4.6.1`.*
+- ✅ AILOG-awareness reduce el triage manual a cero en al menos 1 caso real reportado. *Validado por Sentinel CHARTER-06 (ver issue #91 para evidencia: drift detectó `subscriber.go` declarado pero no modificado, y la supresión AILOG-aware eliminó el triage manual al 100%).*
 
 ## 5. Fase 3 — Auditoría externa multi-modelo
 
@@ -148,25 +195,27 @@ La auditoría externa **no es sustituible por auto-auditoría del mismo modelo**
 
 Decisión abierta: qué APIs/modelos soportar. Recomendación inicial: usar el patrón "user provides the API key" (similar a herramientas como `aichat`), no acoplar el CLI a un proveedor específico. Soportar al menos OpenAI (Copilot stand-in), Google (Gemini), Anthropic (Claude) en v0.
 
+> **Decisión arquitectónica A1 al implementar (ver §0):** los HTTP clients se difirieron a v1 — la versión shippeada (`fw-4.7.0`/`cli-3.8.0`) es **orchestration-only**: el CLI prepara prompts, valida outputs contra schema, e integra con telemetría, pero no invoca APIs. El operador pega los prompts en su auditor de elección manualmente. El flag `--implementer-family` y la heterogeneidad inter-familia descritos arriba quedan como recomendación documentada en CLI-REFERENCE.md hasta que los HTTP clients aterricen en v1.
+
 ### 5.5 Criterios de salida de la Fase 3
 
-- Al menos 1 ciclo de auditoría externa multi-modelo ejecutada en un proyecto adoptante con resultados consistentes con la calibración cross-modelo observada en Sentinel.
-- El calibrador-reconciliador produce findings en formato compatible con el array `external_audit` de la telemetría.
-- Documentación clara de que el CLI orquesta pero no provee modelos; el usuario controla qué APIs usar.
-- La restricción de heterogeneidad inter-familia se ejercita en los tests integration: una configuración monocromática es rechazada con error claro; una heterogénea procede sin advertencia.
+- ⏳ Al menos 1 ciclo de auditoría externa multi-modelo ejecutada en un proyecto adoptante con resultados consistentes con la calibración cross-modelo observada en Sentinel. *Pendiente — Sentinel todavía no ejercita `devtrail charter audit` sobre la nueva versión `fw-4.7.x`. El próximo cycle de telemetría (frontend) lo cubre.*
+- ✅ El calibrador-reconciliador produce findings en formato compatible con el array `external_audit` de la telemetría. *Schema `audit-output.schema.v0.json` enforza compatibilidad por construcción; integración con telemetry validated por la integration test del 3-step flow.*
+- ✅ Documentación clara de que el CLI orquesta pero no provee modelos; el usuario controla qué APIs usar. *CLI-REFERENCE.md `### devtrail charter audit` lo declara explícito; CHANGELOG fw-4.7.0 documenta la decisión A1.*
+- ⏳ La restricción de heterogeneidad inter-familia se ejercita en los tests integration: una configuración monocromática es rechazada con error claro; una heterogénea procede sin advertencia. *Diferido a v1 por la decisión A1 (orchestration-only) — sin invocación de APIs, el CLI no conoce los modelos del operador, así que no hay punto de inyección donde validar. La heterogeneidad queda como recomendación documentada (CLI-REFERENCE.md) hasta que los HTTP clients aterricen.*
 
 ## 6. Mapeo artefactos Sentinel → CLI
 
 Tabla de referencia rápida que conecta cada artefacto validado en Sentinel con su destino en el CLI/framework. La columna izquierda preserva el vocabulario histórico de Sentinel ("Plan"); la columna derecha usa el vocabulario DevTrail going-forward ("Charter").
 
-| Artefacto Sentinel (vocabulario "Plan") | Ruta absoluta de origen | Fase | Destino DevTrail (vocabulario "Charter") |
-|---------------------|--------------------------|------|---------|
-| `TEMPLATE.md` v3 | `sentinel/docs/plans/TEMPLATE.md` | 1 | `dist/.devtrail/templates/charter-template.md` |
-| Plan-docs canónicos | `sentinel/docs/plans/{05,06}-*.md` | 1 | `dist/docs/examples/charters/` (anonimizados, renombrados a `CHARTER-NN`) |
-| Telemetrías YAML | `sentinel/.devtrail/plans/PLAN-{05,06}.telemetry.yaml` | 2 | Schema validador para `devtrail charter close` output |
-| `check-plan-drift.sh` | `sentinel/scripts/check-plan-drift.sh` | 2 | `devtrail charter drift` (invocar bash o reimplementar) |
-| Reportes auditoría dual | `sentinel/audit/plans/{05,06}/{copilot,gemini,claude-analisis}.md` | 3 | Output canónico de `devtrail charter audit` (en `audit/charters/`) |
-| AILOGs 020-024 | `sentinel/.devtrail/07-ai-audit/agent-logs/AILOG-2026-04-28-{020..024}-*.md` | Referencia transversal | `dist/docs/examples/ailogs/` (anonimizados, 1-2 ejemplos) |
+| Artefacto Sentinel (vocabulario "Plan") | Ruta absoluta de origen | Fase | Destino DevTrail (vocabulario "Charter") | Estado |
+|---------------------|--------------------------|------|---------|---|
+| `TEMPLATE.md` v3 | `sentinel/docs/plans/TEMPLATE.md` | 1 | `dist/.devtrail/templates/charter-template.md` | ✅ shipped (`fw-4.4.0`) |
+| Plan-docs canónicos | `sentinel/docs/plans/{05,06}-*.md` | 1 | `dist/docs/examples/charters/CHARTER-{01,02}-*.md` (anonimizados) | ✅ shipped |
+| Telemetrías YAML | `sentinel/.devtrail/plans/PLAN-{05,06}.telemetry.yaml` | 2 | Schema validador para `devtrail charter close` output | ✅ shipped (`fw-4.6.0`) |
+| `check-plan-drift.sh` | `sentinel/scripts/check-plan-drift.sh` | 2 | `devtrail charter drift` (reimplementación nativa Rust) | ✅ shipped (`cli-3.7.0`) |
+| Reportes auditoría dual | `sentinel/audit/plans/{05,06}/{copilot,gemini,claude-analisis}.md` | 3 | Output canónico de `devtrail charter audit` (orchestration-only en v0; ver A1 §0) | ✅ shipped (`cli-3.8.0`) |
+| AILOG canónico originador | `sentinel/.devtrail/07-ai-audit/agent-logs/AILOG-2026-04-24-010-pm008-anomaly-detector.md` | Referencia transversal | `dist/docs/examples/ailogs/AILOG-2026-01-15-001-anomaly-detector-introduction.md` (anonimizado, par de `CHARTER-01`) | ✅ shipped |
 
 ## 7. Verificación end-to-end de cada fase
 
@@ -203,4 +252,4 @@ Cada uno de estos puntos tiene un criterio de salida explícito en `devtrail-the
 
 ---
 
-*Este roadmap es el primer artefacto que traduce evidencia empírica en código accionable para DevTrail. Su evolución sigue el patrón auto-evolutivo observado en Sentinel: cada fase ejecutada genera datos que refinan el roadmap del próximo ciclo. La versión 0.3 de este documento se escribirá tras completar al menos la Fase 1 con un adoptante real.*
+*Este roadmap es el primer artefacto que traduce evidencia empírica en código accionable para DevTrail. Su evolución sigue el patrón auto-evolutivo observado en Sentinel: cada fase ejecutada genera datos que refinan el roadmap del próximo ciclo. La versión 0.3 (este documento) se escribió tras completar las 3 fases en `fw-4.4.0` → `fw-4.7.1` con Sentinel como adoptante único; la próxima versión (0.4) se escribirá cuando el segundo dominio (subproyecto frontend de Sentinel, agendado) cierre al menos 1 Charter completo y aporte señal sobre qué del schema `v0` debe promoverse a `v1`, qué frictions emergen en un stack distinto a Go, y si los HTTP clients se justifican antes de v1 estable.*
