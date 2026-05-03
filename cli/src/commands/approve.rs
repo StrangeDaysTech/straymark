@@ -29,6 +29,7 @@ pub fn run(
     reviewer: Option<&str>,
     at: Option<&str>,
     notes: Option<&str>,
+    force: bool,
 ) -> Result<()> {
     let resolved = utils::resolve_project_root(path)
         .ok_or_else(|| anyhow!("DevTrail not installed. Run 'devtrail init' first."))?;
@@ -37,6 +38,40 @@ pub fn run(
 
     // Locate the document.
     let doc_path = find_document_by_id(&devtrail_dir, doc_id)?;
+
+    // F4 (cli-3.7.1): detect existing approval before resolving any prompts.
+    // Re-applying approve to an already-approved document silently overwrote
+    // the frontmatter and appended a duplicate `## Approval` block. Now the
+    // default is to skip with a clear message and exit Ok; `--force` is the
+    // explicit gate for the legitimate cases (revisions_requested → approved
+    // iteration, multi-reviewer hand-off).
+    if let Ok(parsed) = document::parse_document(&doc_path) {
+        if let (Some(prev_outcome), Some(prev_reviewer)) = (
+            parsed.frontmatter.review_outcome.as_deref(),
+            parsed.frontmatter.reviewed_by.as_deref(),
+        ) {
+            if !force {
+                let prev_at = parsed
+                    .frontmatter
+                    .reviewed_at
+                    .as_deref()
+                    .unwrap_or("(unknown date)");
+                println!(
+                    "{} {} already has approval on file ({} by `{}` on {}).",
+                    "✓".green().bold(),
+                    doc_id.bold(),
+                    prev_outcome.bold(),
+                    prev_reviewer,
+                    prev_at
+                );
+                println!(
+                    "  Pass {} to overwrite or amend (e.g., revisions_requested → approved).",
+                    "--force".cyan()
+                );
+                return Ok(());
+            }
+        }
+    }
 
     // Resolve outcome + reviewer (flags or prompts).
     let outcome = resolve_outcome(outcome)?;

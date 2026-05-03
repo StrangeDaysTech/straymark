@@ -17,6 +17,10 @@ trigger: "[1-line]"
 
 # Charter: [BRIEF TITLE]
 
+> **Status (mirrored from frontmatter — source of truth is above):** declared. Effort: M (~1.5h).
+>
+> **Origin:** scaffolded.
+
 ## Files to modify
 
 | File | Change |
@@ -164,6 +168,51 @@ fn charter_close_from_template_non_interactive_writes_telemetry_file() {
     assert!(
         !content.contains("YYYY-MM-DD"),
         "closed_at placeholder should be replaced with today's date, got:\n{content}"
+    );
+}
+
+#[test]
+fn charter_close_syncs_body_status_mirror_line() {
+    // F6 (cli-3.7.1): the body's `> **Status (mirrored from frontmatter ...):**` line
+    // must reflect the new status, not just the frontmatter. Before the fix,
+    // frontmatter said `closed` while body still said `declared` — silent drift
+    // between the document's own claim ("mirrored from frontmatter") and reality.
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    create_charter(dir.path(), "Mirror Sync");
+
+    let charter_path = dir.path().join("docs/charters/01-mirror-sync.md");
+    let before = std::fs::read_to_string(&charter_path).unwrap();
+    assert!(before.contains(":** declared. Effort:"), "{before}");
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "charter",
+            "close",
+            "CHARTER-01",
+            "--from-template",
+            "--non-interactive",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    let after = std::fs::read_to_string(&charter_path).unwrap();
+
+    // Frontmatter is closed.
+    assert!(after.contains("status: closed"), "frontmatter not bumped:\n{after}");
+    assert!(!after.contains("status: declared"));
+
+    // Body mirror line is also closed (the actual F6 fix).
+    assert!(
+        after.contains(":** closed. Effort:"),
+        "body mirror line not synced, got:\n{after}"
+    );
+    assert!(
+        !after.contains(":** declared. Effort:"),
+        "old body mirror still present, got:\n{after}"
     );
 }
 

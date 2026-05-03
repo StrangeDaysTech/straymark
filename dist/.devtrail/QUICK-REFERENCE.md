@@ -168,4 +168,4 @@ Mark `review_required: true` when:
 
 ---
 
-*DevTrail v4.6.0 | [GitHub](https://github.com/StrangeDaysTech/devtrail) | [Strange Days Tech](https://strangedays.tech)*
+*DevTrail v4.6.1 | [GitHub](https://github.com/StrangeDaysTech/devtrail) | [Strange Days Tech](https://strangedays.tech)*

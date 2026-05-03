@@ -49,14 +49,41 @@ if [ ! -f "$CHARTER_FILE" ]; then
   exit 2
 fi
 
-# Extract declared files from the "## Files to modify" / "## Archivos a modificar" section.
-# Reads the section delimited by the heading and the next `## ` heading.
-# Then extracts backtick-quoted paths that look like real files (have a known
-# extension or `.devtrail/` prefix).
+# Extract declared files from the "## Files to modify" / "## Archivos a modificar"
+# / "## 要修改的文件" section. Reads the section delimited by the heading and the
+# next `## ` heading. For markdown table rows (`| col1 | col2 | ...`) the script
+# extracts only column 1 — the "File" column — to avoid false positives from
+# backtick-quoted path references in the "Change" column (F3 of the
+# CHARTER-02 telemetry, fw-4.6.0). Non-table content (bullets, prose) is
+# preserved as-is for backward compatibility with adopters who use bullet lists
+# instead of tables.
 declared=$(awk '
     /^## (Files to modify|Archivos a modificar|要修改的文件)/ { in_table=1; next }
     in_table && /^## / { in_table=0 }
-    in_table { print }
+    in_table {
+        if (/^\|/) {
+            # Markdown table row. After splitting on |, cols[1] is empty (text
+            # before the leading |), cols[2] is the first column, etc.
+            n = split($0, cols, "|")
+            if (n >= 2) {
+                col1 = cols[2]
+                # Trim whitespace.
+                sub(/^[ \t]+/, "", col1)
+                sub(/[ \t]+$/, "", col1)
+                # Skip separator row (only dashes/spaces/colons) and header
+                # row variants. The grep below filters non-paths anyway, but
+                # silencing these here keeps awk output clean.
+                if (col1 ~ /^[-: ]+$/) next
+                if (col1 ~ /^[*]*[Ff]ile[*]*$/) next
+                if (col1 ~ /^[*]*[Aa]rchivo[*]*$/) next
+                if (col1 ~ /^[*]*文件[*]*$/) next
+                print col1
+            }
+        } else {
+            # Non-table content (bullets, prose) — preserve current behavior.
+            print
+        }
+    }
 ' "$CHARTER_FILE" | grep -oP '`\K[^`]+(?=`)' | grep -E '\.(go|sql|yaml|yml|md|sh|ts|tsx|js|jsx|rs|py|java|kt|rb|cs|cpp|c|h|hpp|swift|toml|json|tf)$|\.devtrail/' | sort -u)
 
 if [ -z "$declared" ]; then
