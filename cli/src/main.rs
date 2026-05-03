@@ -189,6 +189,12 @@ enum Commands {
         /// Optional reviewer notes (appended in the body section)
         #[arg(long)]
         notes: Option<String>,
+        /// Re-apply approval on a document that already has one. Required for
+        /// the revisions_requested → approved iteration cycle and for
+        /// multi-reviewer hand-offs. Without this flag, re-running approve
+        /// on an already-approved document is a no-op (cli-3.7.1+).
+        #[arg(long)]
+        force: bool,
         /// Project directory (default: current directory)
         #[arg(long = "path", default_value = ".")]
         path: String,
@@ -367,6 +373,7 @@ fn main() {
             reviewer,
             at,
             notes,
+            force,
             path,
         } => commands::approve::run(
             &path,
@@ -375,6 +382,7 @@ fn main() {
             reviewer.as_deref(),
             at.as_deref(),
             notes.as_deref(),
+            force,
         ),
         #[cfg(feature = "analyze")]
         Commands::Analyze {

@@ -172,7 +172,68 @@ fn approve_warns_when_review_not_required_but_succeeds() {
 }
 
 #[test]
-fn approve_replaces_existing_approval_fields() {
+fn approve_re_application_without_force_is_idempotent_skip() {
+    // F4 (cli-3.7.1): re-running approve on an already-approved doc no
+    // longer silently overwrites frontmatter and appends a duplicate body
+    // block. The default is now an idempotent skip with a clear message.
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    let aidec = write_aidec(dir.path(), "AIDEC-2026-05-02-003", true);
+
+    // First approval (legitimate).
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "approve",
+            "AIDEC-2026-05-02-003",
+            "--outcome",
+            "revisions_requested",
+            "--reviewer",
+            "first@example.com",
+            "--at",
+            "2026-05-01",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    let content_after_first = std::fs::read_to_string(&aidec).unwrap();
+
+    // Re-approval WITHOUT --force is an idempotent skip.
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "approve",
+            "AIDEC-2026-05-02-003",
+            "--outcome",
+            "approved",
+            "--reviewer",
+            "second@example.com",
+            "--at",
+            "2026-05-02",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("already has approval"))
+        .stdout(predicate::str::contains("--force"));
+
+    // Document is unchanged.
+    let content_after_skip = std::fs::read_to_string(&aidec).unwrap();
+    assert_eq!(
+        content_after_first, content_after_skip,
+        "doc should not change without --force"
+    );
+}
+
+#[test]
+fn approve_re_application_with_force_replaces_and_appends_block() {
+    // F4 (cli-3.7.1): with --force, the legitimate cycles work as before:
+    //  - revisions_requested → approved (same reviewer iterating)
+    //  - multi-reviewer hand-off (different reviewer adding to history)
+    // Frontmatter is latest-wins; body preserves the chronological history.
     let dir = TempDir::new().unwrap();
     setup_devtrail(dir.path());
     let aidec = write_aidec(dir.path(), "AIDEC-2026-05-02-003", true);
@@ -195,7 +256,7 @@ fn approve_replaces_existing_approval_fields() {
         .assert()
         .success();
 
-    // Second approval (overrides the first in frontmatter).
+    // Re-approval WITH --force.
     Command::cargo_bin("devtrail")
         .unwrap()
         .args([
@@ -207,6 +268,7 @@ fn approve_replaces_existing_approval_fields() {
             "second@example.com",
             "--at",
             "2026-05-02",
+            "--force",
             "--path",
         ])
         .arg(dir.path().to_str().unwrap())
@@ -221,8 +283,7 @@ fn approve_replaces_existing_approval_fields() {
     assert!(content.contains("review_outcome: approved"), "{content}");
     assert!(!content.contains("reviewed_by: first@example.com"), "{content}");
 
-    // Body contains BOTH approval blocks chronologically (multi-reviewer
-    // convention from DOCUMENTATION-POLICY §3.5).
+    // Body contains BOTH approval blocks chronologically.
     let approval_count = content.matches("## Approval").count();
     assert_eq!(approval_count, 2, "expected 2 approval blocks, got:\n{content}");
 }

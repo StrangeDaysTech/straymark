@@ -7,6 +7,96 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.6.1 / CLI 3.7.1 — Phase 2 patches (F3, F4, F6 from issue #81)
+
+Empirical validation of fw-4.6.0 / cli-3.7.0 in Sentinel CHARTER-02
+([issue #81](https://github.com/StrangeDaysTech/devtrail/issues/81))
+surfaced 8 reproducible frictions. This release fixes the three that the
+report classified as **real bugs** (Medium severity, in commands the docs
+imply are clean). UX polish items (F1, F2, F5, F7, F8) and design
+discussions (O1, O3) are deferred to cli-3.8.0 and later.
+
+**Compatibility.** No breaking changes. Existing Charters, AILOGs, AIDECs,
+and approved documents continue to work unchanged. The only behavior change
+adopters need to be aware of is **F4** — `devtrail approve` no longer
+silently re-applies; pass `--force` for the legitimate cycles
+(`revisions_requested → approved` iteration, multi-reviewer hand-off).
+
+### Fixed (Framework)
+
+- **F3 — `check-charter-drift.sh` regex too greedy.** The bash drift script
+  used to extract backtick-quoted paths from **any column** of the `## Files
+  to modify` table, including textual references in the "Change" column
+  (e.g., "follows the pattern of `docs/plans/README.md`"). Such references
+  were parsed as declared deliverables and produced false-positive omission
+  warnings. The fix tightens the awk pre-processor to extract only column 1
+  of markdown table rows, while preserving backward compatibility with
+  bullet-list `## Files to modify` sections (non-table content is still
+  passed through). Header and separator rows are also filtered explicitly.
+  Script syntax remains POSIX bash; no new dependencies. Reproduces from a
+  clean Charter — see new test
+  `charter_drift_ignores_path_references_in_change_column`.
+
+### Fixed (CLI)
+
+- **F4 — `devtrail approve` silent re-application.** Re-running `approve`
+  on a document that already had `reviewed_by`/`reviewed_at`/`review_outcome`
+  in frontmatter and a `## Approval` section in the body used to silently
+  overwrite the frontmatter and append a duplicate body block (resulting in
+  two blocks with potentially conflicting `--notes`). The fix detects
+  existing approval state and, by default, performs an **idempotent skip**
+  with an informative message naming the existing reviewer and date. The
+  new `--force` flag is the explicit gate for the legitimate cycles:
+  - `revisions_requested → approved` iteration (same reviewer amending),
+  - multi-reviewer hand-off (different reviewer adding to history).
+
+  Implementation: `Frontmatter.review_outcome.is_some() && !force` ⇒ exit
+  Ok(0) without touching the document. Existing single-approval and
+  multi-reviewer flows are unchanged with `--force`.
+
+- **F6 — `devtrail charter close` did not sync body mirror line.** The
+  command bumped `frontmatter status: declared|in-progress` to `closed`
+  correctly, but left the body's prose mirror line
+  (`> **Status (mirrored from frontmatter — source of truth is above):** declared.`)
+  untouched. The template's own promise that the body line mirrors
+  frontmatter was broken by the CLI. The fix adds a body-sync step
+  immediately after the frontmatter mutation: a string-anchored matcher
+  finds lines containing `mirrored from frontmatter` (EN) or `espejado del
+  frontmatter` (ES), locates the `):**` marker, and replaces the status
+  word with `closed`. Lines without the canonical anchor are left alone
+  (preserves user-added `**Status:**` markers in body). Best-effort: if
+  the line shape is corrupted, the function is a no-op rather than
+  guessing.
+
+### Tests
+
+- 6 new unit tests for `sync_body_status_mirror`: EN form, ES form,
+  in-progress→closed transition with hyphen, leaves unrelated `**Status:**`
+  lines alone, no-op when anchor absent, preserves corrupted lines.
+- 1 new integration test for F3 (`charter_drift_ignores_path_references_in_change_column`)
+  exercising a real git repo where the Change column contains a
+  backtick-quoted path.
+- 1 new integration test for F6 (`charter_close_syncs_body_status_mirror_line`)
+  asserting both frontmatter and body are updated atomically.
+- 2 new integration tests for F4: idempotent skip without `--force`,
+  full multi-reviewer flow with `--force`.
+- The previous test `approve_replaces_existing_approval_fields` was
+  updated and split into the two F4 cases above (the old behavior it
+  pinned is now a bug under the new contract).
+
+**388/388 tests pass** (6 new + 382 carried forward).
+
+### What's NOT in this release
+
+- F1 (slug truncation), F2 (AILOG context backfill), F5 (high-risk approve
+  warning), F7 (close output differentiation), F8 (auto `closed_at`) —
+  bundled for cli-3.8.0.
+- O1 (`--strict-scope` flag for the "always in scope" rule), O3
+  (`INFO: 0 paths suppressed` always-on log) — pending design discussion.
+- Phase 3 (multi-model external audit) — separately scoped.
+
+---
+
 ## Framework 4.6.0 / CLI 3.7.0 — Phase 2: telemetry, drift, approval workflow
 
 The first feature-bearing release since the repositioning (fw-4.5.x). Phase 2 of `Propuesta/devtrail-cli-roadmap.md` lands as 7 bisect-safe PRs (#73–#79), grouped here for reviewers. The release closes the empirical loop the Sentinel experiment opened: telemetry at Charter close, drift detection at Charter close, and a canonical approval signal for `review_required: true` documents (resolving issue #67).

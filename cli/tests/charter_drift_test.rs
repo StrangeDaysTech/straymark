@@ -278,3 +278,70 @@ review_required: false
         .stdout(predicate::str::contains("src/bar.rs"))
         .stdout(predicate::str::contains("Declared in Charter but NOT modified"));
 }
+
+#[test]
+fn charter_drift_ignores_path_references_in_change_column() {
+    // F3 (cli-3.7.1 / fw-4.6.1): the drift script's regex used to extract
+    // backtick-quoted paths from ANY column of the table, including the
+    // "Change" column. A path mentioned as a textual reference (e.g. "follows
+    // the pattern of `docs/plans/README.md`") would be parsed as a declared
+    // deliverable → false-positive omission warning. This test pins the fix:
+    // a Charter that mentions `docs/plans/README.md` in column 2 should
+    // declare only the column-1 paths.
+    if !bash_available() {
+        eprintln!("skipping: bash not available");
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+
+    // Build a Charter where the "Change" column contains a backtick-quoted path.
+    let charters_dir = dir.path().join("docs").join("charters");
+    std::fs::create_dir_all(&charters_dir).unwrap();
+    let charter = r#"---
+charter_id: CHARTER-01
+status: declared
+effort_estimate: S
+trigger: "test"
+---
+
+# Charter: F3 cross-reference test
+
+## Files to modify
+
+| File | Change |
+|---|---|
+| `src/foo.go` | edit (follows the pattern of `docs/plans/README.md`) |
+| `src/bar.go` | edit |
+
+## Tasks
+
+1. Run.
+"#;
+    std::fs::write(charters_dir.join("01-cross-ref.md"), charter).unwrap();
+
+    // Create only the column-1 files, modify them. Don't touch
+    // docs/plans/README.md — if F3 is fixed, the script must NOT flag it
+    // as declared-but-not-modified.
+    std::fs::create_dir_all(dir.path().join("src")).unwrap();
+    std::fs::create_dir_all(dir.path().join("docs/plans")).unwrap();
+    std::fs::write(dir.path().join("src/foo.go"), "// initial\n").unwrap();
+    std::fs::write(dir.path().join("src/bar.go"), "// initial\n").unwrap();
+    std::fs::write(dir.path().join("docs/plans/README.md"), "# plans\n").unwrap();
+
+    git(dir.path(), &["init", "-q", "-b", "main"]);
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-q", "-m", "initial"]);
+    std::fs::write(dir.path().join("src/foo.go"), "// edited\n").unwrap();
+    std::fs::write(dir.path().join("src/bar.go"), "// edited\n").unwrap();
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-q", "-m", "edit foo and bar"]);
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args(["charter", "drift", "CHARTER-01", "--path"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("OK No drift detected"));
+}
