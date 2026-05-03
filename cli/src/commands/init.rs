@@ -9,7 +9,7 @@ use crate::inject;
 use crate::manifest::DistManifest;
 use crate::utils;
 
-pub fn run(path: &str) -> Result<()> {
+pub fn run(path: &str, install_hooks: bool) -> Result<()> {
     let target = PathBuf::from(path)
         .canonicalize()
         .unwrap_or_else(|_| PathBuf::from(path));
@@ -60,6 +60,27 @@ pub fn run(path: &str) -> Result<()> {
 
     // Save checksums
     save_initial_checksums(&target, &release.tag_name)?;
+
+    // Install pre-PR hook (opt-in via --hooks).
+    if install_hooks {
+        match install_pre_pr_hook(&target) {
+            Ok(installed) => {
+                if installed {
+                    println!(
+                        "  {} pre-PR hook installed at {}",
+                        "✓".green().bold(),
+                        ".git/hooks/pre-push".dimmed()
+                    );
+                }
+            }
+            Err(e) => {
+                utils::warn(&format!(
+                    "Failed to install pre-PR hook: {}. Continuing without it.",
+                    e
+                ));
+            }
+        }
+    }
 
     // Print summary
     println!();
@@ -296,6 +317,132 @@ fn save_initial_checksums(target: &Path, version: &str) -> Result<()> {
 
     checksums.save(target)?;
     Ok(())
+}
+
+/// Install `.devtrail/hooks/pre-pr.sh` as `.git/hooks/pre-push`. Returns
+/// `Ok(true)` on success, `Ok(false)` if the project is not a git repo
+/// (so the caller can skip silently). Errors only on actual filesystem
+/// failures (the hook source is missing, the destination can't be written,
+/// etc.).
+fn install_pre_pr_hook(target: &Path) -> Result<bool> {
+    let git_dir = target.join(".git");
+    if !git_dir.exists() {
+        utils::warn(
+            "Skipping --hooks: not a git repository (no .git/ directory). Run 'git init' first.",
+        );
+        return Ok(false);
+    }
+
+    let source = target.join(".devtrail/hooks/pre-pr.sh");
+    if !source.exists() {
+        bail!(
+            "pre-PR hook source not found at {}. The framework distribution may be incomplete.",
+            source.display()
+        );
+    }
+
+    let hooks_dir = git_dir.join("hooks");
+    std::fs::create_dir_all(&hooks_dir)
+        .with_context(|| format!("Failed to create {}", hooks_dir.display()))?;
+
+    let dest = hooks_dir.join("pre-push");
+    if dest.exists() {
+        utils::warn(&format!(
+            "Refusing to overwrite existing hook at {}. Move or remove it, then re-run with --hooks.",
+            dest.display()
+        ));
+        return Ok(false);
+    }
+
+    std::fs::copy(&source, &dest)
+        .with_context(|| format!("Failed to copy hook to {}", dest.display()))?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = std::fs::metadata(&dest)?.permissions();
+        perms.set_mode(0o755);
+        std::fs::set_permissions(&dest, perms)?;
+    }
+    Ok(true)
+}
+
+#[cfg(test)]
+mod hook_tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    fn setup_tempdir_with_hook_source(tmp: &Path) {
+        std::fs::create_dir_all(tmp.join(".git/objects")).unwrap();
+        std::fs::create_dir_all(tmp.join(".devtrail/hooks")).unwrap();
+        std::fs::write(
+            tmp.join(".devtrail/hooks/pre-pr.sh"),
+            "#!/usr/bin/env bash\necho hook\n",
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn install_pre_pr_hook_copies_and_makes_executable() {
+        let tmp = TempDir::new().unwrap();
+        setup_tempdir_with_hook_source(tmp.path());
+
+        let installed = install_pre_pr_hook(tmp.path()).unwrap();
+        assert!(installed);
+
+        let dest = tmp.path().join(".git/hooks/pre-push");
+        assert!(dest.exists());
+        let body = std::fs::read_to_string(&dest).unwrap();
+        assert!(body.contains("hook"));
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mode = std::fs::metadata(&dest).unwrap().permissions().mode();
+            assert_eq!(mode & 0o111, 0o111, "hook must be executable");
+        }
+    }
+
+    #[test]
+    fn install_pre_pr_hook_skips_when_not_a_git_repo() {
+        let tmp = TempDir::new().unwrap();
+        std::fs::create_dir_all(tmp.path().join(".devtrail/hooks")).unwrap();
+        std::fs::write(
+            tmp.path().join(".devtrail/hooks/pre-pr.sh"),
+            "#!/usr/bin/env bash\nexit 0\n",
+        )
+        .unwrap();
+
+        let installed = install_pre_pr_hook(tmp.path()).unwrap();
+        assert!(!installed);
+    }
+
+    #[test]
+    fn install_pre_pr_hook_refuses_to_overwrite_existing() {
+        let tmp = TempDir::new().unwrap();
+        setup_tempdir_with_hook_source(tmp.path());
+        let dest = tmp.path().join(".git/hooks/pre-push");
+        std::fs::create_dir_all(dest.parent().unwrap()).unwrap();
+        std::fs::write(&dest, "#!/bin/sh\necho existing\n").unwrap();
+
+        let installed = install_pre_pr_hook(tmp.path()).unwrap();
+        assert!(!installed);
+
+        // Original content is preserved.
+        let body = std::fs::read_to_string(&dest).unwrap();
+        assert!(body.contains("existing"));
+    }
+
+    #[test]
+    fn install_pre_pr_hook_errors_when_source_missing() {
+        let tmp = TempDir::new().unwrap();
+        std::fs::create_dir_all(tmp.path().join(".git/objects")).unwrap();
+        // Note: no .devtrail/hooks/pre-pr.sh
+
+        let result = install_pre_pr_hook(tmp.path());
+        assert!(result.is_err());
+        let msg = format!("{:?}", result.unwrap_err());
+        assert!(msg.contains("pre-PR hook source not found"));
+    }
 }
 
 /// Simple recursive directory walker
