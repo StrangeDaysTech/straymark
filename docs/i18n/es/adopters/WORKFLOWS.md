@@ -122,8 +122,16 @@ DevTrail tiene dos sistemas de documentación:
 | `/devtrail-ailog` | Creación rápida de AILOG |
 | `/devtrail-aidec` | Creación rápida de AIDEC |
 | `/devtrail-adr` | Creación rápida de ADR |
+| `/devtrail-audit-prompt CHARTER-XX` *(fw-4.8.0+)* | Genera los prompts de auditoría externa multi-modelo inline. Envuelve `devtrail charter audit` PREPARE; muestra ambos prompts en la conversación para que el operador los pegue en 2 LLMs de familias distintas. |
+| `/devtrail-audit-review CHARTER-XX` *(fw-4.8.0+)* | Contraparte de `audit-prompt`. Valida las respuestas de los auditores, corre el calibrador inline, y mergea los findings en la telemetría del Charter vía `--merge-into`. |
 
 Para detalles completos de skills, consulta el [README](../README.md#skills).
+
+### Charter audit checkpoint *(fw-4.8.0+)*
+
+Cuando estés co-implementando un Charter, el agente proactivamente ofrecerá una auditoría externa en un momento específico: cuando la implementación esté lista, el drift esté limpio, y `charter close` aún no se haya invocado. La recomendación es SÍ/NO basada en la superficie de riesgo y complejidad del Charter (heurísticas completas en `.devtrail/00-governance/AGENT-RULES.md` §12).
+
+La auditoría externa es **completamente opcional** y **nunca enforced**. El scope declarativo del Charter + drift check + disciplina AILOG ya proporcionan cierre riguroso sin ella. La auditoría agrega señal cross-modelo cuando el Charter tocó superficie de seguridad, introdujo componentes nuevos, o tiene funciones de alta complejidad en el diff. Declina libremente si el costo (2-3 auditores LLM) no se ajusta al valor de tu caso.
 
 ---
 

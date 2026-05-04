@@ -122,8 +122,16 @@ DevTrail 有两个文档系统：
 | `/devtrail-ailog` | 快速创建 AILOG |
 | `/devtrail-aidec` | 快速创建 AIDEC |
 | `/devtrail-adr` | 快速创建 ADR |
+| `/devtrail-audit-prompt CHARTER-XX` *(fw-4.8.0+)* | 内联生成外部多模型审计 prompts。封装 `devtrail charter audit` PREPARE；在对话中展示两个审计员 prompts，操作员可粘贴到 2 个不同族的 LLM。 |
+| `/devtrail-audit-review CHARTER-XX` *(fw-4.8.0+)* | `audit-prompt` 的对应。验证审计员响应，内联运行校准器，并通过 `--merge-into` 将 findings 合并到 Charter 遥测。 |
 
 完整 Skill 详情参见 [README](../README.md#skills)。
+
+### Charter 审计检查点 *(fw-4.8.0+)*
+
+在与人共同实现 Charter 时，Agent 会在一个特定时刻主动提议外部审计：当实现完成、drift 干净，且 `charter close` 尚未调用时。推荐基于 Charter 的风险面和复杂度给出 是/否（完整启发式见 `.devtrail/00-governance/AGENT-RULES.md` §12）。
+
+外部审计**完全可选**且**永不强制**。Charter 的声明性范围 + drift check + AILOG 纪律已为关闭提供了足够严格的支撑。审计在 Charter 触及安全面、引入新组件或 diff 中存在高复杂度函数时增加跨模型信号。如果你的情况下成本（2-3 个 LLM 审计员）与价值不匹配，可以自由拒绝。
 
 ---
 

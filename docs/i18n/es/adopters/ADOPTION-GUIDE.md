@@ -492,6 +492,21 @@ devtrail validate
 
 ---
 
+## Auditoría Externa (Opcional)
+
+A partir de `fw-4.8.0`, cuando co-implementas Charters con un asistente IA en el loop (Claude Code, Gemini Code, Cursor), puedes opcionalmente correr una auditoría externa multi-modelo al cierre del Charter. Dos skills envuelven la orquestación subyacente del CLI:
+
+- **`/devtrail-audit-prompt CHARTER-XX`** — genera los prompts de auditores inline en la conversación, listos para pegar en 2 LLMs auditores de familias distintas.
+- **`/devtrail-audit-review CHARTER-XX`** — back-half: valida las respuestas guardadas por el operador, corre el calibrador inline, y mergea los findings en la telemetría del Charter directamente (array `external_audit:`).
+
+El agente **proactivamente ofrecerá** la auditoría en un momento específico del workflow — cuando la implementación está lista, el drift check está limpio, y `charter close` no se ha invocado. La recomendación es SÍ/NO basada en la superficie de riesgo y complejidad del Charter (heurísticas en `.devtrail/00-governance/AGENT-RULES.md` §12).
+
+**La auditoría externa es completamente opcional** y **nunca enforced**. El scope declarativo del Charter + drift check + disciplina AILOG ya proporcionan cierre riguroso. La auditoría agrega señal cross-modelo cuando el Charter tocó superficie de seguridad, introdujo componentes nuevos, o tiene funciones de alta complejidad en el diff. Declina libremente si el costo (2-3 auditores LLM) no se ajusta al valor de tu caso.
+
+Para los comandos CLI subyacentes (PREPARE / CALIBRATE / FINALIZE / `--merge-into`), ver [`CLI-REFERENCE.md` § devtrail charter audit](./CLI-REFERENCE.md#devtrail-charter-audit-charter-id-range-revrev-calibrate--finalize-path-dir).
+
+---
+
 ## Preguntas Frecuentes
 
 ### Preguntas Generales

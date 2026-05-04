@@ -185,6 +185,11 @@ risk_level: low | medium | high | critical
 | 命令 | 用途 |
 |------|------|
 | `/devtrail-status` | 检查文档状态和合规性 |
+| `/devtrail-new` | 创建任意类型文档（交互式） |
+| `/devtrail-ailog` / `/devtrail-aidec` / `/devtrail-adr` | AILOG / AIDEC / ADR 的快速快捷方式 |
+| `/devtrail-mcard` / `/devtrail-sec` | Model Card / SEC 评估的交互流程 |
+| `/devtrail-audit-prompt CHARTER-XX` *(fw-4.8.0+)* | 外部多模型审计 — 内联生成 prompts |
+| `/devtrail-audit-review CHARTER-XX` *(fw-4.8.0+)* | 校准审计响应 + 合并入 Charter 遥测 |
 
 ---
 

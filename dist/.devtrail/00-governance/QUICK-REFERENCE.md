@@ -210,6 +210,11 @@ Mark `review_required: true` when:
 | Command | Purpose |
 |---------|---------|
 | `/devtrail-status` | Check documentation status and compliance |
+| `/devtrail-new` | Create any document type (interactive) |
+| `/devtrail-ailog` / `/devtrail-aidec` / `/devtrail-adr` | Quick shortcuts for AILOG / AIDEC / ADR |
+| `/devtrail-mcard` / `/devtrail-sec` | Interactive flows for Model Card / SEC assessment |
+| `/devtrail-audit-prompt CHARTER-XX` *(fw-4.8.0+)* | External multi-model audit — generate prompts inline |
+| `/devtrail-audit-review CHARTER-XX` *(fw-4.8.0+)* | Calibrate audit responses + merge into Charter telemetry |
 
 ---
 

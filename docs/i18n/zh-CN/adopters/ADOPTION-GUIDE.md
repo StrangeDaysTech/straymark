@@ -499,6 +499,21 @@ devtrail validate
 
 ---
 
+## 外部审计（可选）
+
+自 `fw-4.8.0` 起，当你与 AI 助手在循环中协作实现 Charter 时（Claude Code、Gemini Code、Cursor），你可以在 Charter 关闭时可选地运行外部多模型审计。两个 skills 封装底层 CLI 编排：
+
+- **`/devtrail-audit-prompt CHARTER-XX`** — 在对话中内联生成审计员 prompts，可粘贴到 2 个不同族的 LLM 审计员。
+- **`/devtrail-audit-review CHARTER-XX`** — 后半部分：验证操作员保存的审计员响应，内联运行校准器，并直接将 findings 合并到 Charter 遥测中（`external_audit:` 数组）。
+
+Agent 会在工作流的特定时刻**主动提议**审计 — 当实现完成、drift check 干净，且 `charter close` 尚未调用时。推荐基于 Charter 的风险面和复杂度给出 是/否（启发式见 `.devtrail/00-governance/AGENT-RULES.md` §12）。
+
+**外部审计完全可选**且**永不强制**。Charter 的声明性范围 + drift check + AILOG 纪律已为关闭提供严格支撑。审计在 Charter 触及安全面、引入新组件或 diff 中存在高复杂度函数时增加跨模型信号。如果你的情况下成本（2-3 个 LLM 审计员）与价值不匹配，可以自由拒绝。
+
+底层 CLI 命令（PREPARE / CALIBRATE / FINALIZE / `--merge-into`）见 [`CLI-REFERENCE.md` § devtrail charter audit](./CLI-REFERENCE.md#devtrail-charter-audit-charter-id-range-revrev-calibrate--finalize-path-dir)。
+
+---
+
 ## 常见问题
 
 ### 通用问题
