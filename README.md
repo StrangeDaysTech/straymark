@@ -131,7 +131,7 @@ Built-in safeguards ensure humans stay in control:
 
 Built-in commands that turn the discipline into actionable feedback:
 
-- **`devtrail charter <new|list|status|close|drift|audit>`** — Bounded units of work declared ex-ante, audited ex-post. `close` records post-execution telemetry; `drift` detects file-vs-commit drift with AILOG-aware suppression; `audit` orchestrates a multi-model external review (3-step prepare/calibrate/finalize, orchestration-only — no LLM API calls).
+- **`devtrail charter <new|list|status|close|drift|audit>`** — Bounded units of work declared ex-ante, audited ex-post. `close` records post-execution telemetry; `drift` detects file-vs-commit drift with AILOG-aware suppression; `audit` orchestrates a multi-model external review (3-step prepare/calibrate/finalize, orchestration-only — no LLM API calls). For IDE-driven workflows, the inline skills `/devtrail-audit-prompt` and `/devtrail-audit-review` wrap the CLI to surface prompts in the conversation and merge findings into telemetry.
 - **`devtrail approve <doc-id>`** — Record a formal human approval (writes `reviewed_by` / `reviewed_at` / `review_outcome` and the `## Approval` body section in one edit; closes the gap canonized in DOCUMENTATION-POLICY §3.5)
 - **`devtrail validate`** — 25+ validation rules for document correctness (12 China-specific are scope-aware); `--include-charters` extends to `docs/charters/`; `--check-pending-reviews` lists approval backlog (warn-only)
 - **`devtrail metrics`** — Governance KPIs, review rates, risk distribution, trends
