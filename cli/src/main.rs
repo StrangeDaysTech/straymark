@@ -330,6 +330,12 @@ enum CharterCommands {
         /// telemetry.
         #[arg(long, conflicts_with = "calibrate")]
         finalize: bool,
+        /// On --finalize only: append the external_audit array directly into
+        /// the Charter's telemetry YAML at the given path instead of printing
+        /// it to stdout. Re-audit (file already has external_audit) is
+        /// rejected with a clear error in v0.
+        #[arg(long, requires = "finalize")]
+        merge_into: Option<String>,
         /// Project directory (default: current directory)
         #[arg(long = "path", default_value = ".")]
         path: String,
@@ -481,6 +487,7 @@ fn main() {
                 range,
                 calibrate,
                 finalize,
+                merge_into,
                 path,
             } => commands::charter::audit::run(
                 &path,
@@ -488,6 +495,7 @@ fn main() {
                 range.as_deref(),
                 calibrate,
                 finalize,
+                merge_into.as_deref(),
             ),
         },
     };

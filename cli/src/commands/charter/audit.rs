@@ -41,9 +41,13 @@ pub fn run(
     range: Option<&str>,
     calibrate: bool,
     finalize: bool,
+    merge_into: Option<&str>,
 ) -> Result<()> {
     if calibrate && finalize {
         bail!("--calibrate and --finalize are mutually exclusive — run one at a time");
+    }
+    if merge_into.is_some() && !finalize {
+        bail!("--merge-into is only valid with --finalize");
     }
 
     let resolved = utils::resolve_project_root(path)
@@ -69,7 +73,14 @@ pub fn run(
     let range = range.unwrap_or(DEFAULT_RANGE).to_string();
 
     if finalize {
-        return run_finalize(project_root, &devtrail_dir, &audit_dir, &charter);
+        return run_finalize(
+            project_root,
+            &devtrail_dir,
+            &audit_dir,
+            &charter,
+            &canonical_id,
+            merge_into.map(Path::new),
+        );
     }
     if calibrate {
         return run_calibrate(
@@ -276,6 +287,8 @@ fn run_finalize(
     devtrail_dir: &Path,
     audit_dir: &Path,
     charter: &Charter,
+    canonical_id: &str,
+    merge_into: Option<&Path>,
 ) -> Result<()> {
     println!(
         "{} {} ({})",
@@ -346,16 +359,102 @@ fn run_finalize(
     println!();
     println!("  {}", "Charter audit complete.".green().bold());
     println!();
-    println!("  {}", "external_audit YAML — paste into telemetry:".bold());
-    println!("  {}", "(charter_telemetry.external_audit array)".dimmed());
-    println!();
-    println!("{}", render_external_audit_yaml(&auditor_summaries));
-    println!();
-    println!("  {}", "Calibrator summary (copy to outcome.scope_change_notes if relevant):".dimmed());
+
+    if let Some(target) = merge_into {
+        merge_external_audit_into(target, &auditor_summaries, canonical_id)?;
+        println!(
+            "  {} Merged external_audit array into {}",
+            "✔".green().bold(),
+            relative_path(project_root, target).display()
+        );
+        println!();
+        println!(
+            "  {}",
+            "Run `git diff` on the telemetry file to review the merge before commit.".dimmed()
+        );
+    } else {
+        println!("  {}", "external_audit YAML — paste into telemetry:".bold());
+        println!("  {}", "(charter_telemetry.external_audit array)".dimmed());
+        println!();
+        println!("{}", render_external_audit_yaml(&auditor_summaries, canonical_id));
+        println!();
+    }
+    println!(
+        "  {}",
+        "Calibrator summary (copy to outcome.scope_change_notes if relevant):".dimmed()
+    );
     println!(
         "  {}",
         relative_path(project_root, &calibrator_path).display().to_string().dimmed()
     );
+    Ok(())
+}
+
+/// Append a freshly-rendered `external_audit:` block to an existing Charter
+/// telemetry YAML. v0 deliberately rejects re-audit (file already has the
+/// key) so the operator can reconcile manually rather than silently
+/// duplicating findings.
+fn merge_external_audit_into(
+    telemetry_path: &Path,
+    auditor_summaries: &[AuditorSummary],
+    canonical_charter_id: &str,
+) -> Result<()> {
+    if !telemetry_path.exists() {
+        bail!(
+            "Telemetry file not found: {}\n  \
+             Run `devtrail charter close <CHARTER-ID>` first to create the telemetry,\n  \
+             then re-run with --merge-into. Or omit --merge-into to print the YAML\n  \
+             for manual paste.",
+            telemetry_path.display()
+        );
+    }
+
+    let mut content = std::fs::read_to_string(telemetry_path)
+        .with_context(|| format!("Failed to read {}", telemetry_path.display()))?;
+
+    // Sanity: must parse as YAML.
+    let _: serde_yaml::Value = serde_yaml::from_str(&content)
+        .with_context(|| format!("{} is not valid YAML", telemetry_path.display()))?;
+
+    if !content.contains("charter_telemetry:") {
+        bail!(
+            "{} does not have a top-level `charter_telemetry:` key — \
+             expected the standard charter close output shape.",
+            telemetry_path.display()
+        );
+    }
+
+    // v0: re-audit (appending to existing array) is not supported. Detect
+    // the key at indent 0 or 2 and bail with guidance.
+    if content.contains("\n  external_audit:")
+        || content.contains("\nexternal_audit:")
+        || content.starts_with("  external_audit:")
+        || content.starts_with("external_audit:")
+    {
+        bail!(
+            "{} already has an `external_audit:` block. Re-audit (appending\n  \
+             to an existing array) is not supported in v0. Re-run\n  \
+             `devtrail charter audit <id> --finalize` (without --merge-into) to\n  \
+             print the new YAML, then merge manually if you want to append.",
+            telemetry_path.display()
+        );
+    }
+
+    while content.ends_with("\n\n") {
+        content.pop();
+    }
+    if !content.ends_with('\n') {
+        content.push('\n');
+    }
+
+    content.push_str("\n  external_audit:\n");
+    content.push_str(&render_external_audit_yaml(
+        auditor_summaries,
+        canonical_charter_id,
+    ));
+
+    std::fs::write(telemetry_path, &content)
+        .with_context(|| format!("Failed to write {}", telemetry_path.display()))?;
     Ok(())
 }
 
@@ -557,9 +656,9 @@ impl AuditorSummary {
     }
 }
 
-fn render_external_audit_yaml(summaries: &[AuditorSummary]) -> String {
+fn render_external_audit_yaml(summaries: &[AuditorSummary], canonical_charter_id: &str) -> String {
     let mut out = String::new();
-    for s in summaries {
+    for (idx, s) in summaries.iter().enumerate() {
         out.push_str(&format!("    - auditor: \"{}\"\n", s.auditor));
         out.push_str(&format!("      findings_total: {}\n", s.findings_total));
         out.push_str("      findings_by_category:\n");
@@ -575,14 +674,16 @@ fn render_external_audit_yaml(summaries: &[AuditorSummary]) -> String {
         if let Some(quality) = &s.audit_quality {
             out.push_str(&format!("      audit_quality: \"{}\"\n", quality));
         }
+        // First summary maps to auditor-primary.md, second to
+        // auditor-secondary.md — that's the order finalize reads them in.
+        let role_file = if idx == 0 {
+            "auditor-primary"
+        } else {
+            "auditor-secondary"
+        };
         out.push_str(&format!(
             "      audit_notes: \"see audit/charters/{}/{}.md\"\n",
-            "<charter-id>",
-            if s.auditor.contains("primary") || s.findings_total > 0 {
-                "auditor-primary"
-            } else {
-                "auditor-secondary"
-            }
+            canonical_charter_id, role_file
         ));
     }
     out
