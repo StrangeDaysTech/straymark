@@ -127,3 +127,115 @@ fn devtrail_audit_prompt_three_platforms_share_core_guidance() {
         );
     }
 }
+
+// ── devtrail-audit-review (PR 2) ───────────────────────────────────────────
+
+#[test]
+fn devtrail_audit_review_claude_skill_exists_and_has_allowed_tools() {
+    let body = read(
+        dist_root()
+            .join(".claude")
+            .join("skills")
+            .join("devtrail-audit-review")
+            .join("SKILL.md"),
+    );
+    assert!(body.starts_with("---\n"), "missing YAML frontmatter");
+    assert!(
+        body.contains("name: devtrail-audit-review"),
+        "missing name field"
+    );
+    assert!(
+        body.contains("allowed-tools:"),
+        "Claude skill must declare allowed-tools"
+    );
+    assert!(
+        body.contains("--merge-into"),
+        "skill body must reference the CLI flag it wraps"
+    );
+}
+
+#[test]
+fn devtrail_audit_review_gemini_skill_exists_without_allowed_tools() {
+    let body = read(
+        dist_root()
+            .join(".gemini")
+            .join("skills")
+            .join("devtrail-audit-review")
+            .join("SKILL.md"),
+    );
+    assert!(body.starts_with("---\n"), "missing YAML frontmatter");
+    assert!(
+        body.contains("name: devtrail-audit-review"),
+        "missing name field"
+    );
+    assert!(
+        !body.contains("allowed-tools:"),
+        "Gemini skill must not declare allowed-tools"
+    );
+}
+
+#[test]
+fn devtrail_audit_review_agent_workflow_exists_with_description_only() {
+    let body = read(
+        dist_root()
+            .join(".agent")
+            .join("workflows")
+            .join("devtrail-audit-review.md"),
+    );
+    assert!(body.starts_with("---\n"), "missing YAML frontmatter");
+    assert!(
+        !body.contains("name:"),
+        "agent workflow must not declare a name field"
+    );
+    assert!(
+        !body.contains("allowed-tools:"),
+        "agent workflow must not declare allowed-tools"
+    );
+    assert!(
+        body.contains("description:"),
+        "agent workflow must declare description"
+    );
+}
+
+#[test]
+fn devtrail_audit_review_three_platforms_share_core_guidance() {
+    let claude = read(
+        dist_root()
+            .join(".claude")
+            .join("skills")
+            .join("devtrail-audit-review")
+            .join("SKILL.md"),
+    );
+    let gemini = read(
+        dist_root()
+            .join(".gemini")
+            .join("skills")
+            .join("devtrail-audit-review")
+            .join("SKILL.md"),
+    );
+    let agent = read(
+        dist_root()
+            .join(".agent")
+            .join("workflows")
+            .join("devtrail-audit-review.md"),
+    );
+
+    for body in [&claude, &gemini, &agent] {
+        assert!(
+            body.contains("--calibrate"),
+            "skill must reference the CALIBRATE step"
+        );
+        assert!(
+            body.contains("--finalize"),
+            "skill must reference the FINALIZE step"
+        );
+        assert!(
+            body.contains("external-audit-pending.yaml"),
+            "skill must handle the Branch B (telemetry not yet present) case"
+        );
+        assert!(
+            body.contains("re-audit") || body.contains("re-merge"),
+            "skill must surface the v0 re-audit limitation"
+        );
+    }
+}

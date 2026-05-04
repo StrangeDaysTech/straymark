@@ -413,3 +413,242 @@ fn audit_calibrate_and_finalize_are_mutually_exclusive() {
         .assert()
         .failure();
 }
+
+// ── --merge-into: PR 2 of audit-skills rollout ─────────────────────────────
+
+/// Set up a Charter that has been fully audited (3 outputs present), so we
+/// can drive --finalize repeatedly with different --merge-into targets.
+fn setup_finalized_audit(dir: &Path) {
+    setup_devtrail(dir);
+    write_charter(dir);
+    init_repo_with_diff(dir);
+
+    // PREPARE
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args(["charter", "audit", "CHARTER-01", "--path"])
+        .arg(dir.to_str().unwrap())
+        .assert()
+        .success();
+
+    let audit_dir = dir.join("audit/charters/CHARTER-01");
+    std::fs::write(
+        audit_dir.join("auditor-primary.md"),
+        r#"---
+audit_role: auditor-primary
+auditor: copilot-v1.0.37
+charter_id: CHARTER-01
+git_range: "HEAD~1..HEAD"
+prompt_used: prompts/auditor-primary.prompt.md
+audited_at: "2026-05-03"
+findings_total: 2
+findings_by_category:
+  hallucination: 0
+  implementation_gap: 1
+  real_debt: 1
+  false_positive: 0
+audit_quality: high
+---
+# Body
+"#,
+    )
+    .unwrap();
+    std::fs::write(
+        audit_dir.join("auditor-secondary.md"),
+        r#"---
+audit_role: auditor-secondary
+auditor: gemini-cli-v1.5
+charter_id: CHARTER-01
+git_range: "HEAD~1..HEAD"
+prompt_used: prompts/auditor-secondary.prompt.md
+audited_at: "2026-05-03"
+findings_total: 1
+findings_by_category:
+  hallucination: 0
+  implementation_gap: 1
+  real_debt: 0
+  false_positive: 0
+audit_quality: medium
+---
+# Body
+"#,
+    )
+    .unwrap();
+
+    // CALIBRATE (the CLI writes calibrator-reconciler.prompt.md but here we
+    // just simulate the operator pasting the calibrator response directly).
+    std::fs::write(
+        audit_dir.join("calibrator-reconciler.md"),
+        r#"---
+audit_role: calibrator-reconciler
+calibrator: claude-opus-4
+charter_id: CHARTER-01
+git_range: "HEAD~1..HEAD"
+prompt_used: prompts/calibrator-reconciler.prompt.md
+calibrated_at: "2026-05-03"
+auditors_reconciled:
+  - auditor-primary.md
+  - auditor-secondary.md
+findings_consolidated: 2
+findings_by_status:
+  agreed: 1
+  disputed: 0
+  unique_primary: 1
+  unique_secondary: 0
+  rejected: 0
+---
+# Body
+"#,
+    )
+    .unwrap();
+}
+
+/// Build a minimal Charter telemetry file (the shape charter close emits).
+fn write_minimal_telemetry(dir: &Path) -> std::path::PathBuf {
+    let path = dir
+        .join(".devtrail/charters/CHARTER-01.telemetry.yaml");
+    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+    std::fs::write(
+        &path,
+        r#"charter_telemetry:
+  charter_id: "CHARTER-01"
+  charter_title: "Audit test"
+  closed_at: "2026-05-03"
+
+  trigger:
+    declared_kind: "manual"
+    declared_description: "test"
+    fired_at: "2026-05-03"
+    fire_clarity: "clear"
+    fire_clarity_notes: ""
+"#,
+    )
+    .unwrap();
+    path
+}
+
+#[test]
+fn audit_merge_into_appends_external_audit_to_telemetry() {
+    if !bash_available() {
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_finalized_audit(dir.path());
+    let telemetry_path = write_minimal_telemetry(dir.path());
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "charter",
+            "audit",
+            "CHARTER-01",
+            "--finalize",
+            "--merge-into",
+            telemetry_path.to_str().unwrap(),
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Merged external_audit"));
+
+    let merged = std::fs::read_to_string(&telemetry_path).unwrap();
+    assert!(
+        merged.contains("\n  external_audit:\n"),
+        "external_audit block must be appended at indent 2:\n{merged}"
+    );
+    assert!(
+        merged.contains("    - auditor: \"copilot-v1.0.37\""),
+        "primary auditor present in merged output"
+    );
+    assert!(
+        merged.contains("    - auditor: \"gemini-cli-v1.5\""),
+        "secondary auditor present in merged output"
+    );
+    assert!(
+        merged.contains("audit/charters/CHARTER-01/auditor-primary.md"),
+        "audit_notes must reference real charter id (not <charter-id> placeholder)"
+    );
+    // Pre-existing keys preserved.
+    assert!(merged.contains("charter_id: \"CHARTER-01\""));
+    assert!(merged.contains("trigger:"));
+}
+
+#[test]
+fn audit_merge_into_missing_telemetry_fails_with_helpful_message() {
+    if !bash_available() {
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_finalized_audit(dir.path());
+    let missing = dir.path().join(".devtrail/charters/CHARTER-01.telemetry.yaml");
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "charter",
+            "audit",
+            "CHARTER-01",
+            "--finalize",
+            "--merge-into",
+            missing.to_str().unwrap(),
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Telemetry file not found"))
+        .stderr(predicate::str::contains("devtrail charter close"));
+}
+
+#[test]
+fn audit_merge_into_rejects_existing_external_audit() {
+    if !bash_available() {
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_finalized_audit(dir.path());
+    let telemetry_path = write_minimal_telemetry(dir.path());
+
+    // Pre-populate external_audit so re-audit guard fires.
+    let mut existing = std::fs::read_to_string(&telemetry_path).unwrap();
+    existing.push_str("\n  external_audit:\n    - auditor: \"old-auditor\"\n      findings_total: 0\n");
+    std::fs::write(&telemetry_path, &existing).unwrap();
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "charter",
+            "audit",
+            "CHARTER-01",
+            "--finalize",
+            "--merge-into",
+            telemetry_path.to_str().unwrap(),
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("already has an `external_audit:`"));
+}
+
+#[test]
+fn audit_merge_into_requires_finalize() {
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+
+    // Without --finalize, clap should reject --merge-into.
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "charter",
+            "audit",
+            "CHARTER-01",
+            "--merge-into",
+            "/tmp/whatever.yaml",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .failure();
+}
