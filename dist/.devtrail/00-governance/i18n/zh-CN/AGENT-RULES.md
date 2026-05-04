@@ -270,4 +270,76 @@ confidence: high | medium | low
 
 ---
 
+## 12. 审计检查点（Charter 工作流）
+
+在与人共同实现 Charter 时，Agent **主动**在工作流的特定时刻提议外部多模型审计。该检查点是**软性**的——它从不阻塞 `charter close`，也不会升级到强制执行。外部审计在设计上是 opt-in 的（成本，对操作员主要纪律的信任）。
+
+### 何时发出检查点
+
+当**四个**触发条件同时为真时，**每个 Charter 仅发出一次**检查点：
+
+1. Charter 处于 `in-progress` 或 `declared` 状态（非 `closed`）。
+2. Charter 的 `## Tasks` 节中所有任务被标记为 `[x]` 已完成（或 Agent 刚完成最后一个）。
+3. `devtrail charter drift <CHARTER-ID>` 退出码为 0（无未计入的漂移）。
+4. Developer **尚未**调用 `devtrail charter close <CHARTER-ID>`，也未提及关闭意图。
+
+如果 developer 在同一 Charter 的之前轮次中拒绝了审计，**不要在同一对话的后续轮次中重新发出**。
+
+### 检查点消息的形式
+
+按以下格式渲染消息（替换 `<CHARTER-ID>` 和推荐理由）：
+
+```
+到达 <CHARTER-ID> 的检查点。实现已完成，drift check OK，
+仅待执行 `devtrail charter close`。
+
+此时你可以运行外部审计（典型为 2 个不同族的 LLM + 1 个校准器），
+该审计会对实现产出跨模型 findings。
+
+我的建议：[是 / 否]，因为：
+  - <基于 Charter、AILOGs 或 diff 的具体原因>
+
+如果决定审计：
+  运行 /devtrail-audit-prompt <CHARTER-ID>，我会在此处直接展示
+  两个 prompts。当你保存了外部审计员的回复到规范路径后，运行
+  /devtrail-audit-review <CHARTER-ID>，我会在本地校准并将
+  findings 合并到 Charter 遥测中。
+
+如果决定不审计：
+  准备好后继续 `devtrail charter close <CHARTER-ID>`。外部审计
+  完全可选——DevTrail 的声明性 Charter + drift check + AILOG
+  纪律已为周期提供了足够严格的关闭信心。
+```
+
+### 是/否推荐的启发式
+
+这些是启发式，不是硬性规则——你接近上下文，可与 adopter 一起细化。
+
+**当满足以下任一条件时推荐"是"**：
+
+- Charter 触及安全关键面（auth、RLS、secret 处理、IAM）。
+- Charter 引入了 developer 之前未共同实现过的新组件（非重构）。
+- 某关联的 AILOG 记录了 `R<N>`，其 `confidence: low | medium` 且 `risk_level: medium` 或更高。
+- Developer 将 Charter 标记为 `effort_estimate: L` 且这是 adopter 的第一个 Charter。
+- Developer 在 Charter trigger 中**明确**要求跨模型验证。
+- **结构性复杂度信号** *(仅当 CLI 编译启用了 `analyze` feature 时可用，对官方二进制为真)*：`range` 中的 diff 引入或修改了至少一个函数，其认知复杂度超过 `.devtrail/config.yml` 中配置的 `complexity.threshold`（默认 `8`）的 **2 倍**（即 ≥ `17`）。一个新的密集函数恰好是两个跨族审计员能捕获 implementation gap、单一模型会遗漏的场景。**优雅降级**：如果二进制缺少 `analyze` feature，静默跳过此信号——不警告，不提及缺失。
+
+**当以下条件**全部**满足时推荐"否"**：
+
+- Charter 是重构或文档变更（无新行为）。
+- `effort_estimate` 为 `XS` 或 `S`。
+- 所有关联 AILOGs 的 `confidence` 均为 `high`，无涌现的 `R<N+1>` 风险。
+- Charter 的 `risk_level` 为 `low`（或未设置）。
+
+**默认情况（无明显信号）**：推荐**"否"**，使用中性措辞（"我没有看到具体信号能正当化两个额外模型的成本；准备好就关闭吧"）。外部审计的成本是真实的——不要靠惯性推荐"是"来虚胖采用。
+
+### 行为规则
+
+- 检查点在同一 Charter 内一旦 developer 回复就**永不**重复。
+- 检查点**不**阻塞任何后续操作。如果 developer 忽略它并运行 `charter close`，close 正常进行——没有强制执行，将来也不会有（这是 v0+v1 永久设计决策；见 `Propuesta/devtrail-audit-skills.md` §2.2）。
+- 检查点**不**计入任何质量度量。`devtrail metrics` 中没有"已审计 Charter 百分比"KPI——按设计，避免产生虚胖审计计数的激励。
+- 如果 developer 接受审计，接下来的两个 skills（`/devtrail-audit-prompt` 然后 `/devtrail-audit-review`）会推进工作流。
+
+---
+
 *DevTrail v4.7.1 | [Strange Days Tech](https://strangedays.tech)*

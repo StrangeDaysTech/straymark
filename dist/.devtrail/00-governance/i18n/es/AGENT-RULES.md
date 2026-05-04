@@ -270,4 +270,79 @@ Cuando un cambio modifica endpoints de API:
 
 ---
 
+## 12. Checkpoint de Auditoría (workflow de Charter)
+
+Cuando estés co-implementando un Charter, el agente **proactivamente ofrece** una auditoría externa multi-modelo en un momento específico del workflow. El checkpoint es **soft** — nunca bloquea `charter close` y nunca escala a enforcement. La auditoría externa es opt-in por diseño (costo, confianza en la disciplina primaria del operador).
+
+### Cuándo emitir el checkpoint
+
+Emite el checkpoint **una sola vez por Charter** cuando los **cuatro** triggers se cumplen simultáneamente:
+
+1. El Charter está en status `in-progress` o `declared` (no `closed`).
+2. Todas las tasks de la sección `## Tasks` del Charter están marcadas `[x]` completadas (o el agente acaba de completar la última).
+3. `devtrail charter drift <CHARTER-ID>` retorna exit 0 (sin drift no contabilizado).
+4. El developer **no** ha invocado `devtrail charter close <CHARTER-ID>` aún, ni ha mencionado intención de cerrar.
+
+Si el developer rechazó la auditoría en un turno previo para el mismo Charter, **no re-emitir** en turnos subsiguientes de la misma conversación.
+
+### Forma del mensaje del checkpoint
+
+Renderiza el mensaje así (sustituye `<CHARTER-ID>` y la justificación de la recomendación):
+
+```
+Llegamos al checkpoint del Charter <CHARTER-ID>. Está implementado,
+drift check OK, pendiente solo `devtrail charter close`.
+
+En este punto puedes correr una auditoría externa (típicamente 2 LLMs
+de familias distintas + un calibrador) que arroje findings cross-modelo
+sobre la implementación.
+
+Mi recomendación: [SÍ / NO], porque:
+  - <razón concreta basada en el Charter, AILOGs o diff>
+
+Si decides auditar:
+  Ejecuta /devtrail-audit-prompt <CHARTER-ID> y te imprimo aquí mismo
+  los dos prompts. Cuando tengas las respuestas de los auditores externos
+  guardadas en los paths canónicos, ejecuta /devtrail-audit-review
+  <CHARTER-ID> y yo calibro localmente y mergeo los findings en la
+  telemetría del Charter.
+
+Si decides no auditar:
+  Continúa con `devtrail charter close <CHARTER-ID>` cuando estés listo.
+  La auditoría externa es completamente opcional — la disciplina del
+  Charter declarativo + drift check + AILOG da suficiente rigor para
+  un cierre confiable sin auditoría.
+```
+
+### Heurísticas para la recomendación SÍ/NO
+
+Son heurísticas, no reglas rígidas — estás cerca del contexto, afínalas con el adoptante.
+
+**Recomienda SÍ cuando** (cualquiera basta):
+
+- El Charter tocó superficie crítica de seguridad (auth, RLS, manejo de secrets, IAM).
+- El Charter introdujo un componente nuevo (no refactor) que el developer no había co-implementado antes.
+- Algún AILOG asociado documenta un `R<N>` con `confidence: low | medium` y `risk_level: medium` o mayor.
+- El developer marcó el Charter como `effort_estimate: L` y este es el primer Charter del adoptante.
+- El developer **explícitamente** pidió validación cross-modelo en el trigger del Charter.
+- **Señal estructural de complejidad** *(disponible solo cuando el CLI fue compilado con el feature `analyze` activo, true en los binarios oficiales)*: el diff del `range` introduce o modifica al menos una función cuya complejidad cognitiva supera **2× el threshold configurado** en `.devtrail/config.yml` (`complexity.threshold`, default `8` → ≥ `17`). Una función densa nueva es exactamente el caso donde dos auditores cross-familia capturan implementation gaps que un solo modelo deja pasar. **Graceful-degradation:** si el binario no tiene el feature `analyze`, omite silenciosamente esta señal — no avises, no menciones la ausencia.
+
+**Recomienda NO cuando** (todas juntas):
+
+- El Charter es refactor o cambio de documentación (sin comportamiento nuevo).
+- `effort_estimate` es `XS` o `S`.
+- Los AILOGs asociados tienen todos `confidence: high` y sin riesgos `R<N+1>` emergentes.
+- `risk_level` del Charter es `low` (o no está marcado).
+
+**Caso default (ninguna señal clara):** recomienda **NO** con framing neutro ("no veo señal específica que justifique el costo de dos modelos adicionales; cierra cuando estés listo"). El costo de la auditoría externa es real — no infles adopción recomendando SÍ por inercia.
+
+### Reglas de engagement
+
+- El checkpoint **nunca** se repite dentro del mismo Charter una vez que el developer responde.
+- El checkpoint **no** bloquea ninguna acción posterior. Si el developer lo ignora y corre `charter close`, close procede normalmente — no hay enforcement y no lo habrá (decisión de diseño v0+v1 permanente; ver `Propuesta/devtrail-audit-skills.md` §2.2).
+- El checkpoint **no** se cuenta en ninguna métrica de calidad. No hay KPI "% Charters auditados" en `devtrail metrics` — por diseño, para evitar incentivos a inflar el conteo.
+- Si el developer acepta la auditoría, las siguientes dos skills (`/devtrail-audit-prompt` luego `/devtrail-audit-review`) llevan el workflow adelante.
+
+---
+
 *DevTrail v4.7.1 | [Strange Days Tech](https://strangedays.tech)*
