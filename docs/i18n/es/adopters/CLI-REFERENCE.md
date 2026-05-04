@@ -48,8 +48,8 @@ DevTrail usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.7.1` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.8.1` | El binario `devtrail` |
+| Framework | `fw-` | `fw-4.8.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| CLI | `cli-` | `cli-3.9.0` | El binario `devtrail` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
 
@@ -88,7 +88,7 @@ Inicializa DevTrail en un directorio de proyecto.
 
 ```bash
 $ devtrail init .
-✔ Downloaded DevTrail fw-4.7.1
+✔ Downloaded DevTrail fw-4.8.0
 ✔ Created .devtrail/ directory structure
 ✔ Created DEVTRAIL.md
 ✔ Configured AI agent directives
@@ -109,7 +109,7 @@ Si `.devtrail/` no existe en el directorio actual, la actualización del framewo
 ```bash
 $ devtrail update
 Updating framework...
-✔ Framework updated to fw-4.7.1
+✔ Framework updated to fw-4.8.0
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -126,7 +126,7 @@ Actualiza solo los archivos del framework. Busca el último release `fw-*` en Gi
 
 ```bash
 $ devtrail update-framework
-✔ Framework updated to fw-4.7.1
+✔ Framework updated to fw-4.8.0
 ```
 
 ---
@@ -205,7 +205,7 @@ $ devtrail status
 DevTrail Status
 ───────────────
 Path:              /home/user/my-project
-Framework version: fw-4.7.1
+Framework version: fw-4.8.0
 CLI version:       cli-3.5.2
 Language:          en
 Structure:         ✔ Complete
@@ -269,7 +269,7 @@ Valida documentos DevTrail verificando cumplimiento y corrección.
 | `path` | `.` (directorio actual) | Directorio del proyecto |
 | `--fix` | — | Corregir automáticamente problemas simples |
 | `--staged` | — | Validar solo archivos staged en Git (ideal para hooks pre-commit) |
-| `--include-charters` | — | Validar también los Charters en `docs/charters/` contra el JSON Schema y la integridad referencial (los IDs en `originating_ailogs` resuelven; el path en `originating_spec` existe). Opt-in, default `false` para no afectar a proyectos que no usan el patrón. Por ahora solo se honra fuera de `--staged`; la validación de Charters en modo staged llega en cli-3.8.1. |
+| `--include-charters` | — | Validar también los Charters en `docs/charters/` contra el JSON Schema y la integridad referencial (los IDs en `originating_ailogs` resuelven; el path en `originating_spec` existe). Opt-in, default `false` para no afectar a proyectos que no usan el patrón. Por ahora solo se honra fuera de `--staged`; la validación de Charters en modo staged llega en cli-3.9.0. |
 | `--check-pending-reviews` *(cli-3.7.0+)* | off | Lista documentos con `review_required: true` y sin `review_outcome` cuya antigüedad supere `--max-pending-days`. **Solo warn** — nunca falla el exit code de validate; útil para dashboards de CI sobre el backlog de aprobaciones. |
 | `--max-pending-days` *(cli-3.7.0+)* | `14` | Umbral en días para `--check-pending-reviews`. |
 
@@ -490,7 +490,7 @@ Detecta drift archivo-vs-commit al cierre del Charter. Envuelve el script del fr
 |---|---|---|
 | `CHARTER-ID` | — | Mismas reglas de resolución que `charter status`. |
 | `--range` | `HEAD~1..HEAD` | Rango de revisiones git a chequear. |
-| `--no-ailog-suppress` *(cli-3.8.1+ siempre emite una línea INFO de confirmación)* | false | Deshabilita la supresión AILOG-aware (muestra todo path declarado-omitido). Cuando se pasa el flag, el CLI siempre imprime una línea `INFO: AILOG-aware suppression bypassed (would have suppressed: N path(s)…)` — incluso cuando N=0 — para que el modo diagnóstico sea visible en la salida aun en una corrida limpia. |
+| `--no-ailog-suppress` *(cli-3.9.0+ siempre emite una línea INFO de confirmación)* | false | Deshabilita la supresión AILOG-aware (muestra todo path declarado-omitido). Cuando se pasa el flag, el CLI siempre imprime una línea `INFO: AILOG-aware suppression bypassed (would have suppressed: N path(s)…)` — incluso cuando N=0 — para que el modo diagnóstico sea visible en la salida aun en una corrida limpia. |
 | `--path` | `.` | Directorio del proyecto. |
 
 **Códigos de salida:** `0` si no hay drift (o solo AILOG-suprimido); `1` si hay drift no contabilizado; `2` para errores de uso (Charter no encontrado, bash ausente, etc.).
@@ -516,14 +516,14 @@ OK all declared-omitted paths are documented in AILOGs — drift accepted.
 
 > **Nota de plataforma.** El chequeo de drift delega en `bash`. En Linux/macOS/WSL/Git Bash funciona out-of-the-box. En Windows nativo sin WSL, instalar Git Bash; un fallback puro Rust está en el roadmap pero no en fw-4.6.x.
 
-#### Soporte de wildcards en paths declarados *(fw-4.7.1+)*
+#### Soporte de wildcards en paths declarados *(fw-4.8.0+)*
 
 El chequeo de drift resuelve dos formas de wildcard en `## Files to modify`:
 
 | Forma | Ejemplo | Caso de uso |
 |---|---|---|
 | Elipsis | `` `.devtrail/07-ai-audit/agent-logs/AILOG-...md` `` | Cualquier path modificado con ese prefijo satisface el wildcard. Usado históricamente cuando un número desconocido de AILOGs serían creados durante la ejecución. |
-| Glob | `` `AILOG-*.md` `` o `` `src/services/foo-*.rs` `` | Cualquier path modificado que matchee el glob (`*` → `.*`) satisface el wildcard. Usado para declaraciones bulk de Charter donde un set parametrizado es tocado. Añadido en fw-4.7.1 tras la fricción surgida en Sentinel CHARTER-04 ([issue #81](https://github.com/StrangeDaysTech/devtrail/issues/81)). |
+| Glob | `` `AILOG-*.md` `` o `` `src/services/foo-*.rs` `` | Cualquier path modificado que matchee el glob (`*` → `.*`) satisface el wildcard. Usado para declaraciones bulk de Charter donde un set parametrizado es tocado. Añadido en fw-4.8.0 tras la fricción surgida en Sentinel CHARTER-04 ([issue #81](https://github.com/StrangeDaysTech/devtrail/issues/81)). |
 
 Ambas formas se manejan en ambas direcciones: un wildcard declarado suprime tanto warnings de "declarado pero no modificado" (cuando al menos un archivo matching fue modificado) como warnings de "modificado pero no declarado" (cuando un path modificado matchea un wildcard declarado).
 
@@ -886,7 +886,7 @@ Muestra información de versión, autoría y licencia.
 $ devtrail about
 DevTrail CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.7.1
+  Framework version: fw-4.8.0
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/devtrail

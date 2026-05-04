@@ -48,8 +48,8 @@ DevTrail 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.7.1` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.8.1` | `devtrail` 二进制文件 |
+| Framework | `fw-` | `fw-4.8.0` | 模板（12 种类型）、治理文档、指令 |
+| CLI | `cli-` | `cli-3.9.0` | `devtrail` 二进制文件 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
 
@@ -88,7 +88,7 @@ devtrail status   # 显示完整的安装状态，包括版本
 
 ```bash
 $ devtrail init .
-✔ Downloaded DevTrail fw-4.7.1
+✔ Downloaded DevTrail fw-4.8.0
 ✔ Created .devtrail/ directory structure
 ✔ Created DEVTRAIL.md
 ✔ Configured AI agent directives
@@ -110,7 +110,7 @@ Next: git add .devtrail/ DEVTRAIL.md && git commit -m "chore: adopt DevTrail"
 ```bash
 $ devtrail update
 Updating framework...
-✔ Framework updated to fw-4.7.1
+✔ Framework updated to fw-4.8.0
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -127,7 +127,7 @@ Updating CLI...
 
 ```bash
 $ devtrail update-framework
-✔ Framework updated to fw-4.7.1
+✔ Framework updated to fw-4.8.0
 ```
 
 ---
@@ -211,7 +211,7 @@ $ devtrail status
   Project
   ┌───────────┬──────────────────────────┐
   │ Path      │ /home/user/my-project    │
-  │ Framework │ fw-4.7.1                 │
+  │ Framework │ fw-4.8.0                 │
   │ CLI       │ cli-3.5.2                │
   │ Language  │ en                       │
   └───────────┴──────────────────────────┘
@@ -268,7 +268,7 @@ Repairing DevTrail in /home/user/my-project
 → Restoring 1 missing directory...
 ✓ Restored .devtrail/templates/
 → Downloading framework to restore missing files...
-  Using version: fw-4.7.1
+  Using version: fw-4.8.0
 ✓ Restored 16 file(s) from framework
 → Updating checksums...
 
@@ -288,7 +288,7 @@ Repairing DevTrail in /home/user/my-project
 | `path` | `.`（当前目录） | 目标项目目录 |
 | `--fix` | — | 自动修复简单问题（例如为高风险文档添加缺失的 `review_required: true`） |
 | `--staged` | — | 仅验证已暂存（git add）的文件。适合 pre-commit 钩子。 |
-| `--include-charters` | — | 同时根据章程 JSON Schema 和引用完整性（`originating_ailogs` 中的 ID 解析；`originating_spec` 路径存在）验证 `docs/charters/` 中的章程。Opt-in，默认 `false`，确保未使用章程模式的项目不受影响。目前仅在非 `--staged` 模式下生效；staged 模式的章程验证将在 cli-3.8.1 中加入。 |
+| `--include-charters` | — | 同时根据章程 JSON Schema 和引用完整性（`originating_ailogs` 中的 ID 解析；`originating_spec` 路径存在）验证 `docs/charters/` 中的章程。Opt-in，默认 `false`，确保未使用章程模式的项目不受影响。目前仅在非 `--staged` 模式下生效；staged 模式的章程验证将在 cli-3.9.0 中加入。 |
 | `--check-pending-reviews` *(cli-3.7.0+)* | off | 列出所有 `review_required: true` 且没有 `review_outcome`、年龄超过 `--max-pending-days` 的文档。**仅警告** — 永不影响 validate 的退出码；适合用于 CI 仪表板上的审批积压视图。 |
 | `--max-pending-days` *(cli-3.7.0+)* | `14` | `--check-pending-reviews` 的天数阈值。 |
 
@@ -507,7 +507,7 @@ $ devtrail charter close CHARTER-01
 |---|---|---|
 | `CHARTER-ID` | — | 与 `charter status` 相同的解析规则。 |
 | `--range` | `HEAD~1..HEAD` | 要检查的 git 修订范围。 |
-| `--no-ailog-suppress` *(cli-3.8.1+ 始终输出确认 INFO 行)* | false | 禁用 AILOG 感知抑制（显示每条已声明但被遗漏的路径）。传入此标志时，CLI 始终打印 `INFO: AILOG-aware suppression bypassed (would have suppressed: N path(s)…)` 行 — 即使 N=0 — 以便诊断模式即使在干净运行时也在输出中可见。 |
+| `--no-ailog-suppress` *(cli-3.9.0+ 始终输出确认 INFO 行)* | false | 禁用 AILOG 感知抑制（显示每条已声明但被遗漏的路径）。传入此标志时，CLI 始终打印 `INFO: AILOG-aware suppression bypassed (would have suppressed: N path(s)…)` 行 — 即使 N=0 — 以便诊断模式即使在干净运行时也在输出中可见。 |
 | `--path` | `.` | 目标项目目录。 |
 
 **退出码：** `0` 没有漂移（或仅 AILOG 抑制）；`1` 存在未计入的漂移；`2` 用法错误（章程未找到、bash 缺失等）。
@@ -533,14 +533,14 @@ OK all declared-omitted paths are documented in AILOGs — drift accepted.
 
 > **平台说明。** 漂移检查委托给 `bash`。在 Linux/macOS/WSL/Git Bash 上开箱即用。Windows 原生且无 WSL 时需安装 Git Bash；纯 Rust fallback 在路线图上但不在 fw-4.6.x 中。
 
-#### 已声明路径的通配符支持 *(fw-4.7.1+)*
+#### 已声明路径的通配符支持 *(fw-4.8.0+)*
 
 漂移检查在 `## Files to modify` 中解析两种通配符形式：
 
 | 形式 | 示例 | 用例 |
 |---|---|---|
 | 省略号 | `` `.devtrail/07-ai-audit/agent-logs/AILOG-...md` `` | 任何带该前缀的修改路径满足通配符。历史上用于执行期间会创建未知数量 AILOG 的情况。 |
-| Glob | `` `AILOG-*.md` `` 或 `` `src/services/foo-*.rs` `` | 任何匹配该 glob（`*` → `.*`）的修改路径满足通配符。用于参数化集合被触动的批量章程声明。在 fw-4.7.1 中加入，源于 Sentinel CHARTER-04 暴露的摩擦（[issue #81](https://github.com/StrangeDaysTech/devtrail/issues/81)）。 |
+| Glob | `` `AILOG-*.md` `` 或 `` `src/services/foo-*.rs` `` | 任何匹配该 glob（`*` → `.*`）的修改路径满足通配符。用于参数化集合被触动的批量章程声明。在 fw-4.8.0 中加入，源于 Sentinel CHARTER-04 暴露的摩擦（[issue #81](https://github.com/StrangeDaysTech/devtrail/issues/81)）。 |
 
 两种形式都双向处理：声明的通配符既抑制"已声明但未修改"警告（当至少一个匹配文件被修改时），也抑制"已修改但未声明"警告（当一个修改路径匹配某个已声明通配符时）。
 
@@ -993,7 +993,7 @@ $ devtrail explore --lang es             # 会话内切换到西班牙语
 $ devtrail about
 DevTrail CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.7.1
+  Framework version: fw-4.8.0
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/devtrail

@@ -345,4 +345,4 @@ Son heurísticas, no reglas rígidas — estás cerca del contexto, afínalas co
 
 ---
 
-*DevTrail v4.7.1 | [Strange Days Tech](https://strangedays.tech)*
+*DevTrail v4.8.0 | [Strange Days Tech](https://strangedays.tech)*
