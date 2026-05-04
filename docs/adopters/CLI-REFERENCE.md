@@ -705,6 +705,8 @@ $ devtrail charter audit CHARTER-05 --finalize
 
 > **Why orchestration-only?** Implementing 3 HTTP clients (OpenAI / Google / Anthropic) is 1-2 weeks + perpetual maintenance when APIs change. Phase 3 v0 is experimental — the CLI's value is the canon (prompt shape + output schema + telemetry integration), not the API call. v1 may add HTTP clients when an adopter reports a real need; until then the human-in-the-loop shape matches Sentinel's empirical `/plan-audit` pattern that motivated Phase 3 in the first place.
 
+> **Skill alternative *(fw-4.8.0+)*.** When working with an AI assistant in the loop (Claude Code, Gemini Code, Cursor, etc.), the skills `/devtrail-audit-prompt CHARTER-ID` and `/devtrail-audit-review CHARTER-ID` wrap this command and surface the prompts inline in the conversation. The skills also handle the calibrator step (the agent driving the conversation runs the calibrator) and trigger `--finalize --merge-into` so the `external_audit:` array is appended to telemetry without manual copy-paste. See the [Skills](#skills) section below. The CLI remains the single source of truth — the skills only add UX-inline.
+
 ---
 
 ### `devtrail compliance [path] [--standard <name>] [--region <name>] [--all] [--output <format>]`
@@ -1054,6 +1056,36 @@ DevTrail CLI
   Repository:        https://github.com/StrangeDaysTech/devtrail
   Website:           https://strangedays.tech
 ```
+
+---
+
+## Skills
+
+DevTrail ships a set of skills (slash commands) for use inside an AI assistant (Claude Code, Gemini Code, Cursor, generic agent runtimes). Each skill is installed in 3 parallel forms during `devtrail init`:
+
+- `dist/.claude/skills/<skill>/SKILL.md` (Claude — frontmatter with `allowed-tools`)
+- `dist/.gemini/skills/<skill>/SKILL.md` (Gemini — frontmatter without `allowed-tools`)
+- `dist/.agent/workflows/<skill>.md` (generic agent — `description`-only frontmatter)
+
+| Skill | Purpose | Files produced |
+|---|---|---|
+| `/devtrail-status` | Check documentation compliance for recent changes. | none (read-only) |
+| `/devtrail-new` | Create any document type interactively. Suggests best fit from context. | `.devtrail/<type-dir>/<TYPE>-YYYY-MM-DD-NNN-*.md` |
+| `/devtrail-ailog` | Quick AILOG creation shortcut. | `.devtrail/07-ai-audit/agent-logs/AILOG-*.md` |
+| `/devtrail-aidec` | Quick AIDEC creation shortcut. | `.devtrail/07-ai-audit/decisions/AIDEC-*.md` |
+| `/devtrail-adr` | Quick ADR creation shortcut. | `.devtrail/04-architecture/decisions/ADR-*.md` |
+| `/devtrail-mcard` | Interactive Model Card creation flow. | `.devtrail/09-ai-models/MCARD-*.md` |
+| `/devtrail-sec` | Interactive SEC (security assessment) flow. | `.devtrail/08-security/SEC-*.md` |
+| `/devtrail-audit-prompt CHARTER-ID` *(fw-4.8.0+)* | Generate external multi-model audit prompts inline. Wraps `devtrail charter audit` PREPARE — runs the CLI to resolve `auditor-primary.prompt.md` and `auditor-secondary.prompt.md`, then surfaces both prompts in the conversation so the operator can paste them into 2 LLMs of different families without leaving the chat. | `audit/charters/<CHARTER-ID>/prompts/auditor-{primary,secondary}.prompt.md` (via the CLI it wraps) |
+| `/devtrail-audit-review CHARTER-ID` *(fw-4.8.0+)* | Counterpart to `/devtrail-audit-prompt`. Validates the operator's saved auditor responses, runs the calibrator inline (the agent driving the conversation IS a valid calibrator since heterogeneity is required only for the auditor pair), and runs `devtrail charter audit --finalize --merge-into` to append `external_audit:` directly into `.devtrail/charters/<CHARTER-ID>.telemetry.yaml`. If the telemetry does not yet exist (Charter not yet closed), writes `audit/charters/<CHARTER-ID>/external-audit-pending.yaml` for later manual merge. | `audit/charters/<CHARTER-ID>/calibrator-reconciler.md`, `external_audit:` array merged into telemetry |
+
+### Skill vs CLI
+
+The two audit skills are **wrappers** around the CLI commands. The `audit/` directory layout, the prompts, the schema validation, and the `external_audit` shape all live in the CLI — the skills only handle the UX-inline part (surfacing prompts in the conversation, running the calibrator inline, triggering the merge). Adopters using DevTrail without an AI assistant in the loop can drive the same workflow directly via `devtrail charter audit` (PREPARE / `--calibrate` / `--finalize [--merge-into <path>]`).
+
+### Audit checkpoint *(fw-4.8.0+)*
+
+`.devtrail/00-governance/AGENT-RULES.md` §12 codifies a workflow checkpoint where the agent proactively offers the audit at one specific moment — when the Charter implementation is done, drift is clean, and `charter close` has not yet been invoked. The recommendation is YES/NO based on heuristics (security surface, new components, AILOG risks, complexity). External audit is **fully optional**; the checkpoint is **soft** — never blocks `charter close`, never enforced (permanent v0+v1 design decision).
 
 ---
 

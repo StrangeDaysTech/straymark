@@ -655,6 +655,8 @@ $ devtrail charter audit CHARTER-05 --finalize
 
 > **为什么仅编排？** 实现 3 个 HTTP 客户端（OpenAI / Google / Anthropic）需要 1-2 周 + 当 API 变化时的永久维护。Phase 3 v0 是实验性的 — CLI 的价值是 canon（prompt 形状 + output schema + 与遥测的集成），而非 API 调用本身。当 adopter 报告真实需求时，v1 可能加入 HTTP 客户端；在此之前，人在环模式与激发 Phase 3 的 Sentinel 实证 `/plan-audit` 模式相符。
 
+> **Skill 替代方案 *(fw-4.8.0+)*。** 当与 AI 助手在循环中协作时（Claude Code、Gemini Code、Cursor 等），skills `/devtrail-audit-prompt CHARTER-ID` 和 `/devtrail-audit-review CHARTER-ID` 封装此命令并在对话中内联展示 prompts。Skills 还处理校准器步骤（驱动对话的 Agent 运行校准器）并触发 `--finalize --merge-into`，使得 `external_audit:` 数组直接追加到遥测中无需手动复制粘贴。详见下方的 [Skills](#skills) 章节。CLI 仍是唯一真相来源 — skills 仅添加 UX-inline。
+
 ---
 
 ### `devtrail compliance [path] [--standard <name>] [--region <name>] [--all] [--output <format>]`
@@ -997,6 +999,36 @@ DevTrail CLI
   Repository:        https://github.com/StrangeDaysTech/devtrail
   Website:           https://strangedays.tech
 ```
+
+---
+
+## Skills
+
+DevTrail 提供一组 skills（slash 命令）供 AI 助手内使用（Claude Code、Gemini Code、Cursor、通用 Agent 运行时）。每个 skill 在 `devtrail init` 时以 3 种平行形式安装：
+
+- `dist/.claude/skills/<skill>/SKILL.md`（Claude — frontmatter 含 `allowed-tools`）
+- `dist/.gemini/skills/<skill>/SKILL.md`（Gemini — frontmatter 不含 `allowed-tools`）
+- `dist/.agent/workflows/<skill>.md`（通用 Agent — 仅 `description` frontmatter）
+
+| Skill | 用途 | 产生的文件 |
+|---|---|---|
+| `/devtrail-status` | 检查近期变更的文档合规状态。 | 无（read-only） |
+| `/devtrail-new` | 交互式创建任意类型的文档。从上下文建议最佳匹配。 | `.devtrail/<type-dir>/<TYPE>-YYYY-MM-DD-NNN-*.md` |
+| `/devtrail-ailog` | 快速 AILOG 创建快捷方式。 | `.devtrail/07-ai-audit/agent-logs/AILOG-*.md` |
+| `/devtrail-aidec` | 快速 AIDEC 创建快捷方式。 | `.devtrail/07-ai-audit/decisions/AIDEC-*.md` |
+| `/devtrail-adr` | 快速 ADR 创建快捷方式。 | `.devtrail/04-architecture/decisions/ADR-*.md` |
+| `/devtrail-mcard` | 交互式 Model Card 创建流程。 | `.devtrail/09-ai-models/MCARD-*.md` |
+| `/devtrail-sec` | 交互式 SEC（安全评估）流程。 | `.devtrail/08-security/SEC-*.md` |
+| `/devtrail-audit-prompt CHARTER-ID` *(fw-4.8.0+)* | 内联生成外部多模型审计 prompts。封装 `devtrail charter audit` PREPARE — 运行 CLI 解析 `auditor-primary.prompt.md` 与 `auditor-secondary.prompt.md`，并在对话中展示两个 prompts，操作员可粘贴到 2 个不同族的 LLM。 | `audit/charters/<CHARTER-ID>/prompts/auditor-{primary,secondary}.prompt.md`（通过其封装的 CLI） |
+| `/devtrail-audit-review CHARTER-ID` *(fw-4.8.0+)* | `/devtrail-audit-prompt` 的对应。验证操作员保存的审计员响应，内联运行校准器（驱动对话的 Agent 是有效的校准器，因为异质性仅对审计员对必需），并运行 `devtrail charter audit --finalize --merge-into` 直接将 `external_audit:` 追加到 `.devtrail/charters/<CHARTER-ID>.telemetry.yaml`。如果遥测尚不存在（Charter 未关闭），写入 `audit/charters/<CHARTER-ID>/external-audit-pending.yaml` 供后续手动合并。 | `audit/charters/<CHARTER-ID>/calibrator-reconciler.md`，`external_audit:` 数组合并入遥测 |
+
+### Skill vs CLI
+
+两个审计 skill 是 CLI 命令的**封装**。`audit/` 目录布局、prompts、schema 验证、`external_audit` 形状全部在 CLI 中 — skills 仅处理 UX-inline 部分（在对话中展示 prompts，内联运行校准器，触发合并）。不在循环中使用 AI 助手的 adopter 可直接通过 `devtrail charter audit`（PREPARE / `--calibrate` / `--finalize [--merge-into <path>]`）驱动相同工作流。
+
+### 审计检查点 *(fw-4.8.0+)*
+
+`.devtrail/00-governance/AGENT-RULES.md` §12 编码了一个工作流检查点，其中 Agent 在某个特定时刻主动提议审计 — 当 Charter 实现完成、drift 干净，且 `charter close` 尚未调用时。推荐基于启发式给出 是/否（安全面、新组件、AILOG 风险、复杂度）。外部审计**完全可选**；检查点是**软性**的 — 永不阻塞 `charter close`，永不强制（v0+v1 永久设计决策）。
 
 ---
 
