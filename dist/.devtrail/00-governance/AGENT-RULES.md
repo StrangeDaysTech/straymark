@@ -345,4 +345,4 @@ These are heuristics, not rigid rules — you are close to the context, refine t
 
 ---
 
-*DevTrail v4.7.1 | [Strange Days Tech](https://strangedays.tech)*
+*DevTrail v4.8.0 | [Strange Days Tech](https://strangedays.tech)*

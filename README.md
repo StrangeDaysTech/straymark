@@ -259,8 +259,8 @@ DevTrail uses independent version tags for each component:
 
 | Component | Tag prefix | Example | Includes |
 |-----------|-----------|---------|----------|
-| Framework | `fw-` | `fw-4.7.1` | Templates (12 types), governance, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.8.1` | The `devtrail` binary |
+| Framework | `fw-` | `fw-4.8.0` | Templates (12 types), governance, directives, Charter template + schema |
+| CLI | `cli-` | `cli-3.9.0` | The `devtrail` binary |
 
 Check installed versions with `devtrail status` or `devtrail about`.
 
@@ -292,7 +292,7 @@ See [CLI Reference](https://github.com/StrangeDaysTech/devtrail/blob/main/docs/a
 ```bash
 # Download the latest framework release ZIP from GitHub
 # Go to https://github.com/StrangeDaysTech/devtrail/releases
-# and download the latest fw-* release (e.g., fw-4.7.1)
+# and download the latest fw-* release (e.g., fw-4.8.0)
 
 # Extract and copy to your project
 unzip devtrail-fw-*.zip -d your-project/

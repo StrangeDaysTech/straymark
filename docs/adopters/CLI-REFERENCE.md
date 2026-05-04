@@ -48,8 +48,8 @@ DevTrail uses **independent version tags** for each component:
 
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
-| Framework | `fw-` | `fw-4.7.1` | Templates (12 types), governance docs, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.8.1` | The `devtrail` binary |
+| Framework | `fw-` | `fw-4.8.0` | Templates (12 types), governance docs, directives, Charter template + schema |
+| CLI | `cli-` | `cli-3.9.0` | The `devtrail` binary |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
 
@@ -88,7 +88,7 @@ Initialize DevTrail in a project directory.
 
 ```bash
 $ devtrail init .
-✔ Downloaded DevTrail fw-4.7.1
+✔ Downloaded DevTrail fw-4.8.0
 ✔ Created .devtrail/ directory structure
 ✔ Created DEVTRAIL.md
 ✔ Configured AI agent directives
@@ -110,7 +110,7 @@ If `.devtrail/` does not exist in the current directory, the framework update is
 ```bash
 $ devtrail update
 Updating framework...
-✔ Framework updated to fw-4.7.1
+✔ Framework updated to fw-4.8.0
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -127,7 +127,7 @@ Update only the framework files. Looks for the latest `fw-*` release on GitHub.
 
 ```bash
 $ devtrail update-framework
-✔ Framework updated to fw-4.7.1
+✔ Framework updated to fw-4.8.0
 ```
 
 ---
@@ -211,7 +211,7 @@ $ devtrail status
   Project
   ┌───────────┬──────────────────────────┐
   │ Path      │ /home/user/my-project    │
-  │ Framework │ fw-4.7.1                 │
+  │ Framework │ fw-4.8.0                 │
   │ CLI       │ cli-3.5.2                │
   │ Language  │ en                       │
   └───────────┴──────────────────────────┘
@@ -268,7 +268,7 @@ Repairing DevTrail in /home/user/my-project
 → Restoring 1 missing directory...
 ✓ Restored .devtrail/templates/
 → Downloading framework to restore missing files...
-  Using version: fw-4.7.1
+  Using version: fw-4.8.0
 ✓ Restored 16 file(s) from framework
 → Updating checksums...
 
@@ -423,7 +423,7 @@ Manage **Charters**: bounded, auditable units of work declared ex-ante and valid
 - `devtrail charter status` — show Charter detail, or the most recent 5 Charters
 - `devtrail charter close` — record post-execution telemetry and bump status to `closed` *(Phase 2, fw-4.6.0+)*
 - `devtrail charter drift` — detect file-vs-commit drift with AILOG-aware suppression *(Phase 2, fw-4.6.0+)*
-- `devtrail charter audit` — orchestrate a multi-model external review (3-step prepare/calibrate/finalize) *(Phase 3, fw-4.7.1+)*
+- `devtrail charter audit` — orchestrate a multi-model external review (3-step prepare/calibrate/finalize) *(Phase 3, fw-4.8.0+)*
 
 #### `devtrail charter new [-t XS|S|M|L] [--from-ailog <id> | --from-spec <path>] [--title <title>] [path]`
 
@@ -556,7 +556,7 @@ Detect file-vs-commit drift at Charter close. Wraps the framework's `.devtrail/s
 |---|---|---|
 | `CHARTER-ID` | — | Same resolution rules as `charter status` |
 | `--range` | `HEAD~1..HEAD` | Git revision range to check |
-| `--no-ailog-suppress` *(cli-3.8.1+ always emits a confirming INFO line)* | false | Disable AILOG-aware suppression (show every declared-omitted path). When passed, the CLI always prints an `INFO: AILOG-aware suppression bypassed (would have suppressed: N path(s)…)` line — including when N=0 — so that the diagnostic mode is visible in output even on a clean run. |
+| `--no-ailog-suppress` *(cli-3.9.0+ always emits a confirming INFO line)* | false | Disable AILOG-aware suppression (show every declared-omitted path). When passed, the CLI always prints an `INFO: AILOG-aware suppression bypassed (would have suppressed: N path(s)…)` line — including when N=0 — so that the diagnostic mode is visible in output even on a clean run. |
 | `--path` | `.` | Target project directory |
 
 **Exit codes:** `0` if no drift (or only AILOG-suppressed); `1` if there's unaccounted drift; `2` for usage errors (Charter not found, bash missing, etc.).
@@ -582,14 +582,14 @@ OK all declared-omitted paths are documented in AILOGs — drift accepted.
 
 > **Platform note.** The drift check delegates to `bash`. On Linux/macOS/WSL/Git Bash this works out of the box. On Windows native without WSL, install Git Bash; a pure-Rust fallback is on the roadmap but not in fw-4.6.x.
 
-#### Wildcard support in declared paths *(fw-4.7.1+)*
+#### Wildcard support in declared paths *(fw-4.8.0+)*
 
 The drift check resolves two forms of wildcard in `## Files to modify`:
 
 | Form | Example | Use case |
 |---|---|---|
 | Ellipsis | `` `.devtrail/07-ai-audit/agent-logs/AILOG-...md` `` | Any modified path with that prefix satisfies the wildcard. Used historically when an unknown number of AILOGs would be created during execution. |
-| Glob | `` `AILOG-*.md` `` or `` `src/services/foo-*.rs` `` | Any modified path matching the glob (`*` → `.*`) satisfies the wildcard. Used for bulk Charter declarations where a parameterized set is touched. Added in fw-4.7.1 after the friction surfaced in Sentinel CHARTER-04 ([issue #81](https://github.com/StrangeDaysTech/devtrail/issues/81)). |
+| Glob | `` `AILOG-*.md` `` or `` `src/services/foo-*.rs` `` | Any modified path matching the glob (`*` → `.*`) satisfies the wildcard. Used for bulk Charter declarations where a parameterized set is touched. Added in fw-4.8.0 after the friction surfaced in Sentinel CHARTER-04 ([issue #81](https://github.com/StrangeDaysTech/devtrail/issues/81)). |
 
 Both forms are handled in both directions: a declared wildcard suppresses both "declared but not modified" warnings (when at least one matching file was modified) and "modified but not declared" warnings (when a modified path matches a declared wildcard).
 
@@ -1050,7 +1050,7 @@ Show version, authorship, and license information.
 $ devtrail about
 DevTrail CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.7.1
+  Framework version: fw-4.8.0
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/devtrail

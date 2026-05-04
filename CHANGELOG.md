@@ -7,6 +7,39 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.8.0 / CLI 3.9.0 — External audit skills + workflow checkpoint
+
+Phase 1 of `Propuesta/devtrail-audit-skills.md`: closes the back-half of the external multi-model audit cycle by surfacing it inside the AI assistant in the loop, and codifies a soft (never-enforced) workflow checkpoint where the agent proactively offers the audit at the right moment. External audit remains **fully optional** — the Charter's declarative scope + drift check + AILOG discipline already provide rigorous closure without it. The skills only add UX-inline; the underlying CLI orchestration is unchanged in shape, only extended with a new `--merge-into` flag to close the manual copy-paste loop.
+
+This release also fixes a pre-existing bug in `devtrail charter audit --finalize` where the rendered `audit_notes:` field contained the literal placeholder `<charter-id>` instead of the canonical Charter id.
+
+### Added (Framework)
+
+- **Skill `/devtrail-audit-prompt CHARTER-ID`** (3 platforms): `dist/.claude/skills/devtrail-audit-prompt/SKILL.md`, `dist/.gemini/skills/devtrail-audit-prompt/SKILL.md`, `dist/.agent/workflows/devtrail-audit-prompt.md`. Wraps `devtrail charter audit` PREPARE — surfaces both auditor prompts inline in the conversation so the operator can paste them into 2 LLMs of different families without leaving the IDE.
+- **Skill `/devtrail-audit-review CHARTER-ID`** (3 platforms): same install shape. Validates the operator-saved auditor responses, runs the calibrator inline (the agent driving the conversation IS a valid calibrator since heterogeneity is required only for the auditor pair), and triggers `devtrail charter audit --finalize --merge-into` so the `external_audit:` array lands directly in the Charter telemetry. Branch B (telemetry not yet present) writes `audit/charters/<id>/external-audit-pending.yaml` for later manual merge.
+- **AGENT-RULES.md §12 "Audit Checkpoint"** (3 langs: EN / ES / zh-CN): codifies the 4 boolean triggers, the literal YES/NO message text, the YES/NO heuristics (security surface, new component, AILOG risks, large + first Charter, explicit cross-model request, **arborist 2× threshold complexity signal with graceful-degradation when the `analyze` feature is absent**), and the rules of engagement (emit once per Charter, never block, not counted as a metric). Permanent v0+v1 design decision — the checkpoint will never be escalated to enforcement.
+- **Adopter docs surfaced** the new skills + checkpoint in `WORKFLOWS.md`, `CLI-REFERENCE.md` (new `## Skills` section listing all 9 shipped skills), `ADOPTION-GUIDE.md` (new `## External Audit (Optional)` section), and `QUICK-REFERENCE.md` (skills table expanded from 1 row to all 9), across all 3 languages.
+
+### Added (CLI)
+
+- **`devtrail charter audit --finalize --merge-into <PATH>`** *(`cli-3.9.0+`)* — appends the rendered `external_audit:` array directly into the telemetry YAML at `<PATH>` instead of printing it to stdout. String-level append at indent 2 under `charter_telemetry:` (preserves the hand-written shape from `charter close`; no full re-serialization → no comment loss). v0 deliberately rejects re-audit (file already has `external_audit:`) with a clear error — operator reconciles manually rather than risk silent duplication. Missing telemetry path errors with explicit guidance to run `devtrail charter close` first or omit the flag.
+
+### Fixed (CLI)
+
+- **`render_external_audit_yaml` now emits the canonical Charter id** in `audit_notes:` instead of the literal placeholder `<charter-id>`. The function takes the canonical id as a parameter; both the stdout path and the new `--merge-into` path produce correct output.
+
+### Tests
+
+- 4 new integration tests in `cli/tests/charter_audit_test.rs` covering the `--merge-into` flag (happy path, missing telemetry, re-audit guard, clap rejection without `--finalize`).
+- 8 new fixture tests in `cli/tests/audit_skill_test.rs` covering both audit skills across 3 platforms (per-platform frontmatter shape + cross-platform parity of load-bearing guidance).
+- 4 new fixture tests in `cli/tests/checkpoint_guidance_test.rs` covering the §12 Audit Checkpoint section across 3 languages (presence + cross-language parity of language-agnostic anchors).
+
+### Documentation only
+
+- Versioning tables, governance footers, and CLI output examples updated from `fw-4.7.1` / `cli-3.8.1` to `fw-4.8.0` / `cli-3.9.0` across 22 files (3 languages).
+
+---
+
 ## Framework 4.7.1 / CLI 3.8.1 — O3 resolved (`--no-ailog-suppress` always emits INFO line)
 
 Closes the last `pending design discussion` carried forward from issue #81:
