@@ -125,7 +125,7 @@ Salvaguardas incorporadas que aseguran que los humanos mantengan el control:
 
 Comandos integrados que convierten la disciplina en feedback accionable:
 
-- **`devtrail charter <new|list|status|close|drift|audit>`** — Unidades acotadas declaradas ex-ante, auditadas ex-post. `close` registra telemetría; `drift` detecta drift archivos-vs-commits con supresión AILOG-aware; `audit` orquesta revisión externa multi-modelo (flujo de 3 pasos prepare/calibrate/finalize, orchestration-only — sin invocación de APIs de LLM).
+- **`devtrail charter <new|list|status|close|drift|audit>`** — Unidades acotadas declaradas ex-ante, auditadas ex-post. `close` registra telemetría; `drift` detecta drift archivos-vs-commits con supresión AILOG-aware; `audit` orquesta revisión externa multi-modelo (flujo de 3 pasos prepare/calibrate/finalize, orchestration-only — sin invocación de APIs de LLM). Para flujos IDE-driven, las skills inline `/devtrail-audit-prompt` y `/devtrail-audit-review` envuelven al CLI para mostrar prompts en la conversación y mergear findings en la telemetría.
 - **`devtrail approve <doc-id>`** — Registra una aprobación humana formal (escribe `reviewed_by` / `reviewed_at` / `review_outcome` y la sección body `## Approval` en una sola edición; cierra el gap canonizado en DOCUMENTATION-POLICY §3.5)
 - **`devtrail validate`** — 25+ reglas de validación para corrección documental (12 específicas de China son scope-aware); `--include-charters` extiende a `docs/charters/`; `--check-pending-reviews` lista el backlog de aprobaciones (warn-only)
 - **`devtrail metrics`** — KPIs de gobernanza, tasas de revisión, distribución de riesgo, tendencias
