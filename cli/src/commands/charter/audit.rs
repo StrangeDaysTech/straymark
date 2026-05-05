@@ -33,7 +33,46 @@ use crate::audit_schema::AuditOutputSchema;
 use crate::charter::{self, Charter};
 use crate::utils;
 
-const DEFAULT_RANGE: &str = "HEAD~1..HEAD";
+/// Last-resort fallback when no upstream branch is reachable. Issued with a
+/// warning that explains why the operator may want `--range` explicitly.
+const FALLBACK_RANGE: &str = "HEAD~1..HEAD";
+
+/// Resolve the default git range when `--range` is not provided.
+///
+/// Tries upstream branches in priority order (`origin/main` → `origin/master`)
+/// to bound the audit at the point where the feature branch diverged from the
+/// project's main line. Falls back to `HEAD~1..HEAD` (the v0 default) when no
+/// upstream is reachable, with a warning to stderr — that path covers
+/// freshly-cloned repos without remotes, disconnected branches, or repos
+/// where the operator hasn't run `git fetch` yet.
+///
+/// Issue #102 R11(A): Sentinel CHARTER-07 was implemented as 8 commits on a
+/// feature branch; the previous default `HEAD~1..HEAD` only sent the last
+/// (metadata-only) commit to the auditors, which converged on "0 substantive
+/// findings" vacuously because they never saw the migrations, SQLC, scaffolding,
+/// or PII guard test. `origin/main..HEAD` captures the full implementation set.
+fn resolve_default_range(project_root: &Path) -> String {
+    for candidate in ["origin/main", "origin/master"] {
+        let probe = std::process::Command::new("git")
+            .args(["rev-parse", "--verify", "--quiet", candidate])
+            .current_dir(project_root)
+            .output();
+        if let Ok(out) = probe {
+            if out.status.success() {
+                return format!("{candidate}..HEAD");
+            }
+        }
+    }
+    eprintln!(
+        "{} no upstream branch reachable (tried origin/main, origin/master); \
+         falling back to {}. For multi-commit feature branches, pass \
+         --range <REV..REV> explicitly so the auditors see the full \
+         implementation set, not just the last commit.",
+        "warn:".yellow().bold(),
+        FALLBACK_RANGE
+    );
+    FALLBACK_RANGE.to_string()
+}
 
 pub fn run(
     path: &str,
@@ -70,7 +109,10 @@ pub fn run(
     let prompts_dir = audit_dir.join("prompts");
     utils::ensure_dir(&prompts_dir)?;
 
-    let range = range.unwrap_or(DEFAULT_RANGE).to_string();
+    let range = match range {
+        Some(r) => r.to_string(),
+        None => resolve_default_range(project_root),
+    };
 
     if finalize {
         return run_finalize(
