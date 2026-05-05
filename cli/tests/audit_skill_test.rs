@@ -239,3 +239,157 @@ fn devtrail_audit_review_three_platforms_share_core_guidance() {
         );
     }
 }
+
+// ── devtrail-audit-execute (PR 5 — v1 audit-skills) ────────────────────────
+
+#[test]
+fn devtrail_audit_execute_claude_skill_exists_and_has_allowed_tools() {
+    let body = read(
+        dist_root()
+            .join(".claude")
+            .join("skills")
+            .join("devtrail-audit-execute")
+            .join("SKILL.md"),
+    );
+    assert!(body.starts_with("---\n"), "missing YAML frontmatter");
+    assert!(
+        body.contains("name: devtrail-audit-execute"),
+        "missing name field"
+    );
+    assert!(
+        body.contains("allowed-tools:"),
+        "Claude skill must declare allowed-tools"
+    );
+    // The skill orchestrates audit execution with tool use; common build/test
+    // commands across stacks should be allowlisted.
+    assert!(
+        body.contains("go vet")
+            && body.contains("cargo")
+            && body.contains("npm")
+            && body.contains("pytest"),
+        "allowed-tools should permit common build/test commands across stacks"
+    );
+    assert!(
+        body.contains("argument-hint:"),
+        "Claude skill should declare argument-hint for the optional CHARTER-NN arg"
+    );
+}
+
+#[test]
+fn devtrail_audit_execute_gemini_skill_exists_without_allowed_tools() {
+    let body = read(
+        dist_root()
+            .join(".gemini")
+            .join("skills")
+            .join("devtrail-audit-execute")
+            .join("SKILL.md"),
+    );
+    assert!(body.starts_with("---\n"), "missing YAML frontmatter");
+    assert!(
+        body.contains("name: devtrail-audit-execute"),
+        "missing name field"
+    );
+    assert!(
+        !body.contains("allowed-tools:"),
+        "Gemini skill must not declare allowed-tools"
+    );
+}
+
+#[test]
+fn devtrail_audit_execute_agent_workflow_exists_with_description_only() {
+    let body = read(
+        dist_root()
+            .join(".agent")
+            .join("workflows")
+            .join("devtrail-audit-execute.md"),
+    );
+    assert!(body.starts_with("---\n"), "missing YAML frontmatter");
+    assert!(
+        !body.contains("name:"),
+        "agent workflow must not declare a name field"
+    );
+    assert!(
+        !body.contains("allowed-tools:"),
+        "agent workflow must not declare allowed-tools"
+    );
+    assert!(
+        body.contains("description:"),
+        "agent workflow must declare description"
+    );
+}
+
+#[test]
+fn devtrail_audit_execute_three_platforms_share_core_guidance() {
+    let claude = read(
+        dist_root()
+            .join(".claude")
+            .join("skills")
+            .join("devtrail-audit-execute")
+            .join("SKILL.md"),
+    );
+    let gemini = read(
+        dist_root()
+            .join(".gemini")
+            .join("skills")
+            .join("devtrail-audit-execute")
+            .join("SKILL.md"),
+    );
+    let agent = read(
+        dist_root()
+            .join(".agent")
+            .join("workflows")
+            .join("devtrail-audit-execute.md"),
+    );
+
+    for body in [&claude, &gemini, &agent] {
+        // Canonical paths the skill uses.
+        assert!(
+            body.contains(".devtrail/audits/"),
+            "skill must reference the v1 canonical audit dir"
+        );
+        assert!(
+            body.contains("audit-prompt.md"),
+            "skill must read the unified audit prompt"
+        );
+        assert!(
+            body.contains("report-<self-model-slug>.md")
+                || body.contains("report-<slug>.md"),
+            "skill must write the report at the keyed path"
+        );
+
+        // D14: discovery automático when arg omitted.
+        assert!(
+            body.contains("argument is optional")
+                || body.contains("argument provided")
+                || body.contains("arg omitted")
+                || body.contains("Auto-discover"),
+            "skill must handle the optional-argument auto-discovery case"
+        );
+
+        // D14: model-slug detection.
+        assert!(
+            body.contains("model identifier") && body.contains("slug"),
+            "skill must explain how to detect and slugify the model identifier"
+        );
+
+        // The wait warning — load-bearing for parallel-CLI workflows.
+        assert!(
+            body.contains("ALL audits") && body.contains("complete"),
+            "skill must warn the operator to wait for ALL commissioned audits before invoking review"
+        );
+        assert!(
+            body.contains("/devtrail-audit-review"),
+            "skill must point at the audit-review skill as the next step"
+        );
+
+        // Discipline carried from the prompt template.
+        assert!(
+            body.contains("path:line"),
+            "skill must reference the path:line citation discipline"
+        );
+        assert!(
+            body.contains("Read-only") || body.contains("read-only"),
+            "skill must reinforce the read-only constraint"
+        );
+    }
+}
