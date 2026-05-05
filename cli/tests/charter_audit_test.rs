@@ -1,4 +1,4 @@
-//! Integration tests for `devtrail charter audit` (Phase 3 v0).
+//! Integration tests for `devtrail charter audit` (v1 unified flow).
 
 use assert_cmd::Command;
 use predicates::prelude::*;
@@ -6,14 +6,8 @@ use std::path::Path;
 use std::process::Command as StdCommand;
 use tempfile::TempDir;
 
-const AUDIT_PROMPT_PRIMARY: &str = include_str!(
-    "../../dist/.devtrail/audit-prompts/auditor-primary.md"
-);
-const AUDIT_PROMPT_SECONDARY: &str = include_str!(
-    "../../dist/.devtrail/audit-prompts/auditor-secondary.md"
-);
-const AUDIT_PROMPT_CALIBRATOR: &str = include_str!(
-    "../../dist/.devtrail/audit-prompts/calibrator-reconciler.md"
+const AUDIT_PROMPT_UNIFIED: &str = include_str!(
+    "../../dist/.devtrail/audit-prompts/audit-prompt.md"
 );
 const AUDIT_OUTPUT_SCHEMA: &str = include_str!(
     "../../dist/.devtrail/schemas/audit-output.schema.v0.json"
@@ -35,18 +29,8 @@ fn setup_devtrail(dir: &Path) {
     std::fs::create_dir_all(devtrail.join("templates")).unwrap();
     std::fs::write(devtrail.join("config.yml"), "language: en\n").unwrap();
     std::fs::write(
-        devtrail.join("audit-prompts/auditor-primary.md"),
-        AUDIT_PROMPT_PRIMARY,
-    )
-    .unwrap();
-    std::fs::write(
-        devtrail.join("audit-prompts/auditor-secondary.md"),
-        AUDIT_PROMPT_SECONDARY,
-    )
-    .unwrap();
-    std::fs::write(
-        devtrail.join("audit-prompts/calibrator-reconciler.md"),
-        AUDIT_PROMPT_CALIBRATOR,
+        devtrail.join("audit-prompts/audit-prompt.md"),
+        AUDIT_PROMPT_UNIFIED,
     )
     .unwrap();
     std::fs::write(
@@ -54,6 +38,11 @@ fn setup_devtrail(dir: &Path) {
         AUDIT_OUTPUT_SCHEMA,
     )
     .unwrap();
+}
+
+/// Helper: returns the v1 canonical audit dir for a Charter under `dir`.
+fn audit_dir(dir: &Path, charter_id: &str) -> std::path::PathBuf {
+    dir.join(".devtrail").join("audits").join(charter_id)
 }
 
 fn write_charter(dir: &Path) {
@@ -130,7 +119,7 @@ fn audit_unknown_charter_fails() {
 }
 
 #[test]
-fn audit_prepare_writes_resolved_prompts() {
+fn audit_prepare_writes_unified_prompt_to_canonical_location() {
     if !bash_available() {
         eprintln!("skipping: git not available");
         return;
@@ -147,31 +136,33 @@ fn audit_prepare_writes_resolved_prompts() {
         .assert()
         .success()
         .stdout(predicate::str::contains("PREPARE"))
-        .stdout(predicate::str::contains("auditor-primary.prompt.md"))
-        .stdout(predicate::str::contains("auditor-secondary.prompt.md"))
-        .stdout(predicate::str::contains("--calibrate"));
+        .stdout(predicate::str::contains("audit-prompt.md"))
+        .stdout(predicate::str::contains("/devtrail-audit-execute"))
+        .stdout(predicate::str::contains("/devtrail-audit-review"));
 
-    let prompts = dir.path().join("audit/charters/CHARTER-01/prompts");
-    let primary = std::fs::read_to_string(prompts.join("auditor-primary.prompt.md")).unwrap();
+    // v1 canonical path: .devtrail/audits/CHARTER-01/audit-prompt.md
+    // (singular file, not a prompts/ subdirectory with two files).
+    let resolved_path = audit_dir(dir.path(), "CHARTER-01").join("audit-prompt.md");
+    let resolved = std::fs::read_to_string(&resolved_path)
+        .unwrap_or_else(|_| panic!("expected resolved prompt at {}", resolved_path.display()));
+
     // Placeholder substitution happened in the body (outside HTML comments).
-    assert!(primary.contains("CHARTER-01"));
-    assert!(primary.contains("auditor-primary"));
-    assert!(primary.contains("docs/charters/01-audit-test.md"));
+    assert!(resolved.contains("CHARTER-01"));
+    assert!(resolved.contains("docs/charters/01-audit-test.md"));
     // Diff was inlined.
-    assert!(primary.contains("// edited") || primary.contains("// initial"));
+    assert!(resolved.contains("// edited") || resolved.contains("// initial"));
 
     // R10 (issue #102): the resolver must NOT expand placeholders inside
-    // <!-- ... --> blocks. The auditor-primary.md template has a
-    // documentation header that lists placeholders literally; before the
-    // fix, those expanded and duplicated ~30k tokens of payload. After the
-    // fix, the header stays as documentation and each placeholder value
-    // appears in the body proper exactly once.
-    let header_end = primary.find("-->").expect("template should have an HTML comment header");
-    let header = &primary[..header_end];
-    let body = &primary[header_end..];
+    // <!-- ... --> blocks. The unified template has a documentation header
+    // that lists placeholders literally; the resolver preserves them.
+    let header_end = resolved
+        .find("-->")
+        .expect("template should have an HTML comment header");
+    let header = &resolved[..header_end];
+    let body = &resolved[header_end..];
     assert!(
         header.contains("{{charter_id}}"),
-        "documentation header must preserve {{{{charter_id}}}} literal: header={header:?}"
+        "documentation header must preserve {{{{charter_id}}}} literal"
     );
     assert!(
         header.contains("{{git_diff}}"),
@@ -186,12 +177,35 @@ fn audit_prepare_writes_resolved_prompts() {
         "body (outside comment) must have {{{{git_diff}}}} replaced"
     );
 
-    let secondary = std::fs::read_to_string(prompts.join("auditor-secondary.prompt.md")).unwrap();
-    assert!(secondary.contains("auditor-secondary"));
+    // v1: the v0 paths under audit/charters/ must NOT be written by the
+    // v1 CLI. Only the canonical .devtrail/audits/<id>/audit-prompt.md is
+    // produced.
+    let v0_primary = dir
+        .path()
+        .join("audit")
+        .join("charters")
+        .join("CHARTER-01")
+        .join("prompts")
+        .join("auditor-primary.prompt.md");
+    assert!(
+        !v0_primary.exists(),
+        "v0 path under audit/charters/ must NOT be written by the v1 CLI"
+    );
+    let v0_secondary = dir
+        .path()
+        .join("audit")
+        .join("charters")
+        .join("CHARTER-01")
+        .join("prompts")
+        .join("auditor-secondary.prompt.md");
+    assert!(
+        !v0_secondary.exists(),
+        "v0 secondary prompt path must NOT be written by the v1 CLI"
+    );
 }
 
 #[test]
-fn audit_calibrate_requires_auditor_outputs() {
+fn audit_merge_reports_with_no_reports_fails_helpfully() {
     if !bash_available() {
         return;
     }
@@ -200,19 +214,19 @@ fn audit_calibrate_requires_auditor_outputs() {
     write_charter(dir.path());
     init_repo_with_diff(dir.path());
 
-    // Skip prepare; go directly to calibrate.
+    // Skip prepare and any report files; jump straight to merge-reports.
     Command::cargo_bin("devtrail")
         .unwrap()
-        .args(["charter", "audit", "CHARTER-01", "--calibrate", "--path"])
+        .args(["charter", "audit", "CHARTER-01", "--merge-reports", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
         .failure()
-        .stderr(predicate::str::contains("auditor-primary.md"))
-        .stderr(predicate::str::contains("not found"));
+        .stderr(predicate::str::contains("No reports found"))
+        .stderr(predicate::str::contains("report-*.md"));
 }
 
 #[test]
-fn audit_calibrate_validates_outputs_against_schema() {
+fn audit_merge_reports_validates_against_schema() {
     if !bash_available() {
         return;
     }
@@ -221,48 +235,28 @@ fn audit_calibrate_validates_outputs_against_schema() {
     write_charter(dir.path());
     init_repo_with_diff(dir.path());
 
-    let audit_dir = dir.path().join("audit/charters/CHARTER-01");
-    std::fs::create_dir_all(&audit_dir).unwrap();
+    let canonical = audit_dir(dir.path(), "CHARTER-01");
+    std::fs::create_dir_all(&canonical).unwrap();
 
-    // Write a malformed auditor-primary.md (missing required findings_total).
+    // Malformed report (missing required findings_total).
     std::fs::write(
-        audit_dir.join("auditor-primary.md"),
+        canonical.join("report-claude-sonnet-4-6.md"),
         r#"---
-audit_role: auditor-primary
-auditor: copilot
+audit_role: auditor
+auditor: claude-sonnet-4-6
 charter_id: CHARTER-01
 audited_at: "2026-05-03"
-prompt_used: prompts/auditor-primary.prompt.md
+prompt_used: audit-prompt.md
 ---
 
 # bad
 "#,
     )
     .unwrap();
-    std::fs::write(
-        audit_dir.join("auditor-secondary.md"),
-        r#"---
-audit_role: auditor-secondary
-auditor: gemini
-charter_id: CHARTER-01
-audited_at: "2026-05-03"
-findings_total: 0
-findings_by_category:
-  hallucination: 0
-  implementation_gap: 0
-  real_debt: 0
-  false_positive: 0
-prompt_used: prompts/auditor-secondary.prompt.md
----
-
-# good
-"#,
-    )
-    .unwrap();
 
     Command::cargo_bin("devtrail")
         .unwrap()
-        .args(["charter", "audit", "CHARTER-01", "--calibrate", "--path"])
+        .args(["charter", "audit", "CHARTER-01", "--merge-reports", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
         .failure()
@@ -270,7 +264,7 @@ prompt_used: prompts/auditor-secondary.prompt.md
 }
 
 #[test]
-fn audit_full_three_step_cycle_succeeds() {
+fn audit_merge_reports_handles_n_reports_with_unified_role() {
     if !bash_available() {
         return;
     }
@@ -279,149 +273,192 @@ fn audit_full_three_step_cycle_succeeds() {
     write_charter(dir.path());
     init_repo_with_diff(dir.path());
 
-    // Step 1: prepare.
+    // Prepare (writes the unified prompt).
     Command::cargo_bin("devtrail")
         .unwrap()
-        .args(["charter", "audit", "CHARTER-01", "--path"])
+        .args(["charter", "audit", "CHARTER-01", "--prepare", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
         .success();
 
-    // Simulate the operator pasting valid auditor responses.
-    let audit_dir = dir.path().join("audit/charters/CHARTER-01");
-    std::fs::write(
-        audit_dir.join("auditor-primary.md"),
-        r#"---
-audit_role: auditor-primary
-auditor: copilot-v1.0.37
+    // Operator saves three reports under the canonical path with the v1
+    // unified `audit_role: auditor`.
+    let canonical = audit_dir(dir.path(), "CHARTER-01");
+    for (slug, model, findings) in [
+        ("claude-sonnet-4-6", "claude-sonnet-4-6", 2),
+        ("gemini-2-5-pro", "gemini-2.5-pro", 1),
+        ("gpt-5-3-codex", "gpt-5.3-codex", 0),
+    ] {
+        let body = format!(
+            r#"---
+audit_role: auditor
+auditor: {model}
 charter_id: CHARTER-01
 git_range: "HEAD~1..HEAD"
-prompt_used: prompts/auditor-primary.prompt.md
+prompt_used: audit-prompt.md
 audited_at: "2026-05-03"
-findings_total: 2
+findings_total: {findings}
 findings_by_category:
   hallucination: 0
-  implementation_gap: 1
-  real_debt: 1
-  false_positive: 0
-audit_quality: high
----
-
-# Audit by copilot
-
-## Findings
-
-### F1 — minor gap — implementation_gap
-
-Body.
-
-### F2 — leak — real_debt
-
-Body.
-"#,
-    )
-    .unwrap();
-    std::fs::write(
-        audit_dir.join("auditor-secondary.md"),
-        r#"---
-audit_role: auditor-secondary
-auditor: gemini-cli-v1.5
-charter_id: CHARTER-01
-git_range: "HEAD~1..HEAD"
-prompt_used: prompts/auditor-secondary.prompt.md
-audited_at: "2026-05-03"
-findings_total: 1
-findings_by_category:
-  hallucination: 0
-  implementation_gap: 1
+  implementation_gap: {findings}
   real_debt: 0
   false_positive: 0
-audit_quality: medium
+audit_quality: high
+evidence_citations: {findings}
 ---
+# Body
+"#,
+            model = model,
+            findings = findings
+        );
+        std::fs::write(canonical.join(format!("report-{slug}.md")), body).unwrap();
+    }
 
-# Audit by gemini
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args(["charter", "audit", "CHARTER-01", "--merge-reports", "--path"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Audit cycle merge complete"))
+        .stdout(predicate::str::contains("external_audit YAML"))
+        .stdout(predicate::str::contains("claude-sonnet-4-6"))
+        .stdout(predicate::str::contains("gemini-2.5-pro"))
+        .stdout(predicate::str::contains("gpt-5.3-codex"))
+        // No "warning: only one report" because we have three.
+        .stderr(predicate::str::contains("only one report").not());
+}
 
-## Findings
+#[test]
+fn audit_merge_reports_warns_on_single_report_but_proceeds() {
+    if !bash_available() {
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    write_charter(dir.path());
+    init_repo_with_diff(dir.path());
 
-### F1 — overlapping gap — implementation_gap
-
-Body.
+    let canonical = audit_dir(dir.path(), "CHARTER-01");
+    std::fs::create_dir_all(&canonical).unwrap();
+    std::fs::write(
+        canonical.join("report-claude-sonnet-4-6.md"),
+        r#"---
+audit_role: auditor
+auditor: claude-sonnet-4-6
+charter_id: CHARTER-01
+git_range: "HEAD~1..HEAD"
+prompt_used: audit-prompt.md
+audited_at: "2026-05-03"
+findings_total: 0
+findings_by_category:
+  hallucination: 0
+  implementation_gap: 0
+  real_debt: 0
+  false_positive: 0
+---
+# Body
 "#,
     )
     .unwrap();
 
-    // Step 2: calibrate.
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args(["charter", "audit", "CHARTER-01", "--merge-reports", "--path"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("only one report"))
+        .stderr(predicate::str::contains("heterogeneity"));
+}
+
+#[test]
+fn audit_deprecated_calibrate_emits_warning_and_exits() {
+    if !bash_available() {
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    write_charter(dir.path());
+    init_repo_with_diff(dir.path());
+
     Command::cargo_bin("devtrail")
         .unwrap()
         .args(["charter", "audit", "CHARTER-01", "--calibrate", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
-        .success()
-        .stdout(predicate::str::contains("CALIBRATE"))
-        .stdout(predicate::str::contains("calibrator-reconciler.prompt.md"))
-        .stdout(predicate::str::contains("--finalize"));
+        .failure()
+        .stderr(predicate::str::contains("v0 way"))
+        .stderr(predicate::str::contains("/devtrail-audit-review"))
+        .stderr(predicate::str::contains("--merge-reports"));
+}
 
-    // The resolved calibrator prompt should embed both auditors' findings.
-    let cal = std::fs::read_to_string(
-        audit_dir.join("prompts/calibrator-reconciler.prompt.md"),
-    )
-    .unwrap();
-    assert!(cal.contains("calibrator-reconciler"));
-    assert!(cal.contains("copilot-v1.0.37"), "primary auditor body should be embedded");
-    assert!(cal.contains("gemini-cli-v1.5"), "secondary auditor body should be embedded");
+#[test]
+fn audit_deprecated_finalize_redirects_to_merge_reports() {
+    if !bash_available() {
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    write_charter(dir.path());
+    init_repo_with_diff(dir.path());
 
-    // Simulate calibrator response.
+    let canonical = audit_dir(dir.path(), "CHARTER-01");
+    std::fs::create_dir_all(&canonical).unwrap();
     std::fs::write(
-        audit_dir.join("calibrator-reconciler.md"),
+        canonical.join("report-claude-sonnet-4-6.md"),
         r#"---
-audit_role: calibrator-reconciler
-calibrator: claude-opus-4
+audit_role: auditor
+auditor: claude-sonnet-4-6
 charter_id: CHARTER-01
 git_range: "HEAD~1..HEAD"
-prompt_used: prompts/calibrator-reconciler.prompt.md
-calibrated_at: "2026-05-03"
-auditors_reconciled:
-  - auditor-primary.md
-  - auditor-secondary.md
-findings_consolidated: 2
-findings_by_status:
-  agreed: 1
-  disputed: 0
-  unique_primary: 1
-  unique_secondary: 0
-  rejected: 0
+prompt_used: audit-prompt.md
+audited_at: "2026-05-03"
+findings_total: 0
+findings_by_category:
+  hallucination: 0
+  implementation_gap: 0
+  real_debt: 0
+  false_positive: 0
 ---
-
-# Calibration
-
-## Reconciliation summary
-
-Both auditors converged on the implementation_gap; primary added a real_debt
-that secondary missed.
+# Body
 "#,
     )
     .unwrap();
 
-    // Step 3: finalize.
+    // --finalize should warn but proceed via the merge-reports path.
     Command::cargo_bin("devtrail")
         .unwrap()
         .args(["charter", "audit", "CHARTER-01", "--finalize", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
         .success()
-        .stdout(predicate::str::contains("FINALIZE"))
-        .stdout(predicate::str::contains("Charter audit complete"))
-        .stdout(predicate::str::contains("external_audit YAML"))
-        // Both auditors appear in the rendered YAML.
-        .stdout(predicate::str::contains("copilot-v1.0.37"))
-        .stdout(predicate::str::contains("gemini-cli-v1.5"));
+        .stderr(predicate::str::contains("--finalize is the v0 name"))
+        .stderr(predicate::str::contains("--merge-reports"))
+        .stdout(predicate::str::contains("Audit cycle merge complete"));
 }
 
 #[test]
-fn audit_calibrate_and_finalize_are_mutually_exclusive() {
+fn audit_action_flags_are_mutually_exclusive() {
     let dir = TempDir::new().unwrap();
     setup_devtrail(dir.path());
 
+    // --prepare and --merge-reports must not co-occur (clap-enforced).
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "charter",
+            "audit",
+            "CHARTER-01",
+            "--prepare",
+            "--merge-reports",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .failure();
+
+    // Deprecated flags also conflict with each other and with the new ones.
     Command::cargo_bin("devtrail")
         .unwrap()
         .args([
@@ -437,32 +474,32 @@ fn audit_calibrate_and_finalize_are_mutually_exclusive() {
         .failure();
 }
 
-// ── --merge-into: PR 2 of audit-skills rollout ─────────────────────────────
+// ── --merge-into: PR 2 of audit-skills rollout (updated for v1 paths) ─────
 
-/// Set up a Charter that has been fully audited (3 outputs present), so we
-/// can drive --finalize repeatedly with different --merge-into targets.
+/// Set up a Charter with two valid v1 reports under .devtrail/audits/CHARTER-01/,
+/// so we can drive --merge-reports + --merge-into repeatedly.
 fn setup_finalized_audit(dir: &Path) {
     setup_devtrail(dir);
     write_charter(dir);
     init_repo_with_diff(dir);
 
-    // PREPARE
+    // PREPARE writes the unified audit-prompt.md to the canonical path.
     Command::cargo_bin("devtrail")
         .unwrap()
-        .args(["charter", "audit", "CHARTER-01", "--path"])
+        .args(["charter", "audit", "CHARTER-01", "--prepare", "--path"])
         .arg(dir.to_str().unwrap())
         .assert()
         .success();
 
-    let audit_dir = dir.join("audit/charters/CHARTER-01");
+    let canonical = audit_dir(dir, "CHARTER-01");
     std::fs::write(
-        audit_dir.join("auditor-primary.md"),
+        canonical.join("report-copilot-v1-0-37.md"),
         r#"---
-audit_role: auditor-primary
+audit_role: auditor
 auditor: copilot-v1.0.37
 charter_id: CHARTER-01
 git_range: "HEAD~1..HEAD"
-prompt_used: prompts/auditor-primary.prompt.md
+prompt_used: audit-prompt.md
 audited_at: "2026-05-03"
 findings_total: 2
 findings_by_category:
@@ -477,13 +514,13 @@ audit_quality: high
     )
     .unwrap();
     std::fs::write(
-        audit_dir.join("auditor-secondary.md"),
+        canonical.join("report-gemini-cli-v1-5.md"),
         r#"---
-audit_role: auditor-secondary
+audit_role: auditor
 auditor: gemini-cli-v1.5
 charter_id: CHARTER-01
 git_range: "HEAD~1..HEAD"
-prompt_used: prompts/auditor-secondary.prompt.md
+prompt_used: audit-prompt.md
 audited_at: "2026-05-03"
 findings_total: 1
 findings_by_category:
@@ -492,33 +529,6 @@ findings_by_category:
   real_debt: 0
   false_positive: 0
 audit_quality: medium
----
-# Body
-"#,
-    )
-    .unwrap();
-
-    // CALIBRATE (the CLI writes calibrator-reconciler.prompt.md but here we
-    // just simulate the operator pasting the calibrator response directly).
-    std::fs::write(
-        audit_dir.join("calibrator-reconciler.md"),
-        r#"---
-audit_role: calibrator-reconciler
-calibrator: claude-opus-4
-charter_id: CHARTER-01
-git_range: "HEAD~1..HEAD"
-prompt_used: prompts/calibrator-reconciler.prompt.md
-calibrated_at: "2026-05-03"
-auditors_reconciled:
-  - auditor-primary.md
-  - auditor-secondary.md
-findings_consolidated: 2
-findings_by_status:
-  agreed: 1
-  disputed: 0
-  unique_primary: 1
-  unique_secondary: 0
-  rejected: 0
 ---
 # Body
 "#,
@@ -565,7 +575,7 @@ fn audit_merge_into_appends_external_audit_to_telemetry() {
             "charter",
             "audit",
             "CHARTER-01",
-            "--finalize",
+            "--merge-reports",
             "--merge-into",
             telemetry_path.to_str().unwrap(),
             "--path",
@@ -582,14 +592,14 @@ fn audit_merge_into_appends_external_audit_to_telemetry() {
     );
     assert!(
         merged.contains("    - auditor: \"copilot-v1.0.37\""),
-        "primary auditor present in merged output"
+        "first auditor present in merged output"
     );
     assert!(
         merged.contains("    - auditor: \"gemini-cli-v1.5\""),
-        "secondary auditor present in merged output"
+        "second auditor present in merged output"
     );
     assert!(
-        merged.contains("audit/charters/CHARTER-01/auditor-primary.md"),
+        merged.contains("audit/charters/CHARTER-01/"),
         "audit_notes must reference real charter id (not <charter-id> placeholder)"
     );
     // Pre-existing keys preserved.
@@ -612,7 +622,7 @@ fn audit_merge_into_missing_telemetry_fails_with_helpful_message() {
             "charter",
             "audit",
             "CHARTER-01",
-            "--finalize",
+            "--merge-reports",
             "--merge-into",
             missing.to_str().unwrap(),
             "--path",
@@ -644,7 +654,7 @@ fn audit_merge_into_rejects_existing_external_audit() {
             "charter",
             "audit",
             "CHARTER-01",
-            "--finalize",
+            "--merge-reports",
             "--merge-into",
             telemetry_path.to_str().unwrap(),
             "--path",
@@ -656,11 +666,12 @@ fn audit_merge_into_rejects_existing_external_audit() {
 }
 
 #[test]
-fn audit_merge_into_requires_finalize() {
+fn audit_merge_into_requires_merge_reports_or_finalize() {
     let dir = TempDir::new().unwrap();
     setup_devtrail(dir.path());
 
-    // Without --finalize, clap should reject --merge-into.
+    // Without --merge-reports (or deprecated --finalize), the CLI should
+    // reject --merge-into with a clear error.
     Command::cargo_bin("devtrail")
         .unwrap()
         .args([
@@ -673,7 +684,8 @@ fn audit_merge_into_requires_finalize() {
         ])
         .arg(dir.path().to_str().unwrap())
         .assert()
-        .failure();
+        .failure()
+        .stderr(predicate::str::contains("--merge-into is only valid with --merge-reports"));
 }
 
 // ── R11(A) regression tests (issue #102) ───────────────────────────────────
@@ -742,7 +754,7 @@ fn audit_default_range_uses_origin_main_when_available() {
 
     let prompt = std::fs::read_to_string(
         dir.path()
-            .join("audit/charters/CHARTER-01/prompts/auditor-primary.prompt.md"),
+            .join(".devtrail/audits/CHARTER-01/audit-prompt.md"),
     )
     .unwrap();
     assert!(
@@ -779,7 +791,7 @@ fn audit_default_range_falls_back_to_head_minus_one_without_remote() {
 
     let prompt = std::fs::read_to_string(
         dir.path()
-            .join("audit/charters/CHARTER-01/prompts/auditor-primary.prompt.md"),
+            .join(".devtrail/audits/CHARTER-01/audit-prompt.md"),
     )
     .unwrap();
     assert!(

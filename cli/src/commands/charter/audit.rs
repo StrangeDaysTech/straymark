@@ -78,15 +78,16 @@ pub fn run(
     path: &str,
     charter_id: &str,
     range: Option<&str>,
+    prepare: bool,
+    merge_reports: bool,
     calibrate: bool,
     finalize: bool,
     merge_into: Option<&str>,
 ) -> Result<()> {
-    if calibrate && finalize {
-        bail!("--calibrate and --finalize are mutually exclusive — run one at a time");
-    }
-    if merge_into.is_some() && !finalize {
-        bail!("--merge-into is only valid with --finalize");
+    // --merge-into only makes sense with --merge-reports (or the deprecated
+    // --finalize that aliases to it).
+    if merge_into.is_some() && !merge_reports && !finalize {
+        bail!("--merge-into is only valid with --merge-reports (or the deprecated --finalize)");
     }
 
     let resolved = utils::resolve_project_root(path)
@@ -102,20 +103,41 @@ pub fn run(
 
     let canonical_id = canonical_charter_id(&charter.frontmatter.charter_id);
 
-    let audit_dir = project_root
-        .join("audit")
-        .join("charters")
-        .join(&canonical_id);
-    let prompts_dir = audit_dir.join("prompts");
-    utils::ensure_dir(&prompts_dir)?;
+    // v1 canonical path: .devtrail/audits/<CHARTER-ID>/. The audit-prompt is
+    // written directly to this dir; reports land here as report-*.md; the
+    // future review.md consolidated by the audit-review skill lands here too.
+    let audit_dir = devtrail_dir.join("audits").join(&canonical_id);
+    utils::ensure_dir(&audit_dir)?;
 
     let range = match range {
         Some(r) => r.to_string(),
         None => resolve_default_range(project_root),
     };
 
+    // Deprecated v0 flag: --calibrate. v1 has no separate calibrate step
+    // (the main agent fills the calibrator role via /devtrail-audit-review
+    // skill). Emit guidance and exit nonzero so callers notice.
+    if calibrate {
+        eprintln!(
+            "{} --calibrate was the v0 way to resolve the calibrator prompt. \
+             v1 of the audit flow eliminates that step — the main agent \
+             reconciles N reports inline via the /devtrail-audit-review skill. \
+             To merge reports into telemetry, use --merge-reports.",
+            "warn:".yellow().bold()
+        );
+        bail!("--calibrate is no longer supported in the v1 audit flow");
+    }
+
+    // Deprecated v0 alias: --finalize → --merge-reports.
     if finalize {
-        return run_finalize(
+        eprintln!(
+            "{} --finalize is the v0 name for the merge step. The v1 \
+             equivalent is --merge-reports (now reading N reports from \
+             {}/report-*.md instead of two fixed files).",
+            "warn:".yellow().bold(),
+            relative_path(project_root, &audit_dir).display()
+        );
+        return run_merge_reports(
             project_root,
             &devtrail_dir,
             &audit_dir,
@@ -124,24 +146,22 @@ pub fn run(
             merge_into.map(Path::new),
         );
     }
-    if calibrate {
-        return run_calibrate(
+
+    if merge_reports {
+        return run_merge_reports(
             project_root,
             &devtrail_dir,
             &audit_dir,
-            &prompts_dir,
             &charter,
-            &range,
+            &canonical_id,
+            merge_into.map(Path::new),
         );
     }
-    run_prepare(
-        project_root,
-        &devtrail_dir,
-        &audit_dir,
-        &prompts_dir,
-        &charter,
-        &range,
-    )
+
+    // Default action: prepare. The --prepare flag is accepted for
+    // self-documenting invocations but is also the implicit default.
+    let _ = prepare;
+    run_prepare(project_root, &devtrail_dir, &audit_dir, &charter, &range)
 }
 
 // ── Step 1: prepare ────────────────────────────────────────────────────────
@@ -150,150 +170,31 @@ fn run_prepare(
     project_root: &Path,
     devtrail_dir: &Path,
     audit_dir: &Path,
-    prompts_dir: &Path,
     charter: &Charter,
     range: &str,
 ) -> Result<()> {
     println!(
         "{} {} ({})",
-        "Step 1/3:".cyan().bold(),
-        "PREPARE".bold(),
+        "PREPARE".cyan().bold(),
+        "audit prompt".bold(),
         charter.frontmatter.charter_id.dimmed()
     );
 
     let context = build_audit_context(project_root, charter, range)?;
 
-    for role in ["auditor-primary", "auditor-secondary"] {
-        let template_path = devtrail_dir
-            .join("audit-prompts")
-            .join(format!("{role}.md"));
-        let template = std::fs::read_to_string(&template_path).with_context(|| {
-            format!(
-                "Audit prompt template not found at {}. Run `devtrail repair` to restore framework files.",
-                template_path.display()
-            )
-        })?;
-        let resolved = resolve_audit_template(&template, &context, role);
-        let out = prompts_dir.join(format!("{role}.prompt.md"));
-        std::fs::write(&out, resolved)
-            .with_context(|| format!("Failed to write resolved prompt to {}", out.display()))?;
-        println!(
-            "  {} Wrote {}",
-            "✔".green().bold(),
-            relative_path(project_root, &out).display()
-        );
-    }
-
-    println!();
-    println!("  {}", "Next:".bold());
-    println!("    1. Paste each prompt into your auditor of choice (use a model");
-    println!("       of a different family per auditor — see CLI-REFERENCE).");
-    println!("    2. Save the auditor responses to:");
-    println!(
-        "         {}",
-        audit_dir
-            .join("auditor-primary.md")
-            .strip_prefix(project_root)
-            .unwrap_or_else(|_| audit_dir.as_ref())
-            .display()
-    );
-    println!(
-        "         {}",
-        audit_dir
-            .join("auditor-secondary.md")
-            .strip_prefix(project_root)
-            .unwrap_or_else(|_| audit_dir.as_ref())
-            .display()
-    );
-    println!(
-        "    3. Run: {} {} --calibrate",
-        "devtrail charter audit".cyan(),
-        charter.frontmatter.charter_id.cyan()
-    );
-    Ok(())
-}
-
-// ── Step 2: calibrate ──────────────────────────────────────────────────────
-
-fn run_calibrate(
-    project_root: &Path,
-    devtrail_dir: &Path,
-    audit_dir: &Path,
-    prompts_dir: &Path,
-    charter: &Charter,
-    range: &str,
-) -> Result<()> {
-    println!(
-        "{} {} ({})",
-        "Step 2/3:".cyan().bold(),
-        "CALIBRATE".bold(),
-        charter.frontmatter.charter_id.dimmed()
-    );
-
-    let primary_path = audit_dir.join("auditor-primary.md");
-    let secondary_path = audit_dir.join("auditor-secondary.md");
-
-    for (role, path) in [
-        ("auditor-primary", &primary_path),
-        ("auditor-secondary", &secondary_path),
-    ] {
-        if !path.exists() {
-            bail!(
-                "{} not found. Save the {} response to that path before running --calibrate.",
-                path.display(),
-                role
-            );
-        }
-    }
-
-    let schema = AuditOutputSchema::load(devtrail_dir)?;
-    for path in [&primary_path, &secondary_path] {
-        let raw = std::fs::read_to_string(path)
-            .with_context(|| format!("Failed to read {}", path.display()))?;
-        let frontmatter = parse_frontmatter(&raw)
-            .with_context(|| format!("Failed to parse frontmatter in {}", path.display()))?;
-        let issues = schema.validate(&frontmatter, path);
-        if !issues.is_empty() {
-            eprintln!(
-                "{} validation issues in {}:",
-                "error:".red().bold(),
-                path.display()
-            );
-            for issue in &issues {
-                eprintln!("  - {} [{}]", issue.message, issue.rule);
-                if let Some(hint) = &issue.fix_hint {
-                    eprintln!("    {} {}", "hint:".cyan(), hint);
-                }
-            }
-            bail!("auditor output failed schema validation");
-        }
-        println!(
-            "  {} Validated {}",
-            "✔".green().bold(),
-            relative_path(project_root, path).display()
-        );
-    }
-
-    let primary_body = std::fs::read_to_string(&primary_path)?;
-    let secondary_body = std::fs::read_to_string(&secondary_path)?;
-
-    let mut context = build_audit_context(project_root, charter, range)?;
-    context.auditor_primary_findings = primary_body;
-    context.auditor_secondary_findings = secondary_body;
-
     let template_path = devtrail_dir
         .join("audit-prompts")
-        .join("calibrator-reconciler.md");
+        .join("audit-prompt.md");
     let template = std::fs::read_to_string(&template_path).with_context(|| {
         format!(
-            "Calibrator prompt template not found at {}. Run `devtrail repair`.",
+            "Audit prompt template not found at {}. Run `devtrail repair` to restore framework files.",
             template_path.display()
         )
     })?;
-    let resolved = resolve_audit_template(&template, &context, "calibrator-reconciler");
-    let out = prompts_dir.join("calibrator-reconciler.prompt.md");
+    let resolved = resolve_audit_template(&template, &context, "auditor");
+    let out = audit_dir.join("audit-prompt.md");
     std::fs::write(&out, resolved)
-        .with_context(|| format!("Failed to write {}", out.display()))?;
+        .with_context(|| format!("Failed to write resolved prompt to {}", out.display()))?;
     println!(
         "  {} Wrote {}",
         "✔".green().bold(),
@@ -303,28 +204,46 @@ fn run_calibrate(
     println!();
     println!("  {}", "Next:".bold());
     println!(
-        "    1. Run the calibrator prompt in a model of your choice (calibrator may");
-    println!("       be of any family per roadmap §5.2 — heterogeneity is for the");
-    println!("       auditor pair, not the calibrator).");
+        "    1. Open one or more auditor CLIs (gemini-cli, claude-cli, copilot-cli, etc.)"
+    );
+    println!("       in this repo and invoke {} in each.",
+        format!("/devtrail-audit-execute {}", charter.frontmatter.charter_id).cyan());
     println!(
-        "    2. Save the response to: {}",
+        "       Recommended: at least 2 auditors of different model families."
+    );
+    println!("    2. Each auditor reads the prompt above, audits with tool use,");
+    println!("       and writes its report to:");
+    println!(
+        "         {}",
         audit_dir
-            .join("calibrator-reconciler.md")
+            .join("report-<sluggified-model-id>.md")
             .strip_prefix(project_root)
             .unwrap_or_else(|_| audit_dir.as_ref())
             .display()
     );
     println!(
-        "    3. Run: {} {} --finalize",
-        "devtrail charter audit".cyan(),
-        charter.frontmatter.charter_id.cyan()
+        "    3. When ALL audits you commissioned have finished (NOT before),"
     );
+    println!(
+        "       return to this agent and run: {}",
+        format!("/devtrail-audit-review {}", charter.frontmatter.charter_id).cyan()
+    );
+    println!("    4. The review skill consolidates the reports and merges YAML");
+    println!("       into telemetry.");
     Ok(())
 }
 
-// ── Step 3: finalize ───────────────────────────────────────────────────────
+// ── Step 2: merge reports ──────────────────────────────────────────────────
+//
+// v1 unifies the v0 `--calibrate` + `--finalize` two-step into a single
+// `--merge-reports` action. The calibrator role (cross-finding reconciliation,
+// severity recalibration, missed-finding detection, remediation plan) is now
+// performed by the main agent via the /devtrail-audit-review skill, which
+// produces `.devtrail/audits/<id>/review.md` consolidated. The CLI's job
+// here is mechanical: validate each report against the schema, build per-
+// auditor summaries, and emit the YAML block (or merge into telemetry).
 
-fn run_finalize(
+fn run_merge_reports(
     project_root: &Path,
     devtrail_dir: &Path,
     audit_dir: &Path,
@@ -334,72 +253,84 @@ fn run_finalize(
 ) -> Result<()> {
     println!(
         "{} {} ({})",
-        "Step 3/3:".cyan().bold(),
-        "FINALIZE".bold(),
+        "MERGE-REPORTS".cyan().bold(),
+        "audit cycle".bold(),
         charter.frontmatter.charter_id.dimmed()
     );
 
-    let primary_path = audit_dir.join("auditor-primary.md");
-    let secondary_path = audit_dir.join("auditor-secondary.md");
-    let calibrator_path = audit_dir.join("calibrator-reconciler.md");
-
-    for (label, path) in [
-        ("auditor-primary", &primary_path),
-        ("auditor-secondary", &secondary_path),
-        ("calibrator-reconciler", &calibrator_path),
-    ] {
-        if !path.exists() {
-            bail!(
-                "{} not found. {} must exist before --finalize. \
-                 Re-run --calibrate if the calibrator step is incomplete.",
-                path.display(),
-                label
-            );
+    // Gather report-*.md files under the audit dir (one per auditor).
+    let mut report_paths: Vec<PathBuf> = Vec::new();
+    if audit_dir.exists() {
+        for entry in std::fs::read_dir(audit_dir)
+            .with_context(|| format!("Failed to read {}", audit_dir.display()))?
+        {
+            let entry = entry?;
+            let p = entry.path();
+            if !p.is_file() {
+                continue;
+            }
+            let name = match p.file_name().and_then(|n| n.to_str()) {
+                Some(n) => n,
+                None => continue,
+            };
+            if name.starts_with("report-") && name.ends_with(".md") {
+                report_paths.push(p);
+            }
         }
+    }
+    report_paths.sort();
+
+    if report_paths.is_empty() {
+        bail!(
+            "No reports found in {}. Expected one or more files matching report-*.md \
+             written by the /devtrail-audit-execute skill (or saved manually by the \
+             operator). Run --prepare first if you have not generated the audit prompt.",
+            relative_path(project_root, audit_dir).display()
+        );
+    }
+
+    if report_paths.len() < 2 {
+        eprintln!(
+            "{} only one report found ({}). Cross-family heterogeneity is the \
+             discovery mechanism for substantive findings — recommended minimum \
+             is 2 auditors of different model families. Proceeding with the \
+             single report you provided.",
+            "warn:".yellow().bold(),
+            relative_path(project_root, &report_paths[0]).display()
+        );
     }
 
     let schema = AuditOutputSchema::load(devtrail_dir)?;
     let mut auditor_summaries: Vec<AuditorSummary> = Vec::new();
-    for path in [&primary_path, &secondary_path] {
-        let raw = std::fs::read_to_string(path)?;
-        let fm = parse_frontmatter(&raw)?;
+    for path in &report_paths {
+        let raw = std::fs::read_to_string(path)
+            .with_context(|| format!("Failed to read {}", path.display()))?;
+        let fm = parse_frontmatter(&raw)
+            .with_context(|| format!("Failed to parse frontmatter in {}", path.display()))?;
         let issues = schema.validate(&fm, path);
         if !issues.is_empty() {
-            eprintln!("{} {} failed schema validation", "error:".red().bold(), path.display());
+            eprintln!(
+                "{} {} failed schema validation",
+                "error:".red().bold(),
+                path.display()
+            );
             for issue in &issues {
                 eprintln!("  - {}", issue.message);
             }
-            bail!("auditor output failed schema validation");
+            bail!("auditor report failed schema validation");
         }
         let summary = AuditorSummary::from_frontmatter(&fm)?;
         println!(
-            "  {} Validated {} ({} findings, prompt: {})",
+            "  {} Validated {} ({} findings)",
             "✔".green().bold(),
             relative_path(project_root, path).display(),
-            summary.findings_total,
-            summary.prompt_used.dimmed()
+            summary.findings_total
         );
         auditor_summaries.push(summary);
     }
 
-    let calibrator_raw = std::fs::read_to_string(&calibrator_path)?;
-    let calibrator_fm = parse_frontmatter(&calibrator_raw)?;
-    let issues = schema.validate(&calibrator_fm, &calibrator_path);
-    if !issues.is_empty() {
-        eprintln!("{} calibrator failed schema validation", "error:".red().bold());
-        for issue in &issues {
-            eprintln!("  - {}", issue.message);
-        }
-        bail!("calibrator output failed schema validation");
-    }
-    println!(
-        "  {} Validated {}",
-        "✔".green().bold(),
-        relative_path(project_root, &calibrator_path).display()
-    );
-
     println!();
-    println!("  {}", "Charter audit complete.".green().bold());
+    println!("  {}", "Audit cycle merge complete.".green().bold());
     println!();
 
     if let Some(target) = merge_into {
@@ -421,14 +352,6 @@ fn run_finalize(
         println!("{}", render_external_audit_yaml(&auditor_summaries, canonical_id));
         println!();
     }
-    println!(
-        "  {}",
-        "Calibrator summary (copy to outcome.scope_change_notes if relevant):".dimmed()
-    );
-    println!(
-        "  {}",
-        relative_path(project_root, &calibrator_path).display().to_string().dimmed()
-    );
     Ok(())
 }
 
@@ -512,8 +435,7 @@ struct AuditContext {
     ailog_paths: String,
     ailog_contents: String,
     schema_path: String,
-    auditor_primary_findings: String,
-    auditor_secondary_findings: String,
+    project_context: String,
 }
 
 fn build_audit_context(
@@ -540,8 +462,11 @@ fn build_audit_context(
         ailog_paths,
         ailog_contents,
         schema_path: ".devtrail/schemas/audit-output.schema.v0.json".to_string(),
-        auditor_primary_findings: String::new(),
-        auditor_secondary_findings: String::new(),
+        // {{project_context}} is intentionally empty by default. Adopters
+        // who want to give auditors a project-stack hint can edit the
+        // template to substitute it manually, or a future release may
+        // derive it from CLAUDE.md / config.yml.
+        project_context: String::new(),
     })
 }
 
@@ -633,11 +558,7 @@ fn resolve_audit_template(template: &str, ctx: &AuditContext, audit_role: &str) 
         ("{{ailog_contents}}", &ctx.ailog_contents),
         ("{{audit_role}}", audit_role),
         ("{{schema_path}}", &ctx.schema_path),
-        ("{{auditor_primary_findings}}", &ctx.auditor_primary_findings),
-        (
-            "{{auditor_secondary_findings}}",
-            &ctx.auditor_secondary_findings,
-        ),
+        ("{{project_context}}", &ctx.project_context),
     ];
 
     // Find all <!-- ... --> ranges so we can skip placeholder replacement
@@ -704,6 +625,10 @@ struct AuditorSummary {
     findings_total: u64,
     findings_by_category: std::collections::BTreeMap<String, u64>,
     audit_quality: Option<String>,
+    /// Read but currently unused outside the existing unit test that asserts
+    /// it parses correctly. Kept on the struct so the schema validation
+    /// covers it.
+    #[allow(dead_code)]
     prompt_used: String,
 }
 
@@ -823,8 +748,8 @@ mod tests {
             ailog_paths: "(none)".into(),
             ailog_contents: "(none)".into(),
             schema_path: "s".into(),
-            auditor_primary_findings: String::new(),
-            auditor_secondary_findings: String::new(),
+
+            project_context: String::new(),
         };
         let out = resolve_audit_template(template, &ctx, "auditor-primary");
         assert_eq!(
@@ -847,8 +772,8 @@ mod tests {
             ailog_paths: "".into(),
             ailog_contents: "".into(),
             schema_path: "".into(),
-            auditor_primary_findings: String::new(),
-            auditor_secondary_findings: String::new(),
+
+            project_context: String::new(),
         };
         let out = resolve_audit_template(template, &ctx, "x");
         assert_eq!(out, "CHARTER-01 -- {{unknown_token}}");
@@ -875,8 +800,8 @@ mod tests {
             ailog_paths: "(none)".into(),
             ailog_contents: "REAL_AILOGS".into(),
             schema_path: "s".into(),
-            auditor_primary_findings: String::new(),
-            auditor_secondary_findings: String::new(),
+
+            project_context: String::new(),
         }
     }
 

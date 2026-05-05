@@ -318,23 +318,36 @@ enum CharterCommands {
     Audit {
         /// Charter identifier (CHARTER-NN, CHARTER-NN-slug, or just NN)
         charter_id: String,
-        /// Git revision range (default: HEAD~1..HEAD)
+        /// Git revision range (default: origin/main..HEAD with fallback to
+        /// origin/master..HEAD; falls back to HEAD~1..HEAD with warning when
+        /// no upstream is reachable). Override with explicit value as needed.
         #[arg(long)]
         range: Option<String>,
-        /// Step 2: read both auditor outputs from
-        /// audit/charters/CHARTER-NN/ and resolve the calibrator prompt.
-        #[arg(long, conflicts_with = "finalize")]
+        /// Generate the unified audit prompt and write it to
+        /// .devtrail/audits/CHARTER-NN/audit-prompt.md. Default action when
+        /// no other flag is passed. Equivalent to the v0 PREPARE step.
+        #[arg(long, conflicts_with_all = ["merge_reports", "calibrate", "finalize"])]
+        prepare: bool,
+        /// Read all report-*.md files in .devtrail/audits/CHARTER-NN/,
+        /// validate them against audit-output.schema.v0.json, and emit the
+        /// external_audit YAML block. Combine with --merge-into to append
+        /// the block directly into the Charter's telemetry YAML.
+        #[arg(long, conflicts_with_all = ["prepare", "calibrate", "finalize"])]
+        merge_reports: bool,
+        /// Deprecated v0 flag. The v1 flow does not have a separate calibrate
+        /// step — the calibrator role is handled by the main agent via the
+        /// /devtrail-audit-review skill. Emits a warning and exits.
+        #[arg(long, hide = true, conflicts_with_all = ["prepare", "merge_reports", "finalize"])]
         calibrate: bool,
-        /// Step 3: validate all 3 outputs against the schema and print the
-        /// external_audit YAML block ready to paste into the Charter
-        /// telemetry.
-        #[arg(long, conflicts_with = "calibrate")]
+        /// Deprecated v0 flag. Use --merge-reports instead. Emits a
+        /// deprecation warning and routes through the new path.
+        #[arg(long, hide = true, conflicts_with_all = ["prepare", "merge_reports", "calibrate"])]
         finalize: bool,
-        /// On --finalize only: append the external_audit array directly into
-        /// the Charter's telemetry YAML at the given path instead of printing
-        /// it to stdout. Re-audit (file already has external_audit) is
-        /// rejected with a clear error in v0.
-        #[arg(long, requires = "finalize")]
+        /// With --merge-reports (or deprecated --finalize): append the
+        /// external_audit array directly into the Charter's telemetry YAML
+        /// at the given path instead of printing it to stdout. Re-audit
+        /// (file already has external_audit) is rejected with a clear error.
+        #[arg(long)]
         merge_into: Option<String>,
         /// Project directory (default: current directory)
         #[arg(long = "path", default_value = ".")]
@@ -485,6 +498,8 @@ fn main() {
             CharterCommands::Audit {
                 charter_id,
                 range,
+                prepare,
+                merge_reports,
                 calibrate,
                 finalize,
                 merge_into,
@@ -493,6 +508,8 @@ fn main() {
                 &path,
                 &charter_id,
                 range.as_deref(),
+                prepare,
+                merge_reports,
                 calibrate,
                 finalize,
                 merge_into.as_deref(),
