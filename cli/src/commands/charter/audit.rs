@@ -569,6 +569,16 @@ fn run_git_diff(project_root: &Path, range: &str) -> Result<String> {
 /// Substitute `{{placeholder}}` tokens in `template` with values from `ctx`.
 /// `audit_role` is overridden per-call so the same context can be used for
 /// primary, secondary, and calibrator passes.
+///
+/// Placeholder replacement is **scoped to non-comment regions**: any
+/// `{{placeholder}}` inside a `<!-- ... -->` HTML comment block is preserved
+/// as-is. This prevents the documentation header of a template (which lists
+/// available placeholders with their literal `{{name}}` syntax for human
+/// reference) from being weaponized as a content duplicator. Reported in
+/// issue #102 (R10) — Sentinel observed an inflated 1300-line resolved prompt
+/// where Charter content was emitted twice (once expanded inside the comment,
+/// once in the body proper). Unclosed comments (no matching `-->`) terminate
+/// the scan early and the remaining tail is treated as non-comment.
 fn resolve_audit_template(template: &str, ctx: &AuditContext, audit_role: &str) -> String {
     let pairs: &[(&str, &str)] = &[
         ("{{charter_id}}", &ctx.charter_id),
@@ -587,10 +597,49 @@ fn resolve_audit_template(template: &str, ctx: &AuditContext, audit_role: &str) 
             &ctx.auditor_secondary_findings,
         ),
     ];
-    let mut out = template.to_string();
-    for (placeholder, value) in pairs {
-        out = out.replace(placeholder, value);
+
+    // Find all <!-- ... --> ranges so we can skip placeholder replacement
+    // inside them. Each range is (start_byte, end_byte_exclusive) where
+    // end_byte points just past the closing `-->`.
+    let mut comment_ranges: Vec<(usize, usize)> = Vec::new();
+    let mut search_from = 0;
+    while let Some(rel_start) = template[search_from..].find("<!--") {
+        let abs_start = search_from + rel_start;
+        match template[abs_start + 4..].find("-->") {
+            Some(rel_end) => {
+                let abs_end = abs_start + 4 + rel_end + 3; // include closing -->
+                comment_ranges.push((abs_start, abs_end));
+                search_from = abs_end;
+            }
+            None => {
+                // Unclosed comment — leave the rest as comment-region to
+                // mirror typical HTML/markdown rendering, and stop scanning.
+                comment_ranges.push((abs_start, template.len()));
+                break;
+            }
+        }
     }
+
+    let replace_all = |segment: &str| -> String {
+        let mut s = segment.to_string();
+        for (placeholder, value) in pairs {
+            s = s.replace(placeholder, value);
+        }
+        s
+    };
+
+    let mut out = String::with_capacity(template.len());
+    let mut cursor = 0;
+    for (start, end) in &comment_ranges {
+        // Replace placeholders in the segment before this comment.
+        out.push_str(&replace_all(&template[cursor..*start]));
+        // Append the comment range verbatim — no placeholder substitution.
+        out.push_str(&template[*start..*end]);
+        cursor = *end;
+    }
+    // Trailing segment after the last comment (or the whole template if
+    // there were no comments).
+    out.push_str(&replace_all(&template[cursor..]));
     out
 }
 
@@ -761,6 +810,128 @@ mod tests {
         };
         let out = resolve_audit_template(template, &ctx, "x");
         assert_eq!(out, "CHARTER-01 -- {{unknown_token}}");
+    }
+
+    // ── R10 regression tests (issue #102) ──────────────────────────────────
+    //
+    // Before the fix, the resolver did `String::replace` globally without
+    // distinguishing whether a placeholder was inside an HTML comment. The
+    // documentation header of `auditor-primary.md` has lines like
+    // `  {{charter_content}} — full body of the Charter doc` whose intent
+    // is purely descriptive — but the global replace expanded each one,
+    // duplicating ~30k tokens of payload (Charter + AILOG + diff) inside
+    // the comment block. After the fix, comments are preserved verbatim.
+
+    fn r10_test_ctx() -> AuditContext {
+        AuditContext {
+            charter_id: "CHARTER-07".into(),
+            charter_title: "T".into(),
+            charter_path: "p".into(),
+            charter_content: "REAL_CHARTER_BODY".into(),
+            git_range: "main..HEAD".into(),
+            git_diff: "REAL_DIFF".into(),
+            ailog_paths: "(none)".into(),
+            ailog_contents: "REAL_AILOGS".into(),
+            schema_path: "s".into(),
+            auditor_primary_findings: String::new(),
+            auditor_secondary_findings: String::new(),
+        }
+    }
+
+    #[test]
+    fn resolve_template_skips_placeholder_inside_html_comment() {
+        let template = "<!-- doc: {{charter_id}} stays literal --><body>{{charter_id}}</body>";
+        let out = resolve_audit_template(template, &r10_test_ctx(), "auditor");
+        assert_eq!(
+            out,
+            "<!-- doc: {{charter_id}} stays literal --><body>CHARTER-07</body>",
+            "placeholder inside <!-- ... --> must be preserved verbatim; only the body occurrence is replaced"
+        );
+    }
+
+    #[test]
+    fn resolve_template_preserves_documentation_block_with_multiple_placeholders() {
+        // Mirrors the real auditor-primary.md template header structure that
+        // triggered R10 on Sentinel CHARTER-07.
+        let template = "<!--\n\
+            Placeholders:\n  \
+            {{charter_id}}      — e.g., CHARTER-05\n  \
+            {{charter_content}} — full body\n  \
+            {{git_diff}}        — output of git diff\n\
+        -->\n\
+        \n\
+        # Audit for {{charter_id}}\n\
+        \n\
+        Charter: {{charter_content}}\n\
+        Diff: {{git_diff}}\n";
+
+        let out = resolve_audit_template(template, &r10_test_ctx(), "auditor");
+
+        // Comment block stays as documentation (no expansion inside).
+        assert!(
+            out.contains("{{charter_id}}      — e.g., CHARTER-05"),
+            "documentation header must stay literal: got {out:?}"
+        );
+        assert!(
+            out.contains("{{charter_content}} — full body"),
+            "documentation header must stay literal"
+        );
+
+        // Body lines (outside comment) are expanded normally.
+        assert!(out.contains("# Audit for CHARTER-07"));
+        assert!(out.contains("Charter: REAL_CHARTER_BODY"));
+        assert!(out.contains("Diff: REAL_DIFF"));
+
+        // Critically: REAL_CHARTER_BODY should appear exactly once
+        // (the body line), not twice (which would happen if the
+        // documentation line `{{charter_content}} — full body` had been
+        // expanded into `REAL_CHARTER_BODY — full body`).
+        assert_eq!(
+            out.matches("REAL_CHARTER_BODY").count(),
+            1,
+            "expected exactly one occurrence of REAL_CHARTER_BODY (R10 dedup)"
+        );
+        assert_eq!(
+            out.matches("REAL_DIFF").count(),
+            1,
+            "expected exactly one occurrence of REAL_DIFF (R10 dedup)"
+        );
+    }
+
+    #[test]
+    fn resolve_template_handles_multiple_comment_blocks() {
+        let template = "<!-- A: {{charter_id}} -->{{charter_id}}<!-- B: {{charter_id}} -->{{charter_id}}";
+        let out = resolve_audit_template(template, &r10_test_ctx(), "auditor");
+        assert_eq!(
+            out,
+            "<!-- A: {{charter_id}} -->CHARTER-07<!-- B: {{charter_id}} -->CHARTER-07"
+        );
+    }
+
+    #[test]
+    fn resolve_template_handles_unclosed_comment_gracefully() {
+        // Edge case: malformed template with an unclosed `<!--`. The resolver
+        // must not loop forever; it conservatively treats the rest as
+        // comment-region (no replacement) and stops scanning.
+        let template = "{{charter_id}} <!-- forever {{charter_id}}";
+        let out = resolve_audit_template(template, &r10_test_ctx(), "auditor");
+        assert_eq!(
+            out,
+            "CHARTER-07 <!-- forever {{charter_id}}",
+            "first placeholder (before `<!--`) is replaced; tail after unclosed comment is preserved"
+        );
+    }
+
+    #[test]
+    fn resolve_template_no_comments_behaves_like_global_replace() {
+        // When the template has no <!-- ... --> blocks, behavior is
+        // backwards-compatible with the pre-R10 resolver.
+        let template = "id={{charter_id}}; range={{git_range}}; id_again={{charter_id}}";
+        let out = resolve_audit_template(template, &r10_test_ctx(), "auditor");
+        assert_eq!(
+            out,
+            "id=CHARTER-07; range=main..HEAD; id_again=CHARTER-07"
+        );
     }
 
     #[test]
