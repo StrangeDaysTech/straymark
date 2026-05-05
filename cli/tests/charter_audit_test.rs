@@ -675,3 +675,148 @@ fn audit_merge_into_requires_finalize() {
         .assert()
         .failure();
 }
+
+// ── R11(A) regression tests (issue #102) ───────────────────────────────────
+//
+// Sentinel CHARTER-07 was implemented as 8 commits on a feature branch; the
+// previous default `HEAD~1..HEAD` only sent the last (metadata-only) commit
+// to the auditors, who converged on "0 substantive findings" vacuously. The
+// fix prefers `origin/main..HEAD` (or `origin/master..HEAD` on legacy repos)
+// when an upstream is reachable, falling back to `HEAD~1..HEAD` otherwise.
+// The resolved Git range appears in the prompt body via `Git range: <range>`,
+// which is what these tests assert against.
+
+/// Set up a working tree where `origin/main` is reachable: a bare repo as
+/// the remote (in its own tempdir to avoid collisions when tests run in
+/// parallel), an initial commit on `main`, push to remote, then a feature
+/// branch with two additional commits. The current branch is the feature
+/// branch when this returns. The returned `TempDir` MUST be kept alive by
+/// the caller for the duration of the test — dropping it removes the bare
+/// remote and breaks subsequent git operations on the working tree.
+fn init_repo_with_remote_main(dir: &Path) -> TempDir {
+    let remote = TempDir::new().unwrap();
+    let status = StdCommand::new("git")
+        .args(["init", "--bare", "-q", "-b", "main"])
+        .current_dir(remote.path())
+        .status()
+        .expect("git init --bare failed");
+    assert!(status.success());
+
+    std::fs::create_dir_all(dir.join("src")).unwrap();
+    std::fs::write(dir.join("src/foo.rs"), "// initial\n").unwrap();
+    git(dir, &["init", "-q", "-b", "main"]);
+    git(dir, &["add", "."]);
+    git(dir, &["commit", "-q", "-m", "initial on main"]);
+    git(dir, &["remote", "add", "origin", remote.path().to_str().unwrap()]);
+    git(dir, &["push", "-q", "origin", "main"]);
+
+    // Feature branch with multiple commits — this is what `origin/main..HEAD`
+    // is supposed to capture in full.
+    git(dir, &["checkout", "-q", "-b", "feature/multi"]);
+    std::fs::write(dir.join("src/foo.rs"), "// edited 1\n").unwrap();
+    git(dir, &["add", "."]);
+    git(dir, &["commit", "-q", "-m", "feature: first"]);
+    std::fs::write(dir.join("src/foo.rs"), "// edited 2\n").unwrap();
+    git(dir, &["add", "."]);
+    git(dir, &["commit", "-q", "-m", "feature: second"]);
+
+    remote
+}
+
+#[test]
+fn audit_default_range_uses_origin_main_when_available() {
+    if !bash_available() {
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    write_charter(dir.path());
+    let _remote = init_repo_with_remote_main(dir.path());
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args(["charter", "audit", "CHARTER-01", "--path"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    let prompt = std::fs::read_to_string(
+        dir.path()
+            .join("audit/charters/CHARTER-01/prompts/auditor-primary.prompt.md"),
+    )
+    .unwrap();
+    assert!(
+        prompt.contains("origin/main..HEAD"),
+        "default range must resolve to origin/main..HEAD when remote is reachable; \
+         prompt did not contain that string. Excerpt:\n{}",
+        prompt.lines().take(80).collect::<Vec<_>>().join("\n")
+    );
+    assert!(
+        !prompt.contains("Git range: `HEAD~1..HEAD`"),
+        "default range must NOT fall back to HEAD~1..HEAD when origin/main exists"
+    );
+}
+
+#[test]
+fn audit_default_range_falls_back_to_head_minus_one_without_remote() {
+    if !bash_available() {
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    write_charter(dir.path());
+    init_repo_with_diff(dir.path()); // no remote configured
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args(["charter", "audit", "CHARTER-01", "--path"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("no upstream branch reachable"))
+        .stderr(predicate::str::contains("HEAD~1..HEAD"))
+        .stderr(predicate::str::contains("--range"));
+
+    let prompt = std::fs::read_to_string(
+        dir.path()
+            .join("audit/charters/CHARTER-01/prompts/auditor-primary.prompt.md"),
+    )
+    .unwrap();
+    assert!(
+        prompt.contains("HEAD~1..HEAD"),
+        "fallback range must be HEAD~1..HEAD when no upstream is reachable"
+    );
+    assert!(
+        !prompt.contains("origin/main..HEAD"),
+        "no origin/main exists, fallback must not claim it does"
+    );
+}
+
+#[test]
+fn audit_explicit_range_overrides_default_resolution() {
+    // Backwards-compat sanity: --range still wins over the new defaulting
+    // logic (no upstream probe attempted).
+    if !bash_available() {
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_devtrail(dir.path());
+    write_charter(dir.path());
+    init_repo_with_diff(dir.path());
+
+    Command::cargo_bin("devtrail")
+        .unwrap()
+        .args([
+            "charter",
+            "audit",
+            "CHARTER-01",
+            "--range",
+            "HEAD~1..HEAD",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        // No fallback warning when --range was passed explicitly.
+        .stderr(predicate::str::contains("no upstream branch reachable").not());
+}
