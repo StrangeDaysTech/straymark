@@ -301,11 +301,17 @@ My recommendation: [YES / NO], because:
   - <one specific reason grounded in the Charter, AILOGs, or diff>
 
 If you decide to audit:
-  Run /devtrail-audit-prompt <CHARTER-ID> and I will surface the two
-  prompts inline. Once you have the responses from the external
-  auditors saved to canonical paths, run /devtrail-audit-review
-  <CHARTER-ID> and I will calibrate them locally and merge the
-  findings into the Charter telemetry.
+  Run /devtrail-audit-prompt <CHARTER-ID> and I will write the unified
+  audit prompt to .devtrail/audits/<CHARTER-ID>/audit-prompt.md.
+  Then open one or more auditor-side CLIs (gemini-cli, claude-cli,
+  copilot-cli, codex-cli) in this repo and invoke
+  /devtrail-audit-execute <CHARTER-ID> in each — recommendation: at
+  least 2 auditors of different model families. When and only when
+  ALL auditors you commissioned have completed, return here and run
+  /devtrail-audit-review <CHARTER-ID>. I will consolidate the N
+  reports into a review.md document with verdicts, remediation plan,
+  and auditor ratings, and merge the YAML block into the Charter
+  telemetry.
 
 If you decide not to audit:
   Continue with `devtrail charter close <CHARTER-ID>` when you're
@@ -341,7 +347,7 @@ These are heuristics, not rigid rules — you are close to the context, refine t
 - The checkpoint is **never** repeated within the same Charter once the developer responds.
 - The checkpoint **does not** block any subsequent action. If the developer ignores it and runs `charter close`, close proceeds normally — there is no enforcement and there will not be (this is a permanent v0+v1 design decision; see `Propuesta/devtrail-audit-skills.md` §2.2).
 - The checkpoint is **not** counted in any quality metric. There is no "% Charters audited" KPI in `devtrail metrics` — by design, to avoid creating an incentive to inflate the audit count.
-- If the developer accepts the audit, the next two skills (`/devtrail-audit-prompt` then `/devtrail-audit-review`) carry the workflow forward.
+- If the developer accepts the audit, the workflow proceeds via three skills in sequence: `/devtrail-audit-prompt` (writes the unified prompt at the canonical path) → `/devtrail-audit-execute` × N (one per auditor-side CLI the operator opens — these run in those CLIs, not in the main agent) → `/devtrail-audit-review` (consolidates N reports inline into `.devtrail/audits/<id>/review.md` and merges the YAML into telemetry). Operators never copy/paste prompts or reports — file exchange happens via canonical paths under `.devtrail/audits/`.
 
 ---
 

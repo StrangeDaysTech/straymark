@@ -122,8 +122,9 @@ DevTrail 有两个文档系统：
 | `/devtrail-ailog` | 快速创建 AILOG |
 | `/devtrail-aidec` | 快速创建 AIDEC |
 | `/devtrail-adr` | 快速创建 ADR |
-| `/devtrail-audit-prompt CHARTER-XX` *(fw-4.8.0+)* | 内联生成外部多模型审计 prompts。封装 `devtrail charter audit` PREPARE；在对话中展示两个审计员 prompts，操作员可粘贴到 2 个不同族的 LLM。 |
-| `/devtrail-audit-review CHARTER-XX` *(fw-4.8.0+)* | `audit-prompt` 的对应。验证审计员响应，内联运行校准器，并通过 `--merge-into` 将 findings 合并到 Charter 遥测。 |
+| `/devtrail-audit-prompt CHARTER-XX` *(fw-4.8.0+，在 fw-4.9.0 中重构)* | 在规范路径 `.devtrail/audits/<id>/audit-prompt.md` 处生成统一的审计 prompt。封装 `devtrail charter audit --prepare`。操作员随后打开 N 个审计员 CLI 并在每个中运行 `/devtrail-audit-execute` — 无需复制/粘贴。 |
+| `/devtrail-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | **在审计员 CLI 中运行**（gemini-cli、claude-cli、copilot-cli、codex-cli）。从磁盘读取 prompt，使用 tool use 进行审计并引用 `path:line`，写入以审计员模型 ID 为键的 report。参数可选 — 自动发现此模型待处理的 prompts。 |
+| `/devtrail-audit-review CHARTER-XX` *(fw-4.8.0+，在 fw-4.9.0 中扩展)* | `audit-prompt` 的对应。读取 N 个 reports，对 findings 与实际代码交叉验证，生成 `review.md` 六节合并分析（执行摘要 / 范围 / 按审计员评估 / 修复计划 P0-P4 / 丢弃 / 审计员评分），并将 `external_audit:` YAML 合并到遥测。 |
 
 完整 Skill 详情参见 [README](../README.md#skills)。
 

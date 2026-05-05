@@ -122,8 +122,9 @@ DevTrail has two documentation systems:
 | `/devtrail-ailog` | Quick AILOG creation |
 | `/devtrail-aidec` | Quick AIDEC creation |
 | `/devtrail-adr` | Quick ADR creation |
-| `/devtrail-audit-prompt CHARTER-XX` *(fw-4.8.0+)* | Generate external multi-model audit prompts inline. Wraps `devtrail charter audit` PREPARE; surfaces both auditor prompts in the conversation so the operator can paste them into 2 LLMs of different families. |
-| `/devtrail-audit-review CHARTER-XX` *(fw-4.8.0+)* | Counterpart to `audit-prompt`. Validates auditor responses, runs the calibrator inline, and merges findings into the Charter telemetry via `--merge-into`. |
+| `/devtrail-audit-prompt CHARTER-XX` *(fw-4.8.0+, refactored in fw-4.9.0)* | Generate the unified audit prompt at the canonical path `.devtrail/audits/<id>/audit-prompt.md`. Wraps `devtrail charter audit --prepare`. Operator then opens N auditor CLIs and runs `/devtrail-audit-execute` in each — no copy/paste. |
+| `/devtrail-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | **Run inside an auditor-side CLI** (gemini-cli, claude-cli, copilot-cli, codex-cli). Reads the prompt from disk, audits with tool use citing `path:line`, writes a report keyed on the auditor's model id. Argument optional — auto-discovers prompts pending from this model. |
+| `/devtrail-audit-review CHARTER-XX` *(fw-4.8.0+, expanded in fw-4.9.0)* | Counterpart to `audit-prompt`. Reads N reports, verifies findings against actual code, produces `review.md` consolidated 6-section analysis (Executive summary / Scope / Per-auditor evaluation / Remediation plan P0-P4 / Discarded / Auditor ratings), and merges `external_audit:` YAML into telemetry. |
 
 For full skill details, see the [README](../../README.md#skills).
 

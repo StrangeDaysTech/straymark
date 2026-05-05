@@ -550,9 +550,9 @@ OK all declared-omitted paths are documented in AILOGs — drift accepted.
 
 如果你运行的章程显式 scope 是治理 churn（例如仅触动 `.devtrail/07-ai-audit/` 的批量批准章程），漂移检查将报告 0 个修改文件，你需要通过阅读 AILOG 来验证 scope。一个 `--strict-scope` 标志（禁用"始终在 scope"规则）在桌面上，用于未来 minor 版本，前提是真实的 adopter 报告这种不对称为摩擦。
 
-#### `devtrail charter audit <CHARTER-ID> [--range <REV..REV>] [--calibrate | --finalize] [--path <dir>]`
+#### `devtrail charter audit <CHARTER-ID> [--range <REV..REV>] [--prepare | --merge-reports] [--merge-into <PATH>] [--path <dir>]`
 
-*自 **cli-3.8.0** + **fw-4.7.0** 起可用（Phase 3 v0）。*
+*自 **cli-3.8.0** + **fw-4.7.0** 起可用。v1 统一流程在 **cli-3.10.0** + **fw-4.9.0** 中发布 — 用两步（PREPARE/MERGE-REPORTS）替换 v0 的三步（PREPARE/CALIBRATE/FINALIZE），统一审计员模板，并将规范路径迁移到 `.devtrail/audits/`。*
 
 编排章程执行的多模型外部审计。**仅编排** — CLI 准备 prompts、根据 schema 验证 outputs，并打印可粘贴到章程遥测中的 findings。**它不调用 LLM API。** 操作员在自己选择的审计器（Copilot、Gemini、Claude 等）中运行 prompts，并将响应保存到规范路径。
 
@@ -1019,12 +1019,15 @@ DevTrail 提供一组 skills（slash 命令）供 AI 助手内使用（Claude Co
 | `/devtrail-adr` | 快速 ADR 创建快捷方式。 | `.devtrail/04-architecture/decisions/ADR-*.md` |
 | `/devtrail-mcard` | 交互式 Model Card 创建流程。 | `.devtrail/09-ai-models/MCARD-*.md` |
 | `/devtrail-sec` | 交互式 SEC（安全评估）流程。 | `.devtrail/08-security/SEC-*.md` |
-| `/devtrail-audit-prompt CHARTER-ID` *(fw-4.8.0+)* | 内联生成外部多模型审计 prompts。封装 `devtrail charter audit` PREPARE — 运行 CLI 解析 `auditor-primary.prompt.md` 与 `auditor-secondary.prompt.md`，并在对话中展示两个 prompts，操作员可粘贴到 2 个不同族的 LLM。 | `audit/charters/<CHARTER-ID>/prompts/auditor-{primary,secondary}.prompt.md`（通过其封装的 CLI） |
-| `/devtrail-audit-review CHARTER-ID` *(fw-4.8.0+)* | `/devtrail-audit-prompt` 的对应。验证操作员保存的审计员响应，内联运行校准器（驱动对话的 Agent 是有效的校准器，因为异质性仅对审计员对必需），并运行 `devtrail charter audit --finalize --merge-into` 直接将 `external_audit:` 追加到 `.devtrail/charters/<CHARTER-ID>.telemetry.yaml`。如果遥测尚不存在（Charter 未关闭），写入 `audit/charters/<CHARTER-ID>/external-audit-pending.yaml` 供后续手动合并。 | `audit/charters/<CHARTER-ID>/calibrator-reconciler.md`，`external_audit:` 数组合并入遥测 |
+| `/devtrail-audit-prompt CHARTER-ID` *(fw-4.8.0+，在 fw-4.9.0 中重构)* | 在规范路径处生成章程的统一审计 prompt。封装 `devtrail charter audit --prepare`。操作员随后在同一仓库中打开 N 个审计员 CLI，在每个中调用 `/devtrail-audit-execute` — 无需复制/粘贴。 | `.devtrail/audits/<CHARTER-ID>/audit-prompt.md` |
+| `/devtrail-audit-execute [CHARTER-ID]` *(fw-4.9.0+)* | **在审计员 CLI 中运行**（gemini-cli、claude-cli、copilot-cli、codex-cli 等）。从磁盘读取已准备的 prompt，使用 tool use 进行审计并引用 `path:line`，写入以审计员模型 ID 为键的 report。CHARTER-ID 参数可选 — 自动发现尚未由此模型生成 report 的 prompts。 | `.devtrail/audits/<CHARTER-ID>/report-<sluggified-model-id>.md` |
+| `/devtrail-audit-review CHARTER-ID` *(fw-4.8.0+，在 fw-4.9.0 中扩展)* | `/devtrail-audit-prompt` 的对应。读取 `.devtrail/audits/<CHARTER-ID>/` 下的 N 个 reports，对每个 finding 与实际代码进行交叉验证（并行 Explore agents），生成六节合并的 `review.md`（执行摘要、范围、按审计员评估、修复计划 P0-P4、丢弃的 findings、审计员评分），并运行 `devtrail charter audit --merge-reports --merge-into` 将 `external_audit:` 追加到章程遥测中。如果遥测尚不存在（章程未关闭），写入 `external-audit-pending.yaml` 供 close 时合并。 | `.devtrail/audits/<CHARTER-ID>/review.md`，`external_audit:` 数组合并入遥测（或 pending YAML） |
 
 ### Skill vs CLI
 
-两个审计 skill 是 CLI 命令的**封装**。`audit/` 目录布局、prompts、schema 验证、`external_audit` 形状全部在 CLI 中 — skills 仅处理 UX-inline 部分（在对话中展示 prompts，内联运行校准器，触发合并）。不在循环中使用 AI 助手的 adopter 可直接通过 `devtrail charter audit`（PREPARE / `--calibrate` / `--finalize [--merge-into <path>]`）驱动相同工作流。
+三个审计 skill 是 CLI 命令和流程纪律的**封装**。`.devtrail/audits/` 下的规范路径、统一的 prompt 模板、schema 验证、`external_audit` 形状全部在 CLI + framework 中 — skills 处理 UX-inline 部分：调度操作员通过审计周期，无需手动管理文件。**操作员从不复制/粘贴 prompts 或 reports** — skills 通过 `.devtrail/audits/` 下的规范文件系统路径交换 artefacts。
+
+不在循环中使用 AI 助手的 adopter 可直接通过 `devtrail charter audit`（`--prepare` / `--merge-reports [--merge-into <path>]`）驱动相同工作流。`.devtrail/audits/<id>/audit-prompt.md` 中的审计 prompt 在没有审计员 CLI 时也可粘贴到 chat 类 LLM 中使用 — skill 只是自动化文件交换。
 
 ### 审计检查点 *(fw-4.8.0+)*
 

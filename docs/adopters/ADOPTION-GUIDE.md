@@ -502,8 +502,9 @@ devtrail validate
 
 From `fw-4.8.0`, when you co-implement Charters with an AI assistant in the loop (Claude Code, Gemini Code, Cursor), you can optionally run an external multi-model audit at Charter close. Two skills wrap the underlying CLI orchestration:
 
-- **`/devtrail-audit-prompt CHARTER-XX`** — generates the auditor prompts inline in the conversation, ready to paste into 2 LLM auditors of different families.
-- **`/devtrail-audit-review CHARTER-XX`** — back-half: validates the operator-saved auditor responses, runs the calibrator inline, and merges findings into the Charter telemetry directly (`external_audit:` array).
+- **`/devtrail-audit-prompt CHARTER-XX`** — writes the unified audit prompt at the canonical path `.devtrail/audits/<id>/audit-prompt.md`. Operator opens N auditor-side CLIs and runs `/devtrail-audit-execute` in each. No copy/paste.
+- **`/devtrail-audit-execute [CHARTER-XX]`** *(fw-4.9.0+)* — runs inside an auditor-side CLI (gemini-cli, claude-cli, copilot-cli, codex-cli). Reads the prompt, audits with tool use citing `path:line`, writes a report keyed on the auditor's model id.
+- **`/devtrail-audit-review CHARTER-XX`** — consolidates N reports into a six-section `review.md` (Executive summary / Scope / Per-auditor evaluation / Remediation plan P0-P4 / Discarded / Auditor ratings) and merges the `external_audit:` YAML into Charter telemetry.
 
 The agent will **proactively offer** the audit at one specific moment in the workflow — when implementation is done, drift check is clean, and `charter close` has not been invoked. Recommendation is YES/NO based on the Charter's risk surface and complexity (heuristics in `.devtrail/00-governance/AGENT-RULES.md` §12).
 
