@@ -7,6 +7,72 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.9.0 / CLI 3.10.0 — Audit v1: zero copy/paste flow with auditor-side CLI tool use
+
+Closes the four axes reported in [issue #102](https://github.com/StrangeDaysTech/devtrail/issues/102) by Sentinel during its first primary-adopter run of the v0 audit-skills (CHARTER-07 of CommsHub Etapa 2). The release is **one integrated iteration** rather than four separate patches — Sentinel re-runs CHARTER-07 once after this lands, with the full v1 flow, instead of multiple times against partial fixes.
+
+This is the largest single audit-flow refactor since v0 shipped. Operators now invoke three skills in sequence (`audit-prompt` → `audit-execute` × N → `audit-review`) over canonical filesystem paths under `.devtrail/audits/`, and **never copy/paste prompts or reports**. The unified prompt template lifts the seven universal sections from Sentinel's pre-DevTrail audit skill (contributed via the issue), parameterized against Charter doc + originating AILOGs + git range. The review evolves from "validate + merge YAML" to a six-section consolidated analysis (Executive summary / Scope / Per-auditor evaluation / Remediation plan P0-P4 / Discarded / Auditor ratings).
+
+### Added (Framework)
+
+- **NEW skill `devtrail-audit-execute` (3 platforms)** — runs inside an auditor-side CLI (gemini-cli, claude-cli, copilot-cli, codex-cli). Reads the prompt at the canonical path, audits with tool use citing `path:line`, writes a report keyed on the auditor's model id. Auto-discovery when CHARTER-ID argument is omitted (D14). Wait-for-all-audits warning at completion is load-bearing for parallel-CLI workflows.
+- **NEW unified prompt template** `dist/.devtrail/audit-prompts/audit-prompt.md` (325 lines) lifting the seven universal sections from Sentinel's `audit/SKILL.md`: REGLA ABSOLUTA — SOLO LECTURA, Tu rol (anti-cheerleader), Reglas de alcance, Paso 2 verificación obligatoria, Paso 5 calibración severidad (anti-inflation/deflation with the Etapa 12 example preserved as labeled real adopter case), Lo que NO debes hacer, Formato de salida.
+- **AGENT-RULES.md §12 Audit checkpoint** updated for the 3-skill sequence + canonical paths under `.devtrail/audits/`. Wait-for-ALL-audits warning surfaces in both the message text and the rules of engagement.
+
+### Changed (Framework)
+
+- **Skills `devtrail-audit-prompt` and `devtrail-audit-review` rewritten** for v1: prompt skill no longer surfaces prompts inline (writes to canonical path; operator opens auditor CLIs). Review skill evolves to consolidated analysis generator producing `review.md` with 6 sections + 5-verdict vocabulary (VALID / PARTIALLY VALID / MISATTRIBUTED / FALSE POSITIVE / DUPLICATE) + 4-criterion weighted auditor rating (Scope precision 25% / Technical depth 25% / Bug detection 30% / False positive rate 20%). Both lifts Sentinel's `audit-review/SKILL.md` mature pre-DevTrail.
+- **Adopter docs** (CLI-REFERENCE, WORKFLOWS, ADOPTION-GUIDE, QUICK-REFERENCE) in 3 langs aligned to v1 flow.
+
+### Removed (Framework, BREAKING within `v0.x` schemas)
+
+- DELETE `dist/.devtrail/audit-prompts/auditor-primary.md` (154 lines), `auditor-secondary.md` (131 lines), `calibrator-reconciler.md` (173 lines). Replaced by the single unified `audit-prompt.md`.
+
+### Added (CLI)
+
+- **NEW flag `--prepare`** on `devtrail charter audit` — generates the unified prompt at `.devtrail/audits/<id>/audit-prompt.md`. Default action when no other action flag is passed.
+- **NEW flag `--merge-reports`** — reads N `report-*.md` files from the canonical audit dir, validates each against `audit-output.schema.v0.json`, emits/merges the `external_audit` YAML. Replaces the v0 two-step `--calibrate` then `--finalize`.
+- **`--merge-into <PATH>`** combines with `--merge-reports` (or deprecated `--finalize`); strict `requires = "finalize"` removed.
+- **Schema `audit-output.schema.v0.json` evolved**: `audit_role` enum extended to `["auditor", "auditor-primary", "auditor-secondary"]` (v1 unified value + v0 legacy). NEW optional `evidence_citations: integer (>=0)` for review-skill weighting. `calibratorOutput.auditors_reconciled.maxItems` removed (v1 supports N≥2).
+
+### Changed (CLI)
+
+- **`git_range` default** changes from `HEAD~1..HEAD` to `origin/main..HEAD` (with fallback to `origin/master..HEAD`, then to `HEAD~1..HEAD` with stderr warning when no upstream is reachable). Fixes R11(A): Sentinel CHARTER-07 had 8 commits on a feature branch; v0 default sent only the last commit to auditors.
+- **Canonical audit path migration**: `audit/charters/<CHARTER-ID>/` → `.devtrail/audits/<CHARTER-ID>/`. Per propuesta D13: namespaced under `.devtrail/` to avoid collisions with adopter-defined `audit/` folders; structure leaves room for future audit-unit categories beyond Charter.
+- **Resolved prompt is one file, not two**: `audit-prompt.md` (was `auditor-{primary,secondary}.prompt.md`).
+- **Reports keyed on model slug**: `report-<sluggified-model-id>.md` (was `auditor-{primary,secondary}.md`).
+
+### Fixed (CLI)
+
+- **R10 — resolver respects HTML comment bounds.** Issue #102: `auditor-primary.md` template's documentation header listed placeholders with literal `{{name}}` syntax, and the global `String::replace` expanded them inside the `<!-- ... -->` block, duplicating ~30k tokens of payload. Resolver now scans for comment ranges before substituting and skips placeholder replacement inside them. Unclosed comments terminate the scan early (conservative).
+- **`render_external_audit_yaml` uses canonical Charter id** in `audit_notes:` instead of literal `<charter-id>` placeholder (pre-existing bug fixed as side-effect of refactor).
+
+### Deprecated (CLI)
+
+- **`--calibrate`** — emits warning explaining the v1 flow has no separate calibrate step (`/devtrail-audit-review` skill handles the calibrator role inline) and exits with error. Hidden in `--help`.
+- **`--finalize`** — deprecated alias for `--merge-reports`. Emits warning and routes through the new path. Hidden in `--help`.
+
+### BREAKING (deliberate, within experimental v0.x schemas)
+
+- Convention of paths changes from `audit/charters/` to `.devtrail/audits/`. Audits in flight that used v0 paths (Sentinel CHARTER-07 paused state) need to be re-run under v1 — the v0 outputs stay as historical evidence at the v0 path.
+- The 3 v0 prompt templates are removed. Adopters who customized them must port their changes to the unified `audit-prompt.md`.
+- The CLI no longer reads from `audit/charters/<id>/` — only from `.devtrail/audits/<id>/`.
+
+### Tests
+
+- 5 new unit tests for the R10 resolver fix (HTML comment boundaries).
+- 3 new integration tests for the `git_range` default change (R11(A)) — uses `init_repo_with_remote_main` helper with isolated bare-repo TempDirs to avoid parallel-test collisions.
+- 9 new fixture tests for the unified prompt template (canonical path, 7 universal sections, expected placeholders, didactic Etapa 12 example, Sentinel credit, evidence discipline, schema accepts v1 + legacy, evidence_citations optional, calibrator supports N≥2).
+- 17 charter_audit integration tests rewritten for v1 (10 new + 7 v0-tests-ported-to-v1 paths/flags).
+- 4 new fixture tests for `devtrail-audit-execute` skill (per-platform frontmatter + cross-platform parity asserting D14 elements + wait warning + path:line discipline).
+- audit_skill_test parity assertions updated for the rewritten audit-prompt and audit-review skills (six-section structure, 5-verdict vocabulary, 4-criterion rating, `external-audit-pending.yaml` for Branch B).
+
+### Credit
+
+The seven universal sections of the unified prompt template, the six-section structure of the consolidated review, the five-verdict vocabulary, and the four-criterion weighted auditor rating all lift directly from Sentinel's pre-DevTrail audit-skills (`audit/SKILL.md` and `audit-review/SKILL.md`), contributed via [issue #102](https://github.com/StrangeDaysTech/devtrail/issues/102) by José Villaseñor Montfort (StrangeDaysTech). Sentinel-specific hardcodes (paths, headings, build commands) were parameterized; didactic examples (Etapa 12 Pub/Sub stub vs gochannel active) preserved as labeled real adopter cases.
+
+---
+
 ## Framework 4.8.0 / CLI 3.9.0 — External audit skills + workflow checkpoint
 
 Phase 1 of `Propuesta/devtrail-audit-skills.md`: closes the back-half of the external multi-model audit cycle by surfacing it inside the AI assistant in the loop, and codifies a soft (never-enforced) workflow checkpoint where the agent proactively offers the audit at the right moment. External audit remains **fully optional** — the Charter's declarative scope + drift check + AILOG discipline already provide rigorous closure without it. The skills only add UX-inline; the underlying CLI orchestration is unchanged in shape, only extended with a new `--merge-into` flag to close the manual copy-paste loop.

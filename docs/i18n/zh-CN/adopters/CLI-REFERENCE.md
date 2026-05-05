@@ -48,8 +48,8 @@ DevTrail 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.8.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.9.0` | `devtrail` 二进制文件 |
+| Framework | `fw-` | `fw-4.9.0` | 模板（12 种类型）、治理文档、指令 |
+| CLI | `cli-` | `cli-3.10.0` | `devtrail` 二进制文件 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
 
@@ -88,7 +88,7 @@ devtrail status   # 显示完整的安装状态，包括版本
 
 ```bash
 $ devtrail init .
-✔ Downloaded DevTrail fw-4.8.0
+✔ Downloaded DevTrail fw-4.9.0
 ✔ Created .devtrail/ directory structure
 ✔ Created DEVTRAIL.md
 ✔ Configured AI agent directives
@@ -110,7 +110,7 @@ Next: git add .devtrail/ DEVTRAIL.md && git commit -m "chore: adopt DevTrail"
 ```bash
 $ devtrail update
 Updating framework...
-✔ Framework updated to fw-4.8.0
+✔ Framework updated to fw-4.9.0
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -127,7 +127,7 @@ Updating CLI...
 
 ```bash
 $ devtrail update-framework
-✔ Framework updated to fw-4.8.0
+✔ Framework updated to fw-4.9.0
 ```
 
 ---
@@ -211,7 +211,7 @@ $ devtrail status
   Project
   ┌───────────┬──────────────────────────┐
   │ Path      │ /home/user/my-project    │
-  │ Framework │ fw-4.8.0                 │
+  │ Framework │ fw-4.9.0                 │
   │ CLI       │ cli-3.5.2                │
   │ Language  │ en                       │
   └───────────┴──────────────────────────┘
@@ -268,7 +268,7 @@ Repairing DevTrail in /home/user/my-project
 → Restoring 1 missing directory...
 ✓ Restored .devtrail/templates/
 → Downloading framework to restore missing files...
-  Using version: fw-4.8.0
+  Using version: fw-4.9.0
 ✓ Restored 16 file(s) from framework
 → Updating checksums...
 
@@ -288,7 +288,7 @@ Repairing DevTrail in /home/user/my-project
 | `path` | `.`（当前目录） | 目标项目目录 |
 | `--fix` | — | 自动修复简单问题（例如为高风险文档添加缺失的 `review_required: true`） |
 | `--staged` | — | 仅验证已暂存（git add）的文件。适合 pre-commit 钩子。 |
-| `--include-charters` | — | 同时根据章程 JSON Schema 和引用完整性（`originating_ailogs` 中的 ID 解析；`originating_spec` 路径存在）验证 `docs/charters/` 中的章程。Opt-in，默认 `false`，确保未使用章程模式的项目不受影响。目前仅在非 `--staged` 模式下生效；staged 模式的章程验证将在 cli-3.9.0 中加入。 |
+| `--include-charters` | — | 同时根据章程 JSON Schema 和引用完整性（`originating_ailogs` 中的 ID 解析；`originating_spec` 路径存在）验证 `docs/charters/` 中的章程。Opt-in，默认 `false`，确保未使用章程模式的项目不受影响。目前仅在非 `--staged` 模式下生效；staged 模式的章程验证将在 cli-3.10.0 中加入。 |
 | `--check-pending-reviews` *(cli-3.7.0+)* | off | 列出所有 `review_required: true` 且没有 `review_outcome`、年龄超过 `--max-pending-days` 的文档。**仅警告** — 永不影响 validate 的退出码；适合用于 CI 仪表板上的审批积压视图。 |
 | `--max-pending-days` *(cli-3.7.0+)* | `14` | `--check-pending-reviews` 的天数阈值。 |
 
@@ -507,7 +507,7 @@ $ devtrail charter close CHARTER-01
 |---|---|---|
 | `CHARTER-ID` | — | 与 `charter status` 相同的解析规则。 |
 | `--range` | `HEAD~1..HEAD` | 要检查的 git 修订范围。 |
-| `--no-ailog-suppress` *(cli-3.9.0+ 始终输出确认 INFO 行)* | false | 禁用 AILOG 感知抑制（显示每条已声明但被遗漏的路径）。传入此标志时，CLI 始终打印 `INFO: AILOG-aware suppression bypassed (would have suppressed: N path(s)…)` 行 — 即使 N=0 — 以便诊断模式即使在干净运行时也在输出中可见。 |
+| `--no-ailog-suppress` *(cli-3.10.0+ 始终输出确认 INFO 行)* | false | 禁用 AILOG 感知抑制（显示每条已声明但被遗漏的路径）。传入此标志时，CLI 始终打印 `INFO: AILOG-aware suppression bypassed (would have suppressed: N path(s)…)` 行 — 即使 N=0 — 以便诊断模式即使在干净运行时也在输出中可见。 |
 | `--path` | `.` | 目标项目目录。 |
 
 **退出码：** `0` 没有漂移（或仅 AILOG 抑制）；`1` 存在未计入的漂移；`2` 用法错误（章程未找到、bash 缺失等）。
@@ -533,14 +533,14 @@ OK all declared-omitted paths are documented in AILOGs — drift accepted.
 
 > **平台说明。** 漂移检查委托给 `bash`。在 Linux/macOS/WSL/Git Bash 上开箱即用。Windows 原生且无 WSL 时需安装 Git Bash；纯 Rust fallback 在路线图上但不在 fw-4.6.x 中。
 
-#### 已声明路径的通配符支持 *(fw-4.8.0+)*
+#### 已声明路径的通配符支持 *(fw-4.9.0+)*
 
 漂移检查在 `## Files to modify` 中解析两种通配符形式：
 
 | 形式 | 示例 | 用例 |
 |---|---|---|
 | 省略号 | `` `.devtrail/07-ai-audit/agent-logs/AILOG-...md` `` | 任何带该前缀的修改路径满足通配符。历史上用于执行期间会创建未知数量 AILOG 的情况。 |
-| Glob | `` `AILOG-*.md` `` 或 `` `src/services/foo-*.rs` `` | 任何匹配该 glob（`*` → `.*`）的修改路径满足通配符。用于参数化集合被触动的批量章程声明。在 fw-4.8.0 中加入，源于 Sentinel CHARTER-04 暴露的摩擦（[issue #81](https://github.com/StrangeDaysTech/devtrail/issues/81)）。 |
+| Glob | `` `AILOG-*.md` `` 或 `` `src/services/foo-*.rs` `` | 任何匹配该 glob（`*` → `.*`）的修改路径满足通配符。用于参数化集合被触动的批量章程声明。在 fw-4.9.0 中加入，源于 Sentinel CHARTER-04 暴露的摩擦（[issue #81](https://github.com/StrangeDaysTech/devtrail/issues/81)）。 |
 
 两种形式都双向处理：声明的通配符既抑制"已声明但未修改"警告（当至少一个匹配文件被修改时），也抑制"已修改但未声明"警告（当一个修改路径匹配某个已声明通配符时）。
 
@@ -655,7 +655,7 @@ $ devtrail charter audit CHARTER-05 --finalize
 
 > **为什么仅编排？** 实现 3 个 HTTP 客户端（OpenAI / Google / Anthropic）需要 1-2 周 + 当 API 变化时的永久维护。Phase 3 v0 是实验性的 — CLI 的价值是 canon（prompt 形状 + output schema + 与遥测的集成），而非 API 调用本身。当 adopter 报告真实需求时，v1 可能加入 HTTP 客户端；在此之前，人在环模式与激发 Phase 3 的 Sentinel 实证 `/plan-audit` 模式相符。
 
-> **Skill 替代方案 *(fw-4.8.0+)*。** 当与 AI 助手在循环中协作时（Claude Code、Gemini Code、Cursor 等），skills `/devtrail-audit-prompt CHARTER-ID` 和 `/devtrail-audit-review CHARTER-ID` 封装此命令并在对话中内联展示 prompts。Skills 还处理校准器步骤（驱动对话的 Agent 运行校准器）并触发 `--finalize --merge-into`，使得 `external_audit:` 数组直接追加到遥测中无需手动复制粘贴。详见下方的 [Skills](#skills) 章节。CLI 仍是唯一真相来源 — skills 仅添加 UX-inline。
+> **Skill 替代方案 *(fw-4.9.0+)*。** 当与 AI 助手在循环中协作时（Claude Code、Gemini Code、Cursor 等），skills `/devtrail-audit-prompt CHARTER-ID` 和 `/devtrail-audit-review CHARTER-ID` 封装此命令并在对话中内联展示 prompts。Skills 还处理校准器步骤（驱动对话的 Agent 运行校准器）并触发 `--finalize --merge-into`，使得 `external_audit:` 数组直接追加到遥测中无需手动复制粘贴。详见下方的 [Skills](#skills) 章节。CLI 仍是唯一真相来源 — skills 仅添加 UX-inline。
 
 ---
 
@@ -993,7 +993,7 @@ $ devtrail explore --lang es             # 会话内切换到西班牙语
 $ devtrail about
 DevTrail CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.8.0
+  Framework version: fw-4.9.0
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/devtrail
@@ -1019,9 +1019,9 @@ DevTrail 提供一组 skills（slash 命令）供 AI 助手内使用（Claude Co
 | `/devtrail-adr` | 快速 ADR 创建快捷方式。 | `.devtrail/04-architecture/decisions/ADR-*.md` |
 | `/devtrail-mcard` | 交互式 Model Card 创建流程。 | `.devtrail/09-ai-models/MCARD-*.md` |
 | `/devtrail-sec` | 交互式 SEC（安全评估）流程。 | `.devtrail/08-security/SEC-*.md` |
-| `/devtrail-audit-prompt CHARTER-ID` *(fw-4.8.0+，在 fw-4.9.0 中重构)* | 在规范路径处生成章程的统一审计 prompt。封装 `devtrail charter audit --prepare`。操作员随后在同一仓库中打开 N 个审计员 CLI，在每个中调用 `/devtrail-audit-execute` — 无需复制/粘贴。 | `.devtrail/audits/<CHARTER-ID>/audit-prompt.md` |
+| `/devtrail-audit-prompt CHARTER-ID` *(fw-4.9.0+，在 fw-4.9.0 中重构)* | 在规范路径处生成章程的统一审计 prompt。封装 `devtrail charter audit --prepare`。操作员随后在同一仓库中打开 N 个审计员 CLI，在每个中调用 `/devtrail-audit-execute` — 无需复制/粘贴。 | `.devtrail/audits/<CHARTER-ID>/audit-prompt.md` |
 | `/devtrail-audit-execute [CHARTER-ID]` *(fw-4.9.0+)* | **在审计员 CLI 中运行**（gemini-cli、claude-cli、copilot-cli、codex-cli 等）。从磁盘读取已准备的 prompt，使用 tool use 进行审计并引用 `path:line`，写入以审计员模型 ID 为键的 report。CHARTER-ID 参数可选 — 自动发现尚未由此模型生成 report 的 prompts。 | `.devtrail/audits/<CHARTER-ID>/report-<sluggified-model-id>.md` |
-| `/devtrail-audit-review CHARTER-ID` *(fw-4.8.0+，在 fw-4.9.0 中扩展)* | `/devtrail-audit-prompt` 的对应。读取 `.devtrail/audits/<CHARTER-ID>/` 下的 N 个 reports，对每个 finding 与实际代码进行交叉验证（并行 Explore agents），生成六节合并的 `review.md`（执行摘要、范围、按审计员评估、修复计划 P0-P4、丢弃的 findings、审计员评分），并运行 `devtrail charter audit --merge-reports --merge-into` 将 `external_audit:` 追加到章程遥测中。如果遥测尚不存在（章程未关闭），写入 `external-audit-pending.yaml` 供 close 时合并。 | `.devtrail/audits/<CHARTER-ID>/review.md`，`external_audit:` 数组合并入遥测（或 pending YAML） |
+| `/devtrail-audit-review CHARTER-ID` *(fw-4.9.0+，在 fw-4.9.0 中扩展)* | `/devtrail-audit-prompt` 的对应。读取 `.devtrail/audits/<CHARTER-ID>/` 下的 N 个 reports，对每个 finding 与实际代码进行交叉验证（并行 Explore agents），生成六节合并的 `review.md`（执行摘要、范围、按审计员评估、修复计划 P0-P4、丢弃的 findings、审计员评分），并运行 `devtrail charter audit --merge-reports --merge-into` 将 `external_audit:` 追加到章程遥测中。如果遥测尚不存在（章程未关闭），写入 `external-audit-pending.yaml` 供 close 时合并。 | `.devtrail/audits/<CHARTER-ID>/review.md`，`external_audit:` 数组合并入遥测（或 pending YAML） |
 
 ### Skill vs CLI
 
@@ -1029,7 +1029,7 @@ DevTrail 提供一组 skills（slash 命令）供 AI 助手内使用（Claude Co
 
 不在循环中使用 AI 助手的 adopter 可直接通过 `devtrail charter audit`（`--prepare` / `--merge-reports [--merge-into <path>]`）驱动相同工作流。`.devtrail/audits/<id>/audit-prompt.md` 中的审计 prompt 在没有审计员 CLI 时也可粘贴到 chat 类 LLM 中使用 — skill 只是自动化文件交换。
 
-### 审计检查点 *(fw-4.8.0+)*
+### 审计检查点 *(fw-4.9.0+)*
 
 `.devtrail/00-governance/AGENT-RULES.md` §12 编码了一个工作流检查点，其中 Agent 在某个特定时刻主动提议审计 — 当 Charter 实现完成、drift 干净，且 `charter close` 尚未调用时。推荐基于启发式给出 是/否（安全面、新组件、AILOG 风险、复杂度）。外部审计**完全可选**；检查点是**软性**的 — 永不阻塞 `charter close`，永不强制（v0+v1 永久设计决策）。
 

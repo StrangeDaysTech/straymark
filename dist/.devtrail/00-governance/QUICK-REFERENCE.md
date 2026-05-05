@@ -213,10 +213,10 @@ Mark `review_required: true` when:
 | `/devtrail-new` | Create any document type (interactive) |
 | `/devtrail-ailog` / `/devtrail-aidec` / `/devtrail-adr` | Quick shortcuts for AILOG / AIDEC / ADR |
 | `/devtrail-mcard` / `/devtrail-sec` | Interactive flows for Model Card / SEC assessment |
-| `/devtrail-audit-prompt CHARTER-XX` *(fw-4.8.0+, refactored in fw-4.9.0)* | External multi-model audit — write unified prompt at canonical path |
+| `/devtrail-audit-prompt CHARTER-XX` *(fw-4.9.0+, refactored in fw-4.9.0)* | External multi-model audit — write unified prompt at canonical path |
 | `/devtrail-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | Run inside an auditor CLI — read prompt, audit with tool use, write report |
-| `/devtrail-audit-review CHARTER-XX` *(fw-4.8.0+, expanded in fw-4.9.0)* | Consolidate N reports into review.md (6 sections) + merge YAML into telemetry |
+| `/devtrail-audit-review CHARTER-XX` *(fw-4.9.0+, expanded in fw-4.9.0)* | Consolidate N reports into review.md (6 sections) + merge YAML into telemetry |
 
 ---
 
-*DevTrail v4.8.0 | [Strange Days Tech](https://strangedays.tech)*
+*DevTrail v4.9.0 | [Strange Days Tech](https://strangedays.tech)*

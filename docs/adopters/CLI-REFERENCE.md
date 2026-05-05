@@ -48,8 +48,8 @@ DevTrail uses **independent version tags** for each component:
 
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
-| Framework | `fw-` | `fw-4.8.0` | Templates (12 types), governance docs, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.9.0` | The `devtrail` binary |
+| Framework | `fw-` | `fw-4.9.0` | Templates (12 types), governance docs, directives, Charter template + schema |
+| CLI | `cli-` | `cli-3.10.0` | The `devtrail` binary |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
 
@@ -88,7 +88,7 @@ Initialize DevTrail in a project directory.
 
 ```bash
 $ devtrail init .
-✔ Downloaded DevTrail fw-4.8.0
+✔ Downloaded DevTrail fw-4.9.0
 ✔ Created .devtrail/ directory structure
 ✔ Created DEVTRAIL.md
 ✔ Configured AI agent directives
@@ -110,7 +110,7 @@ If `.devtrail/` does not exist in the current directory, the framework update is
 ```bash
 $ devtrail update
 Updating framework...
-✔ Framework updated to fw-4.8.0
+✔ Framework updated to fw-4.9.0
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -127,7 +127,7 @@ Update only the framework files. Looks for the latest `fw-*` release on GitHub.
 
 ```bash
 $ devtrail update-framework
-✔ Framework updated to fw-4.8.0
+✔ Framework updated to fw-4.9.0
 ```
 
 ---
@@ -211,7 +211,7 @@ $ devtrail status
   Project
   ┌───────────┬──────────────────────────┐
   │ Path      │ /home/user/my-project    │
-  │ Framework │ fw-4.8.0                 │
+  │ Framework │ fw-4.9.0                 │
   │ CLI       │ cli-3.5.2                │
   │ Language  │ en                       │
   └───────────┴──────────────────────────┘
@@ -268,7 +268,7 @@ Repairing DevTrail in /home/user/my-project
 → Restoring 1 missing directory...
 ✓ Restored .devtrail/templates/
 → Downloading framework to restore missing files...
-  Using version: fw-4.8.0
+  Using version: fw-4.9.0
 ✓ Restored 16 file(s) from framework
 → Updating checksums...
 
@@ -423,7 +423,7 @@ Manage **Charters**: bounded, auditable units of work declared ex-ante and valid
 - `devtrail charter status` — show Charter detail, or the most recent 5 Charters
 - `devtrail charter close` — record post-execution telemetry and bump status to `closed` *(Phase 2, fw-4.6.0+)*
 - `devtrail charter drift` — detect file-vs-commit drift with AILOG-aware suppression *(Phase 2, fw-4.6.0+)*
-- `devtrail charter audit` — orchestrate a multi-model external review (3-step prepare/calibrate/finalize) *(Phase 3, fw-4.8.0+)*
+- `devtrail charter audit` — orchestrate a multi-model external review (3-step prepare/calibrate/finalize) *(Phase 3, fw-4.9.0+)*
 
 #### `devtrail charter new [-t XS|S|M|L] [--from-ailog <id> | --from-spec <path>] [--title <title>] [path]`
 
@@ -556,7 +556,7 @@ Detect file-vs-commit drift at Charter close. Wraps the framework's `.devtrail/s
 |---|---|---|
 | `CHARTER-ID` | — | Same resolution rules as `charter status` |
 | `--range` | `HEAD~1..HEAD` | Git revision range to check |
-| `--no-ailog-suppress` *(cli-3.9.0+ always emits a confirming INFO line)* | false | Disable AILOG-aware suppression (show every declared-omitted path). When passed, the CLI always prints an `INFO: AILOG-aware suppression bypassed (would have suppressed: N path(s)…)` line — including when N=0 — so that the diagnostic mode is visible in output even on a clean run. |
+| `--no-ailog-suppress` *(cli-3.10.0+ always emits a confirming INFO line)* | false | Disable AILOG-aware suppression (show every declared-omitted path). When passed, the CLI always prints an `INFO: AILOG-aware suppression bypassed (would have suppressed: N path(s)…)` line — including when N=0 — so that the diagnostic mode is visible in output even on a clean run. |
 | `--path` | `.` | Target project directory |
 
 **Exit codes:** `0` if no drift (or only AILOG-suppressed); `1` if there's unaccounted drift; `2` for usage errors (Charter not found, bash missing, etc.).
@@ -582,14 +582,14 @@ OK all declared-omitted paths are documented in AILOGs — drift accepted.
 
 > **Platform note.** The drift check delegates to `bash`. On Linux/macOS/WSL/Git Bash this works out of the box. On Windows native without WSL, install Git Bash; a pure-Rust fallback is on the roadmap but not in fw-4.6.x.
 
-#### Wildcard support in declared paths *(fw-4.8.0+)*
+#### Wildcard support in declared paths *(fw-4.9.0+)*
 
 The drift check resolves two forms of wildcard in `## Files to modify`:
 
 | Form | Example | Use case |
 |---|---|---|
 | Ellipsis | `` `.devtrail/07-ai-audit/agent-logs/AILOG-...md` `` | Any modified path with that prefix satisfies the wildcard. Used historically when an unknown number of AILOGs would be created during execution. |
-| Glob | `` `AILOG-*.md` `` or `` `src/services/foo-*.rs` `` | Any modified path matching the glob (`*` → `.*`) satisfies the wildcard. Used for bulk Charter declarations where a parameterized set is touched. Added in fw-4.8.0 after the friction surfaced in Sentinel CHARTER-04 ([issue #81](https://github.com/StrangeDaysTech/devtrail/issues/81)). |
+| Glob | `` `AILOG-*.md` `` or `` `src/services/foo-*.rs` `` | Any modified path matching the glob (`*` → `.*`) satisfies the wildcard. Used for bulk Charter declarations where a parameterized set is touched. Added in fw-4.9.0 after the friction surfaced in Sentinel CHARTER-04 ([issue #81](https://github.com/StrangeDaysTech/devtrail/issues/81)). |
 
 Both forms are handled in both directions: a declared wildcard suppresses both "declared but not modified" warnings (when at least one matching file was modified) and "modified but not declared" warnings (when a modified path matches a declared wildcard).
 
@@ -708,7 +708,7 @@ $ devtrail charter audit CHARTER-05 --merge-reports \
 
 > **Why orchestration-only?** Implementing 3 HTTP clients (OpenAI / Google / Anthropic) is 1-2 weeks + perpetual maintenance when APIs change. v1 audit-skills extend the orchestration-only stance to a second mode (CLI auditor-side with tool use enforcement) where the operator runs their own auditor CLIs and DevTrail's prompts enforce the discipline (`cite path:line of files actually opened`). DevTrail still doesn't manage API keys, doesn't invoke APIs, doesn't maintain HTTP clients.
 
-> **Skill alternative *(fw-4.8.0+, expanded in fw-4.9.0)*.** Three skills wrap the CLI for IDE-driven workflows: `/devtrail-audit-prompt CHARTER-ID` (calls `--prepare`), `/devtrail-audit-execute CHARTER-ID` (runs in auditor CLIs to read the prompt and write a report), and `/devtrail-audit-review CHARTER-ID` (consolidates N reports into `review.md` and merges YAML). With these skills the operator never copies/pastes prompts or reports — file exchange happens via the canonical filesystem paths under `.devtrail/audits/`. See the [Skills](#skills) section below. The CLI remains the single source of truth — the skills only add UX-inline.
+> **Skill alternative *(fw-4.9.0+, expanded in fw-4.9.0)*.** Three skills wrap the CLI for IDE-driven workflows: `/devtrail-audit-prompt CHARTER-ID` (calls `--prepare`), `/devtrail-audit-execute CHARTER-ID` (runs in auditor CLIs to read the prompt and write a report), and `/devtrail-audit-review CHARTER-ID` (consolidates N reports into `review.md` and merges YAML). With these skills the operator never copies/pastes prompts or reports — file exchange happens via the canonical filesystem paths under `.devtrail/audits/`. See the [Skills](#skills) section below. The CLI remains the single source of truth — the skills only add UX-inline.
 
 ---
 
@@ -1053,7 +1053,7 @@ Show version, authorship, and license information.
 $ devtrail about
 DevTrail CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.8.0
+  Framework version: fw-4.9.0
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/devtrail
@@ -1079,9 +1079,9 @@ DevTrail ships a set of skills (slash commands) for use inside an AI assistant (
 | `/devtrail-adr` | Quick ADR creation shortcut. | `.devtrail/04-architecture/decisions/ADR-*.md` |
 | `/devtrail-mcard` | Interactive Model Card creation flow. | `.devtrail/09-ai-models/MCARD-*.md` |
 | `/devtrail-sec` | Interactive SEC (security assessment) flow. | `.devtrail/08-security/SEC-*.md` |
-| `/devtrail-audit-prompt CHARTER-ID` *(fw-4.8.0+, refactored in fw-4.9.0)* | Generate the unified audit prompt for a Charter at the canonical path. Wraps `devtrail charter audit --prepare`. The operator then opens N auditor CLIs in the same repo and invokes `/devtrail-audit-execute` in each — no copy/paste. | `.devtrail/audits/<CHARTER-ID>/audit-prompt.md` |
+| `/devtrail-audit-prompt CHARTER-ID` *(fw-4.9.0+, refactored in fw-4.9.0)* | Generate the unified audit prompt for a Charter at the canonical path. Wraps `devtrail charter audit --prepare`. The operator then opens N auditor CLIs in the same repo and invokes `/devtrail-audit-execute` in each — no copy/paste. | `.devtrail/audits/<CHARTER-ID>/audit-prompt.md` |
 | `/devtrail-audit-execute [CHARTER-ID]` *(fw-4.9.0+)* | **Run inside an auditor-side CLI** (gemini-cli, claude-cli, copilot-cli, codex-cli, ...). Reads the prepared prompt from disk, audits with tool use citing `path:line`, writes a report keyed on the auditor's model id. CHARTER-ID argument is optional — auto-discovers prompts that don't yet have a report from this model. | `.devtrail/audits/<CHARTER-ID>/report-<sluggified-model-id>.md` |
-| `/devtrail-audit-review CHARTER-ID` *(fw-4.8.0+, expanded in fw-4.9.0)* | Counterpart to `/devtrail-audit-prompt`. Reads N reports under `.devtrail/audits/<CHARTER-ID>/`, verifies each finding against actual code (Explore agents in parallel), produces a six-section consolidated `review.md` (Executive summary, Scope, Per-auditor evaluation, Remediation plan P0-P4, Discarded findings, Auditor ratings), and runs `devtrail charter audit --merge-reports --merge-into` to append `external_audit:` into the Charter telemetry. If the telemetry doesn't yet exist (Charter not yet closed), writes `external-audit-pending.yaml` for later merge at close time. | `.devtrail/audits/<CHARTER-ID>/review.md`, `external_audit:` array merged into telemetry (or pending YAML) |
+| `/devtrail-audit-review CHARTER-ID` *(fw-4.9.0+, expanded in fw-4.9.0)* | Counterpart to `/devtrail-audit-prompt`. Reads N reports under `.devtrail/audits/<CHARTER-ID>/`, verifies each finding against actual code (Explore agents in parallel), produces a six-section consolidated `review.md` (Executive summary, Scope, Per-auditor evaluation, Remediation plan P0-P4, Discarded findings, Auditor ratings), and runs `devtrail charter audit --merge-reports --merge-into` to append `external_audit:` into the Charter telemetry. If the telemetry doesn't yet exist (Charter not yet closed), writes `external-audit-pending.yaml` for later merge at close time. | `.devtrail/audits/<CHARTER-ID>/review.md`, `external_audit:` array merged into telemetry (or pending YAML) |
 
 ### Skill vs CLI
 
@@ -1089,7 +1089,7 @@ The three audit skills are **wrappers** around the CLI commands and discipline. 
 
 Adopters using DevTrail without an AI assistant in the loop can drive the same workflow directly via `devtrail charter audit` (`--prepare` / `--merge-reports [--merge-into <path>]`). The audit prompt at `.devtrail/audits/<id>/audit-prompt.md` works equally well pasted into a chat-based LLM if no auditor-side CLI is available — the skill just automates the file exchange.
 
-### Audit checkpoint *(fw-4.8.0+)*
+### Audit checkpoint *(fw-4.9.0+)*
 
 `.devtrail/00-governance/AGENT-RULES.md` §12 codifies a workflow checkpoint where the agent proactively offers the audit at one specific moment — when the Charter implementation is done, drift is clean, and `charter close` has not yet been invoked. The recommendation is YES/NO based on heuristics (security surface, new components, AILOG risks, complexity). External audit is **fully optional**; the checkpoint is **soft** — never blocks `charter close`, never enforced (permanent v0+v1 design decision).
 
