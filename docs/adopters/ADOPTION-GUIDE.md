@@ -239,7 +239,7 @@ The CLI automatically:
 
 1. **Download the latest release**
 
-   Go to [GitHub Releases](https://github.com/StrangeDaysTech/devtrail/releases) and download the latest `fw-*` release ZIP (e.g., `fw-4.8.0`).
+   Go to [GitHub Releases](https://github.com/StrangeDaysTech/devtrail/releases) and download the latest `fw-*` release ZIP (e.g., `fw-4.9.0`).
 
 2. **Extract to your project**
    ```bash
@@ -500,7 +500,7 @@ devtrail validate
 
 ## External Audit (Optional)
 
-From `fw-4.8.0`, when you co-implement Charters with an AI assistant in the loop (Claude Code, Gemini Code, Cursor), you can optionally run an external multi-model audit at Charter close. Two skills wrap the underlying CLI orchestration:
+From `fw-4.9.0`, when you co-implement Charters with an AI assistant in the loop (Claude Code, Gemini Code, Cursor), you can optionally run an external multi-model audit at Charter close. Two skills wrap the underlying CLI orchestration:
 
 - **`/devtrail-audit-prompt CHARTER-XX`** — writes the unified audit prompt at the canonical path `.devtrail/audits/<id>/audit-prompt.md`. Operator opens N auditor-side CLIs and runs `/devtrail-audit-execute` in each. No copy/paste.
 - **`/devtrail-audit-execute [CHARTER-XX]`** *(fw-4.9.0+)* — runs inside an auditor-side CLI (gemini-cli, claude-cli, copilot-cli, codex-cli). Reads the prompt, audits with tool use citing `path:line`, writes a report keyed on the auditor's model id.

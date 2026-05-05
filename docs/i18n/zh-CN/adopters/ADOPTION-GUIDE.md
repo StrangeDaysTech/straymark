@@ -239,7 +239,7 @@ CLI 自动完成：
 
 1. **下载最新版本**
 
-   前往 [GitHub Releases](https://github.com/StrangeDaysTech/devtrail/releases)，下载最新的 `fw-*` 版本 ZIP（例如 `fw-4.8.0`）。
+   前往 [GitHub Releases](https://github.com/StrangeDaysTech/devtrail/releases)，下载最新的 `fw-*` 版本 ZIP（例如 `fw-4.9.0`）。
 
 2. **解压到你的项目**
    ```bash
@@ -501,7 +501,7 @@ devtrail validate
 
 ## 外部审计（可选）
 
-自 `fw-4.8.0` 起，当你与 AI 助手在循环中协作实现 Charter 时（Claude Code、Gemini Code、Cursor），你可以在 Charter 关闭时可选地运行外部多模型审计。两个 skills 封装底层 CLI 编排：
+自 `fw-4.9.0` 起，当你与 AI 助手在循环中协作实现 Charter 时（Claude Code、Gemini Code、Cursor），你可以在 Charter 关闭时可选地运行外部多模型审计。两个 skills 封装底层 CLI 编排：
 
 - **`/devtrail-audit-prompt CHARTER-XX`** — 在规范路径 `.devtrail/audits/<id>/audit-prompt.md` 处写入统一审计 prompt。操作员打开 N 个审计员 CLI 并在每个中运行 `/devtrail-audit-execute`。无需复制/粘贴。
 - **`/devtrail-audit-execute [CHARTER-XX]`** *(fw-4.9.0+)* — 在审计员 CLI 中运行（gemini-cli、claude-cli、copilot-cli、codex-cli）。读取 prompt，使用 tool use 进行审计并引用 `path:line`，写入以审计员模型 ID 为键的 report。

@@ -188,10 +188,10 @@ risk_level: low | medium | high | critical
 | `/devtrail-new` | 创建任意类型文档（交互式） |
 | `/devtrail-ailog` / `/devtrail-aidec` / `/devtrail-adr` | AILOG / AIDEC / ADR 的快速快捷方式 |
 | `/devtrail-mcard` / `/devtrail-sec` | Model Card / SEC 评估的交互流程 |
-| `/devtrail-audit-prompt CHARTER-XX` *(fw-4.8.0+，在 fw-4.9.0 中重构)* | 外部多模型审计 — 在规范路径写入统一 prompt |
+| `/devtrail-audit-prompt CHARTER-XX` *(fw-4.9.0+，在 fw-4.9.0 中重构)* | 外部多模型审计 — 在规范路径写入统一 prompt |
 | `/devtrail-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | 在审计员 CLI 中运行 — 读取 prompt，使用 tool use 审计，写入 report |
-| `/devtrail-audit-review CHARTER-XX` *(fw-4.8.0+，在 fw-4.9.0 中扩展)* | 合并 N 个 reports 为 review.md（6 节）+ YAML 合并入遥测 |
+| `/devtrail-audit-review CHARTER-XX` *(fw-4.9.0+，在 fw-4.9.0 中扩展)* | 合并 N 个 reports 为 review.md（6 节）+ YAML 合并入遥测 |
 
 ---
 
-*DevTrail v4.8.0 | [Strange Days Tech](https://strangedays.tech)*
+*DevTrail v4.9.0 | [Strange Days Tech](https://strangedays.tech)*
