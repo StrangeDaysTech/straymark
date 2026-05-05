@@ -188,8 +188,9 @@ Marcar `review_required: true` cuando:
 | `/devtrail-new` | Crear cualquier tipo de documento (interactivo) |
 | `/devtrail-ailog` / `/devtrail-aidec` / `/devtrail-adr` | Atajos rápidos para AILOG / AIDEC / ADR |
 | `/devtrail-mcard` / `/devtrail-sec` | Flujos interactivos para Model Card / SEC assessment |
-| `/devtrail-audit-prompt CHARTER-XX` *(fw-4.8.0+)* | Auditoría externa multi-modelo — genera prompts inline |
-| `/devtrail-audit-review CHARTER-XX` *(fw-4.8.0+)* | Calibra respuestas de auditoría + mergea en telemetría del Charter |
+| `/devtrail-audit-prompt CHARTER-XX` *(fw-4.8.0+, refactorizada en fw-4.9.0)* | Auditoría externa multi-modelo — escribe prompt unificado en path canónico |
+| `/devtrail-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | Corre en una CLI auditora — lee prompt, audita con tool use, escribe report |
+| `/devtrail-audit-review CHARTER-XX` *(fw-4.8.0+, expandida en fw-4.9.0)* | Consolida N reports en review.md (6 secciones) + mergea YAML en telemetría |
 
 ---
 

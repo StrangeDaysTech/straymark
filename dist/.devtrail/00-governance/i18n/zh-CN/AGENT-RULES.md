@@ -300,10 +300,14 @@ confidence: high | medium | low
   - <基于 Charter、AILOGs 或 diff 的具体原因>
 
 如果决定审计：
-  运行 /devtrail-audit-prompt <CHARTER-ID>，我会在此处直接展示
-  两个 prompts。当你保存了外部审计员的回复到规范路径后，运行
-  /devtrail-audit-review <CHARTER-ID>，我会在本地校准并将
-  findings 合并到 Charter 遥测中。
+  运行 /devtrail-audit-prompt <CHARTER-ID>，我会将统一审计 prompt
+  写入 .devtrail/audits/<CHARTER-ID>/audit-prompt.md。然后在此仓库中
+  打开一个或多个审计员 CLI（gemini-cli、claude-cli、copilot-cli、
+  codex-cli），并在每个中调用 /devtrail-audit-execute <CHARTER-ID> —
+  建议：至少 2 个不同模型族的审计员。当且仅当你委托的所有审计员
+  都已完成时，返回此处并运行 /devtrail-audit-review <CHARTER-ID>。
+  我会将 N 个 reports 合并为 review.md 文档（含判决、修复计划、
+  审计员评分），并将 YAML 块合并到 Charter 遥测中。
 
 如果决定不审计：
   准备好后继续 `devtrail charter close <CHARTER-ID>`。外部审计
@@ -338,7 +342,7 @@ confidence: high | medium | low
 - 检查点在同一 Charter 内一旦 developer 回复就**永不**重复。
 - 检查点**不**阻塞任何后续操作。如果 developer 忽略它并运行 `charter close`，close 正常进行——没有强制执行，将来也不会有（这是 v0+v1 永久设计决策；见 `Propuesta/devtrail-audit-skills.md` §2.2）。
 - 检查点**不**计入任何质量度量。`devtrail metrics` 中没有"已审计 Charter 百分比"KPI——按设计，避免产生虚胖审计计数的激励。
-- 如果 developer 接受审计，接下来的两个 skills（`/devtrail-audit-prompt` 然后 `/devtrail-audit-review`）会推进工作流。
+- 如果 developer 接受审计，工作流通过三个 skills 依次推进：`/devtrail-audit-prompt`（在规范路径写入统一 prompt）→ `/devtrail-audit-execute` × N（每个操作员打开的审计员 CLI 一个 — 这些运行在那些 CLI 中，不在主代理中）→ `/devtrail-audit-review`（在 `.devtrail/audits/<id>/review.md` 中内联合并 N 个 reports 并将 YAML 合并到遥测）。操作员从不复制/粘贴 prompts 或 reports — 文件交换通过 `.devtrail/audits/` 下的规范路径进行。
 
 ---
 

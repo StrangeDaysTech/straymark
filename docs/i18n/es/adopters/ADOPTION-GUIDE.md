@@ -496,8 +496,9 @@ devtrail validate
 
 A partir de `fw-4.8.0`, cuando co-implementas Charters con un asistente IA en el loop (Claude Code, Gemini Code, Cursor), puedes opcionalmente correr una auditoría externa multi-modelo al cierre del Charter. Dos skills envuelven la orquestación subyacente del CLI:
 
-- **`/devtrail-audit-prompt CHARTER-XX`** — genera los prompts de auditores inline en la conversación, listos para pegar en 2 LLMs auditores de familias distintas.
-- **`/devtrail-audit-review CHARTER-XX`** — back-half: valida las respuestas guardadas por el operador, corre el calibrador inline, y mergea los findings en la telemetría del Charter directamente (array `external_audit:`).
+- **`/devtrail-audit-prompt CHARTER-XX`** — escribe el audit prompt unificado en el path canónico `.devtrail/audits/<id>/audit-prompt.md`. El operador abre N CLIs auditoras y corre `/devtrail-audit-execute` en cada una. Sin copy/paste.
+- **`/devtrail-audit-execute [CHARTER-XX]`** *(fw-4.9.0+)* — corre dentro de una CLI auditora (gemini-cli, claude-cli, copilot-cli, codex-cli). Lee el prompt, audita con tool use citando `path:línea`, escribe un report con el id del modelo en el nombre.
+- **`/devtrail-audit-review CHARTER-XX`** — consolida N reports en un `review.md` de seis secciones (Resumen ejecutivo / Alcance / Evaluación por auditor / Plan de remediación P0-P4 / Descartados / Calificación de auditores) y mergea el YAML `external_audit:` en la telemetría del Charter.
 
 El agente **proactivamente ofrecerá** la auditoría en un momento específico del workflow — cuando la implementación está lista, el drift check está limpio, y `charter close` no se ha invocado. La recomendación es SÍ/NO basada en la superficie de riesgo y complejidad del Charter (heurísticas en `.devtrail/00-governance/AGENT-RULES.md` §12).
 

@@ -301,11 +301,17 @@ Mi recomendación: [SÍ / NO], porque:
   - <razón concreta basada en el Charter, AILOGs o diff>
 
 Si decides auditar:
-  Ejecuta /devtrail-audit-prompt <CHARTER-ID> y te imprimo aquí mismo
-  los dos prompts. Cuando tengas las respuestas de los auditores externos
-  guardadas en los paths canónicos, ejecuta /devtrail-audit-review
-  <CHARTER-ID> y yo calibro localmente y mergeo los findings en la
-  telemetría del Charter.
+  Ejecuta /devtrail-audit-prompt <CHARTER-ID> y yo escribo el prompt
+  unificado de auditoría en .devtrail/audits/<CHARTER-ID>/audit-prompt.md.
+  Después abre una o más CLIs auditoras (gemini-cli, claude-cli,
+  copilot-cli, codex-cli) en este repo e invoca
+  /devtrail-audit-execute <CHARTER-ID> en cada una — recomendación: al
+  menos 2 auditores de familias de modelo distintas. Cuando y solo
+  cuando TODAS las auditorías que encargaste hayan terminado, regresa
+  aquí y ejecuta /devtrail-audit-review <CHARTER-ID>. Yo consolido los
+  N reports en un documento review.md con veredictos, plan de
+  remediación y calificación de auditores, y mergeo el bloque YAML en
+  la telemetría del Charter.
 
 Si decides no auditar:
   Continúa con `devtrail charter close <CHARTER-ID>` cuando estés listo.
@@ -341,7 +347,7 @@ Son heurísticas, no reglas rígidas — estás cerca del contexto, afínalas co
 - El checkpoint **nunca** se repite dentro del mismo Charter una vez que el developer responde.
 - El checkpoint **no** bloquea ninguna acción posterior. Si el developer lo ignora y corre `charter close`, close procede normalmente — no hay enforcement y no lo habrá (decisión de diseño v0+v1 permanente; ver `Propuesta/devtrail-audit-skills.md` §2.2).
 - El checkpoint **no** se cuenta en ninguna métrica de calidad. No hay KPI "% Charters auditados" en `devtrail metrics` — por diseño, para evitar incentivos a inflar el conteo.
-- Si el developer acepta la auditoría, las siguientes dos skills (`/devtrail-audit-prompt` luego `/devtrail-audit-review`) llevan el workflow adelante.
+- Si el developer acepta la auditoría, el workflow procede vía tres skills en secuencia: `/devtrail-audit-prompt` (escribe el prompt unificado en el path canónico) → `/devtrail-audit-execute` × N (una por CLI auditora que abra el operador — estas corren en esas CLIs, no en el agente principal) → `/devtrail-audit-review` (consolida N reports inline en `.devtrail/audits/<id>/review.md` y mergea el YAML en la telemetría). Los operadores nunca copian/pegan prompts ni reports — el intercambio de archivos sucede vía paths canónicos bajo `.devtrail/audits/`.
 
 ---
 

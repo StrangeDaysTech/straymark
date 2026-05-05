@@ -599,113 +599,116 @@ Paths under `docs/charters/*` and `.devtrail/07-ai-audit/*` are **never** report
 
 If you're running a Charter whose explicit scope is governance churn (e.g., a bulk approval Charter touching only `.devtrail/07-ai-audit/`), the drift check will report 0 modified files and you'll need to verify scope by reading the AILOG. A `--strict-scope` flag that disables the always-in-scope rule is on the table for a future minor if a real adopter reports the asymmetry as a friction.
 
-#### `devtrail charter audit <CHARTER-ID> [--range <REV..REV>] [--calibrate | --finalize] [--path <dir>]`
+#### `devtrail charter audit <CHARTER-ID> [--range <REV..REV>] [--prepare | --merge-reports] [--merge-into <PATH>] [--path <dir>]`
 
-*Available since **cli-3.8.0** + **fw-4.7.0** (Phase 3 v0).*
+*Available since **cli-3.8.0** + **fw-4.7.0**. v1 unified flow shipped in **cli-3.10.0** + **fw-4.9.0** — replaces the v0 three-step (PREPARE/CALIBRATE/FINALIZE) with a two-step (PREPARE/MERGE-REPORTS), unifies the auditor template, and moves canonical paths to `.devtrail/audits/`.*
 
-Orchestrate a multi-model external review of a Charter's execution. **Orchestration-only** — the CLI prepares prompts, validates outputs against the schema, and prints findings ready to paste into Charter telemetry. **It does NOT invoke LLM APIs.** The operator runs the prompts in their auditor of choice (Copilot, Gemini, Claude, etc.) and saves responses to canonical paths.
+Orchestrate a multi-model external review of a Charter's execution. **Orchestration-only** — the CLI prepares the unified audit prompt, validates auditor reports against the schema, and emits/merges the `external_audit` YAML block. **It does NOT invoke LLM APIs.** The operator runs N auditor-side CLIs (gemini-cli, claude-cli, copilot-cli, codex-cli — whatever they have) configured with read-only filesystem access; each invokes the `/devtrail-audit-execute` skill to read the prompt, audit with tool use citing `path:line`, and write the report.
 
-Three steps, each invokable independently:
+Two steps, each invokable independently:
 
 | Step | Flag | What happens |
 |---|---|---|
-| 1. PREPARE | (default) | Resolves `auditor-primary` and `auditor-secondary` prompts against the Charter + git diff + originating AILOGs. Writes them under `audit/charters/<CHARTER-ID>/prompts/`. |
-| 2. CALIBRATE | `--calibrate` | Reads `auditor-primary.md` and `auditor-secondary.md` (operator must save these between steps 1 and 2). Validates them against `audit-output.schema.v0.json`. Resolves the calibrator prompt with both responses embedded. |
-| 3. FINALIZE | `--finalize` | Reads the calibrator response. Validates all 3 outputs. Prints a YAML-formatted `external_audit` array block ready to paste into the Charter telemetry. |
+| 1. PREPARE | `--prepare` (default) | Resolves the unified audit prompt against the Charter + git diff + originating AILOGs. Writes it to `.devtrail/audits/<CHARTER-ID>/audit-prompt.md`. |
+| 2. MERGE-REPORTS | `--merge-reports` | Reads all `report-*.md` files in `.devtrail/audits/<CHARTER-ID>/` (one per auditor that completed). Validates each against `audit-output.schema.v0.json`. Emits the YAML-formatted `external_audit` array — combine with `--merge-into <PATH>` to append it directly into the Charter's telemetry YAML. |
 
 | Argument/Flag | Default | Description |
 |---|---|---|
 | `<CHARTER-ID>` | — | Same resolution rules as `charter status` |
-| `--range` | `HEAD~1..HEAD` | Git revision range the auditors will review |
-| `--calibrate` | off | Run step 2. Mutually exclusive with `--finalize`. |
-| `--finalize` | off | Run step 3. Mutually exclusive with `--calibrate`. |
+| `--range` | `origin/main..HEAD` (with fallback to `origin/master..HEAD`, then `HEAD~1..HEAD` with warning) | Git revision range the auditors review. The default captures the full feature-branch implementation set; explicit `--range <REV..REV>` overrides without probing for upstream. |
+| `--prepare` | off (default action when no other flag) | Run step 1. Mutually exclusive with `--merge-reports`. |
+| `--merge-reports` | off | Run step 2. Mutually exclusive with `--prepare`. |
+| `--merge-into <PATH>` | — | With `--merge-reports`: append the `external_audit:` array directly into the telemetry YAML at `<PATH>` instead of printing to stdout. The CLI rejects re-audit (telemetry already has the key) with a clear error. |
 | `--path` | `.` | Project directory |
+
+**Deprecated v0 flags (hidden in `--help`):**
+
+- `--calibrate` — emits a warning and exits with error. The v0 calibrate step is replaced by the `/devtrail-audit-review` skill, which reconciles N reports inline with filesystem access (no separate paste-based prompt).
+- `--finalize` — deprecated alias for `--merge-reports` with backwards-compat behavior. Emits a warning and routes through the new path.
 
 ### Heterogeneity recommendation (not enforced in v0)
 
 Per the design rationale (`devtrail-cli-roadmap.md` §5.2), the auditor pair should be of **different model families**: one Anthropic + one Google + one OpenAI, in any combination, never two of the same family. Cross-family heterogeneity is what makes convergence on findings high-signal — same-family auditors share blind spots.
 
-The calibrator-reconciler MAY be of any family (including the implementer's family) because its task is definitional (apply the schema to already-produced verdicts), not discovery. Heterogeneity matters for the auditor pair, not the calibrator.
+v1 supports **N≥2 auditors** (no longer fixed to 2). Operators may opt in to 3 or 4 auditors for high-risk Charters, including specialized models (security-focused, code-review-tuned, etc.). The skill `/devtrail-audit-review` iterates over all `report-*.md` files in the audit dir.
 
-v0 documents this recommendation but does not auto-detect or enforce it. A `--implementer-family X` flag with rejection of monochromatic configurations is a v1 candidate when an adopter reports a real case.
+The calibrator role moves from a paste-based template (v0) to the in-conversation main agent via the `/devtrail-audit-review` skill — its task is definitional (reconcile already-produced verdicts), so heterogeneity from the implementer is NOT required.
 
-### Layout produced
+### Canonical layout produced (v1)
 
 ```
-audit/charters/CHARTER-NN/
-├── prompts/
-│   ├── auditor-primary.prompt.md      # resolved by step 1, what was sent
-│   ├── auditor-secondary.prompt.md    # resolved by step 1
-│   └── calibrator-reconciler.prompt.md  # resolved by step 2
-├── auditor-primary.md                 # operator pastes auditor 1 response
-├── auditor-secondary.md               # operator pastes auditor 2 response
-└── calibrator-reconciler.md           # operator pastes calibrator response
+.devtrail/audits/CHARTER-NN/
+├── audit-prompt.md                          # resolved by --prepare (single unified prompt)
+├── report-claude-sonnet-4-6.md              # written by /devtrail-audit-execute in claude-cli
+├── report-gemini-2-5-pro.md                 # written by /devtrail-audit-execute in gemini-cli
+├── report-gpt-5-3-codex.md                  # optional 3rd auditor
+├── review.md                                # written by /devtrail-audit-review (consolidated 6-section analysis)
+└── external-audit-pending.yaml              # written by /devtrail-audit-review when telemetry doesn't yet exist (Branch B)
 ```
 
-The `prompts/` subdirectory persists what was sent to each auditor *before* the API call (closes [RFC #82](https://github.com/StrangeDaysTech/devtrail/issues/82) on audit visibility). Adopters can `git add` the entire `audit/` directory for a fully version-controlled audit trail, or `.gitignore` it if they prefer the cycle to be ephemeral.
+The directory is namespaced under `.devtrail/` to avoid collisions with adopter-defined `audit/` folders. The `<UNIT-TYPE>-<UNIT-ID>` shape leaves room for future audit-unit categories beyond Charter (e.g. `MODULE-payments/`, `RELEASE-v2.0/`) without restructuring.
 
-**Example:**
+Adopters can `git add` the entire `.devtrail/audits/` directory for a fully version-controlled audit trail, or `.gitignore` it if they prefer the cycle to be ephemeral.
+
+**Example (v1, with the audit-skills wrappers — recommended for IDE-driven workflows):**
 
 ```bash
-$ devtrail charter audit CHARTER-05
-  Step 1/3: PREPARE (CHARTER-05)
-  ✔ Wrote audit/charters/CHARTER-05/prompts/auditor-primary.prompt.md
-  ✔ Wrote audit/charters/CHARTER-05/prompts/auditor-secondary.prompt.md
+# In the main IDE (Claude Code, Gemini Code, Cursor, ...):
+> /devtrail-audit-prompt CHARTER-05
+  → runs `devtrail charter audit CHARTER-05 --prepare`
+  → writes .devtrail/audits/CHARTER-05/audit-prompt.md
+  → instructs operator to open auditor CLIs
 
-  Next:
-    1. Paste each prompt into your auditor of choice (use a model
-       of a different family per auditor — see CLI-REFERENCE).
-    2. Save the auditor responses to:
-         audit/charters/CHARTER-05/auditor-primary.md
-         audit/charters/CHARTER-05/auditor-secondary.md
-    3. Run: devtrail charter audit CHARTER-05 --calibrate
+# In claude-cli (with read access to repo):
+> /devtrail-audit-execute CHARTER-05
+  → reads .devtrail/audits/CHARTER-05/audit-prompt.md
+  → audits with tool use, citing path:line
+  → writes .devtrail/audits/CHARTER-05/report-claude-sonnet-4-6.md
+  → reminds operator to wait for ALL audits before review
 
-# (operator runs auditor 1 in Copilot, saves response. Runs auditor 2
-# in Gemini, saves response.)
+# In gemini-cli:
+> /devtrail-audit-execute CHARTER-05
+  → writes .devtrail/audits/CHARTER-05/report-gemini-2-5-pro.md
 
-$ devtrail charter audit CHARTER-05 --calibrate
-  Step 2/3: CALIBRATE (CHARTER-05)
-  ✔ Validated audit/charters/CHARTER-05/auditor-primary.md
-  ✔ Validated audit/charters/CHARTER-05/auditor-secondary.md
-  ✔ Wrote audit/charters/CHARTER-05/prompts/calibrator-reconciler.prompt.md
-
-  Next:
-    1. Run the calibrator prompt in a model of your choice (calibrator
-       may be of any family).
-    2. Save the response to: audit/charters/CHARTER-05/calibrator-reconciler.md
-    3. Run: devtrail charter audit CHARTER-05 --finalize
-
-# (operator runs calibrator in Claude, saves response.)
-
-$ devtrail charter audit CHARTER-05 --finalize
-  Step 3/3: FINALIZE (CHARTER-05)
-  ✔ Validated audit/charters/CHARTER-05/auditor-primary.md (5 findings, prompt: prompts/auditor-primary.prompt.md)
-  ✔ Validated audit/charters/CHARTER-05/auditor-secondary.md (4 findings, prompt: prompts/auditor-secondary.prompt.md)
-  ✔ Validated audit/charters/CHARTER-05/calibrator-reconciler.md
-
-  Charter audit complete.
-
-  external_audit YAML — paste into telemetry:
-    - auditor: "copilot-v1.0.37"
-      findings_total: 5
-      findings_by_category:
-        hallucination: 0
-        implementation_gap: 2
-        real_debt: 2
-        false_positive: 1
-      audit_quality: "high"
-      audit_notes: "see audit/charters/<charter-id>/auditor-primary.md"
-    - auditor: "gemini-cli-v1.5"
-      findings_total: 4
-      findings_by_category: ...
-
-  Calibrator summary (copy to outcome.scope_change_notes if relevant):
-    audit/charters/CHARTER-05/calibrator-reconciler.md
+# Back in the main IDE, after ALL audits complete:
+> /devtrail-audit-review CHARTER-05
+  → reads N reports, verifies each finding against code
+  → writes .devtrail/audits/CHARTER-05/review.md (6-section consolidated)
+  → runs `devtrail charter audit CHARTER-05 --merge-reports --merge-into <telemetry>`
+  → external_audit YAML merged into Charter telemetry
 ```
 
-> **Why orchestration-only?** Implementing 3 HTTP clients (OpenAI / Google / Anthropic) is 1-2 weeks + perpetual maintenance when APIs change. Phase 3 v0 is experimental — the CLI's value is the canon (prompt shape + output schema + telemetry integration), not the API call. v1 may add HTTP clients when an adopter reports a real need; until then the human-in-the-loop shape matches Sentinel's empirical `/plan-audit` pattern that motivated Phase 3 in the first place.
+**Example (CLI direct, without skills — for CI / batch / non-IDE use):**
 
-> **Skill alternative *(fw-4.8.0+)*.** When working with an AI assistant in the loop (Claude Code, Gemini Code, Cursor, etc.), the skills `/devtrail-audit-prompt CHARTER-ID` and `/devtrail-audit-review CHARTER-ID` wrap this command and surface the prompts inline in the conversation. The skills also handle the calibrator step (the agent driving the conversation runs the calibrator) and trigger `--finalize --merge-into` so the `external_audit:` array is appended to telemetry without manual copy-paste. See the [Skills](#skills) section below. The CLI remains the single source of truth — the skills only add UX-inline.
+```bash
+$ devtrail charter audit CHARTER-05 --prepare
+  PREPARE audit prompt (CHARTER-05)
+  ✔ Wrote .devtrail/audits/CHARTER-05/audit-prompt.md
+
+  Next:
+    1. Open one or more auditor CLIs ... and invoke /devtrail-audit-execute CHARTER-05.
+    2. Each auditor reads the prompt above and writes report-<model-slug>.md.
+    3. When ALL audits complete, run: /devtrail-audit-review CHARTER-05
+
+# (operator runs auditors in their CLIs of choice; reports land at canonical paths)
+
+$ devtrail charter audit CHARTER-05 --merge-reports \
+    --merge-into .devtrail/charters/CHARTER-05.telemetry.yaml
+  MERGE-REPORTS audit cycle (CHARTER-05)
+  ✔ Validated .devtrail/audits/CHARTER-05/report-claude-sonnet-4-6.md (5 findings)
+  ✔ Validated .devtrail/audits/CHARTER-05/report-gemini-2-5-pro.md (4 findings)
+  ✔ Validated .devtrail/audits/CHARTER-05/report-gpt-5-3-codex.md (3 findings)
+
+  Audit cycle merge complete.
+
+  ✔ Merged external_audit array into .devtrail/charters/CHARTER-05.telemetry.yaml
+
+  Run `git diff` on the telemetry file to review the merge before commit.
+```
+
+> **Why orchestration-only?** Implementing 3 HTTP clients (OpenAI / Google / Anthropic) is 1-2 weeks + perpetual maintenance when APIs change. v1 audit-skills extend the orchestration-only stance to a second mode (CLI auditor-side with tool use enforcement) where the operator runs their own auditor CLIs and DevTrail's prompts enforce the discipline (`cite path:line of files actually opened`). DevTrail still doesn't manage API keys, doesn't invoke APIs, doesn't maintain HTTP clients.
+
+> **Skill alternative *(fw-4.8.0+, expanded in fw-4.9.0)*.** Three skills wrap the CLI for IDE-driven workflows: `/devtrail-audit-prompt CHARTER-ID` (calls `--prepare`), `/devtrail-audit-execute CHARTER-ID` (runs in auditor CLIs to read the prompt and write a report), and `/devtrail-audit-review CHARTER-ID` (consolidates N reports into `review.md` and merges YAML). With these skills the operator never copies/pastes prompts or reports — file exchange happens via the canonical filesystem paths under `.devtrail/audits/`. See the [Skills](#skills) section below. The CLI remains the single source of truth — the skills only add UX-inline.
 
 ---
 
@@ -1076,12 +1079,15 @@ DevTrail ships a set of skills (slash commands) for use inside an AI assistant (
 | `/devtrail-adr` | Quick ADR creation shortcut. | `.devtrail/04-architecture/decisions/ADR-*.md` |
 | `/devtrail-mcard` | Interactive Model Card creation flow. | `.devtrail/09-ai-models/MCARD-*.md` |
 | `/devtrail-sec` | Interactive SEC (security assessment) flow. | `.devtrail/08-security/SEC-*.md` |
-| `/devtrail-audit-prompt CHARTER-ID` *(fw-4.8.0+)* | Generate external multi-model audit prompts inline. Wraps `devtrail charter audit` PREPARE — runs the CLI to resolve `auditor-primary.prompt.md` and `auditor-secondary.prompt.md`, then surfaces both prompts in the conversation so the operator can paste them into 2 LLMs of different families without leaving the chat. | `audit/charters/<CHARTER-ID>/prompts/auditor-{primary,secondary}.prompt.md` (via the CLI it wraps) |
-| `/devtrail-audit-review CHARTER-ID` *(fw-4.8.0+)* | Counterpart to `/devtrail-audit-prompt`. Validates the operator's saved auditor responses, runs the calibrator inline (the agent driving the conversation IS a valid calibrator since heterogeneity is required only for the auditor pair), and runs `devtrail charter audit --finalize --merge-into` to append `external_audit:` directly into `.devtrail/charters/<CHARTER-ID>.telemetry.yaml`. If the telemetry does not yet exist (Charter not yet closed), writes `audit/charters/<CHARTER-ID>/external-audit-pending.yaml` for later manual merge. | `audit/charters/<CHARTER-ID>/calibrator-reconciler.md`, `external_audit:` array merged into telemetry |
+| `/devtrail-audit-prompt CHARTER-ID` *(fw-4.8.0+, refactored in fw-4.9.0)* | Generate the unified audit prompt for a Charter at the canonical path. Wraps `devtrail charter audit --prepare`. The operator then opens N auditor CLIs in the same repo and invokes `/devtrail-audit-execute` in each — no copy/paste. | `.devtrail/audits/<CHARTER-ID>/audit-prompt.md` |
+| `/devtrail-audit-execute [CHARTER-ID]` *(fw-4.9.0+)* | **Run inside an auditor-side CLI** (gemini-cli, claude-cli, copilot-cli, codex-cli, ...). Reads the prepared prompt from disk, audits with tool use citing `path:line`, writes a report keyed on the auditor's model id. CHARTER-ID argument is optional — auto-discovers prompts that don't yet have a report from this model. | `.devtrail/audits/<CHARTER-ID>/report-<sluggified-model-id>.md` |
+| `/devtrail-audit-review CHARTER-ID` *(fw-4.8.0+, expanded in fw-4.9.0)* | Counterpart to `/devtrail-audit-prompt`. Reads N reports under `.devtrail/audits/<CHARTER-ID>/`, verifies each finding against actual code (Explore agents in parallel), produces a six-section consolidated `review.md` (Executive summary, Scope, Per-auditor evaluation, Remediation plan P0-P4, Discarded findings, Auditor ratings), and runs `devtrail charter audit --merge-reports --merge-into` to append `external_audit:` into the Charter telemetry. If the telemetry doesn't yet exist (Charter not yet closed), writes `external-audit-pending.yaml` for later merge at close time. | `.devtrail/audits/<CHARTER-ID>/review.md`, `external_audit:` array merged into telemetry (or pending YAML) |
 
 ### Skill vs CLI
 
-The two audit skills are **wrappers** around the CLI commands. The `audit/` directory layout, the prompts, the schema validation, and the `external_audit` shape all live in the CLI — the skills only handle the UX-inline part (surfacing prompts in the conversation, running the calibrator inline, triggering the merge). Adopters using DevTrail without an AI assistant in the loop can drive the same workflow directly via `devtrail charter audit` (PREPARE / `--calibrate` / `--finalize [--merge-into <path>]`).
+The three audit skills are **wrappers** around the CLI commands and discipline. The canonical paths under `.devtrail/audits/`, the unified prompt template, the schema validation, and the `external_audit` shape all live in the CLI + framework — the skills handle the UX-inline part: dispatching the operator across the audit cycle without manual file management. **Operators never copy/paste prompts or reports** — the skills exchange artifacts via the canonical filesystem paths.
+
+Adopters using DevTrail without an AI assistant in the loop can drive the same workflow directly via `devtrail charter audit` (`--prepare` / `--merge-reports [--merge-into <path>]`). The audit prompt at `.devtrail/audits/<id>/audit-prompt.md` works equally well pasted into a chat-based LLM if no auditor-side CLI is available — the skill just automates the file exchange.
 
 ### Audit checkpoint *(fw-4.8.0+)*
 
