@@ -110,20 +110,35 @@ fn devtrail_audit_prompt_three_platforms_share_core_guidance() {
             .join("devtrail-audit-prompt.md"),
     );
 
-    // The next-steps guidance text is load-bearing for the workflow —
-    // the operator gets the same instructions regardless of platform.
+    // v1: skill no longer surfaces prompts inline. It runs --prepare and
+    // points the operator at /devtrail-audit-execute in N CLIs. The
+    // wait-for-all warning is the load-bearing UX guarantee.
     for body in [&claude, &gemini, &agent] {
         assert!(
-            body.contains("Run AUDITOR PRIMARY PROMPT"),
-            "next-steps guidance missing"
-        );
-        assert!(
-            body.contains("DO NOT use the same family for both"),
-            "heterogeneity recommendation missing"
+            body.contains("/devtrail-audit-execute"),
+            "skill must point operator at the auditor-side execute skill"
         );
         assert!(
             body.contains("/devtrail-audit-review"),
             "skill must point operator at the follow-up review skill"
+        );
+        assert!(
+            body.contains(".devtrail/audits/")
+                && body.contains("audit-prompt.md"),
+            "skill must reference the v1 canonical prompt location"
+        );
+        assert!(
+            body.contains("--prepare"),
+            "skill must invoke `devtrail charter audit ... --prepare`"
+        );
+        assert!(
+            body.contains("ALL audits") && body.contains("complete"),
+            "skill must include the wait-for-all warning before review"
+        );
+        assert!(
+            body.contains("DIFFERENT model families")
+                || body.contains("different model families"),
+            "skill must surface the heterogeneity inter-family recommendation"
         );
     }
 }
@@ -221,21 +236,51 @@ fn devtrail_audit_review_three_platforms_share_core_guidance() {
     );
 
     for body in [&claude, &gemini, &agent] {
+        // v1: review consolidates N reports + writes review.md +
+        // optionally merges YAML. No more --calibrate / --finalize
+        // round-trip.
         assert!(
-            body.contains("--calibrate"),
-            "skill must reference the CALIBRATE step"
+            body.contains("--merge-reports"),
+            "skill must invoke the v1 merge-reports CLI subcommand"
         );
         assert!(
-            body.contains("--finalize"),
-            "skill must reference the FINALIZE step"
+            body.contains("review.md"),
+            "skill must produce the consolidated review.md document"
         );
+        // Six-section structure lifted from Sentinel skill.
+        assert!(
+            body.contains("Executive summary") || body.contains("executive summary"),
+            "review.md must include an Executive summary section"
+        );
+        assert!(
+            body.contains("Remediation plan") || body.contains("remediation plan"),
+            "review.md must include the prioritized remediation plan"
+        );
+        assert!(
+            body.contains("Auditor ratings") || body.contains("auditor ratings"),
+            "review.md must include the per-auditor ratings"
+        );
+        // Verdict vocabulary.
+        assert!(
+            body.contains("VALID")
+                && body.contains("PARTIALLY VALID")
+                && body.contains("MISATTRIBUTED")
+                && body.contains("FALSE POSITIVE")
+                && body.contains("DUPLICATE"),
+            "skill must use the five-verdict vocabulary lifted from Sentinel"
+        );
+        // Branch B: pending YAML when telemetry doesn't exist yet.
         assert!(
             body.contains("external-audit-pending.yaml"),
             "skill must handle the Branch B (telemetry not yet present) case"
         );
+        // The four-criterion weighted auditor rating.
         assert!(
-            body.contains("re-audit") || body.contains("re-merge"),
-            "skill must surface the v0 re-audit limitation"
+            body.contains("Scope precision")
+                && body.contains("Technical depth")
+                && body.contains("Bug detection")
+                && body.contains("False positive rate"),
+            "skill must include the four-criterion weighted rating"
         );
     }
 }

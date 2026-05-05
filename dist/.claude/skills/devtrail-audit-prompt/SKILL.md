@@ -1,16 +1,16 @@
 ---
 name: devtrail-audit-prompt
-description: Prepare external multi-model audit for a Charter. Generates auditor prompts inline so the operator can paste them into 2 LLM auditors of different families.
+description: Generate the unified audit prompt for a Charter at the canonical filesystem location. The operator then opens N auditor-side CLIs (gemini-cli, claude-cli, copilot-cli, etc.) and invokes /devtrail-audit-execute in each — no copy/paste. Counterpart of /devtrail-audit-review.
 allowed-tools: Read, Bash(devtrail charter audit *, devtrail charter status *, ls *)
 ---
 
 # DevTrail Audit Prompt Skill
 
-Generate prompts for external multi-model audit of a Charter, surfaced inline in the conversation so the operator can paste them into auditors of two different model families without leaving the chat.
+Generate the unified audit prompt for a Charter and write it to the canonical filesystem location. The operator then opens auditor-side CLIs in the same repo and invokes `/devtrail-audit-execute` — the audit prompt is read directly from disk by each auditor; the operator never copies/pastes.
 
 ## When to invoke
 
-Use this skill when the developer agreed to run an external audit at the Charter checkpoint (see `.devtrail/00-governance/AGENT-RULES.md` § Audit checkpoint, available from `fw-4.8.0`).
+Use this skill when the developer agreed to run an external audit at the Charter checkpoint (see `.devtrail/00-governance/AGENT-RULES.md` § Audit checkpoint).
 
 The Charter should be in `in-progress` or `declared` status — auditing closed Charters is allowed but atypical (warn the operator and proceed only on confirmation).
 
@@ -18,7 +18,7 @@ The Charter should be in `in-progress` or `declared` status — auditing closed 
 
 ### 1. Resolve the Charter
 
-Argument: a Charter identifier (`CHARTER-04`, `04`, or the full id with slug).
+Argument: a Charter identifier (`CHARTER-04`, `04`, or full id with slug).
 
 ```bash
 devtrail charter status <CHARTER-ID>
@@ -26,67 +26,60 @@ devtrail charter status <CHARTER-ID>
 
 Verify the Charter exists and capture its `status`. If `status: closed`, surface a one-line warning to the operator and ask whether to proceed.
 
-### 2. Generate the auditor prompts (PREPARE step)
+### 2. Generate the unified audit prompt
 
 ```bash
-devtrail charter audit <CHARTER-ID>
+devtrail charter audit <CHARTER-ID> --prepare
 ```
 
-The CLI writes the resolved prompts to disk:
-
-- `audit/charters/<CHARTER-ID>/prompts/auditor-primary.prompt.md`
-- `audit/charters/<CHARTER-ID>/prompts/auditor-secondary.prompt.md`
-
-This is `devtrail charter audit` step 1 (PREPARE). The CLI does NOT invoke any LLM — it only resolves placeholders against the Charter content, the git diff, and the originating AILOGs.
-
-### 3. Surface the prompts inline
-
-Read both files and print their contents in the conversation, with clear separators:
+The CLI writes the resolved prompt to:
 
 ```
-═══════════════════ AUDITOR PRIMARY PROMPT ═══════════════════
-[full contents of auditor-primary.prompt.md]
-══════════════════════════════════════════════════════════════
-
-═══════════════════ AUDITOR SECONDARY PROMPT ═════════════════
-[full contents of auditor-secondary.prompt.md]
-══════════════════════════════════════════════════════════════
+.devtrail/audits/<CHARTER-ID>/audit-prompt.md
 ```
 
-Do not summarise or truncate. The operator needs the full prompts to paste into the external auditors as-is.
+The prompt is self-contained: it embeds the Charter content, the originating AILOGs, the git diff over the resolved range (default `origin/main..HEAD`, falls back to `HEAD~1..HEAD` if no upstream is reachable), and the discipline rules (REGLA ABSOLUTA — SOLO LECTURA, evidence-citation, severity calibration). The prompt template lifts the seven universal sections from Sentinel's pre-DevTrail audit skill and parameterizes the project-specific hardcodes.
 
-### 4. Provide next-steps guidance
+The CLI does NOT invoke any LLM. It only resolves placeholders.
 
-After surfacing the prompts, print this guidance verbatim (substituting `<CHARTER-ID>`):
+### 3. Notify the operator
+
+After the CLI succeeds, print this guidance verbatim (substituting `<CHARTER-ID>`):
 
 ```
+Audit prompt prepared for <CHARTER-ID>.
+
+  Location: .devtrail/audits/<CHARTER-ID>/audit-prompt.md
+  (informational — you don't need to copy this path anywhere)
+
 Next steps:
 
-  1. Run AUDITOR PRIMARY PROMPT in a model of family A
-     (e.g., Anthropic — claude-sonnet-4-6 or claude-opus-4-7).
+  1. Open one or more auditor-side CLIs (gemini-cli, claude-cli,
+     copilot-cli, codex-cli — whatever you have) in this repo. Each
+     CLI session uses its own model; recommendation is at least 2
+     auditors of DIFFERENT model families, so cross-family blind
+     spots become signal when their findings converge.
 
-  2. Run AUDITOR SECONDARY PROMPT in a model of family B
-     (e.g., Google — gemini-2.5-pro, or OpenAI — gpt-4o / Copilot).
-     DO NOT use the same family for both. Heterogeneity inter-family
-     is what makes convergent findings high-signal — same-family
-     auditors share blind spots.
+  2. In each auditor CLI, invoke:
 
-  3. Save the auditor responses to canonical paths:
-       audit/charters/<CHARTER-ID>/auditor-primary.md
-       audit/charters/<CHARTER-ID>/auditor-secondary.md
+         /devtrail-audit-execute <CHARTER-ID>
 
-  4. Return with: /devtrail-audit-review <CHARTER-ID>
-     I will calibrate the responses, generate the calibrator analysis
-     locally, and merge the findings into the Charter telemetry.
+     The skill is already installed (devtrail init copies it to all
+     three platform locations). It reads the prompt from disk
+     automatically — you do not need to copy/paste anything.
+
+  3. When and only when ALL audits you commissioned have completed,
+     return to this main agent and run:
+
+         /devtrail-audit-review <CHARTER-ID>
+
+     Reviewing with incomplete reports gives you a partial consolidated
+     analysis that you will have to discard or re-run.
 ```
-
-## Output schema for auditor responses
-
-The `auditor-primary.md` and `auditor-secondary.md` files the operator saves must follow `audit-output.schema.v0.json` (validated by `devtrail charter audit --calibrate`). The required frontmatter is documented inside each prompt — the operator should preserve it when pasting the LLM response.
 
 ## Notes
 
-- This skill is **orchestration-only**. It does NOT invoke LLM APIs, decide which models the operator uses, or wait for responses. It surfaces prompts and exits.
-- Re-running the skill on the same Charter regenerates the prompts (idempotent at the prompt level). It does NOT overwrite operator-saved responses in `auditor-primary.md` / `auditor-secondary.md`.
-- Heterogeneity inter-family is recommended but not enforced in v0. The operator decides the model pairing; the skill surfaces the recommendation in the next-steps guidance.
-- For the rationale on why dual auditors of different families produce calibration that mono-auditor cannot, see `dist/.devtrail/audit-prompts/auditor-primary.md` § heterogeneity (or `Propuesta/devtrail-cli-roadmap.md` §5.2 in the upstream repo).
+- This skill is **orchestration-only**. It does NOT invoke LLM APIs, decide which models the operator uses, or wait for responses. It runs the CLI's `--prepare`, points the operator at the next-step skill, and exits.
+- Re-running the skill on the same Charter regenerates the prompt at the same path. It does NOT touch operator-saved reports under `.devtrail/audits/<CHARTER-ID>/report-*.md`.
+- Heterogeneity inter-family is recommended but not enforced in v0; the operator decides the model pairing across the N CLIs they open.
+- For the rationale on cross-family auditors, see `dist/.devtrail/audit-prompts/audit-prompt.md` § Tu rol or `Propuesta/devtrail-cli-roadmap.md` §5.2 in the upstream repo.

@@ -1,107 +1,251 @@
 ---
-description: Calibrate the responses of two external auditors and merge findings into the Charter telemetry. Counterpart to /devtrail-audit-prompt — invoke after the operator has saved the auditor responses.
+description: Consolidate N external auditor reports into a critical review document with verdicts, remediation plan, and auditor ratings. Then merge the external_audit YAML block into the Charter telemetry. Counterpart of /devtrail-audit-prompt and /devtrail-audit-execute.
 ---
 
 # DevTrail Audit Review Skill
 
-Reconcile the responses of two external auditors and produce the calibrator analysis. When the Charter has telemetry, append the consolidated `external_audit:` array directly into the YAML so the operator does not have to copy/paste.
+Critically evaluate the N external auditor reports for a Charter, cross-reference each finding against the actual source code, and produce a consolidated `review.md` with verdicts, a prioritized remediation plan, and per-auditor ratings. Then merge the `external_audit` YAML block into the Charter telemetry.
+
+This is the third and final step of the v1 audit cycle, and it is where the substance lives — the calibrator role (definitional reconciliation across heterogeneous auditor verdicts) is now performed by the main agent inline, replacing the v0 paste-based calibrator-reconciler prompt.
 
 ## When to invoke
 
-After running `/devtrail-audit-prompt <CHARTER-ID>`, having pasted both prompts into LLMs of different families, and saved the responses to:
+After the operator has commissioned the audits in N auditor-side CLIs (each running `/devtrail-audit-execute <CHARTER-ID>`) and **all of them have completed**. The operator returns to the main IDE and invokes:
 
-- `audit/charters/<CHARTER-ID>/auditor-primary.md`
-- `audit/charters/<CHARTER-ID>/auditor-secondary.md`
+```
+/devtrail-audit-review <CHARTER-ID>
+```
 
-This skill produces the calibrator response and merges findings into telemetry.
+If only some audits have completed, **do not proceed** — invoking the skill with incomplete reports produces a partial consolidated analysis. Verify with the operator that all the CLIs they opened have finished writing their reports under `.devtrail/audits/<CHARTER-ID>/report-*.md`.
 
 ## Instructions
 
-### 1. Verify auditor responses exist
+### 1. Resolve the Charter and verify report set
+
+Argument: a Charter identifier.
 
 ```bash
-ls audit/charters/<CHARTER-ID>/auditor-primary.md \
-   audit/charters/<CHARTER-ID>/auditor-secondary.md
+ls -la .devtrail/audits/<CHARTER-ID>/
 ```
 
-If either file is missing, instruct the operator to run `/devtrail-audit-prompt <CHARTER-ID>` first and exit.
+Confirm:
 
-### 2. Resolve the calibrator prompt (CALIBRATE step)
+- `audit-prompt.md` exists (the prepared prompt the auditors read).
+- `report-*.md` files exist (one per auditor that completed). At least 2 reports are recommended for cross-family heterogeneity to deliver signal; warn (do not block) if only 1 report is present.
+- Match each `report-<slug>.md` filename against the model identifier in its frontmatter (`auditor:` field) to confirm consistency. Discrepancies are surfaced to the operator.
 
-```bash
-devtrail charter audit <CHARTER-ID> --calibrate
+If only the prompt is present and no reports exist, instruct the operator to run `/devtrail-audit-execute` in the auditor CLIs first.
+
+### 2. Read all auditor reports + extract finding master list
+
+For each `.devtrail/audits/<CHARTER-ID>/report-*.md`:
+
+- Validate the frontmatter against `audit-output.schema.v0.json` (the CLI does this in step 6, but a soft check here gives an earlier and more readable error if any report is malformed).
+- Extract: model identifier, total findings, findings by category, evidence_citations count, audit_quality.
+- Parse the body for finding entries (typically `## Findings` → `### F1 — title — category` blocks with `Where:`, `What I observed:`, `Why I'm flagging it:`).
+
+Build a **master finding list** — every unique claim across all auditors, deduplicated when two auditors clearly describe the same thing.
+
+### 3. Verify every finding against actual code
+
+This is the substantive step. For EACH finding in the master list:
+
+**Launch Explore agents in parallel** (up to 3 at a time) to verify findings. Group findings by the file they reference and send related findings to the same agent.
+
+For each finding, the verification answers four questions:
+
+1. **Does the code actually have this problem?** Read the cited `path:line`. Is the claim accurate?
+2. **Is it in scope?** Does the finding affect a task or file declared in the Charter? If it's outside the Charter's scope, classify as `MISATTRIBUTED`.
+3. **What's the real severity given the CURRENT configuration?** Check active driver, feature flags, build tags, DB role, deployment scope (the calibration discipline from the audit prompt). The Etapa 12 example in the prompt is a real case of inflation that careful calibration catches.
+4. **Is it a duplicate?** Does another auditor report the same finding differently?
+
+#### Verdict classification
+
+Each finding gets one of these verdicts:
+
+- **VALID** — Real problem, in scope, correctly described, correctly severized.
+- **PARTIALLY VALID** — Real observation but wrong severity, missing nuance, or triggers only under a config not active in main. Include the reclassification.
+- **MISATTRIBUTED** — Real observation but belongs to a different Charter or scope unit.
+- **FALSE POSITIVE** — Claim is factually incorrect (file exists, code works as expected, the assumed driver isn't active, etc.).
+- **DUPLICATE** — Same finding reported by another auditor (reference the original).
+
+#### Severity reclassification
+
+When the auditor's severity does not match the active configuration:
+
+- **Inflation** (auditor says Critical/High, code confirms only conditional): downgrade to Medium with explicit note on what config would activate it, OR move to "post-Charter / no bloqueante" if the trigger is a component not yet implemented.
+- **Deflation** (auditor says Low/None, code shows a real trigger in current config): upgrade with evidence from the code path that activates it.
+- **Correct inflation** (auditor says Critical and config confirms it): keep.
+
+An auditor that consistently inflates or deflates loses points in the auditor rating (step 5).
+
+### 4. Identify findings the auditors missed
+
+Based on your code exploration, check whether there are problems the auditors did NOT find. Focus on:
+
+- Security: SQL queries missing ownership filters, missing transaction boundaries, secrets in logs.
+- Logic: input parameters ignored, dead code paths, unreachable branches.
+- Consistency: naming mismatches between layers (model vs handler vs API).
+
+Mark these as "Missed by all auditors" in the remediation plan.
+
+### 5. Build the consolidated review.md
+
+Write the consolidated analysis to `.devtrail/audits/<CHARTER-ID>/review.md` with this structure (six sections, lifted from Sentinel's pre-DevTrail audit-review skill):
+
+```markdown
+---
+audit_role: calibrator-reconciler
+calibrator: <self-model-id>
+charter_id: <CHARTER-ID>
+git_range: "<range from prompt>"
+prompt_used: ../audit-prompt.md
+calibrated_at: <today YYYY-MM-DD>
+auditors_reconciled:
+  - report-<auditor-1-slug>.md
+  - report-<auditor-2-slug>.md
+  - ...
+findings_consolidated: <N>
+findings_by_status:
+  agreed: <N>
+  disputed: <N>
+  unique_<auditor-1-slug>: <N>
+  unique_<auditor-2-slug>: <N>
+  rejected: <N>
+---
+
+# Consolidated audit review — <CHARTER-ID>
+
+**Reviewer:** <self-model-id>
+**Date:** <YYYY-MM-DD>
+**Confidence:** [High | Medium]
+
+## 1. Executive summary
+
+[2-3 paragraphs. Total findings count, scope confusion if any, most critical bug,
+overall verdict on the Charter's implementation.]
+
+## 2. Scope definition
+
+[Table of Charter tasks, the closing criterion, and what IS vs IS NOT in scope
+of this Charter. The auditors' findings are evaluated against THIS scope.]
+
+## 3. Per-auditor evaluation
+
+### 3.1 <auditor-1-slug> (model: <auditor-1-model-id>)
+
+| # | Finding | Reported severity | Verdict | Justification |
+|---|---------|-------------------|---------|---------------|
+
+**Summary:** [2-3 sentences on this auditor's overall performance.]
+
+### 3.2 <auditor-2-slug> ... (same shape)
+
+## 4. Remediation plan — VALID and PARTIALLY VALID findings
+
+### P0 — Security
+- **Files:** `path:line`
+- **Problem:** [description with code evidence]
+- **Remediation:** [specific approach]
+- **Complexity:** [Low / Medium / High]
+- **Detected by:** [auditor slug(s), or "Missed by all auditors" if you found it]
+
+### P1 — Integrity
+[Same shape]
+
+### P2 — Consistency
+[Same shape]
+
+### P3 — Robustness
+[Same shape]
+
+### P4 — Documentation
+[Same shape]
+
+## 5. Discarded findings — misattributions and false positives
+
+| Finding | Type | Charter / area | Auditor |
+|---------|------|----------------|---------|
+
+## 6. Auditor ratings
+
+Score each auditor 1-10 across four criteria with weights:
+
+| Auditor | Scope precision (25%) | Technical depth (25%) | Bug detection (30%) | False positive rate (20%) | **Overall** |
+|---------|:-:|:-:|:-:|:-:|:-:|
+| <auditor-1-slug> | /10 | /10 | /10 | /10 | **/10** |
+| ...
+
+### Justifications
+
+**<auditor-1-slug> — <score>/10**: [2-3 sentences on what this auditor did well and where they slipped.]
+
+## 7. Conclusion
+
+[State of the Charter — clean / partial / deviated. Critical findings count.
+Key remediation items the operator should address before close.
+Recommended next step.]
 ```
 
-The CLI:
-- Validates `auditor-primary.md` and `auditor-secondary.md` against `audit-output.schema.v0.json`. If validation fails, surface the error to the operator and exit — the auditor response frontmatter must follow the schema documented inside each prompt.
-- Writes `audit/charters/<CHARTER-ID>/prompts/calibrator-reconciler.prompt.md`.
+### 6. Validate + emit external_audit YAML
 
-### 3. Run the calibrator inline (this conversation IS the calibrator)
+Run the CLI's merge step to validate all reports against the schema and emit the YAML block (combined with `--merge-into` if the operator's Charter telemetry already exists):
 
-The calibrator-reconciler prompt is designed to run in any model family — the agent currently in this conversation can produce the calibrator response directly. Heterogeneity inter-family is required for the auditor pair, NOT for the calibrator (the calibrator's task is definitional, not discovery — see `Propuesta/devtrail-cli-roadmap.md` §5.2 for the rationale).
-
-Read the resolved prompt:
+**Branch A — telemetry exists** (operator already ran `devtrail charter close` for this Charter, perhaps without audit, and is now adding audit findings retroactively):
 
 ```bash
-cat audit/charters/<CHARTER-ID>/prompts/calibrator-reconciler.prompt.md
-```
-
-Produce the response **following the prompt's output schema exactly** — the frontmatter is required (`audit_role: calibrator-reconciler`, `calibrator: <model-id>`, `auditors_reconciled`, `findings_consolidated`, `findings_by_status`). Save to:
-
-- `audit/charters/<CHARTER-ID>/calibrator-reconciler.md`
-
-### 4. Finalize and merge into telemetry
-
-Determine the telemetry path: `.devtrail/charters/<CHARTER-ID>.telemetry.yaml` (canonical form, `<CHARTER-ID>` without slug).
-
-```bash
-test -f .devtrail/charters/<CHARTER-ID>.telemetry.yaml
-```
-
-**Branch A — telemetry exists** (operator has already run `devtrail charter close`):
-
-```bash
-devtrail charter audit <CHARTER-ID> --finalize \
+devtrail charter audit <CHARTER-ID> --merge-reports \
   --merge-into .devtrail/charters/<CHARTER-ID>.telemetry.yaml
 ```
 
-The CLI validates all 3 outputs and appends `external_audit:` to the telemetry YAML directly. **Do NOT** edit the YAML by hand afterwards — `git diff` will show what changed; the operator reviews before commit.
+The CLI appends the `external_audit:` array to the telemetry YAML. The CLI v1 deliberately rejects re-audit (file already has `external_audit:`) — if that fires, surface the message to the operator. Manual append is the fallback.
 
-If the CLI rejects the merge because `external_audit:` already exists (re-audit guard, v0 does not support re-merge), surface the message to the operator. Manual append of new findings is the v0 fallback for that case.
-
-**Branch B — telemetry does NOT exist** (Charter not yet closed):
+**Branch B — telemetry does NOT exist** (the typical case: operator audits BEFORE closing):
 
 ```bash
-devtrail charter audit <CHARTER-ID> --finalize > /tmp/external-audit-block.yaml
-mkdir -p audit/charters/<CHARTER-ID>
-mv /tmp/external-audit-block.yaml audit/charters/<CHARTER-ID>/external-audit-pending.yaml
+devtrail charter audit <CHARTER-ID> --merge-reports
 ```
 
-Tell the operator: "The Charter is not yet closed. The findings are saved in `audit/charters/<CHARTER-ID>/external-audit-pending.yaml`. When you run `devtrail charter close <CHARTER-ID>`, paste the `external_audit:` block from that file into the telemetry when prompted, or merge it manually after close completes."
+The YAML block prints to stdout. Capture it and write it to `.devtrail/audits/<CHARTER-ID>/external-audit-pending.yaml` so the operator can paste it into the telemetry when running `devtrail charter close <CHARTER-ID>`. Tell the operator: "When you run `devtrail charter close <CHARTER-ID>`, paste the `external_audit:` block from `.devtrail/audits/<CHARTER-ID>/external-audit-pending.yaml` when prompted."
 
-### 5. Print summary
-
-After step 4, print to the operator:
+### 7. Notify the operator with a summary
 
 ```
-Audit review complete for <CHARTER-ID>.
+Consolidated audit review complete for <CHARTER-ID>.
 
-  Auditors reconciled:
-    - auditor-primary.md   (<N> findings, <model-id>)
-    - auditor-secondary.md (<M> findings, <model-id>)
-  Calibrator:               <calibrator-model-id> (<K> findings consolidated)
+  Auditors reconciled:    <count>
+  Findings reported:      <total>
+  Findings VALID:         <valid> (<percent>%)
+  False positives:        <fp>
+  Misattributions:        <misattr>
+  Missed by all (you):    <missed>
 
-  external_audit YAML:
-    [merged into .devtrail/charters/<CHARTER-ID>.telemetry.yaml]
-    or
-    [pending in audit/charters/<CHARTER-ID>/external-audit-pending.yaml]
+  Remediation plan:
+    P0 (Security):        <count or 'none'>
+    P1 (Integrity):       <count or 'none'>
+    P2-P4 (Other):        <count or 'none'>
 
-  Run `git diff .devtrail/charters/<CHARTER-ID>.telemetry.yaml` to review.
+  Auditor ratings:
+    <auditor-1-slug>:     <score>/10
+    <auditor-2-slug>:     <score>/10
+    ...
+
+  Documents written:
+    .devtrail/audits/<CHARTER-ID>/review.md
+    [either: .devtrail/charters/<CHARTER-ID>.telemetry.yaml (merged)]
+    [or:     .devtrail/audits/<CHARTER-ID>/external-audit-pending.yaml]
+
+Run `git diff` to review the changes before commit.
 ```
 
 ## Notes
 
-- This skill **does** invoke an LLM (the calibrator runs in the current conversation), unlike `/devtrail-audit-prompt` which is purely orchestration. The distinction is intentional: the calibrator is family-agnostic, so the agent driving the conversation is a valid calibrator.
-- The skill is **idempotent for steps 1-3** (re-running regenerates the calibrator response if you delete `calibrator-reconciler.md`). It is **NOT idempotent for step 4 in Branch A** — once telemetry has `external_audit:`, the CLI rejects re-merge to prevent silent duplication.
-- The auto-merge re-emits the YAML using the existing `charter_telemetry:` shape; cosmetic formatting of the merged file matches the close.rs output. Comments in the original telemetry YAML, if any, are preserved (the CLI uses string-level append, not full re-serialization).
-- The `audit_notes:` field in the merged block points at the canonical paths `audit/charters/<CHARTER-ID>/auditor-{primary,secondary}.md`. If you renamed those files, fix the field manually after merge.
+- **The calibrator role is in-conversation, not in a paste-based prompt.** v0 had a `calibrator-reconciler.md` template that the operator pasted into a separate model. v1 eliminates that round-trip — the main agent (this conversation) has filesystem access and can verify findings against code, which is what makes the consolidated review substantive instead of mechanical.
+- **Heterogeneity inter-family is for the auditor pair, not the calibrator.** The calibrator (this skill, running in the main agent) may be of any family — even the same family as one of the auditors — because its task is definitional (apply the schema to already-produced verdicts), not discovery.
+- **The review.md is the human-readable delivery; the YAML block is the machine-readable input to telemetry.** Both coexist by design. The operator reads `review.md`; `devtrail metrics` and the Phase 2 telemetry aggregation read the YAML.
+- **Re-running the skill** overwrites `review.md`. If the operator wants to keep the previous review (e.g., after a re-audit cycle), instruct them to copy it manually before re-running.
+- **No HTTP API calls.** The skill runs the CLI's `--merge-reports` (which validates schemas and emits YAML), invokes Explore agents internally for code verification (which run in the main agent's context, not external APIs), and writes markdown. DevTrail does not invoke LLM APIs at any point.
+
+## Credit
+
+The six-section structure of `review.md` and the verdict vocabulary (VALID / PARTIALLY VALID / MISATTRIBUTED / FALSE POSITIVE / DUPLICATE) are lifted from the `audit-review/SKILL.md` skill mature pre-DevTrail in Sentinel, contributed via [issue #102](https://github.com/StrangeDaysTech/devtrail/issues/102) by José Villaseñor Montfort (StrangeDaysTech). The four-criterion weighted auditor rating (Scope precision 25% / Technical depth 25% / Bug detection 30% / False positive rate 20%) is the same. Project-specific hardcodes parameterized.
