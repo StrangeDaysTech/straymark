@@ -153,15 +153,38 @@ fn audit_prepare_writes_resolved_prompts() {
 
     let prompts = dir.path().join("audit/charters/CHARTER-01/prompts");
     let primary = std::fs::read_to_string(prompts.join("auditor-primary.prompt.md")).unwrap();
-    // Placeholder substitution happened.
+    // Placeholder substitution happened in the body (outside HTML comments).
     assert!(primary.contains("CHARTER-01"));
     assert!(primary.contains("auditor-primary"));
     assert!(primary.contains("docs/charters/01-audit-test.md"));
     // Diff was inlined.
     assert!(primary.contains("// edited") || primary.contains("// initial"));
-    // Unknown placeholder syntax is gone.
-    assert!(!primary.contains("{{charter_id}}"));
-    assert!(!primary.contains("{{git_diff}}"));
+
+    // R10 (issue #102): the resolver must NOT expand placeholders inside
+    // <!-- ... --> blocks. The auditor-primary.md template has a
+    // documentation header that lists placeholders literally; before the
+    // fix, those expanded and duplicated ~30k tokens of payload. After the
+    // fix, the header stays as documentation and each placeholder value
+    // appears in the body proper exactly once.
+    let header_end = primary.find("-->").expect("template should have an HTML comment header");
+    let header = &primary[..header_end];
+    let body = &primary[header_end..];
+    assert!(
+        header.contains("{{charter_id}}"),
+        "documentation header must preserve {{{{charter_id}}}} literal: header={header:?}"
+    );
+    assert!(
+        header.contains("{{git_diff}}"),
+        "documentation header must preserve {{{{git_diff}}}} literal"
+    );
+    assert!(
+        !body.contains("{{charter_id}}"),
+        "body (outside comment) must have {{{{charter_id}}}} replaced"
+    );
+    assert!(
+        !body.contains("{{git_diff}}"),
+        "body (outside comment) must have {{{{git_diff}}}} replaced"
+    );
 
     let secondary = std::fs::read_to_string(prompts.join("auditor-secondary.prompt.md")).unwrap();
     assert!(secondary.contains("auditor-secondary"));
