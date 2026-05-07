@@ -7,6 +7,28 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.10.0 — Follow-ups backlog pattern (governance docs)
+
+Documents the follow-ups backlog convention contributed by the Sentinel adopter via [issue #111](https://github.com/StrangeDaysTech/devtrail/issues/111). The pattern was empirically validated in `StrangeDaysTech/sentinel` CHARTER-12 (47 AILOGs accumulated across CHARTER-08 → CHARTER-11). Adopters reaching ~20+ AILOGs benefit from a central registry + per-AILOG drift detection script + agent integration in `CLAUDE.md` / `AGENT.md`.
+
+This release is **docs only** — no CLI changes, no schema changes, no audit flow changes. Cristalization as a `devtrail followups` subcommand is deferred until a second adopter validates the pattern.
+
+### Added (Framework)
+
+- **NEW governance pattern document** `FOLLOW-UPS-BACKLOG-PATTERN.md` describing the reproducible convention: registry shape (`.devtrail/follow-ups-backlog.md` with `fully_extracted_ailogs` frontmatter), 5 buckets (`ready` / `time-triggered` / `charter-triggered` / `phase-blocked` / `operational`), per-entry schema (FU-NNN / Origin / Status / Trigger / Destination / Cost / Notes), drift detection script (3 modes: default / `--apply` / `--scan-all`), agent integration block, adoption walkthrough, reference implementation in Sentinel CHARTER-12 (PRs #53/#54), and open questions (bucket heuristic, schema validation, audit-cycle integration, cristalization path).
+- **Pointers** added in `AGENT-RULES.md` (new "Patterns" section) and `QUICK-REFERENCE.md` (new "Patterns" table) referencing the new pattern document.
+- **Translations** to ES and zh-CN under `dist/.devtrail/00-governance/i18n/{es,zh-CN}/FOLLOW-UPS-BACKLOG-PATTERN.md`.
+
+### Changed (Framework)
+
+- Footer version bumps from `v4.9.0` to `v4.10.0` across governance docs (EN + ES + zh-CN) and version-table references in adopter docs.
+
+### Status
+
+The pattern is **v0** — proven in N=1 domain (Sentinel). It may evolve into a CLI helper after a second-domain validation. Adopters who implement it now follow the documented convention; their local script + registry is fully portable and survives a future cristalization unchanged.
+
+---
+
 ## Framework 4.9.0 / CLI 3.10.0 — Audit v1: zero copy/paste flow with auditor-side CLI tool use
 
 Closes the four axes reported in [issue #102](https://github.com/StrangeDaysTech/devtrail/issues/102) by Sentinel during its first primary-adopter run of the v0 audit-skills (CHARTER-07 of CommsHub Etapa 2). The release is **one integrated iteration** rather than four separate patches — Sentinel re-runs CHARTER-07 once after this lands, with the full v1 flow, instead of multiple times against partial fixes.

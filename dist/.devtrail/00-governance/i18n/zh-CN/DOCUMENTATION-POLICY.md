@@ -299,4 +299,4 @@ review_outcome: approved                # approved | revisions_requested | rejec
 
 ---
 
-*DevTrail v4.9.0 | [Strange Days Tech](https://strangedays.tech)*
+*DevTrail v4.10.0 | [Strange Days Tech](https://strangedays.tech)*

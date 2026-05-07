@@ -219,4 +219,12 @@ Mark `review_required: true` when:
 
 ---
 
-*DevTrail v4.9.0 | [Strange Days Tech](https://strangedays.tech)*
+## Patterns
+
+| Pattern | Document |
+|---------|----------|
+| Follow-ups backlog (central registry + drift detection) *(fw-4.10.0+)* | [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) |
+
+---
+
+*DevTrail v4.10.0 | [Strange Days Tech](https://strangedays.tech)*
