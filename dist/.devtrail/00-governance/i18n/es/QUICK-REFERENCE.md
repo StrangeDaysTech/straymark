@@ -194,4 +194,12 @@ Marcar `review_required: true` cuando:
 
 ---
 
-*DevTrail v4.9.0 | [Strange Days Tech](https://strangedays.tech)*
+## Patrones
+
+| Patrón | Documento |
+|--------|-----------|
+| Backlog de follow-ups (registro central + detección de drift) *(fw-4.10.0+)* | [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) |
+
+---
+
+*DevTrail v4.10.0 | [Strange Days Tech](https://strangedays.tech)*

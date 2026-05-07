@@ -234,4 +234,4 @@ Usar un diagrama de Nivel 1 (Contexto) para ilustrar:
 
 ---
 
-*DevTrail v4.9.0 | [Strange Days Tech](https://strangedays.tech)*
+*DevTrail v4.10.0 | [Strange Days Tech](https://strangedays.tech)*

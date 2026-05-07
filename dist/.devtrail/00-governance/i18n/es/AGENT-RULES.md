@@ -351,4 +351,10 @@ Son heurísticas, no reglas rígidas — estás cerca del contexto, afínalas co
 
 ---
 
-*DevTrail v4.9.0 | [Strange Days Tech](https://strangedays.tech)*
+## Patrones
+
+Cuando un proyecto acumula un volumen alto de AILOGs a lo largo de múltiples Charters y los follow-ups se vuelven difíciles de rastrear, ver [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) para una convención reproducible (registro central + script de detección de drift + integración con agentes). Los adopters con ~20+ AILOGs se benefician; por debajo de ese umbral la convención per-AILOG `§Follow-ups` por sí sola es suficiente.
+
+---
+
+*DevTrail v4.10.0 | [Strange Days Tech](https://strangedays.tech)*

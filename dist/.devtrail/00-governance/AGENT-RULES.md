@@ -351,4 +351,10 @@ These are heuristics, not rigid rules — you are close to the context, refine t
 
 ---
 
-*DevTrail v4.9.0 | [Strange Days Tech](https://strangedays.tech)*
+## Patterns
+
+When a project accumulates a high volume of AILOGs across multiple Charters and follow-ups become hard to track, see [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) for a reproducible convention (central registry + drift detection script + agent integration). Adopters at ~20+ AILOGs benefit; below that threshold the per-AILOG `§Follow-ups` convention alone is sufficient.
+
+---
+
+*DevTrail v4.10.0 | [Strange Days Tech](https://strangedays.tech)*

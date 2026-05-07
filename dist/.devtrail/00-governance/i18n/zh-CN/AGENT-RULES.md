@@ -346,4 +346,10 @@ confidence: high | medium | low
 
 ---
 
-*DevTrail v4.9.0 | [Strange Days Tech](https://strangedays.tech)*
+## 模式
+
+当项目在多个 Charter 之间累积大量 AILOG 且 follow-ups 难以跟踪时,参见 [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) 了解可复制的约定(中央注册表 + drift 检测脚本 + 代理集成)。约 20+ AILOG 的 adopter 会受益;低于该阈值时,仅 per-AILOG 的 `§Follow-ups` 约定就足够了。
+
+---
+
+*DevTrail v4.10.0 | [Strange Days Tech](https://strangedays.tech)*

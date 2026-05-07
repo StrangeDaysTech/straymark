@@ -194,4 +194,12 @@ risk_level: low | medium | high | critical
 
 ---
 
-*DevTrail v4.9.0 | [Strange Days Tech](https://strangedays.tech)*
+## 模式
+
+| 模式 | 文档 |
+|------|------|
+| Follow-ups backlog(中央注册表 + drift 检测) *(fw-4.10.0+)* | [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) |
+
+---
+
+*DevTrail v4.10.0 | [Strange Days Tech](https://strangedays.tech)*
