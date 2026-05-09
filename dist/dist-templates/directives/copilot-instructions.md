@@ -17,6 +17,7 @@ When assisting with code changes in this project, follow these documentation rul
 - Changing auth/PII/security → suggest AILOG (risk_level: high) + ETH draft
 - Changing public API or DB schema → suggest AILOG + consider ADR
 - Changing ML models or prompts → suggest AILOG + human review
+- Starting a multi-session implementation block (>1 day, >5 tasks, multi-phase) → suggest declaring a Charter (`straymark charter new`)
 
 **Always:**
 - Identify as `copilot-v{version}` in the `agent:` field

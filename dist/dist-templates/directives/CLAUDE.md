@@ -29,6 +29,7 @@ Before committing, check:
 - [ ] Changed public API or DB schema? → Create AILOG + consider ADR
 - [ ] Changed ML model/prompts? → Create AILOG + human review
 - [ ] Changed OTel instrumentation? → Create AILOG + tag `observabilidad`
+- [ ] Starting a multi-session implementation block (>1 day, >5 tasks, multi-phase)? → Declare a Charter via `straymark charter new` (see STRAYMARK.md §15)
 
 ### Regulatory Frontmatter Snippet
 
