@@ -11,6 +11,7 @@
 [![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
 
 [Inicio Rápido](#inicio-rápido) •
+[¿Por qué StrayMark?](#por-qué-straymark) •
 [¿Para quién es?](#para-quién-es-straymark) •
 [Principios de Diseño](#principios-de-diseño) •
 [Características](#características) •
@@ -36,6 +37,18 @@ StrayMark es un **framework + CLI** que externaliza la disciplina cognitiva del 
 > **"Ningún cambio significativo sin un rastro documentado — y un espacio de decisión acotado para el agente."**
 
 Como efecto secundario, la disciplina produce evidencia compatible con **ISO/IEC 42001**, **EU AI Act**, **NIST AI RMF** y (opt-in) la pila regulatoria china de IA/datos. Pero la meta es la calidad de ingeniería primero; el cumplimiento es lo que cae como subproducto cuando la disciplina es real.
+
+---
+
+## ¿Por qué StrayMark?
+
+El código es solo el rastro fósil de una batalla mental. La verdadera ingeniería sucede en el caos de las decisiones, los riesgos calculados y las rutas que decidiste no tomar. Tradicionalmente, todo ese rastro humano se descarta como stray marks (manchas accidentales) en el historial de un proyecto. En Strange Days Tech, creemos que esas marcas son la señal, no el ruido. Mientras el software de compliance corporativo te obliga a mentir en retrospectiva para llenar formularios vacíos, StrayMark te permite marcar tu territorio en tiempo real.
+
+Para nosotros, el cumplimiento normativo (ISO 42001, EU AI Act, NIST) no es el objetivo final, sino el hilado. Utilizamos estos estándares como un tejido estructural para construir una memoria técnica multidimensional. No se trata de marcar casillas para un auditor; se trata de usar esos hilos para tejer un andamiaje que soporte procesos cognitivos complejos durante el diseño y la implementación. StrayMark convierte la burocracia en una malla táctica que te ayuda a pensar, navegar y construir con una resolución que el código por sí solo no puede alcanzar.
+
+En esta era de agentes autónomos, StrayMark no es un mecanismo de refuerzo para la sustitución del operador humano. Todo lo contrario: es una herramienta para humanizar los procesos de alta velocidad y vasta complejidad en los que operan los agentes de IA. Mientras la máquina se mueve a ritmos que desbordan la intuición, StrayMark actúa como el ancla de intención humana, forzando a los agentes a operar dentro de un espacio de decisiones restringido, legible y auditable. No buscamos automatizar la ingeniería hasta el olvido, sino dotar a la velocidad de la IA de una consciencia y una estructura profundamente humana.
+
+**Captura el ruido. Teje la señal. Humaniza la máquina.**
 
 ---
 
