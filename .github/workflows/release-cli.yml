@@ -97,8 +97,8 @@ jobs:
         if: matrix.archive == 'tar.gz'
         shell: bash
         run: |
-          BINARY=cli/target/${{ matrix.target }}/release/devtrail
-          ARCHIVE=devtrail-cli-v${{ needs.resolve-version.outputs.version }}-${{ matrix.target }}.tar.gz
+          BINARY=cli/target/${{ matrix.target }}/release/straymark
+          ARCHIVE=straymark-cli-v${{ needs.resolve-version.outputs.version }}-${{ matrix.target }}.tar.gz
           tar czf "$ARCHIVE" -C "$(dirname "$BINARY")" "$(basename "$BINARY")"
           echo "ARCHIVE=$ARCHIVE" >> "$GITHUB_ENV"
 
@@ -106,10 +106,10 @@ jobs:
         if: matrix.archive == 'zip'
         shell: bash
         run: |
-          BINARY=cli/target/${{ matrix.target }}/release/devtrail.exe
-          ARCHIVE=devtrail-cli-v${{ needs.resolve-version.outputs.version }}-${{ matrix.target }}.zip
-          cp "$BINARY" devtrail.exe
-          7z a "$ARCHIVE" devtrail.exe
+          BINARY=cli/target/${{ matrix.target }}/release/straymark.exe
+          ARCHIVE=straymark-cli-v${{ needs.resolve-version.outputs.version }}-${{ matrix.target }}.zip
+          cp "$BINARY" straymark.exe
+          7z a "$ARCHIVE" straymark.exe
           echo "ARCHIVE=$ARCHIVE" >> "$GITHUB_ENV"
 
       - name: Upload binary artifact
@@ -150,7 +150,7 @@ jobs:
           else
             echo "Creating release $TAG..."
             gh release create "$TAG" \
-              --title "DevTrail CLI $VERSION" \
+              --title "StrayMark CLI $VERSION" \
               --generate-notes \
               --latest \
               release/*
