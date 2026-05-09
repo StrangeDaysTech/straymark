@@ -66,6 +66,16 @@ language: en  # Options: en, es (default: en)
 | `TC260RA` | TC260 v2.0 Risk Assessment | `07-ai-audit/risk-assessments/` | Draft → approval (always) |
 | `AILABEL` | GB 45438 Content Labeling Plan | `09-ai-models/labeling/` | Draft → approval (always) |
 
+### Bounded Units of Work — Charter
+
+Charters are **not** doc types — they wrap a multi-session implementation block. Filename uses a sequential prefix (`NN-slug.md`), not a date prefix. Lifecycle: `declared` → `in-progress` → `closed`.
+
+| Concept | Folder | Agent Autonomy |
+|---------|--------|---------------|
+| `Charter` | `.straymark/charters/` (declarative `NN-slug.md` + telemetry `NN-slug.telemetry.yaml`) | Scaffold via `charter new`; operator owns trigger and lifecycle transitions |
+
+> See section 15 of `STRAYMARK.md` and `.straymark/00-governance/SPECKIT-CHARTER-BRIDGE.md` for granularity heuristics, lifecycle, and the SpecKit ↔ Charter bridge.
+
 ---
 
 ## When to Document
@@ -79,6 +89,7 @@ language: en  # Options: en, es (default: en)
 | ML model/prompt changes | AILOG + human review |
 | Security-critical dependency changes | AILOG + human review |
 | OTel instrumentation changes | AILOG + tag `observabilidad` |
+| Multi-session implementation block (>1 day, >5 tasks across phases) | Declare a **Charter** (`straymark charter new`) |
 
 **DO NOT document**: credentials, tokens, PII, secrets.
 
@@ -140,7 +151,8 @@ Mark `review_required: true` when:
 ├── 08-security/                 ← SEC
 ├── 09-ai-models/                ← MCARD
 │   └── labeling/                ← AILABEL*
-└── templates/                   ← Templates
+├── charters/                    ← Charter (NN-slug.md + NN-slug.telemetry.yaml)
+└── templates/                   ← Templates (incl. charter/ subdir)
 
 * Only created when regional_scope: china is enabled.
 ```
@@ -213,6 +225,7 @@ Mark `review_required: true` when:
 | `/straymark-new` | Create any document type (interactive) |
 | `/straymark-ailog` / `/straymark-aidec` / `/straymark-adr` | Quick shortcuts for AILOG / AIDEC / ADR |
 | `/straymark-mcard` / `/straymark-sec` | Interactive flows for Model Card / SEC assessment |
+| `/straymark-charter-new` | Scaffold a Charter (declarative ex-ante work unit) |
 | `/straymark-audit-prompt CHARTER-XX` *(fw-4.9.0+, refactored in fw-4.9.0)* | External multi-model audit — write unified prompt at canonical path |
 | `/straymark-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | Run inside an auditor CLI — read prompt, audit with tool use, write report |
 | `/straymark-audit-review CHARTER-XX` *(fw-4.9.0+, expanded in fw-4.9.0)* | Consolidate N reports into review.md (6 sections) + merge YAML into telemetry |

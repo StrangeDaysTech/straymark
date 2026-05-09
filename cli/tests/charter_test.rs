@@ -11,7 +11,7 @@ fn setup_straymark_with_charter_template(dir: &std::path::Path) {
     std::fs::write(straymark.join("config.yml"), "language: en\n").unwrap();
 
     // Bundled template. We ship the actual template from
-    // dist/.straymark/templates/charter-template.md in the framework; this test
+    // dist/.straymark/templates/charter/charter-template.md in the framework; this test
     // helper inlines a structurally-equivalent copy so tests don't depend on
     // the dist/ path being available at test runtime.
     let template = r#"---
@@ -76,7 +76,9 @@ When closing this Charter (post-merge):
 
 1. Drift check.
 "#;
-    std::fs::write(straymark.join("templates").join("charter-template.md"), template).unwrap();
+    let charter_templates = straymark.join("templates").join("charter");
+    std::fs::create_dir_all(&charter_templates).unwrap();
+    std::fs::write(charter_templates.join("charter-template.md"), template).unwrap();
 }
 
 #[test]
@@ -316,13 +318,15 @@ fn charter_new_uses_es_template_when_config_says_es() {
     std::fs::write(straymark.join("config.yml"), "language: es\n").unwrap();
 
     // EN template (fallback).
+    let charter_templates = straymark.join("templates").join("charter");
+    std::fs::create_dir_all(charter_templates.join("i18n").join("es")).unwrap();
     std::fs::write(
-        straymark.join("templates").join("charter-template.md"),
+        charter_templates.join("charter-template.md"),
         "---\ncharter_id: CHARTER-NN\nstatus: declared\neffort_estimate: M\ntrigger: \"[x]\"\n---\n\n# Charter: [BRIEF TITLE]\n\nEN body.\n",
     ).unwrap();
     // ES translation.
     std::fs::write(
-        straymark.join("templates").join("i18n").join("es").join("charter-template.md"),
+        charter_templates.join("i18n").join("es").join("charter-template.md"),
         "---\ncharter_id: CHARTER-NN\nstatus: declared\neffort_estimate: M\ntrigger: \"[x]\"\n---\n\n# Charter: [TÍTULO BREVE]\n\nES body.\n",
     ).unwrap();
 

@@ -145,6 +145,7 @@ gh pr create --title "fix: description" --body "..."
 | Changes in ML models or AI prompts | Create AILOG + human review |
 | Security-critical dependency changes | Create AILOG + human review |
 | OTel instrumentation changes | Create AILOG + tag `observabilidad` |
+| Multi-session implementation block (>1 day, >5 tasks across phases) | Declare a **Charter** — `straymark charter new`. See section 15. |
 
 ### DO NOT DOCUMENT
 
@@ -221,6 +222,7 @@ related:
 | **CACFILE** *(china)* | Create draft | Approval (always — counsel + compliance officer before submission) |
 | **TC260RA** *(china)* | Create draft | Approval (always) |
 | **AILABEL** *(china)* | Create draft | Approval (always — before deployment) |
+| **Charter** | Scaffold via `charter new`; fill scope, files, risks, tasks | Operator owns the *trigger* and lifecycle transitions (`declared` → `in-progress` → `closed`). See section 15. |
 
 ---
 
@@ -279,7 +281,11 @@ related:
 │   └── labeling/               # GB 45438 content labeling plans (AILABEL*)
 │       └── [AILABEL-*.md]
 │
-├── templates/                  ← TEMPLATES (12 base + 4 China*)
+├── charters/                   ← CHARTERS — BOUNDED UNITS OF WORK
+│   ├── [NN-slug.md]            # Declarative ex-ante scope (filename: NN-slug.md, NOT TYPE-YYYY-...)
+│   └── [NN-slug.telemetry.yaml] # Post-close telemetry (created by `straymark charter close`)
+│
+├── templates/                  ← TEMPLATES (12 base + 4 China* + Charter)
 
 * Only created when regional_scope: china is enabled in .straymark/config.yml.
 │
@@ -301,6 +307,9 @@ related:
 | Need to see existing requirements | List `.straymark/01-requirements/` |
 | Need to see existing ADRs | List `.straymark/02-design/decisions/` |
 | Need to see technical debt | List `.straymark/06-evolution/technical-debt/` |
+| Going to declare a Charter | `.straymark/templates/charter/charter-template.md` (or `straymark charter new`) |
+| Need to see existing Charters | `straymark charter list` (or list `.straymark/charters/`) |
+| SpecKit user — when does a feature yield a Charter? | `.straymark/00-governance/SPECKIT-CHARTER-BRIDGE.md` |
 
 ---
 
@@ -339,6 +348,7 @@ related:
 | `MCARD` | Model/System Card | `.straymark/09-ai-models/` |
 | `SBOM` | Software Bill of Materials | `.straymark/07-ai-audit/` |
 | `DPIA` | Data Protection Impact Assessment | `.straymark/07-ai-audit/ethical-reviews/` |
+| `Charter` | Bounded unit of work (filename `NN-slug.md`, not `TYPE-YYYY-…`) | `.straymark/charters/` |
 
 ---
 
@@ -359,6 +369,57 @@ StrayMark is aligned with the following standards and regulations:
 | **C4 Model** | Architecture visualization in ADR documents | ADR (Mermaid diagrams) |
 
 > **Reference**: See `AI-GOVERNANCE-POLICY.md` for the full ISO 42001 Annex A mapping to StrayMark documents.
+
+---
+
+## 15. Charters — bounded units of work
+
+A **Charter** is StrayMark's artifact for an *implementation block that is too big to track as a single AILOG and too small to deserve its own product spec*. It pairs **declarative ex-ante scope** (files to modify, risks, tasks, effort estimate) with **ex-post telemetry** (drift detection, external audit, lessons learned). Concretely: the kind of work that takes >1 day, spans >5 tasks, or crosses multiple sessions where an agent might lose the thread.
+
+Charters are **conceptually distinct** from the 12+4 document types listed in section 13:
+
+- They live at `.straymark/charters/NN-slug.md` (sequential prefix, not date-prefix).
+- Their lifecycle is `declared` → `in-progress` → `closed`, persisted in frontmatter as the source of truth.
+- Telemetry sits beside them as `NN-slug.telemetry.yaml`, written by `straymark charter close`.
+- External audits resolve to `.straymark/audits/CHARTER-NN/` and merge back into telemetry.
+
+### When to declare a Charter
+
+Trigger row in section 6 names the heuristic; expanded:
+
+- The work spans **more than one working session** and you need a stable scope contract you can drift-check at close.
+- The work has **5+ named tasks** with a topological order (e.g., a SpecKit `tasks.md`).
+- The work warrants **external audit** at completion (cross-model review, cross-team review).
+- You want **measurable telemetry**: time-to-close, drift count, lessons that feed forward.
+
+### Charter lifecycle
+
+| Stage | What happens | CLI |
+|-------|--------------|-----|
+| **Declared** | Operator scaffolds Charter, fills scope/files/risks/tasks. Status `declared`. | `straymark charter new` |
+| **In progress** | Operator flips status to `in-progress` when execution starts. Day-to-day work continues to produce AILOGs. | (manual frontmatter edit) |
+| **Drift check** | Before closing, verify declared files vs. actual git diff. AILOG-suppressed paths are noise-filtered. | `straymark charter drift` |
+| **External audit** *(optional)* | Generate prompt → run N auditor CLIs → consolidate → merge into telemetry. | `straymark charter audit` + `/straymark-audit-prompt` + `/straymark-audit-execute` + `/straymark-audit-review` |
+| **Closed** | Telemetry yaml emitted; status flips to `closed`; charter is now an audit artifact. | `straymark charter close` |
+
+### How Charters relate to existing artifacts
+
+- A Charter **does not replace** AILOGs. AILOGs document individual blocks of code work; the Charter wraps them as a unit. `originating_ailogs:` in the Charter frontmatter declares which AILOGs the Charter contains.
+- A Charter **does not replace** ADRs. ADRs document architectural decisions; a Charter may reference them in `originating_spec` or in body sections.
+- A Charter **bridges SpecKit features** (`specs/NNN-feature/spec.md`) and execution. See `.straymark/00-governance/SPECKIT-CHARTER-BRIDGE.md` for granularity heuristics and creation timing.
+
+### Quick CLI surface
+
+```bash
+straymark charter new                # scaffold a Charter (interactive)
+straymark charter list               # enumerate Charters with status/effort/origin
+straymark charter status CHARTER-NN  # detailed view of one Charter
+straymark charter drift CHARTER-NN   # file-vs-commit drift, AILOG-aware
+straymark charter audit CHARTER-NN   # multi-model external audit (orchestration only)
+straymark charter close CHARTER-NN   # record telemetry; flip status to `closed`
+```
+
+> **Schema**: `.straymark/schemas/charter.schema.v0.json` (declarative) and `.straymark/schemas/charter-telemetry.schema.v0.json` (telemetry). Both are experimental v0 — patterns crystallize after validation against a second domain (Principle #12).
 
 ---
 

@@ -57,6 +57,16 @@ language: en  # Options: en, es (default: en)
 | `SBOM` | 软件物料清单 | `07-ai-audit/` | 自由创建 |
 | `DPIA` | 数据保护影响评估 | `07-ai-audit/ethical-reviews/` | 草稿 → 批准（始终） |
 
+### 有界工作单元 — Charter
+
+Charter **不是**文档类型——它包裹一个跨多个会话的实施块。文件名使用顺序前缀（`NN-slug.md`），而不是日期前缀。生命周期：`declared` → `in-progress` → `closed`。
+
+| 概念 | 目录 | 代理自主权 |
+|------|------|-----------|
+| `Charter` | `.straymark/charters/`（声明式 `NN-slug.md` + 遥测 `NN-slug.telemetry.yaml`） | 通过 `charter new` 搭建脚手架；操作者拥有 trigger 与生命周期的转换 |
+
+> 参见 `STRAYMARK.md` 第 15 节及 `.straymark/00-governance/SPECKIT-CHARTER-BRIDGE.md`，了解粒度启发式、生命周期与 SpecKit ↔ Charter 桥接。
+
 ---
 
 ## 何时编写文档
@@ -70,6 +80,7 @@ language: en  # Options: en, es (default: en)
 | 机器学习模型/提示词变更 | AILOG + 人工审核 |
 | 安全关键依赖变更 | AILOG + 人工审核 |
 | OTel 埋点变更 | AILOG + 标签 `observabilidad` |
+| 跨多个会话的实施块（>1 天，跨多个阶段 >5 个任务） | 声明一个 **Charter**（`straymark charter new`） |
 
 **不要记录**：凭据、令牌、PII、机密信息。
 
@@ -128,7 +139,8 @@ risk_level: low | medium | high | critical
 │   └── ethical-reviews/         ← ETH, DPIA
 ├── 08-security/                 ← SEC
 ├── 09-ai-models/                ← MCARD
-└── templates/                   ← 模板
+├── charters/                    ← Charter（NN-slug.md + NN-slug.telemetry.yaml）
+└── templates/                   ← 模板（包括 charter/ 子目录）
 ```
 
 ---
@@ -188,6 +200,7 @@ risk_level: low | medium | high | critical
 | `/straymark-new` | 创建任意类型文档（交互式） |
 | `/straymark-ailog` / `/straymark-aidec` / `/straymark-adr` | AILOG / AIDEC / ADR 的快速快捷方式 |
 | `/straymark-mcard` / `/straymark-sec` | Model Card / SEC 评估的交互流程 |
+| `/straymark-charter-new` | 搭建一个 Charter（声明式事前工作单元） |
 | `/straymark-audit-prompt CHARTER-XX` *(fw-4.9.0+，在 fw-4.9.0 中重构)* | 外部多模型审计 — 在规范路径写入统一 prompt |
 | `/straymark-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | 在审计员 CLI 中运行 — 读取 prompt，使用 tool use 审计，写入 report |
 | `/straymark-audit-review CHARTER-XX` *(fw-4.9.0+，在 fw-4.9.0 中扩展)* | 合并 N 个 reports 为 review.md（6 节）+ YAML 合并入遥测 |

@@ -53,17 +53,21 @@ const TELEMETRY_SCHEMA: &str = include_str!(
 /// after fw-4.6.0 ships.
 fn setup_straymark(dir: &Path) {
     let straymark = dir.join(".straymark");
-    std::fs::create_dir_all(straymark.join("templates")).unwrap();
+    std::fs::create_dir_all(straymark.join("templates").join("charter")).unwrap();
     std::fs::create_dir_all(straymark.join("schemas")).unwrap();
     std::fs::write(straymark.join("config.yml"), "language: en\n").unwrap();
     std::fs::write(
-        straymark.join("templates").join("charter-template.md"),
+        straymark
+            .join("templates")
+            .join("charter")
+            .join("charter-template.md"),
         CHARTER_TEMPLATE,
     )
     .unwrap();
     std::fs::write(
         straymark
             .join("templates")
+            .join("charter")
             .join("charter-telemetry-template.yaml"),
         TELEMETRY_TEMPLATE,
     )

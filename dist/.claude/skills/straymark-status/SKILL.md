@@ -39,6 +39,15 @@ Check these directories for each document type:
 | SBOM | `SBOM-` | `.straymark/07-ai-audit/` |
 | DPIA | `DPIA-` | `.straymark/07-ai-audit/ethical-reviews/` |
 
+Also enumerate **Charters** (bounded units of work — distinct from doc types; see STRAYMARK.md §15):
+
+```bash
+# Charters list with status counts (declared / in-progress / closed)
+straymark charter list 2>/dev/null
+```
+
+If the project has no Charters yet but the work clearly fits the trigger (multi-session implementation block, >5 tasks across phases, audit value), surface that as a gap in the Display Results step and recommend `/straymark-charter-new`.
+
 ### 2. Find Modified Source Files
 
 Identify source files that were modified and might need documentation:
@@ -71,6 +80,7 @@ For each modified source file, check if there's a corresponding StrayMark docume
 - Changes involving personal data processing should have a DPIA
 - Test files should have a TES record
 - Bug fixes or incidents should have an INC record
+- Multi-session implementation blocks (>1 day, >5 tasks, multi-phase) should have an open or closed **Charter** at `.straymark/charters/`
 
 ### 4. Display Results
 

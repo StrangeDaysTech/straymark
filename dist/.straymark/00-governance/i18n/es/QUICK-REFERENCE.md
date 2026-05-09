@@ -57,6 +57,16 @@ language: en  # Opciones: en, es (por defecto: en)
 | `SBOM` | Lista de Materiales de Software | `07-ai-audit/` | Crear libremente |
 | `DPIA` | Evaluación de Impacto en Protección de Datos | `07-ai-audit/ethical-reviews/` | Borrador → aprobación (siempre) |
 
+### Unidades de Trabajo Acotadas — Charter
+
+Los Charters **no** son tipos de documento — envuelven un bloque de implementación multi-sesión. El nombre de archivo usa prefijo secuencial (`NN-slug.md`), no prefijo de fecha. Ciclo de vida: `declared` → `in-progress` → `closed`.
+
+| Concepto | Carpeta | Autonomía del Agente |
+|----------|---------|---------------------|
+| `Charter` | `.straymark/charters/` (declarativo `NN-slug.md` + telemetría `NN-slug.telemetry.yaml`) | Andamiar vía `charter new`; el operador es dueño del trigger y de las transiciones de ciclo de vida |
+
+> Ver sección 15 de `STRAYMARK.md` y `.straymark/00-governance/SPECKIT-CHARTER-BRIDGE.md` para heurísticas de granularidad, ciclo de vida y el puente SpecKit ↔ Charter.
+
 ---
 
 ## Cuándo Documentar
@@ -70,6 +80,7 @@ language: en  # Opciones: en, es (por defecto: en)
 | Cambios en modelos ML/prompts | AILOG + revisión humana |
 | Cambios en dependencias críticas de seguridad | AILOG + revisión humana |
 | Cambios en instrumentación OTel | AILOG + tag `observabilidad` |
+| Bloque de implementación multi-sesión (>1 día, >5 tareas en varias fases) | Declarar un **Charter** (`straymark charter new`) |
 
 **NO documentar**: credenciales, tokens, PII, secretos.
 
@@ -128,7 +139,8 @@ Marcar `review_required: true` cuando:
 │   └── ethical-reviews/         ← ETH, DPIA
 ├── 08-security/                 ← SEC
 ├── 09-ai-models/                ← MCARD
-└── templates/                   ← Plantillas
+├── charters/                    ← Charter (NN-slug.md + NN-slug.telemetry.yaml)
+└── templates/                   ← Plantillas (incl. subdir charter/)
 ```
 
 ---
@@ -188,6 +200,7 @@ Marcar `review_required: true` cuando:
 | `/straymark-new` | Crear cualquier tipo de documento (interactivo) |
 | `/straymark-ailog` / `/straymark-aidec` / `/straymark-adr` | Atajos rápidos para AILOG / AIDEC / ADR |
 | `/straymark-mcard` / `/straymark-sec` | Flujos interactivos para Model Card / SEC assessment |
+| `/straymark-charter-new` | Andamiar un Charter (unidad de trabajo declarativa ex-ante) |
 | `/straymark-audit-prompt CHARTER-XX` *(fw-4.9.0+, refactorizada en fw-4.9.0)* | Auditoría externa multi-modelo — escribe prompt unificado en path canónico |
 | `/straymark-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | Corre en una CLI auditora — lee prompt, audita con tool use, escribe report |
 | `/straymark-audit-review CHARTER-XX` *(fw-4.9.0+, expandida en fw-4.9.0)* | Consolida N reports en review.md (6 secciones) + mergea YAML en telemetría |

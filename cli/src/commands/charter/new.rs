@@ -65,8 +65,10 @@ pub fn run(
         validate_spec_path(project_root, spec_path)?;
     }
 
-    // Resolve template (with i18n) and load.
-    let templates_dir = straymark_dir.join("templates");
+    // Resolve template (with i18n) and load. Charter templates live under
+    // their own subdirectory (`templates/charter/`) since fw-4.12.0; the
+    // helper handles i18n fallback within that subdir.
+    let templates_dir = straymark_dir.join("templates").join("charter");
     let template_path = utils::resolve_localized_path(&templates_dir, "charter-template.md", lang);
     let template = std::fs::read_to_string(&template_path).with_context(|| {
         format!(
@@ -505,7 +507,7 @@ mod tests {
     use super::*;
 
     /// Minimal template that covers all substitution points the runner touches.
-    /// Mirrors the structure of dist/.straymark/templates/charter-template.md
+    /// Mirrors the structure of dist/.straymark/templates/charter/charter-template.md
     /// without the full body.
     const TEMPLATE: &str = r#"---
 charter_id: CHARTER-NN

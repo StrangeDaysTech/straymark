@@ -16,6 +16,8 @@ If the user specified a document type (e.g., `/straymark-new ailog`), skip to st
 
 Valid types: `ailog`, `aidec`, `adr`, `eth`, `req`, `tes`, `inc`, `tde`, `sec`, `mcard`, `sbom`, `dpia`
 
+> **Charter is not a `straymark new` type.** Charters are bounded units of work (filename `NN-slug.md`, sequential prefix) and have their own command. If the user asks for a Charter (`/straymark-new charter`, *"create a Charter"*, *"declare a Charter"*), redirect to the `straymark-charter-new` skill.
+
 ### 2. Analyze Context
 
 Gather information about recent changes:
@@ -52,6 +54,7 @@ Based on the analysis, suggest a document type:
 | Bug fixes, hotfixes | INC |
 | `TODO`, `FIXME`, `HACK` comments added | TDE |
 | Requirements or spec files | REQ |
+| Multi-session implementation block (>1 day, >5 tasks, multi-phase) | **Charter** — redirect to `straymark-charter-new` (Charters use `straymark charter new`, not `straymark new`) |
 
 ### 4. Confirm with User
 
