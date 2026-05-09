@@ -7,6 +7,44 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.11.0 / CLI 3.11.0 — StrayMark rebranding
+
+The project formerly known as DevTrail is now **StrayMark**. The decision was made on 2026-05-08 by the operator after external trademark conflict research, motivated by **legal certainty over the project's mark**. See [`ADR-2026-05-08-001`](docs/decisions/ADR-2026-05-08-rebranding-straymark.md) for the full record.
+
+This release ships the rebrand end-to-end across the **live state** of the project. **Historical state is preserved literally** — prior CHANGELOG entries, release titles, tags, the `devtrail-cli@3.10.0` crate (not yanked), and closed issues/PRs all retain the "DevTrail" name as historical record. The single Sentinel adopter (operator-owned) migrates manually via `mv .devtrail .straymark` + `git mv DEVTRAIL.md STRAYMARK.md` + updating refs in their `CLAUDE.md`/`AGENT.md`.
+
+### Changed (Framework + CLI)
+
+- **GitHub repository renamed**: `StrangeDaysTech/devtrail` → `StrangeDaysTech/straymark`. GitHub maintains automatic 301 redirects from the old URL for at least one year (so existing clones, badges, and external links continue to resolve).
+- **Framework root path**: `.devtrail/` → `.straymark/`, `DEVTRAIL.md` → `STRAYMARK.md`. Adopters reinstalling get the new layout; existing adopters migrate manually (no fallback logic in CLI).
+- **CLI binary**: `devtrail` → `straymark`.
+- **CLI crate (crates.io)**: published as `straymark-cli@3.11.0`. The legacy `devtrail-cli@3.10.0` is preserved on crates.io (not yanked) as historical record.
+- **Skills (3 platforms)**: `/devtrail-{ailog,aidec,adr,mcard,sec,status,new,audit-prompt,audit-execute,audit-review}` → `/straymark-*` across `.claude/skills/`, `.gemini/skills/`, `.agent/workflows/`.
+- **Asset filename prefixes**: `devtrail-fw-X.Y.Z.zip` → `straymark-fw-X.Y.Z.zip`, `devtrail-cli-vX.Y.Z-*` → `straymark-cli-vX.Y.Z-*`.
+- **Documentation rebranded** end-to-end: README, CLAUDE.md, governance docs (3 langs), adopter docs (3 langs), CONTRIBUTING, CODE_OF_CONDUCT, all framework distributables.
+- **Rust identifiers**: `DevTrailConfig` → `StrayMarkConfig`, `DevTrailDocument` → `StrayMarkDocument`, `GITHUB_REPO` const updated.
+
+### Preserved (immutable historical record)
+
+- All commits, commit messages, and git history.
+- Tags published before this release (`fw-4.10.0`, `cli-3.10.0`, and earlier) and their release titles ("DevTrail Framework X.Y.Z", "DevTrail CLI X.Y.Z").
+- Prior CHANGELOG entries below (`## Framework 4.10.0 — Follow-ups backlog pattern`, etc.) — preserved literally with the "DevTrail" name and old repo URLs.
+- All previously merged PRs, closed issues, and their bodies/comments.
+- `devtrail-cli@3.10.0` on crates.io.
+- Sentinel adopter's AILOGs and Charters that reference "DevTrail" — those are Sentinel's history, not this repo's.
+
+### Versioning continuity
+
+Versions continue the existing series — **no reset to 0.1.0**. The product trajectory is unbroken; only the name changes. Tag prefixes (`fw-`, `cli-`) are agnostic to the project name and continue unchanged.
+
+### Adopter impact
+
+Single known adopter (`StrangeDaysTech/sentinel`, operator-owned) migrates manually. No third-party adopters are known. Any silent adopters (improbable) are protected for at least one year by the GitHub redirect; the legacy `devtrail-cli@3.10.0` crate continues to be installable.
+
+The README does not yet include an etymological paragraph explaining the meaning of "StrayMark" — that is a deliberate follow-up, deferred from the rebranding execution per operator instruction.
+
+---
+
 ## Framework 4.10.0 — Follow-ups backlog pattern (governance docs)
 
 Documents the follow-ups backlog convention contributed by the Sentinel adopter via [issue #111](https://github.com/StrangeDaysTech/devtrail/issues/111). The pattern was empirically validated in `StrangeDaysTech/sentinel` CHARTER-12 (47 AILOGs accumulated across CHARTER-08 → CHARTER-11). Adopters reaching ~20+ AILOGs benefit from a central registry + per-AILOG drift detection script + agent integration in `CLAUDE.md` / `AGENT.md`.
