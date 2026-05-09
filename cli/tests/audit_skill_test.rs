@@ -21,17 +21,17 @@ fn read(path: PathBuf) -> String {
 }
 
 #[test]
-fn devtrail_audit_prompt_claude_skill_exists_and_has_allowed_tools() {
+fn straymark_audit_prompt_claude_skill_exists_and_has_allowed_tools() {
     let body = read(
         dist_root()
             .join(".claude")
             .join("skills")
-            .join("devtrail-audit-prompt")
+            .join("straymark-audit-prompt")
             .join("SKILL.md"),
     );
     assert!(body.starts_with("---\n"), "missing YAML frontmatter");
     assert!(
-        body.contains("name: devtrail-audit-prompt"),
+        body.contains("name: straymark-audit-prompt"),
         "missing name field"
     );
     assert!(
@@ -39,23 +39,23 @@ fn devtrail_audit_prompt_claude_skill_exists_and_has_allowed_tools() {
         "Claude skill must declare allowed-tools"
     );
     assert!(
-        body.contains("devtrail charter audit"),
+        body.contains("straymark charter audit"),
         "skill body must reference the CLI command it wraps"
     );
 }
 
 #[test]
-fn devtrail_audit_prompt_gemini_skill_exists_without_allowed_tools() {
+fn straymark_audit_prompt_gemini_skill_exists_without_allowed_tools() {
     let body = read(
         dist_root()
             .join(".gemini")
             .join("skills")
-            .join("devtrail-audit-prompt")
+            .join("straymark-audit-prompt")
             .join("SKILL.md"),
     );
     assert!(body.starts_with("---\n"), "missing YAML frontmatter");
     assert!(
-        body.contains("name: devtrail-audit-prompt"),
+        body.contains("name: straymark-audit-prompt"),
         "missing name field"
     );
     assert!(
@@ -65,12 +65,12 @@ fn devtrail_audit_prompt_gemini_skill_exists_without_allowed_tools() {
 }
 
 #[test]
-fn devtrail_audit_prompt_agent_workflow_exists_with_description_only() {
+fn straymark_audit_prompt_agent_workflow_exists_with_description_only() {
     let body = read(
         dist_root()
             .join(".agent")
             .join("workflows")
-            .join("devtrail-audit-prompt.md"),
+            .join("straymark-audit-prompt.md"),
     );
     assert!(body.starts_with("---\n"), "missing YAML frontmatter");
     assert!(
@@ -88,48 +88,48 @@ fn devtrail_audit_prompt_agent_workflow_exists_with_description_only() {
 }
 
 #[test]
-fn devtrail_audit_prompt_three_platforms_share_core_guidance() {
+fn straymark_audit_prompt_three_platforms_share_core_guidance() {
     let claude = read(
         dist_root()
             .join(".claude")
             .join("skills")
-            .join("devtrail-audit-prompt")
+            .join("straymark-audit-prompt")
             .join("SKILL.md"),
     );
     let gemini = read(
         dist_root()
             .join(".gemini")
             .join("skills")
-            .join("devtrail-audit-prompt")
+            .join("straymark-audit-prompt")
             .join("SKILL.md"),
     );
     let agent = read(
         dist_root()
             .join(".agent")
             .join("workflows")
-            .join("devtrail-audit-prompt.md"),
+            .join("straymark-audit-prompt.md"),
     );
 
     // v1: skill no longer surfaces prompts inline. It runs --prepare and
-    // points the operator at /devtrail-audit-execute in N CLIs. The
+    // points the operator at /straymark-audit-execute in N CLIs. The
     // wait-for-all warning is the load-bearing UX guarantee.
     for body in [&claude, &gemini, &agent] {
         assert!(
-            body.contains("/devtrail-audit-execute"),
+            body.contains("/straymark-audit-execute"),
             "skill must point operator at the auditor-side execute skill"
         );
         assert!(
-            body.contains("/devtrail-audit-review"),
+            body.contains("/straymark-audit-review"),
             "skill must point operator at the follow-up review skill"
         );
         assert!(
-            body.contains(".devtrail/audits/")
+            body.contains(".straymark/audits/")
                 && body.contains("audit-prompt.md"),
             "skill must reference the v1 canonical prompt location"
         );
         assert!(
             body.contains("--prepare"),
-            "skill must invoke `devtrail charter audit ... --prepare`"
+            "skill must invoke `straymark charter audit ... --prepare`"
         );
         assert!(
             body.contains("ALL audits") && body.contains("complete"),
@@ -143,20 +143,20 @@ fn devtrail_audit_prompt_three_platforms_share_core_guidance() {
     }
 }
 
-// ── devtrail-audit-review (PR 2) ───────────────────────────────────────────
+// ── straymark-audit-review (PR 2) ───────────────────────────────────────────
 
 #[test]
-fn devtrail_audit_review_claude_skill_exists_and_has_allowed_tools() {
+fn straymark_audit_review_claude_skill_exists_and_has_allowed_tools() {
     let body = read(
         dist_root()
             .join(".claude")
             .join("skills")
-            .join("devtrail-audit-review")
+            .join("straymark-audit-review")
             .join("SKILL.md"),
     );
     assert!(body.starts_with("---\n"), "missing YAML frontmatter");
     assert!(
-        body.contains("name: devtrail-audit-review"),
+        body.contains("name: straymark-audit-review"),
         "missing name field"
     );
     assert!(
@@ -170,17 +170,17 @@ fn devtrail_audit_review_claude_skill_exists_and_has_allowed_tools() {
 }
 
 #[test]
-fn devtrail_audit_review_gemini_skill_exists_without_allowed_tools() {
+fn straymark_audit_review_gemini_skill_exists_without_allowed_tools() {
     let body = read(
         dist_root()
             .join(".gemini")
             .join("skills")
-            .join("devtrail-audit-review")
+            .join("straymark-audit-review")
             .join("SKILL.md"),
     );
     assert!(body.starts_with("---\n"), "missing YAML frontmatter");
     assert!(
-        body.contains("name: devtrail-audit-review"),
+        body.contains("name: straymark-audit-review"),
         "missing name field"
     );
     assert!(
@@ -190,12 +190,12 @@ fn devtrail_audit_review_gemini_skill_exists_without_allowed_tools() {
 }
 
 #[test]
-fn devtrail_audit_review_agent_workflow_exists_with_description_only() {
+fn straymark_audit_review_agent_workflow_exists_with_description_only() {
     let body = read(
         dist_root()
             .join(".agent")
             .join("workflows")
-            .join("devtrail-audit-review.md"),
+            .join("straymark-audit-review.md"),
     );
     assert!(body.starts_with("---\n"), "missing YAML frontmatter");
     assert!(
@@ -213,26 +213,26 @@ fn devtrail_audit_review_agent_workflow_exists_with_description_only() {
 }
 
 #[test]
-fn devtrail_audit_review_three_platforms_share_core_guidance() {
+fn straymark_audit_review_three_platforms_share_core_guidance() {
     let claude = read(
         dist_root()
             .join(".claude")
             .join("skills")
-            .join("devtrail-audit-review")
+            .join("straymark-audit-review")
             .join("SKILL.md"),
     );
     let gemini = read(
         dist_root()
             .join(".gemini")
             .join("skills")
-            .join("devtrail-audit-review")
+            .join("straymark-audit-review")
             .join("SKILL.md"),
     );
     let agent = read(
         dist_root()
             .join(".agent")
             .join("workflows")
-            .join("devtrail-audit-review.md"),
+            .join("straymark-audit-review.md"),
     );
 
     for body in [&claude, &gemini, &agent] {
@@ -285,20 +285,20 @@ fn devtrail_audit_review_three_platforms_share_core_guidance() {
     }
 }
 
-// ── devtrail-audit-execute (PR 5 — v1 audit-skills) ────────────────────────
+// ── straymark-audit-execute (PR 5 — v1 audit-skills) ────────────────────────
 
 #[test]
-fn devtrail_audit_execute_claude_skill_exists_and_has_allowed_tools() {
+fn straymark_audit_execute_claude_skill_exists_and_has_allowed_tools() {
     let body = read(
         dist_root()
             .join(".claude")
             .join("skills")
-            .join("devtrail-audit-execute")
+            .join("straymark-audit-execute")
             .join("SKILL.md"),
     );
     assert!(body.starts_with("---\n"), "missing YAML frontmatter");
     assert!(
-        body.contains("name: devtrail-audit-execute"),
+        body.contains("name: straymark-audit-execute"),
         "missing name field"
     );
     assert!(
@@ -321,17 +321,17 @@ fn devtrail_audit_execute_claude_skill_exists_and_has_allowed_tools() {
 }
 
 #[test]
-fn devtrail_audit_execute_gemini_skill_exists_without_allowed_tools() {
+fn straymark_audit_execute_gemini_skill_exists_without_allowed_tools() {
     let body = read(
         dist_root()
             .join(".gemini")
             .join("skills")
-            .join("devtrail-audit-execute")
+            .join("straymark-audit-execute")
             .join("SKILL.md"),
     );
     assert!(body.starts_with("---\n"), "missing YAML frontmatter");
     assert!(
-        body.contains("name: devtrail-audit-execute"),
+        body.contains("name: straymark-audit-execute"),
         "missing name field"
     );
     assert!(
@@ -341,12 +341,12 @@ fn devtrail_audit_execute_gemini_skill_exists_without_allowed_tools() {
 }
 
 #[test]
-fn devtrail_audit_execute_agent_workflow_exists_with_description_only() {
+fn straymark_audit_execute_agent_workflow_exists_with_description_only() {
     let body = read(
         dist_root()
             .join(".agent")
             .join("workflows")
-            .join("devtrail-audit-execute.md"),
+            .join("straymark-audit-execute.md"),
     );
     assert!(body.starts_with("---\n"), "missing YAML frontmatter");
     assert!(
@@ -364,32 +364,32 @@ fn devtrail_audit_execute_agent_workflow_exists_with_description_only() {
 }
 
 #[test]
-fn devtrail_audit_execute_three_platforms_share_core_guidance() {
+fn straymark_audit_execute_three_platforms_share_core_guidance() {
     let claude = read(
         dist_root()
             .join(".claude")
             .join("skills")
-            .join("devtrail-audit-execute")
+            .join("straymark-audit-execute")
             .join("SKILL.md"),
     );
     let gemini = read(
         dist_root()
             .join(".gemini")
             .join("skills")
-            .join("devtrail-audit-execute")
+            .join("straymark-audit-execute")
             .join("SKILL.md"),
     );
     let agent = read(
         dist_root()
             .join(".agent")
             .join("workflows")
-            .join("devtrail-audit-execute.md"),
+            .join("straymark-audit-execute.md"),
     );
 
     for body in [&claude, &gemini, &agent] {
         // Canonical paths the skill uses.
         assert!(
-            body.contains(".devtrail/audits/"),
+            body.contains(".straymark/audits/"),
             "skill must reference the v1 canonical audit dir"
         );
         assert!(
@@ -423,7 +423,7 @@ fn devtrail_audit_execute_three_platforms_share_core_guidance() {
             "skill must warn the operator to wait for ALL commissioned audits before invoking review"
         );
         assert!(
-            body.contains("/devtrail-audit-review"),
+            body.contains("/straymark-audit-review"),
             "skill must point at the audit-review skill as the next step"
         );
 

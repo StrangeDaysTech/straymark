@@ -7,12 +7,12 @@ fn create_rust_file(dir: &std::path::Path, name: &str, code: &str) {
     std::fs::write(dir.join(name), code).unwrap();
 }
 
-/// Helper to create a minimal DevTrail installation with complexity config
-fn setup_devtrail_with_config(dir: &std::path::Path, threshold: u32) {
-    let devtrail = dir.join(".devtrail");
-    std::fs::create_dir_all(&devtrail).unwrap();
+/// Helper to create a minimal StrayMark installation with complexity config
+fn setup_straymark_with_config(dir: &std::path::Path, threshold: u32) {
+    let straymark = dir.join(".straymark");
+    std::fs::create_dir_all(&straymark).unwrap();
     std::fs::write(
-        devtrail.join("config.yml"),
+        straymark.join("config.yml"),
         format!("language: en\ncomplexity:\n  threshold: {}\n", threshold),
     )
     .unwrap();
@@ -22,13 +22,13 @@ fn setup_devtrail_with_config(dir: &std::path::Path, threshold: u32) {
 fn test_analyze_empty_directory() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("analyze")
         .arg(dir.path().to_str().unwrap())
         .assert()
         .success()
         .stdout(
-            predicate::str::contains("DevTrail Analyze")
+            predicate::str::contains("StrayMark Analyze")
                 .and(predicate::str::contains("Files analyzed: 0")),
         );
 }
@@ -46,7 +46,7 @@ fn hello(name: &str) -> String {
 "#,
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("analyze")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -81,7 +81,7 @@ fn nested(x: i32) -> i32 {
     );
 
     // With threshold 1, the function should exceed it
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("analyze")
         .arg("--threshold")
         .arg("1")
@@ -108,7 +108,7 @@ fn c() -> i32 { 42 }
 "#,
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("analyze")
         .arg("--top")
         .arg("1")
@@ -121,7 +121,7 @@ fn c() -> i32 { 42 }
         .success();
 
     // With --top 1 and json output, only 1 function in the array
-    let output = Command::cargo_bin("devtrail")
+    let output = Command::cargo_bin("straymark")
         .unwrap()
         .arg("analyze")
         .arg("--top")
@@ -143,7 +143,7 @@ fn test_analyze_output_json() {
     let dir = TempDir::new().unwrap();
     create_rust_file(dir.path(), "simple.rs", "fn add(a: i32, b: i32) -> i32 { a + b }\n");
 
-    let output = Command::cargo_bin("devtrail")
+    let output = Command::cargo_bin("straymark")
         .unwrap()
         .arg("analyze")
         .arg("--output")
@@ -164,7 +164,7 @@ fn test_analyze_output_markdown() {
     let dir = TempDir::new().unwrap();
     create_rust_file(dir.path(), "lib.rs", "fn foo() -> i32 { 1 }\n");
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("analyze")
         .arg("--output")
         .arg("markdown")
@@ -172,18 +172,18 @@ fn test_analyze_output_markdown() {
         .assert()
         .success()
         .stdout(
-            predicate::str::contains("# DevTrail Analyze Report")
+            predicate::str::contains("# StrayMark Analyze Report")
                 .and(predicate::str::contains("## Summary")),
         );
 }
 
 #[test]
-fn test_analyze_no_devtrail_required() {
-    // Works in a dir without .devtrail/ initialized
+fn test_analyze_no_straymark_required() {
+    // Works in a dir without .straymark/ initialized
     let dir = TempDir::new().unwrap();
     create_rust_file(dir.path(), "main.rs", "fn main() {}\n");
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("analyze")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -194,7 +194,7 @@ fn test_analyze_no_devtrail_required() {
 #[test]
 fn test_analyze_reads_config_threshold() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_config(dir.path(), 1);
+    setup_straymark_with_config(dir.path(), 1);
 
     // Function with cognitive complexity > 1
     create_rust_file(
@@ -214,7 +214,7 @@ fn branchy(x: i32) -> i32 {
     );
 
     // With config threshold=1, this function should exceed it
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("analyze")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -238,7 +238,7 @@ fn test_analyze_skips_excluded_dirs() {
     std::fs::create_dir_all(&target).unwrap();
     create_rust_file(&target, "build.rs", "fn build_fn() -> i32 { 3 }\n");
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("analyze")
         .arg("--output")
         .arg("json")
@@ -246,7 +246,7 @@ fn test_analyze_skips_excluded_dirs() {
         .assert()
         .success();
 
-    let output = Command::cargo_bin("devtrail")
+    let output = Command::cargo_bin("straymark")
         .unwrap()
         .arg("analyze")
         .arg("--output")
@@ -280,7 +280,7 @@ fn low_complexity(x: i32) -> &'static str {
     );
 
     // Default threshold is 8 — function should NOT exceed it
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("analyze")
         .arg(dir.path().to_str().unwrap())
         .assert()

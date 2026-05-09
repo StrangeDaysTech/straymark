@@ -1,11 +1,11 @@
-//! `devtrail approve` — record a formal human approval on a `review_required`
+//! `straymark approve` — record a formal human approval on a `review_required`
 //! document. Implements the closure signal canonized in DOCUMENTATION-POLICY
 //! §3.5 (added in fw-4.6.0): writes the `reviewed_by` / `reviewed_at` /
 //! `review_outcome` frontmatter fields and appends the canonical `## Approval`
 //! body section in one atomic edit.
 //!
 //! Two operating modes:
-//! - **Flag-driven** (CI / scripted): `devtrail approve <doc-id> --outcome
+//! - **Flag-driven** (CI / scripted): `straymark approve <doc-id> --outcome
 //!   approved --reviewer <id> [--notes "..."] [--at YYYY-MM-DD]`. Fully
 //!   non-interactive when all required flags are present.
 //! - **Interactive fallback**: when `--outcome` or `--reviewer` is missing
@@ -33,12 +33,12 @@ pub fn run(
     quiet: bool,
 ) -> Result<()> {
     let resolved = utils::resolve_project_root(path)
-        .ok_or_else(|| anyhow!("DevTrail not installed. Run 'devtrail init' first."))?;
+        .ok_or_else(|| anyhow!("StrayMark not installed. Run 'straymark init' first."))?;
     let project_root = &resolved.path;
-    let devtrail_dir = project_root.join(".devtrail");
+    let straymark_dir = project_root.join(".straymark");
 
     // Locate the document.
-    let doc_path = find_document_by_id(&devtrail_dir, doc_id)?;
+    let doc_path = find_document_by_id(&straymark_dir, doc_id)?;
 
     // F4 (cli-3.7.1): detect existing approval before resolving any prompts.
     if let Ok(parsed) = document::parse_document(&doc_path) {
@@ -135,11 +135,11 @@ pub fn run(
     Ok(())
 }
 
-/// Search `.devtrail/` for a document whose filename starts with the given ID.
+/// Search `.straymark/` for a document whose filename starts with the given ID.
 /// The ID may be the bare prefix (`AIDEC-2026-05-02-001`) or include the slug
 /// (`AIDEC-2026-05-02-001-foo`); both forms resolve to the same file.
-fn find_document_by_id(devtrail_dir: &Path, doc_id: &str) -> Result<PathBuf> {
-    let docs = document::discover_documents(devtrail_dir);
+fn find_document_by_id(straymark_dir: &Path, doc_id: &str) -> Result<PathBuf> {
+    let docs = document::discover_documents(straymark_dir);
     // Strip optional slug to get canonical prefix (TYPE-YYYY-MM-DD-NNN).
     let prefix = canonical_prefix(doc_id);
     for path in docs {
@@ -150,7 +150,7 @@ fn find_document_by_id(devtrail_dir: &Path, doc_id: &str) -> Result<PathBuf> {
         }
     }
     bail!(
-        "document {} not found under .devtrail/. Run `devtrail validate` to see all documents.",
+        "document {} not found under .straymark/. Run `straymark validate` to see all documents.",
         doc_id
     )
 }
@@ -193,7 +193,7 @@ fn resolve_reviewer(flag: Option<&str>) -> Result<String> {
 /// - Frontmatter: insert/update the three approval fields (after
 ///   `review_required:` or, lacking that line, before the closing `---`).
 /// - Body: append a `## Approval` section near the end (before any final
-///   HTML comment marker, e.g., `<!-- Template: DevTrail | ... -->`).
+///   HTML comment marker, e.g., `<!-- Template: StrayMark | ... -->`).
 fn apply_approval(
     raw: &str,
     reviewer: &str,
@@ -319,7 +319,7 @@ fn yaml_scalar(value: &str) -> String {
 }
 
 /// Append a `## Approval` section to the body. Inserts before any trailing
-/// HTML comment marker (e.g., `<!-- Template: DevTrail | ... -->`) so the
+/// HTML comment marker (e.g., `<!-- Template: StrayMark | ... -->`) so the
 /// canonical signature stays at the very bottom.
 fn append_body_section(
     raw: &str,
@@ -346,7 +346,7 @@ fn append_body_section(
 
     // Find a trailing HTML comment marker (the template signature) and
     // insert the block immediately before it. If absent, append at end.
-    let needle = "<!-- Template: DevTrail";
+    let needle = "<!-- Template: StrayMark";
     if let Some(pos) = raw.rfind(needle) {
         // Ensure we land at the start of the line containing the marker.
         let line_start = raw[..pos].rfind('\n').map(|i| i + 1).unwrap_or(0);
@@ -417,10 +417,10 @@ mod tests {
 
     #[test]
     fn append_body_section_inserts_before_template_marker() {
-        let body = "\n# Body\n\nContent.\n\n---\n\n<!-- Template: DevTrail | https://strangedays.tech -->\n";
+        let body = "\n# Body\n\nContent.\n\n---\n\n<!-- Template: StrayMark | https://strangedays.tech -->\n";
         let out = append_body_section(body, "pepe", "2026-05-02", "approved", None);
         let approval_pos = out.find("## Approval").unwrap();
-        let marker_pos = out.find("<!-- Template: DevTrail").unwrap();
+        let marker_pos = out.find("<!-- Template: StrayMark").unwrap();
         assert!(approval_pos < marker_pos, "Approval should land before signature");
         assert!(out.contains("**Approved**: 2026-05-02 by `pepe`."));
     }

@@ -10,10 +10,10 @@ PR refs, infrastructure hostnames, reviewer emails, dates) have been
 replaced with generic placeholders. Technical reasoning, the Decision
 section structure, the Risk numbering, and the Verification commands
 are preserved verbatim per the example-anonymization rules in
-devtrail-cli-roadmap.md §3.1.
+straymark-cli-roadmap.md §3.1.
 
-For browsing only — `devtrail init` does not install this file. Adopters
-who want a starting AILOG scaffold use `devtrail new --doc-type ailog`
+For browsing only — `straymark init` does not install this file. Adopters
+who want a starting AILOG scaffold use `straymark new --doc-type ailog`
 against TEMPLATE-AILOG.md.
 -->
 

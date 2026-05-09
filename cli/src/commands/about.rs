@@ -15,13 +15,13 @@ pub fn run() -> Result<()> {
     println!();
     println!(
         "  {} {}",
-        "DevTrail CLI".bold(),
+        "StrayMark CLI".bold(),
         format!("cli-{version}").dimmed()
     );
 
     // Show framework version if installed
     if let Ok(cwd) = std::env::current_dir() {
-        let manifest_path = cwd.join(".devtrail/dist-manifest.yml");
+        let manifest_path = cwd.join(".straymark/dist-manifest.yml");
         if let Ok(manifest) = DistManifest::load(&manifest_path) {
             println!(
                 "  {} {}",

@@ -14,19 +14,19 @@ const LEGACY_DIRECTIVE_TARGETS: &[&str] = &[
     "GEMINI.md",
     ".github/copilot-instructions.md",
     ".cursorrules",
-    ".cursor/rules/devtrail.md",
+    ".cursor/rules/straymark.md",
 ];
 
 pub fn run(full: bool) -> Result<()> {
     let target = std::env::current_dir().context("Failed to get current directory")?;
 
-    if !target.join(".devtrail").exists() {
-        bail!("DevTrail is not installed in this directory.");
+    if !target.join(".straymark").exists() {
+        bail!("StrayMark is not installed in this directory.");
     }
 
     if full {
         println!(
-            "{} This will remove ALL DevTrail files including your documents!",
+            "{} This will remove ALL StrayMark files including your documents!",
             "WARNING:".red().bold()
         );
         let confirmed = Confirm::with_theme(&ColorfulTheme::default())
@@ -50,7 +50,7 @@ pub fn run(full: bool) -> Result<()> {
         }
     }
 
-    println!("{} DevTrail...", "Removing".red().bold());
+    println!("{} StrayMark...", "Removing".red().bold());
 
     // Remove injections from directive files
     utils::info("Cleaning AI agent directives...");
@@ -61,14 +61,14 @@ pub fn run(full: bool) -> Result<()> {
 
     if full {
         // Remove everything
-        remove_dir_if_exists(&target.join(".devtrail"))?;
+        remove_dir_if_exists(&target.join(".straymark"))?;
     } else {
         // Selective removal: keep user documents, remove framework
         remove_framework_files(&target)?;
     }
 
     // Remove distributed files
-    remove_file_if_exists(&target.join("DEVTRAIL.md"))?;
+    remove_file_if_exists(&target.join("STRAYMARK.md"))?;
 
     // Remove agent skills and workflows
     remove_dir_if_exists(&target.join(".claude/skills"))?;
@@ -86,8 +86,8 @@ pub fn run(full: bool) -> Result<()> {
 
     // Legacy: clean up scripts from pre-CLI installations (removed in fw-5.0)
     let scripts = [
-        "scripts/devtrail-new.sh",
-        "scripts/devtrail-status.sh",
+        "scripts/straymark-new.sh",
+        "scripts/straymark-status.sh",
         "scripts/pre-commit-docs.sh",
         "scripts/validate-docs.ps1",
     ];
@@ -97,17 +97,17 @@ pub fn run(full: bool) -> Result<()> {
     remove_empty_dir(&target.join("scripts"))?;
 
     println!();
-    utils::success("DevTrail removed successfully.");
+    utils::success("StrayMark removed successfully.");
 
     if !full {
         println!();
         println!(
-            "  {} User-generated documents in .devtrail/ were preserved.",
+            "  {} User-generated documents in .straymark/ were preserved.",
             "Note:".bold()
         );
         println!(
             "  Use {} to remove everything.",
-            "devtrail remove --full".yellow()
+            "straymark remove --full".yellow()
         );
     }
 
@@ -116,7 +116,7 @@ pub fn run(full: bool) -> Result<()> {
 
 fn clean_directives(target: &Path) -> Result<()> {
     // Try to load the local manifest for injection targets
-    let manifest_path = target.join(".devtrail/dist-manifest.yml");
+    let manifest_path = target.join(".straymark/dist-manifest.yml");
     let directive_targets: Vec<String> = if manifest_path.exists() {
         match DistManifest::load(&manifest_path) {
             Ok(manifest) => manifest
@@ -159,7 +159,7 @@ fn clean_directives(target: &Path) -> Result<()> {
 
 /// Remove framework files but keep user-generated documents
 fn remove_framework_files(target: &Path) -> Result<()> {
-    let devtrail = target.join(".devtrail");
+    let straymark = target.join(".straymark");
 
     // Framework directories to remove entirely
     let framework_dirs = [
@@ -169,7 +169,7 @@ fn remove_framework_files(target: &Path) -> Result<()> {
     ];
 
     for dir in &framework_dirs {
-        remove_dir_if_exists(&devtrail.join(dir))?;
+        remove_dir_if_exists(&straymark.join(dir))?;
     }
 
     // Remove framework files but keep user documents in these dirs
@@ -186,7 +186,7 @@ fn remove_framework_files(target: &Path) -> Result<()> {
     ];
 
     for dir in &mixed_dirs {
-        let dir_path = devtrail.join(dir);
+        let dir_path = straymark.join(dir);
         if dir_path.is_dir() {
             // Only remove .gitkeep, keep user documents
             remove_file_if_exists(&dir_path.join(".gitkeep"))?;
@@ -194,10 +194,10 @@ fn remove_framework_files(target: &Path) -> Result<()> {
     }
 
     // Remove framework root files
-    remove_file_if_exists(&devtrail.join("config.yml"))?;
-    remove_file_if_exists(&devtrail.join("QUICK-REFERENCE.md"))?;
-    remove_file_if_exists(&devtrail.join(".checksums.json"))?;
-    remove_file_if_exists(&devtrail.join("dist-manifest.yml"))?;
+    remove_file_if_exists(&straymark.join("config.yml"))?;
+    remove_file_if_exists(&straymark.join("QUICK-REFERENCE.md"))?;
+    remove_file_if_exists(&straymark.join(".checksums.json"))?;
+    remove_file_if_exists(&straymark.join("dist-manifest.yml"))?;
 
     Ok(())
 }

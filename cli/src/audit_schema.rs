@@ -1,9 +1,9 @@
 //! JSON Schema validation for audit output frontmatter.
 //!
 //! The schema is shipped at
-//! `<framework>/.devtrail/schemas/audit-output.schema.v0.json` and validates
+//! `<framework>/.straymark/schemas/audit-output.schema.v0.json` and validates
 //! the YAML frontmatter of the markdown files produced by auditors and the
-//! calibrator-reconciler during a `devtrail charter audit` cycle. The schema
+//! calibrator-reconciler during a `straymark charter audit` cycle. The schema
 //! uses `oneOf` to discriminate auditor outputs (primary/secondary) from
 //! calibrator outputs via the `audit_role` field.
 //!
@@ -19,7 +19,7 @@ use std::path::{Path, PathBuf};
 use crate::charter_schema::yaml_to_json_value;
 use crate::validation::{Severity, ValidationIssue};
 
-/// Path to the audit-output schema relative to a project's `.devtrail/`.
+/// Path to the audit-output schema relative to a project's `.straymark/`.
 pub const SCHEMA_RELATIVE_PATH: &str = "schemas/audit-output.schema.v0.json";
 
 /// A loaded and compiled audit-output schema, ready to validate YAML.
@@ -28,14 +28,14 @@ pub struct AuditOutputSchema {
 }
 
 impl AuditOutputSchema {
-    /// Load and compile the audit-output schema from a project's `.devtrail/`
+    /// Load and compile the audit-output schema from a project's `.straymark/`
     /// directory. Returns an error if the schema file is missing, not valid
     /// JSON, or not a valid JSON Schema.
-    pub fn load(devtrail_dir: &Path) -> Result<Self> {
-        let path = devtrail_dir.join(SCHEMA_RELATIVE_PATH);
+    pub fn load(straymark_dir: &Path) -> Result<Self> {
+        let path = straymark_dir.join(SCHEMA_RELATIVE_PATH);
         let raw = std::fs::read_to_string(&path).with_context(|| {
             format!(
-                "Failed to read audit-output schema at {}. Run `devtrail repair` to restore framework files.",
+                "Failed to read audit-output schema at {}. Run `straymark repair` to restore framework files.",
                 path.display()
             )
         })?;
@@ -158,7 +158,7 @@ mod tests {
     use super::*;
 
     /// Minimal-shape schema for unit tests. The real schema lives at
-    /// dist/.devtrail/schemas/audit-output.schema.v0.json and is not bundled
+    /// dist/.straymark/schemas/audit-output.schema.v0.json and is not bundled
     /// into the binary — these tests are for the wrapper logic.
     const TEST_SCHEMA: &str = r##"{
         "$schema": "https://json-schema.org/draft/2020-12/schema",

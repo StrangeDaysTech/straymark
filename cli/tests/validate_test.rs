@@ -2,19 +2,19 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
-/// Helper to create a minimal DevTrail installation
-fn setup_devtrail(dir: &std::path::Path) {
-    let devtrail = dir.join(".devtrail");
-    std::fs::create_dir_all(devtrail.join("07-ai-audit/agent-logs")).unwrap();
-    std::fs::create_dir_all(devtrail.join("07-ai-audit/decisions")).unwrap();
-    std::fs::create_dir_all(devtrail.join("07-ai-audit/ethical-reviews")).unwrap();
-    std::fs::create_dir_all(devtrail.join("08-security")).unwrap();
-    std::fs::create_dir_all(devtrail.join("09-ai-models")).unwrap();
-    std::fs::create_dir_all(devtrail.join("05-operations/incidents")).unwrap();
-    std::fs::create_dir_all(devtrail.join("templates")).unwrap();
-    std::fs::write(devtrail.join("config.yml"), "language: en\n").unwrap();
+/// Helper to create a minimal StrayMark installation
+fn setup_straymark(dir: &std::path::Path) {
+    let straymark = dir.join(".straymark");
+    std::fs::create_dir_all(straymark.join("07-ai-audit/agent-logs")).unwrap();
+    std::fs::create_dir_all(straymark.join("07-ai-audit/decisions")).unwrap();
+    std::fs::create_dir_all(straymark.join("07-ai-audit/ethical-reviews")).unwrap();
+    std::fs::create_dir_all(straymark.join("08-security")).unwrap();
+    std::fs::create_dir_all(straymark.join("09-ai-models")).unwrap();
+    std::fs::create_dir_all(straymark.join("05-operations/incidents")).unwrap();
+    std::fs::create_dir_all(straymark.join("templates")).unwrap();
+    std::fs::write(straymark.join("config.yml"), "language: en\n").unwrap();
     std::fs::write(
-        devtrail.join("dist-manifest.yml"),
+        straymark.join("dist-manifest.yml"),
         "version: \"3.0.0\"\ndescription: test\n",
     )
     .unwrap();
@@ -22,7 +22,7 @@ fn setup_devtrail(dir: &std::path::Path) {
 
 /// Helper to create a document file with frontmatter
 fn create_doc(dir: &std::path::Path, subpath: &str, filename: &str, frontmatter: &str) {
-    let path = dir.join(".devtrail").join(subpath);
+    let path = dir.join(".straymark").join(subpath);
     std::fs::create_dir_all(&path).unwrap();
     std::fs::write(
         path.join(filename),
@@ -35,7 +35,7 @@ fn create_doc(dir: &std::path::Path, subpath: &str, filename: &str, frontmatter:
 fn test_validate_not_installed() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -46,9 +46,9 @@ fn test_validate_not_installed() {
 #[test]
 fn test_validate_no_documents() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -59,7 +59,7 @@ fn test_validate_no_documents() {
 #[test]
 fn test_validate_valid_document() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -68,7 +68,7 @@ fn test_validate_valid_document() {
         "id: AILOG-2025-01-27-001\ntitle: Implement auth\nstatus: draft\ncreated: 2025-01-27\nagent: claude-code-v1.0\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -79,7 +79,7 @@ fn test_validate_valid_document() {
 #[test]
 fn test_validate_missing_frontmatter_fields() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -88,7 +88,7 @@ fn test_validate_missing_frontmatter_fields() {
         "id: AILOG-2025-01-27-001\ntitle: Test",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -99,7 +99,7 @@ fn test_validate_missing_frontmatter_fields() {
 #[test]
 fn test_validate_invalid_status() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -108,7 +108,7 @@ fn test_validate_invalid_status() {
         "id: AILOG-2025-01-27-001\ntitle: Test\nstatus: invalid_status\ncreated: 2025-01-27\nagent: test\nconfidence: high\nreview_required: false\nrisk_level: low",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -119,7 +119,7 @@ fn test_validate_invalid_status() {
 #[test]
 fn test_validate_cross_001_high_risk_no_review() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -128,7 +128,7 @@ fn test_validate_cross_001_high_risk_no_review() {
         "id: AILOG-2025-01-27-001\ntitle: Test\nstatus: draft\ncreated: 2025-01-27\nagent: test\nconfidence: high\nreview_required: false\nrisk_level: high",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -139,9 +139,9 @@ fn test_validate_cross_001_high_risk_no_review() {
 #[test]
 fn test_validate_sensitive_info_detected() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
-    let path = dir.path().join(".devtrail/07-ai-audit/agent-logs");
+    let path = dir.path().join(".straymark/07-ai-audit/agent-logs");
     std::fs::create_dir_all(&path).unwrap();
     std::fs::write(
         path.join("AILOG-2025-01-27-001-secrets.md"),
@@ -149,7 +149,7 @@ fn test_validate_sensitive_info_detected() {
     )
     .unwrap();
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -160,7 +160,7 @@ fn test_validate_sensitive_info_detected() {
 #[test]
 fn test_validate_related_not_found() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -169,7 +169,7 @@ fn test_validate_related_not_found() {
         "id: AILOG-2025-01-27-001\ntitle: Test\nstatus: draft\ncreated: 2025-01-27\nagent: test\nconfidence: high\nreview_required: false\nrisk_level: low\nrelated:\n  - AIDEC-2025-01-27-001",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -180,7 +180,7 @@ fn test_validate_related_not_found() {
 #[test]
 fn test_validate_sec_requires_review() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -189,7 +189,7 @@ fn test_validate_sec_requires_review() {
         "id: SEC-2025-01-27-001\ntitle: API Review\nstatus: draft\ncreated: 2025-01-27\nagent: test\nconfidence: medium\nreview_required: false\nrisk_level: high",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -200,18 +200,18 @@ fn test_validate_sec_requires_review() {
 #[test]
 fn test_validate_fix_review_required() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     let doc_path = dir
         .path()
-        .join(".devtrail/08-security/SEC-2025-01-27-001-fix-test.md");
+        .join(".straymark/08-security/SEC-2025-01-27-001-fix-test.md");
     std::fs::write(
         &doc_path,
         "---\nid: SEC-2025-01-27-001\ntitle: Fix Test\nstatus: draft\ncreated: 2025-01-27\nagent: test\nconfidence: medium\nreview_required: false\nrisk_level: high\n---\n\n# Test\n",
     )
     .unwrap();
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg("--fix")
         .arg(dir.path().to_str().unwrap())
@@ -226,7 +226,7 @@ fn test_validate_fix_review_required() {
 #[test]
 fn test_validate_obs_001_tag_without_content() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -235,7 +235,7 @@ fn test_validate_obs_001_tag_without_content() {
         "id: AILOG-2025-01-27-001\ntitle: Obs Test\nstatus: draft\ncreated: 2025-01-27\nagent: test\nconfidence: high\nreview_required: false\nrisk_level: low\ntags:\n  - observability",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -246,7 +246,7 @@ fn test_validate_obs_001_tag_without_content() {
 #[test]
 fn test_validate_inc_needs_severity() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -255,7 +255,7 @@ fn test_validate_inc_needs_severity() {
         "id: INC-2025-01-27-001\ntitle: Outage\nstatus: draft\ncreated: 2025-01-27\nagent: test\nconfidence: high\nreview_required: true\nrisk_level: high",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -268,11 +268,11 @@ fn test_validate_inc_needs_severity() {
 // =============================================================================
 
 /// F2.QA.02.01 — Create a test document for each new type (SEC, MCARD, SBOM, DPIA)
-/// and validate with `devtrail validate`
+/// and validate with `straymark validate`
 #[test]
 fn test_validate_sec_document_valid() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -281,7 +281,7 @@ fn test_validate_sec_document_valid() {
         "id: SEC-2026-03-24-001\ntitle: API Security Assessment\nstatus: draft\ncreated: 2026-03-24\nagent: claude-code-v1.0\nconfidence: medium\nreview_required: true\nrisk_level: high\nthreat_model_methodology: STRIDE\nowasp_asvs_level: 1\ntags:\n  - security\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -292,7 +292,7 @@ fn test_validate_sec_document_valid() {
 #[test]
 fn test_validate_mcard_document_valid() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -301,7 +301,7 @@ fn test_validate_mcard_document_valid() {
         "id: MCARD-2026-03-24-001\ntitle: GPT-4 Turbo Card\nstatus: draft\ncreated: 2026-03-24\nagent: claude-code-v1.0\nconfidence: medium\nreview_required: true\nrisk_level: medium\nmodel_name: gpt-4-turbo\nmodel_type: LLM\ntags:\n  - ai-model\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -312,7 +312,7 @@ fn test_validate_mcard_document_valid() {
 #[test]
 fn test_validate_sbom_document_valid() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -321,7 +321,7 @@ fn test_validate_sbom_document_valid() {
         "id: SBOM-2026-03-24-001\ntitle: Platform AI SBOM\nstatus: accepted\ncreated: 2026-03-24\nagent: claude-code-v1.0\nconfidence: high\nreview_required: false\nrisk_level: low\ntags:\n  - sbom\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -332,7 +332,7 @@ fn test_validate_sbom_document_valid() {
 #[test]
 fn test_validate_dpia_document_valid() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -341,7 +341,7 @@ fn test_validate_dpia_document_valid() {
         "id: DPIA-2026-03-24-001\ntitle: User Profiling DPIA\nstatus: draft\ncreated: 2026-03-24\nagent: claude-code-v1.0\nconfidence: low\nreview_required: true\nrisk_level: high\ntags:\n  - privacy\n  - gdpr\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -353,7 +353,7 @@ fn test_validate_dpia_document_valid() {
 #[test]
 fn test_validate_mcard_requires_review() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -362,7 +362,7 @@ fn test_validate_mcard_requires_review() {
         "id: MCARD-2026-03-24-001\ntitle: Test\nstatus: draft\ncreated: 2026-03-24\nagent: test\nconfidence: medium\nreview_required: false\nrisk_level: medium\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -373,7 +373,7 @@ fn test_validate_mcard_requires_review() {
 #[test]
 fn test_validate_dpia_requires_review() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -382,7 +382,7 @@ fn test_validate_dpia_requires_review() {
         "id: DPIA-2026-03-24-001\ntitle: Test\nstatus: draft\ncreated: 2026-03-24\nagent: test\nconfidence: low\nreview_required: false\nrisk_level: high\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -396,7 +396,7 @@ fn test_new_templates_exist_in_dist() {
     let dist_templates = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .unwrap()
-        .join("dist/.devtrail/templates");
+        .join("dist/.straymark/templates");
 
     // EN templates
     assert!(dist_templates.join("TEMPLATE-SEC.md").exists(), "TEMPLATE-SEC.md (EN) missing");
@@ -412,12 +412,12 @@ fn test_new_templates_exist_in_dist() {
     assert!(es.join("TEMPLATE-DPIA.md").exists(), "TEMPLATE-DPIA.md (ES) missing");
 
     // New directories
-    let devtrail = dist_templates.parent().unwrap();
-    assert!(devtrail.join("08-security").exists(), "08-security/ directory missing");
-    assert!(devtrail.join("09-ai-models").exists(), "09-ai-models/ directory missing");
+    let straymark = dist_templates.parent().unwrap();
+    assert!(straymark.join("08-security").exists(), "08-security/ directory missing");
+    assert!(straymark.join("09-ai-models").exists(), "09-ai-models/ directory missing");
 }
 
-/// F2.QA.02.02 — Verify devtrail new supports all 12 document types via DocType::ALL
+/// F2.QA.02.02 — Verify straymark new supports all 12 document types via DocType::ALL
 #[test]
 fn test_new_supports_all_doc_types() {
     let source_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -437,12 +437,12 @@ fn test_new_supports_all_doc_types() {
 fn test_validate_staged_no_git_repo() {
     let dir = tempfile::TempDir::new().unwrap();
 
-    // Create minimal .devtrail/
-    let devtrail = dir.path().join(".devtrail");
-    std::fs::create_dir_all(&devtrail).unwrap();
-    std::fs::write(devtrail.join("config.yml"), "language: en\n").unwrap();
+    // Create minimal .straymark/
+    let straymark = dir.path().join(".straymark");
+    std::fs::create_dir_all(&straymark).unwrap();
+    std::fs::write(straymark.join("config.yml"), "language: en\n").unwrap();
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg("--staged")
         .arg(dir.path().to_str().unwrap())
@@ -464,7 +464,7 @@ fn days_ago(n: i64) -> String {
 #[test]
 fn test_check_pending_reviews_flags_old_pending_aidec() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     let created = days_ago(30);
     create_doc(
@@ -484,7 +484,7 @@ risk_level: medium"#,
         ),
     );
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "validate",
@@ -503,7 +503,7 @@ risk_level: medium"#,
 #[test]
 fn test_check_pending_reviews_silent_when_outcome_set() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     let created = days_ago(30);
     create_doc(
@@ -526,7 +526,7 @@ risk_level: medium"#,
         ),
     );
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "validate",
@@ -543,7 +543,7 @@ risk_level: medium"#,
 #[test]
 fn test_check_pending_reviews_threshold_respected() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     let recent = days_ago(5); // newer than the default 14-day threshold
     create_doc(
@@ -564,7 +564,7 @@ risk_level: medium"#,
     );
 
     // Default max-pending-days = 14, doc is 5 days old → no warning.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["validate", "--check-pending-reviews"])
         .arg(dir.path().to_str().unwrap())
@@ -576,7 +576,7 @@ risk_level: medium"#,
 #[test]
 fn test_check_pending_reviews_skipped_without_flag() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     let created = days_ago(30);
     create_doc(
@@ -597,7 +597,7 @@ risk_level: medium"#,
     );
 
     // Without --check-pending-reviews, the warning does not appear.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("validate")
         .arg(dir.path().to_str().unwrap())
@@ -619,12 +619,12 @@ fn test_validate_staged_no_staged_docs() {
         .output()
         .unwrap();
 
-    // Create .devtrail/
-    let devtrail = dir.path().join(".devtrail");
-    std::fs::create_dir_all(&devtrail).unwrap();
-    std::fs::write(devtrail.join("config.yml"), "language: en\n").unwrap();
+    // Create .straymark/
+    let straymark = dir.path().join(".straymark");
+    std::fs::create_dir_all(&straymark).unwrap();
+    std::fs::write(straymark.join("config.yml"), "language: en\n").unwrap();
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("validate")
         .arg("--staged")
         .arg(dir.path().to_str().unwrap())

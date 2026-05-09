@@ -2,20 +2,20 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
-/// Helper to create a minimal DevTrail installation
-fn setup_devtrail(dir: &std::path::Path) {
-    let devtrail = dir.join(".devtrail");
-    std::fs::create_dir_all(devtrail.join("00-governance")).unwrap();
-    std::fs::create_dir_all(devtrail.join("07-ai-audit/agent-logs")).unwrap();
-    std::fs::create_dir_all(devtrail.join("07-ai-audit/decisions")).unwrap();
-    std::fs::create_dir_all(devtrail.join("07-ai-audit/ethical-reviews")).unwrap();
-    std::fs::create_dir_all(devtrail.join("08-security")).unwrap();
-    std::fs::create_dir_all(devtrail.join("09-ai-models")).unwrap();
-    std::fs::create_dir_all(devtrail.join("05-operations/incidents")).unwrap();
-    std::fs::create_dir_all(devtrail.join("templates")).unwrap();
-    std::fs::write(devtrail.join("config.yml"), "language: en\n").unwrap();
+/// Helper to create a minimal StrayMark installation
+fn setup_straymark(dir: &std::path::Path) {
+    let straymark = dir.join(".straymark");
+    std::fs::create_dir_all(straymark.join("00-governance")).unwrap();
+    std::fs::create_dir_all(straymark.join("07-ai-audit/agent-logs")).unwrap();
+    std::fs::create_dir_all(straymark.join("07-ai-audit/decisions")).unwrap();
+    std::fs::create_dir_all(straymark.join("07-ai-audit/ethical-reviews")).unwrap();
+    std::fs::create_dir_all(straymark.join("08-security")).unwrap();
+    std::fs::create_dir_all(straymark.join("09-ai-models")).unwrap();
+    std::fs::create_dir_all(straymark.join("05-operations/incidents")).unwrap();
+    std::fs::create_dir_all(straymark.join("templates")).unwrap();
+    std::fs::write(straymark.join("config.yml"), "language: en\n").unwrap();
     std::fs::write(
-        devtrail.join("dist-manifest.yml"),
+        straymark.join("dist-manifest.yml"),
         "version: \"3.0.0\"\ndescription: test\n",
     )
     .unwrap();
@@ -23,7 +23,7 @@ fn setup_devtrail(dir: &std::path::Path) {
 
 /// Helper to create a document file with frontmatter
 fn create_doc(dir: &std::path::Path, subpath: &str, filename: &str, frontmatter: &str) {
-    let path = dir.join(".devtrail").join(subpath);
+    let path = dir.join(".straymark").join(subpath);
     std::fs::create_dir_all(&path).unwrap();
     std::fs::write(
         path.join(filename),
@@ -34,7 +34,7 @@ fn create_doc(dir: &std::path::Path, subpath: &str, filename: &str, frontmatter:
 
 /// Helper to create AI-GOVERNANCE-POLICY.md
 fn create_governance_policy(dir: &std::path::Path) {
-    let path = dir.join(".devtrail/00-governance");
+    let path = dir.join(".straymark/00-governance");
     std::fs::create_dir_all(&path).unwrap();
     std::fs::write(
         path.join("AI-GOVERNANCE-POLICY.md"),
@@ -47,7 +47,7 @@ fn create_governance_policy(dir: &std::path::Path) {
 fn test_compliance_not_installed() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("compliance")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -58,9 +58,9 @@ fn test_compliance_not_installed() {
 #[test]
 fn test_compliance_no_documents() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("compliance")
         .arg("--all")
         .arg(dir.path().to_str().unwrap())
@@ -76,9 +76,9 @@ fn test_compliance_no_documents() {
 #[test]
 fn test_compliance_eu_ai_act_only() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("compliance")
         .arg("--standard")
         .arg("eu-ai-act")
@@ -94,9 +94,9 @@ fn test_compliance_eu_ai_act_only() {
 #[test]
 fn test_compliance_iso_42001_only() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("compliance")
         .arg("--standard")
         .arg("iso-42001")
@@ -112,9 +112,9 @@ fn test_compliance_iso_42001_only() {
 #[test]
 fn test_compliance_nist_ai_rmf_only() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("compliance")
         .arg("--standard")
         .arg("nist-ai-rmf")
@@ -130,10 +130,10 @@ fn test_compliance_nist_ai_rmf_only() {
 #[test]
 fn test_compliance_with_governance_policy() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     create_governance_policy(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("compliance")
         .arg("--standard")
         .arg("iso-42001")
@@ -146,7 +146,7 @@ fn test_compliance_with_governance_policy() {
 #[test]
 fn test_compliance_with_documents() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     create_governance_policy(dir.path());
 
     create_doc(
@@ -170,7 +170,7 @@ fn test_compliance_with_documents() {
         "id: AIDEC-2026-03-20-001\ntitle: Choice\nstatus: accepted\ncreated: 2026-03-20\nagent: claude-code\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("compliance")
         .arg("--all")
         .arg(dir.path().to_str().unwrap())
@@ -185,9 +185,9 @@ fn test_compliance_with_documents() {
 #[test]
 fn test_compliance_output_json() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     let output = cmd
         .arg("compliance")
         .arg("--all")
@@ -207,9 +207,9 @@ fn test_compliance_output_json() {
 #[test]
 fn test_compliance_output_markdown() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("compliance")
         .arg("--all")
         .arg("--output")
@@ -218,7 +218,7 @@ fn test_compliance_output_markdown() {
         .assert()
         .success()
         .stdout(
-            predicate::str::contains("# DevTrail Compliance Report")
+            predicate::str::contains("# StrayMark Compliance Report")
                 .and(predicate::str::contains("| Check |")),
         );
 }
@@ -228,9 +228,9 @@ fn test_compliance_output_markdown() {
 // ---------------------------------------------------------------------------
 
 /// Setup helper that writes a regional_scope including china to config.yml.
-fn setup_devtrail_with_china(dir: &std::path::Path) {
-    setup_devtrail(dir);
-    let config_path = dir.join(".devtrail/config.yml");
+fn setup_straymark_with_china(dir: &std::path::Path) {
+    setup_straymark(dir);
+    let config_path = dir.join(".straymark/config.yml");
     std::fs::write(
         &config_path,
         "language: en\nregional_scope:\n  - global\n  - china\n",
@@ -241,9 +241,9 @@ fn setup_devtrail_with_china(dir: &std::path::Path) {
 #[test]
 fn test_compliance_china_tc260_only() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_china(dir.path());
+    setup_straymark_with_china(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("compliance")
         .arg("--standard")
         .arg("china-tc260")
@@ -259,9 +259,9 @@ fn test_compliance_china_tc260_only() {
 #[test]
 fn test_compliance_china_pipl_only() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_china(dir.path());
+    setup_straymark_with_china(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("compliance")
         .arg("--standard")
         .arg("china-pipl")
@@ -277,9 +277,9 @@ fn test_compliance_china_pipl_only() {
 #[test]
 fn test_compliance_china_gb45438_only() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_china(dir.path());
+    setup_straymark_with_china(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("compliance")
         .arg("--standard")
         .arg("china-gb45438")
@@ -295,9 +295,9 @@ fn test_compliance_china_gb45438_only() {
 #[test]
 fn test_compliance_china_cac_only() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_china(dir.path());
+    setup_straymark_with_china(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("compliance")
         .arg("--standard")
         .arg("china-cac")
@@ -313,9 +313,9 @@ fn test_compliance_china_cac_only() {
 #[test]
 fn test_compliance_china_gb45652_only() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_china(dir.path());
+    setup_straymark_with_china(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("compliance")
         .arg("--standard")
         .arg("china-gb45652")
@@ -331,9 +331,9 @@ fn test_compliance_china_gb45652_only() {
 #[test]
 fn test_compliance_china_csl_only() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_china(dir.path());
+    setup_straymark_with_china(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("compliance")
         .arg("--standard")
         .arg("china-csl")
@@ -349,9 +349,9 @@ fn test_compliance_china_csl_only() {
 #[test]
 fn test_compliance_region_china_runs_six_checkers() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_china(dir.path());
+    setup_straymark_with_china(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     let output = cmd
         .arg("compliance")
         .arg("--region")
@@ -371,9 +371,9 @@ fn test_compliance_region_china_runs_six_checkers() {
 #[test]
 fn test_compliance_default_excludes_china_when_not_in_scope() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path()); // default scope = [global, eu]
+    setup_straymark(dir.path()); // default scope = [global, eu]
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     let output = cmd
         .arg("compliance")
         .arg("--output")
@@ -393,9 +393,9 @@ fn test_compliance_default_excludes_china_when_not_in_scope() {
 #[test]
 fn test_compliance_all_flag_includes_china() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path()); // default scope (no china)
+    setup_straymark(dir.path()); // default scope (no china)
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     let output = cmd
         .arg("compliance")
         .arg("--all")
@@ -413,9 +413,9 @@ fn test_compliance_all_flag_includes_china() {
 #[test]
 fn test_compliance_china_default_when_in_scope() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_china(dir.path()); // scope = [global, china]
+    setup_straymark_with_china(dir.path()); // scope = [global, china]
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     let output = cmd
         .arg("compliance")
         .arg("--output")

@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 
 /// Directories to skip during source file walking
 const EXCLUDED_DIRS: &[&str] = &[
-    ".devtrail",
+    ".straymark",
     ".git",
     "node_modules",
     "target",

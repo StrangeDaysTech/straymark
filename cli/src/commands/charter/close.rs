@@ -1,4 +1,4 @@
-//! `devtrail charter close` — record the post-execution telemetry of a Charter.
+//! `straymark charter close` — record the post-execution telemetry of a Charter.
 //!
 //! Two operating modes:
 //! - **Interactive** (default): walks the operator through the telemetry schema
@@ -8,10 +8,10 @@
 //!   editor. Combine with `--non-interactive` for CI / scripted use.
 //!
 //! After populating telemetry, the YAML is validated against
-//! `.devtrail/schemas/charter-telemetry.schema.v0.json`. The Charter
+//! `.straymark/schemas/charter-telemetry.schema.v0.json`. The Charter
 //! frontmatter `status` is bumped to `closed`.
 //!
-//! Storage: `.devtrail/charters/CHARTER-NN.telemetry.yaml`. We do not embed
+//! Storage: `.straymark/charters/CHARTER-NN.telemetry.yaml`. We do not embed
 //! telemetry in the Charter frontmatter (see roadmap §A2): frontmatter is
 //! declarative ex-ante; telemetry is ex-post and voluminous.
 
@@ -32,9 +32,9 @@ pub fn run(
     non_interactive: bool,
 ) -> Result<()> {
     let resolved = utils::resolve_project_root(path)
-        .ok_or_else(|| anyhow!("DevTrail not installed. Run 'devtrail init' first."))?;
+        .ok_or_else(|| anyhow!("StrayMark not installed. Run 'straymark init' first."))?;
     let project_root = &resolved.path;
-    let devtrail_dir = project_root.join(".devtrail");
+    let straymark_dir = project_root.join(".straymark");
 
     // Resolve the Charter.
     let (charters, _errors) = charter::discover_and_parse(project_root);
@@ -43,7 +43,7 @@ pub fn run(
         .clone();
 
     // Decide telemetry destination.
-    let charters_state_dir = devtrail_dir.join("charters");
+    let charters_state_dir = straymark_dir.join("charters");
     utils::ensure_dir(&charters_state_dir)?;
     let telemetry_path = telemetry_path_for(&charters_state_dir, &charter);
 
@@ -54,7 +54,7 @@ pub fn run(
 
     // Mode dispatch.
     let yaml_text = if from_template {
-        copy_template_for(&devtrail_dir, &charter, &telemetry_path, non_interactive)?
+        copy_template_for(&straymark_dir, &charter, &telemetry_path, non_interactive)?
     } else {
         prompts::require_interactive()?;
         let telemetry = drive_interactive_flow(&charter)?;
@@ -70,7 +70,7 @@ pub fn run(
     // template yet) skips validation since the placeholders would fail.
     let is_first_run_template = from_template && non_interactive && !telemetry_existed_before;
     if !is_first_run_template {
-        let schema = TelemetrySchema::load(&devtrail_dir)?;
+        let schema = TelemetrySchema::load(&straymark_dir)?;
         let yaml_value: serde_yaml::Value = serde_yaml::from_str(&yaml_text)
             .with_context(|| format!("Telemetry YAML at {} is not valid YAML", telemetry_path.display()))?;
         let issues = schema.validate(&yaml_value, &telemetry_path);
@@ -131,7 +131,7 @@ pub fn run(
     Ok(())
 }
 
-/// Build the `.devtrail/charters/CHARTER-NN.telemetry.yaml` path for a Charter.
+/// Build the `.straymark/charters/CHARTER-NN.telemetry.yaml` path for a Charter.
 fn telemetry_path_for(charters_state_dir: &Path, charter: &Charter) -> PathBuf {
     // Strip optional slug suffix to keep the telemetry filename stable across
     // Charter renames: CHARTER-01-foo → CHARTER-01.telemetry.yaml.
@@ -151,17 +151,17 @@ fn telemetry_path_for(charters_state_dir: &Path, charter: &Charter) -> PathBuf {
 /// existing file unless the operator confirms (interactive mode) or the file
 /// is the template itself unchanged (resumable in `--from-template` flow).
 fn copy_template_for(
-    devtrail_dir: &Path,
+    straymark_dir: &Path,
     charter: &Charter,
     dest: &Path,
     non_interactive: bool,
 ) -> Result<String> {
-    let template_path = devtrail_dir
+    let template_path = straymark_dir
         .join("templates")
         .join("charter-telemetry-template.yaml");
     let template = std::fs::read_to_string(&template_path).with_context(|| {
         format!(
-            "Telemetry template not found at {}. Run `devtrail repair` to restore framework files.",
+            "Telemetry template not found at {}. Run `straymark repair` to restore framework files.",
             template_path.display()
         )
     })?;

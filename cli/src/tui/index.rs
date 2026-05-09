@@ -111,7 +111,7 @@ const GROUP_DEFS: &[(&str, &str, &[SubgroupDef])] = &[
 ];
 
 impl DocIndex {
-    /// Build the index by scanning the .devtrail directory.
+    /// Build the index by scanning the .straymark directory.
     ///
     /// `language` selects the preferred locale (e.g. `"en"`, `"es"`, `"zh-CN"`).
     /// When non-`"en"`, framework files at group roots (e.g. governance docs)
@@ -119,13 +119,13 @@ impl DocIndex {
     /// when one exists; otherwise the English original is used. User-authored
     /// content under subgroups (`decisions/`, `incidents/`, ...) is never
     /// localized.
-    pub fn build(devtrail_dir: &Path, language: &str) -> Self {
+    pub fn build(straymark_dir: &Path, language: &str) -> Self {
         let mut groups = Vec::new();
         let mut relations = RelationIndex::default();
         let mut total_docs = 0;
 
         for &(group_name, group_label, subgroup_defs) in GROUP_DEFS {
-            let group_path = devtrail_dir.join(group_name);
+            let group_path = straymark_dir.join(group_name);
             let localized_group_label = t(group_label, language).to_string();
             if !group_path.exists() {
                 groups.push(DocGroup {
@@ -207,12 +207,12 @@ impl DocIndex {
         }
 
         // Synthetic "Charters" group at the end. Charters live at
-        // <project_root>/docs/charters/, NOT under .devtrail/. We append them
+        // <project_root>/docs/charters/, NOT under .straymark/. We append them
         // as a 10th-style pseudo-group so the existing NavSelection tree
         // model handles them without modification. The group is added only
         // when at least one Charter exists — adopters who don't use the
         // pattern see no empty stub.
-        let project_root = devtrail_dir.parent().unwrap_or(devtrail_dir);
+        let project_root = straymark_dir.parent().unwrap_or(straymark_dir);
         let charter_files = scan_charters(project_root, &mut relations);
         if !charter_files.is_empty() {
             total_docs += charter_files.len();
@@ -657,15 +657,15 @@ fn quick_scan_frontmatter(path: &Path, relations: &mut RelationIndex) -> Scanned
 mod tests {
     use super::*;
 
-    /// Build a fixture .devtrail tree with a translated and an English-only
+    /// Build a fixture .straymark tree with a translated and an English-only
     /// governance doc, and verify DocIndex prefers the translation when
     /// language=zh-CN, falling back to English silently when no translation
     /// exists.
     #[test]
     fn build_zh_cn_swaps_governance_path_when_translation_present() {
         let tmp = tempfile::TempDir::new().unwrap();
-        let devtrail_dir = tmp.path().join(".devtrail");
-        let governance = devtrail_dir.join("00-governance");
+        let straymark_dir = tmp.path().join(".straymark");
+        let governance = straymark_dir.join("00-governance");
         let zh = governance.join("i18n").join("zh-CN");
         std::fs::create_dir_all(&zh).unwrap();
 
@@ -688,7 +688,7 @@ mod tests {
         )
         .unwrap();
 
-        let index = DocIndex::build(&devtrail_dir, "zh-CN");
+        let index = DocIndex::build(&straymark_dir, "zh-CN");
 
         let governance_group = index
             .groups
@@ -724,15 +724,15 @@ mod tests {
     #[test]
     fn build_en_never_descends_into_i18n_subdirs() {
         let tmp = tempfile::TempDir::new().unwrap();
-        let devtrail_dir = tmp.path().join(".devtrail");
-        let governance = devtrail_dir.join("00-governance");
+        let straymark_dir = tmp.path().join(".straymark");
+        let governance = straymark_dir.join("00-governance");
         let zh = governance.join("i18n").join("zh-CN");
         std::fs::create_dir_all(&zh).unwrap();
 
         std::fs::write(governance.join("AGENT-RULES.md"), "# Rules").unwrap();
         std::fs::write(zh.join("AGENT-RULES.md"), "# 规则").unwrap();
 
-        let index = DocIndex::build(&devtrail_dir, "en");
+        let index = DocIndex::build(&straymark_dir, "en");
         let governance_group = index
             .groups
             .iter()
@@ -752,8 +752,8 @@ mod tests {
     fn build_appends_charters_synthetic_group_when_present() {
         let tmp = tempfile::TempDir::new().unwrap();
         let project_root = tmp.path();
-        let devtrail_dir = project_root.join(".devtrail");
-        std::fs::create_dir_all(&devtrail_dir).unwrap();
+        let straymark_dir = project_root.join(".straymark");
+        std::fs::create_dir_all(&straymark_dir).unwrap();
         let charters_dir = project_root.join("docs").join("charters");
         std::fs::create_dir_all(&charters_dir).unwrap();
         std::fs::write(
@@ -773,7 +773,7 @@ mod tests {
         )
         .unwrap();
 
-        let index = DocIndex::build(&devtrail_dir, "en");
+        let index = DocIndex::build(&straymark_dir, "en");
         // The synthetic group is appended after the GROUP_DEFS entries.
         let charters_group = index
             .groups
@@ -812,11 +812,11 @@ mod tests {
     #[test]
     fn build_skips_charters_group_when_no_charters_exist() {
         let tmp = tempfile::TempDir::new().unwrap();
-        let devtrail_dir = tmp.path().join(".devtrail");
-        std::fs::create_dir_all(&devtrail_dir).unwrap();
+        let straymark_dir = tmp.path().join(".straymark");
+        std::fs::create_dir_all(&straymark_dir).unwrap();
         // No docs/charters/ directory.
 
-        let index = DocIndex::build(&devtrail_dir, "en");
+        let index = DocIndex::build(&straymark_dir, "en");
         assert!(
             index.groups.iter().all(|g| g.name != "_charters"),
             "no synthetic Charters group should be present when none exist"
@@ -827,8 +827,8 @@ mod tests {
     fn build_charters_label_localizes_to_zh_cn() {
         let tmp = tempfile::TempDir::new().unwrap();
         let project_root = tmp.path();
-        let devtrail_dir = project_root.join(".devtrail");
-        std::fs::create_dir_all(&devtrail_dir).unwrap();
+        let straymark_dir = project_root.join(".straymark");
+        std::fs::create_dir_all(&straymark_dir).unwrap();
         let charters_dir = project_root.join("docs").join("charters");
         std::fs::create_dir_all(&charters_dir).unwrap();
         std::fs::write(
@@ -837,7 +837,7 @@ mod tests {
         )
         .unwrap();
 
-        let index = DocIndex::build(&devtrail_dir, "zh-CN");
+        let index = DocIndex::build(&straymark_dir, "zh-CN");
         let charters_group = index
             .groups
             .iter()
@@ -849,8 +849,8 @@ mod tests {
     #[test]
     fn build_does_not_localize_user_subgroups() {
         let tmp = tempfile::TempDir::new().unwrap();
-        let devtrail_dir = tmp.path().join(".devtrail");
-        let decisions = devtrail_dir.join("02-design").join("decisions");
+        let straymark_dir = tmp.path().join(".straymark");
+        let decisions = straymark_dir.join("02-design").join("decisions");
         let stray_zh = decisions.join("i18n").join("zh-CN");
         std::fs::create_dir_all(&stray_zh).unwrap();
 
@@ -864,7 +864,7 @@ mod tests {
         std::fs::write(stray_zh.join("ADR-2026-01-01-001-foo.md"), "# 中文 ADR")
             .unwrap();
 
-        let index = DocIndex::build(&devtrail_dir, "zh-CN");
+        let index = DocIndex::build(&straymark_dir, "zh-CN");
         let design = index
             .groups
             .iter()

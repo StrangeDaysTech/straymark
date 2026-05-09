@@ -24,5 +24,5 @@ pub fn archive_extension() -> &'static str {
 pub fn asset_name(version: &str) -> Result<String> {
     let target = current_target()?;
     let ext = archive_extension();
-    Ok(format!("devtrail-cli-v{}-{}.{}", version, target, ext))
+    Ok(format!("straymark-cli-v{}-{}.{}", version, target, ext))
 }

@@ -1,7 +1,7 @@
 //! JSON Schema validation for Charter frontmatter.
 //!
-//! The schema is shipped at `<framework>/.devtrail/schemas/charter.schema.v0.json`
-//! (the framework distribution drops it into the project at `devtrail init` time).
+//! The schema is shipped at `<framework>/.straymark/schemas/charter.schema.v0.json`
+//! (the framework distribution drops it into the project at `straymark init` time).
 //! This module loads and compiles the schema once and validates frontmatter
 //! parsed as `serde_yaml::Value`, mapping JSON-Schema errors to the
 //! `ValidationIssue` shape used by the rest of the validate pipeline so the
@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 
 use crate::validation::{Severity, ValidationIssue};
 
-/// Path to the Charter schema relative to a project's `.devtrail/` directory.
+/// Path to the Charter schema relative to a project's `.straymark/` directory.
 pub const SCHEMA_RELATIVE_PATH: &str = "schemas/charter.schema.v0.json";
 
 /// A loaded and compiled Charter schema, ready to validate frontmatter.
@@ -23,14 +23,14 @@ pub struct CharterSchema {
 }
 
 impl CharterSchema {
-    /// Load and compile the Charter schema from a project's `.devtrail/`
+    /// Load and compile the Charter schema from a project's `.straymark/`
     /// directory. Returns an error if the schema file is missing, not valid
     /// JSON, or not a valid JSON Schema.
-    pub fn load(devtrail_dir: &Path) -> Result<Self> {
-        let path = devtrail_dir.join(SCHEMA_RELATIVE_PATH);
+    pub fn load(straymark_dir: &Path) -> Result<Self> {
+        let path = straymark_dir.join(SCHEMA_RELATIVE_PATH);
         let raw = std::fs::read_to_string(&path).with_context(|| {
             format!(
-                "Failed to read Charter schema at {}. Run `devtrail repair` to restore framework files.",
+                "Failed to read Charter schema at {}. Run `straymark repair` to restore framework files.",
                 path.display()
             )
         })?;
@@ -203,7 +203,7 @@ mod tests {
     /// The Charter schema text. In tests we keep an in-tree copy of the
     /// schema's structure (a minimal subset) so this module compiles without
     /// depending on the framework distribution being installed at test time.
-    /// The full schema lives at `dist/.devtrail/schemas/charter.schema.v0.json`.
+    /// The full schema lives at `dist/.straymark/schemas/charter.schema.v0.json`.
     const TEST_SCHEMA: &str = r##"{
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
@@ -349,7 +349,7 @@ trigger: "x"
     #[test]
     fn rejects_charter_id_pattern_mismatch() {
         let s = schema();
-        // Plan-NN format (Sentinel historical) is rejected — DevTrail vocabulary
+        // Plan-NN format (Sentinel historical) is rejected — StrayMark vocabulary
         // requires CHARTER-NN.
         let fm = yaml(
             r#"

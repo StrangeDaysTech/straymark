@@ -1,14 +1,14 @@
 version: "4.10.0"
-description: "DevTrail distribution manifest"
-repository: "https://github.com/StrangeDaysTech/devtrail"
+description: "StrayMark distribution manifest"
+repository: "https://github.com/StrangeDaysTech/straymark"
 
-# Files included when running `devtrail init`
+# Files included when running `straymark init`
 files:
   # Core framework
-  - .devtrail/
+  - .straymark/
 
   # Unified rules file
-  - DEVTRAIL.md
+  - STRAYMARK.md
 
   # Agent skills
   - .claude/skills/
@@ -29,7 +29,7 @@ injections:
     template: dist-templates/directives/copilot-instructions.md
   - target: .cursorrules
     template: dist-templates/directives/cursorrules
-    embed: DEVTRAIL.md
-  - target: .cursor/rules/devtrail.md
-    template: dist-templates/directives/cursor-rules-devtrail.md
-    embed: DEVTRAIL.md
+    embed: STRAYMARK.md
+  - target: .cursor/rules/straymark.md
+    template: dist-templates/directives/cursor-rules-straymark.md
+    embed: STRAYMARK.md

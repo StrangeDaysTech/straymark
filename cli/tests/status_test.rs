@@ -6,7 +6,7 @@ use tempfile::TempDir;
 fn test_status_not_installed() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("status")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -17,23 +17,23 @@ fn test_status_not_installed() {
 #[test]
 fn test_status_with_minimal_install() {
     let dir = TempDir::new().unwrap();
-    let devtrail = dir.path().join(".devtrail");
-    std::fs::create_dir_all(&devtrail).unwrap();
+    let straymark = dir.path().join(".straymark");
+    std::fs::create_dir_all(&straymark).unwrap();
 
     // Create minimal config and manifest
     std::fs::write(
-        devtrail.join("config.yml"),
+        straymark.join("config.yml"),
         "language: es\n",
     )
     .unwrap();
     std::fs::write(
-        devtrail.join("dist-manifest.yml"),
+        straymark.join("dist-manifest.yml"),
         "version: \"2.1.0\"\ndescription: test\nfiles: []\n",
     )
     .unwrap();
 
     // Create some fake documents
-    let reqs_dir = devtrail.join("01-requirements");
+    let reqs_dir = straymark.join("01-requirements");
     std::fs::create_dir_all(&reqs_dir).unwrap();
     std::fs::write(
         reqs_dir.join("REQ-2025-01-01-001-test.md"),
@@ -46,7 +46,7 @@ fn test_status_with_minimal_install() {
     )
     .unwrap();
 
-    let logs_dir = devtrail.join("07-ai-audit/agent-logs");
+    let logs_dir = straymark.join("07-ai-audit/agent-logs");
     std::fs::create_dir_all(&logs_dir).unwrap();
     std::fs::write(
         logs_dir.join("AILOG-2025-03-01-001-session.md"),
@@ -55,15 +55,15 @@ fn test_status_with_minimal_install() {
     .unwrap();
 
     // Create new Fase 1 directories
-    let sec_dir = devtrail.join("08-security");
+    let sec_dir = straymark.join("08-security");
     std::fs::create_dir_all(&sec_dir).unwrap();
     std::fs::write(sec_dir.join(".gitkeep"), "").unwrap();
 
-    let models_dir = devtrail.join("09-ai-models");
+    let models_dir = straymark.join("09-ai-models");
     std::fs::create_dir_all(&models_dir).unwrap();
     std::fs::write(models_dir.join(".gitkeep"), "").unwrap();
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("status")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -79,22 +79,22 @@ fn test_status_with_minimal_install() {
 #[test]
 fn test_status_recognizes_new_doc_types() {
     let dir = TempDir::new().unwrap();
-    let devtrail = dir.path().join(".devtrail");
-    std::fs::create_dir_all(&devtrail).unwrap();
+    let straymark = dir.path().join(".straymark");
+    std::fs::create_dir_all(&straymark).unwrap();
 
     std::fs::write(
-        devtrail.join("config.yml"),
+        straymark.join("config.yml"),
         "language: en\n",
     )
     .unwrap();
     std::fs::write(
-        devtrail.join("dist-manifest.yml"),
+        straymark.join("dist-manifest.yml"),
         "version: \"3.0.0\"\ndescription: test\nfiles: []\n",
     )
     .unwrap();
 
     // Create documents of new types
-    let sec_dir = devtrail.join("08-security");
+    let sec_dir = straymark.join("08-security");
     std::fs::create_dir_all(&sec_dir).unwrap();
     std::fs::write(
         sec_dir.join("SEC-2026-03-25-001-threat-model.md"),
@@ -102,7 +102,7 @@ fn test_status_recognizes_new_doc_types() {
     )
     .unwrap();
 
-    let models_dir = devtrail.join("09-ai-models");
+    let models_dir = straymark.join("09-ai-models");
     std::fs::create_dir_all(&models_dir).unwrap();
     std::fs::write(
         models_dir.join("MCARD-2026-03-25-001-classifier.md"),
@@ -110,7 +110,7 @@ fn test_status_recognizes_new_doc_types() {
     )
     .unwrap();
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("status")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -124,14 +124,14 @@ fn test_status_recognizes_new_doc_types() {
 #[test]
 fn test_status_incomplete_structure() {
     let dir = TempDir::new().unwrap();
-    let devtrail = dir.path().join(".devtrail");
+    let straymark = dir.path().join(".straymark");
 
     // Create only some directories
-    std::fs::create_dir_all(devtrail.join("00-governance")).unwrap();
-    std::fs::create_dir_all(devtrail.join("01-requirements")).unwrap();
+    std::fs::create_dir_all(straymark.join("00-governance")).unwrap();
+    std::fs::create_dir_all(straymark.join("01-requirements")).unwrap();
     // Intentionally skip other directories
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("status")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -143,7 +143,7 @@ fn test_status_incomplete_structure() {
 fn test_status_explicit_path_argument() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("status")
         .arg(dir.path().to_str().unwrap())
         .assert()

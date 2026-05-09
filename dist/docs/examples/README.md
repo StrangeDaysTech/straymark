@@ -1,11 +1,11 @@
-# DevTrail examples — browse-only reference
+# StrayMark examples — browse-only reference
 
 This directory ships a small set of anonymized real-world examples derived from the Sentinel `/plan-audit` experiment that originated the Charter pattern. They exist for **browsing** — not as scaffolding templates.
 
-`devtrail init` does **not** copy these into adopter projects. The auto-installed manifest paths are `.devtrail/`, `DEVTRAIL.md`, agent skills, and the docs-validation workflow (see `dist/dist-manifest.yml`); `dist/docs/` is excluded by design. To scaffold a real document in your project, use:
+`straymark init` does **not** copy these into adopter projects. The auto-installed manifest paths are `.straymark/`, `STRAYMARK.md`, agent skills, and the docs-validation workflow (see `dist/dist-manifest.yml`); `dist/docs/` is excluded by design. To scaffold a real document in your project, use:
 
-- `devtrail new --doc-type ailog --title "..."` → AILOG
-- `devtrail charter new --type S|M|L --title "..."` → Charter
+- `straymark new --doc-type ailog --title "..."` → AILOG
+- `straymark charter new --type S|M|L --title "..."` → Charter
 
 ## What's here
 
@@ -30,4 +30,4 @@ This pair illustrates the loop the framework is built to capture:
 
 ## Anonymization
 
-Sentinel-specific identifiers (module names, internal issue numbers, PR refs, infrastructure hostnames, reviewer emails, dates) have been replaced with generic placeholders. Technical reasoning, the Decision section structure, the Risk numbering, and the Verification commands are preserved verbatim per the example-anonymization rules in `Propuesta/devtrail-cli-roadmap.md` §3.1.
+Sentinel-specific identifiers (module names, internal issue numbers, PR refs, infrastructure hostnames, reviewer emails, dates) have been replaced with generic placeholders. Technical reasoning, the Decision section structure, the Risk numbering, and the Verification commands are preserved verbatim per the example-anonymization rules in `Propuesta/straymark-cli-roadmap.md` §3.1.

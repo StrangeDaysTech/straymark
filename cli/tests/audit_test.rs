@@ -2,20 +2,20 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
-/// Helper to create a minimal DevTrail installation
-fn setup_devtrail(dir: &std::path::Path) {
-    let devtrail = dir.join(".devtrail");
-    std::fs::create_dir_all(devtrail.join("00-governance")).unwrap();
-    std::fs::create_dir_all(devtrail.join("07-ai-audit/agent-logs")).unwrap();
-    std::fs::create_dir_all(devtrail.join("07-ai-audit/decisions")).unwrap();
-    std::fs::create_dir_all(devtrail.join("07-ai-audit/ethical-reviews")).unwrap();
-    std::fs::create_dir_all(devtrail.join("08-security")).unwrap();
-    std::fs::create_dir_all(devtrail.join("09-ai-models")).unwrap();
-    std::fs::create_dir_all(devtrail.join("05-operations/incidents")).unwrap();
-    std::fs::create_dir_all(devtrail.join("templates")).unwrap();
-    std::fs::write(devtrail.join("config.yml"), "language: en\n").unwrap();
+/// Helper to create a minimal StrayMark installation
+fn setup_straymark(dir: &std::path::Path) {
+    let straymark = dir.join(".straymark");
+    std::fs::create_dir_all(straymark.join("00-governance")).unwrap();
+    std::fs::create_dir_all(straymark.join("07-ai-audit/agent-logs")).unwrap();
+    std::fs::create_dir_all(straymark.join("07-ai-audit/decisions")).unwrap();
+    std::fs::create_dir_all(straymark.join("07-ai-audit/ethical-reviews")).unwrap();
+    std::fs::create_dir_all(straymark.join("08-security")).unwrap();
+    std::fs::create_dir_all(straymark.join("09-ai-models")).unwrap();
+    std::fs::create_dir_all(straymark.join("05-operations/incidents")).unwrap();
+    std::fs::create_dir_all(straymark.join("templates")).unwrap();
+    std::fs::write(straymark.join("config.yml"), "language: en\n").unwrap();
     std::fs::write(
-        devtrail.join("dist-manifest.yml"),
+        straymark.join("dist-manifest.yml"),
         "version: \"3.2.0\"\ndescription: test\n",
     )
     .unwrap();
@@ -23,7 +23,7 @@ fn setup_devtrail(dir: &std::path::Path) {
 
 /// Helper to create a document file with frontmatter
 fn create_doc(dir: &std::path::Path, subpath: &str, filename: &str, frontmatter: &str) {
-    let path = dir.join(".devtrail").join(subpath);
+    let path = dir.join(".straymark").join(subpath);
     std::fs::create_dir_all(&path).unwrap();
     std::fs::write(
         path.join(filename),
@@ -36,7 +36,7 @@ fn create_doc(dir: &std::path::Path, subpath: &str, filename: &str, frontmatter:
 fn test_audit_not_installed() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("audit")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -47,9 +47,9 @@ fn test_audit_not_installed() {
 #[test]
 fn test_audit_no_documents() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("audit")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -60,7 +60,7 @@ fn test_audit_no_documents() {
 #[test]
 fn test_audit_with_documents() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -69,7 +69,7 @@ fn test_audit_with_documents() {
         "id: AILOG-2026-03-20-001\ntitle: Init project\nstatus: accepted\ncreated: 2026-03-20\nagent: claude-code\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("audit")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -84,7 +84,7 @@ fn test_audit_with_documents() {
 #[test]
 fn test_audit_date_range_filter() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -107,7 +107,7 @@ fn test_audit_date_range_filter() {
         "id: AILOG-2026-06-01-001\ntitle: June entry\nstatus: accepted\ncreated: 2026-06-01\nagent: claude-code\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("audit")
         .arg("--from")
         .arg("2026-03-01")
@@ -127,7 +127,7 @@ fn test_audit_date_range_filter() {
 #[test]
 fn test_audit_system_filter() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -143,7 +143,7 @@ fn test_audit_system_filter() {
         "id: AILOG-2026-03-21-001\ntitle: Payment update\nstatus: accepted\ncreated: 2026-03-21\nagent: claude-code\nconfidence: high\nreview_required: false\nrisk_level: low\ntags:\n  - payment\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("audit")
         .arg("--system")
         .arg("auth")
@@ -160,7 +160,7 @@ fn test_audit_system_filter() {
 #[test]
 fn test_audit_traceability() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -183,7 +183,7 @@ fn test_audit_traceability() {
         "id: AILOG-2026-03-03-001\ntitle: Implement JWT\nstatus: accepted\ncreated: 2026-03-03\nagent: claude-code\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("audit")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -199,7 +199,7 @@ fn test_audit_traceability() {
 #[test]
 fn test_audit_output_markdown() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -208,7 +208,7 @@ fn test_audit_output_markdown() {
         "id: AILOG-2026-03-20-001\ntitle: Test\nstatus: accepted\ncreated: 2026-03-20\nagent: claude-code\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("audit")
         .arg("--output")
         .arg("markdown")
@@ -216,7 +216,7 @@ fn test_audit_output_markdown() {
         .assert()
         .success()
         .stdout(
-            predicate::str::contains("# DevTrail Audit Report")
+            predicate::str::contains("# StrayMark Audit Report")
                 .and(predicate::str::contains("| Date |")),
         );
 }
@@ -224,7 +224,7 @@ fn test_audit_output_markdown() {
 #[test]
 fn test_audit_output_html() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -233,7 +233,7 @@ fn test_audit_output_html() {
         "id: AILOG-2026-03-20-001\ntitle: Test\nstatus: accepted\ncreated: 2026-03-20\nagent: claude-code\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("audit")
         .arg("--output")
         .arg("html")
@@ -249,7 +249,7 @@ fn test_audit_output_html() {
 #[test]
 fn test_audit_output_json() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -258,7 +258,7 @@ fn test_audit_output_json() {
         "id: AILOG-2026-03-20-001\ntitle: Test\nstatus: accepted\ncreated: 2026-03-20\nagent: claude-code\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     let output = cmd
         .arg("audit")
         .arg("--output")

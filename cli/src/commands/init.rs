@@ -15,16 +15,16 @@ pub fn run(path: &str, install_hooks: bool) -> Result<()> {
         .unwrap_or_else(|_| PathBuf::from(path));
 
     println!(
-        "{} DevTrail in {}",
+        "{} StrayMark in {}",
         "Initializing".cyan().bold(),
         target.display()
     );
 
     // Check if already initialized
-    if target.join(".devtrail").exists() {
+    if target.join(".straymark").exists() {
         bail!(
-            ".devtrail/ already exists. Use {} to update.",
-            "devtrail update".yellow()
+            ".straymark/ already exists. Use {} to update.",
+            "straymark update".yellow()
         );
     }
 
@@ -39,7 +39,7 @@ pub fn run(path: &str, install_hooks: bool) -> Result<()> {
 
     // Download ZIP to temp file
     let temp_dir = tempfile::tempdir().context("Failed to create temp directory")?;
-    let zip_path = temp_dir.path().join("devtrail.zip");
+    let zip_path = temp_dir.path().join("straymark.zip");
 
     utils::info("Downloading...");
     download::download_zip(&release.zip_url, &zip_path)?;
@@ -84,18 +84,18 @@ pub fn run(path: &str, install_hooks: bool) -> Result<()> {
 
     // Print summary
     println!();
-    utils::success("DevTrail initialized successfully!");
+    utils::success("StrayMark initialized successfully!");
     println!();
     println!("  {}", "Next steps:".bold());
-    println!("    1. Review .devtrail/config.yml for language settings");
-    println!("    2. Check DEVTRAIL.md for governance rules");
+    println!("    1. Review .straymark/config.yml for language settings");
+    println!("    2. Check STRAYMARK.md for governance rules");
     println!(
         "    3. Run {} to validate your setup",
-        "devtrail validate".cyan()
+        "straymark validate".cyan()
     );
     println!(
         "    4. Commit: {}",
-        "git add .devtrail/ DEVTRAIL.md && git commit -m \"chore: adopt DevTrail\"".dimmed()
+        "git add .straymark/ STRAYMARK.md && git commit -m \"chore: adopt StrayMark\"".dimmed()
     );
 
     Ok(())
@@ -109,7 +109,7 @@ fn extract_distribution(
     let file = std::fs::File::open(zip_path).context("Failed to open ZIP file")?;
     let mut archive = zip::ZipArchive::new(file).context("Failed to read ZIP archive")?;
 
-    // Find the manifest inside the ZIP (it may be in a subdirectory like devtrail-v2.0.0/)
+    // Find the manifest inside the ZIP (it may be in a subdirectory like straymark-v2.0.0/)
     let mut manifest_content = None;
     let mut prefix = String::new();
 
@@ -205,19 +205,19 @@ fn extract_matching_files(
 /// Create the empty directory structure with .gitkeep files
 fn create_empty_dirs(target: &Path) -> Result<()> {
     let dirs = [
-        ".devtrail/01-requirements",
-        ".devtrail/02-design/decisions",
-        ".devtrail/03-implementation",
-        ".devtrail/04-testing",
-        ".devtrail/05-operations/incidents",
-        ".devtrail/05-operations/runbooks",
-        ".devtrail/06-evolution/technical-debt",
-        ".devtrail/07-ai-audit/agent-logs",
-        ".devtrail/07-ai-audit/decisions",
-        ".devtrail/07-ai-audit/ethical-reviews",
-        ".devtrail/08-security",
-        ".devtrail/09-ai-models",
-        ".devtrail/00-governance/exceptions",
+        ".straymark/01-requirements",
+        ".straymark/02-design/decisions",
+        ".straymark/03-implementation",
+        ".straymark/04-testing",
+        ".straymark/05-operations/incidents",
+        ".straymark/05-operations/runbooks",
+        ".straymark/06-evolution/technical-debt",
+        ".straymark/07-ai-audit/agent-logs",
+        ".straymark/07-ai-audit/decisions",
+        ".straymark/07-ai-audit/ethical-reviews",
+        ".straymark/08-security",
+        ".straymark/09-ai-models",
+        ".straymark/00-governance/exceptions",
     ];
 
     for dir in &dirs {
@@ -232,7 +232,7 @@ fn create_empty_dirs(target: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Inject DevTrail directives based on manifest and templates
+/// Inject StrayMark directives based on manifest and templates
 fn inject_directives(
     target: &Path,
     manifest: &DistManifest,
@@ -281,7 +281,7 @@ fn inject_directives(
 
 /// Save the manifest locally for future remove operations
 fn save_local_manifest(target: &Path, manifest: &DistManifest) -> Result<()> {
-    let manifest_path = target.join(".devtrail/dist-manifest.yml");
+    let manifest_path = target.join(".straymark/dist-manifest.yml");
     let content = manifest.to_yaml()?;
     std::fs::write(&manifest_path, content)
         .context("Failed to save local dist-manifest.yml")?;
@@ -295,8 +295,8 @@ fn save_initial_checksums(target: &Path, version: &str) -> Result<()> {
         files: std::collections::HashMap::new(),
     };
 
-    // Walk .devtrail/ and hash all files
-    if let Ok(entries) = walkdir(target.join(".devtrail")) {
+    // Walk .straymark/ and hash all files
+    if let Ok(entries) = walkdir(target.join(".straymark")) {
         for entry in entries {
             if let Some(hash) = utils::file_hash(&entry) {
                 let relative = entry
@@ -309,17 +309,17 @@ fn save_initial_checksums(target: &Path, version: &str) -> Result<()> {
         }
     }
 
-    // Also hash DEVTRAIL.md
-    let devtrail_path = target.join("DEVTRAIL.md");
-    if let Some(hash) = utils::file_hash(&devtrail_path) {
-        checksums.files.insert("DEVTRAIL.md".to_string(), hash);
+    // Also hash STRAYMARK.md
+    let straymark_path = target.join("STRAYMARK.md");
+    if let Some(hash) = utils::file_hash(&straymark_path) {
+        checksums.files.insert("STRAYMARK.md".to_string(), hash);
     }
 
     checksums.save(target)?;
     Ok(())
 }
 
-/// Install `.devtrail/hooks/pre-pr.sh` as `.git/hooks/pre-push`. Returns
+/// Install `.straymark/hooks/pre-pr.sh` as `.git/hooks/pre-push`. Returns
 /// `Ok(true)` on success, `Ok(false)` if the project is not a git repo
 /// (so the caller can skip silently). Errors only on actual filesystem
 /// failures (the hook source is missing, the destination can't be written,
@@ -333,7 +333,7 @@ fn install_pre_pr_hook(target: &Path) -> Result<bool> {
         return Ok(false);
     }
 
-    let source = target.join(".devtrail/hooks/pre-pr.sh");
+    let source = target.join(".straymark/hooks/pre-pr.sh");
     if !source.exists() {
         bail!(
             "pre-PR hook source not found at {}. The framework distribution may be incomplete.",
@@ -373,9 +373,9 @@ mod hook_tests {
 
     fn setup_tempdir_with_hook_source(tmp: &Path) {
         std::fs::create_dir_all(tmp.join(".git/objects")).unwrap();
-        std::fs::create_dir_all(tmp.join(".devtrail/hooks")).unwrap();
+        std::fs::create_dir_all(tmp.join(".straymark/hooks")).unwrap();
         std::fs::write(
-            tmp.join(".devtrail/hooks/pre-pr.sh"),
+            tmp.join(".straymark/hooks/pre-pr.sh"),
             "#!/usr/bin/env bash\necho hook\n",
         )
         .unwrap();
@@ -405,9 +405,9 @@ mod hook_tests {
     #[test]
     fn install_pre_pr_hook_skips_when_not_a_git_repo() {
         let tmp = TempDir::new().unwrap();
-        std::fs::create_dir_all(tmp.path().join(".devtrail/hooks")).unwrap();
+        std::fs::create_dir_all(tmp.path().join(".straymark/hooks")).unwrap();
         std::fs::write(
-            tmp.path().join(".devtrail/hooks/pre-pr.sh"),
+            tmp.path().join(".straymark/hooks/pre-pr.sh"),
             "#!/usr/bin/env bash\nexit 0\n",
         )
         .unwrap();
@@ -436,7 +436,7 @@ mod hook_tests {
     fn install_pre_pr_hook_errors_when_source_missing() {
         let tmp = TempDir::new().unwrap();
         std::fs::create_dir_all(tmp.path().join(".git/objects")).unwrap();
-        // Note: no .devtrail/hooks/pre-pr.sh
+        // Note: no .straymark/hooks/pre-pr.sh
 
         let result = install_pre_pr_hook(tmp.path());
         assert!(result.is_err());

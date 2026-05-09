@@ -1,7 +1,7 @@
 use serde::Serialize;
 use std::path::Path;
 
-use crate::document::{DevTrailDocument, DocType};
+use crate::document::{StrayMarkDocument, DocType};
 
 /// The 12 NIST AI 600-1 GenAI risk categories (canonical identifiers)
 pub const NIST_GENAI_CATEGORIES: &[&str] = &[
@@ -92,18 +92,18 @@ pub struct ComplianceReport {
     pub score: f64,
 }
 
-/// Check if a governance file exists in the devtrail directory
-fn governance_file_exists(devtrail_dir: &Path, filename: &str) -> bool {
-    devtrail_dir.join("00-governance").join(filename).exists()
+/// Check if a governance file exists in the straymark directory
+fn governance_file_exists(straymark_dir: &Path, filename: &str) -> bool {
+    straymark_dir.join("00-governance").join(filename).exists()
 }
 
 /// Count documents of a specific type
-fn count_type(docs: &[DevTrailDocument], doc_type: DocType) -> usize {
+fn count_type(docs: &[StrayMarkDocument], doc_type: DocType) -> usize {
     docs.iter().filter(|d| d.doc_type == doc_type).count()
 }
 
 /// Collect document IDs of a specific type
-fn ids_of_type(docs: &[DevTrailDocument], doc_type: DocType) -> Vec<String> {
+fn ids_of_type(docs: &[StrayMarkDocument], doc_type: DocType) -> Vec<String> {
     docs.iter()
         .filter(|d| d.doc_type == doc_type)
         .filter_map(|d| d.frontmatter.id.clone())
@@ -128,7 +128,7 @@ fn calculate_score(checks: &[ComplianceCheck]) -> f64 {
 // EU AI Act checker
 // ---------------------------------------------------------------------------
 
-pub fn check_eu_ai_act(docs: &[DevTrailDocument], _governance_dir: &Path) -> ComplianceReport {
+pub fn check_eu_ai_act(docs: &[StrayMarkDocument], _governance_dir: &Path) -> ComplianceReport {
     let mut checks = Vec::new();
 
     // EU-001: Risk classification — at least one doc classifies EU AI Act risk
@@ -162,7 +162,7 @@ pub fn check_eu_ai_act(docs: &[DevTrailDocument], _governance_dir: &Path) -> Com
 
     // EU-002: High-risk docs have ETH linked in related
     {
-        let high_risk_docs: Vec<&DevTrailDocument> = docs
+        let high_risk_docs: Vec<&StrayMarkDocument> = docs
             .iter()
             .filter(|d| d.frontmatter.eu_ai_act_risk.as_deref() == Some("high"))
             .collect();
@@ -257,7 +257,7 @@ pub fn check_eu_ai_act(docs: &[DevTrailDocument], _governance_dir: &Path) -> Com
 
     // EU-004: Incident reporting compliance
     {
-        let inc_docs: Vec<&DevTrailDocument> = docs
+        let inc_docs: Vec<&StrayMarkDocument> = docs
             .iter()
             .filter(|d| d.doc_type == DocType::Inc)
             .collect();
@@ -310,7 +310,7 @@ pub fn check_eu_ai_act(docs: &[DevTrailDocument], _governance_dir: &Path) -> Com
 // ISO/IEC 42001 checker
 // ---------------------------------------------------------------------------
 
-pub fn check_iso_42001(docs: &[DevTrailDocument], governance_dir: &Path) -> ComplianceReport {
+pub fn check_iso_42001(docs: &[StrayMarkDocument], governance_dir: &Path) -> ComplianceReport {
     let mut checks = Vec::new();
 
     // ISO-001: AI Governance Policy exists
@@ -330,7 +330,7 @@ pub fn check_iso_42001(docs: &[DevTrailDocument], governance_dir: &Path) -> Comp
                 vec![]
             },
             remediation: if !exists {
-                Some("Run 'devtrail init' or 'devtrail repair' to restore governance files".into())
+                Some("Run 'straymark init' or 'straymark repair' to restore governance files".into())
             } else {
                 None
             },
@@ -452,7 +452,7 @@ pub fn check_iso_42001(docs: &[DevTrailDocument], governance_dir: &Path) -> Comp
 // NIST AI RMF checker
 // ---------------------------------------------------------------------------
 
-pub fn check_nist_ai_rmf(docs: &[DevTrailDocument], governance_dir: &Path) -> ComplianceReport {
+pub fn check_nist_ai_rmf(docs: &[StrayMarkDocument], governance_dir: &Path) -> ComplianceReport {
     let mut checks = Vec::new();
 
     // NIST-MAP-001: MAP function — AILOG documents exist (context)
@@ -622,12 +622,12 @@ pub fn check_nist_ai_rmf(docs: &[DevTrailDocument], governance_dir: &Path) -> Co
 // ===========================================================================
 
 /// True if any document in the corpus declares the given doc type.
-fn has_type(docs: &[DevTrailDocument], doc_type: DocType) -> bool {
+fn has_type(docs: &[StrayMarkDocument], doc_type: DocType) -> bool {
     count_type(docs, doc_type) > 0
 }
 
 /// Documents whose `related:` list references at least one of the given prefixes.
-fn related_includes_prefix(doc: &DevTrailDocument, prefix: &str) -> bool {
+fn related_includes_prefix(doc: &StrayMarkDocument, prefix: &str) -> bool {
     doc.frontmatter
         .related
         .as_ref()
@@ -641,7 +641,7 @@ fn related_includes_prefix(doc: &DevTrailDocument, prefix: &str) -> bool {
 const TC260_HIGH_LEVELS: &[&str] = &["high", "very_high", "extremely_severe"];
 
 pub fn check_china_tc260(
-    docs: &[DevTrailDocument],
+    docs: &[StrayMarkDocument],
     _governance_dir: &Path,
 ) -> ComplianceReport {
     let mut checks = Vec::new();
@@ -659,7 +659,7 @@ pub fn check_china_tc260(
             },
             evidence: ids.clone(),
             remediation: if ids.is_empty() {
-                Some("Run 'devtrail new tc260ra' for each AI system in scope".into())
+                Some("Run 'straymark new tc260ra' for each AI system in scope".into())
             } else {
                 None
             },
@@ -668,7 +668,7 @@ pub fn check_china_tc260(
 
     // TC260-002: high / very_high / extremely_severe levels require review_required: true
     {
-        let high_risk: Vec<&DevTrailDocument> = docs
+        let high_risk: Vec<&StrayMarkDocument> = docs
             .iter()
             .filter(|d| {
                 d.frontmatter
@@ -725,7 +725,7 @@ pub fn check_china_tc260(
 
     // TC260-003: TC260RA documents have all three grading criteria populated
     {
-        let tc260_docs: Vec<&DevTrailDocument> =
+        let tc260_docs: Vec<&StrayMarkDocument> =
             docs.iter().filter(|d| d.doc_type == DocType::Tc260ra).collect();
         if tc260_docs.is_empty() {
             checks.push(ComplianceCheck {
@@ -789,14 +789,14 @@ pub fn check_china_tc260(
 // ---------------------------------------------------------------------------
 
 pub fn check_china_pipl(
-    docs: &[DevTrailDocument],
+    docs: &[StrayMarkDocument],
     _governance_dir: &Path,
 ) -> ComplianceReport {
     let mut checks = Vec::new();
 
     // PIPL-001: PIPIA exists when any document declares pipl_applicable: true
     {
-        let need_pipia: Vec<&DevTrailDocument> = docs
+        let need_pipia: Vec<&StrayMarkDocument> = docs
             .iter()
             .filter(|d| d.frontmatter.pipl_applicable == Some(true))
             .collect();
@@ -820,7 +820,7 @@ pub fn check_china_pipl(
                 },
                 evidence: ids_of_type(docs, DocType::Pipia),
                 remediation: if !has_pipia {
-                    Some("Run 'devtrail new pipia' to create the PIPL impact assessment".into())
+                    Some("Run 'straymark new pipia' to create the PIPL impact assessment".into())
                 } else {
                     None
                 },
@@ -830,7 +830,7 @@ pub fn check_china_pipl(
 
     // PIPL-002: Sensitive personal information requires a PIPIA + linkage
     {
-        let need_link: Vec<&DevTrailDocument> = docs
+        let need_link: Vec<&StrayMarkDocument> = docs
             .iter()
             .filter(|d| d.frontmatter.pipl_sensitive_data == Some(true))
             .filter(|d| d.doc_type != DocType::Pipia)
@@ -884,7 +884,7 @@ pub fn check_china_pipl(
 
     // PIPL-003: Cross-border transfer documents must have a PIPIA addressing it
     {
-        let cb_docs: Vec<&DevTrailDocument> = docs
+        let cb_docs: Vec<&StrayMarkDocument> = docs
             .iter()
             .filter(|d| d.frontmatter.pipl_cross_border_transfer == Some(true))
             .collect();
@@ -927,7 +927,7 @@ pub fn check_china_pipl(
 
     // PIPL-004: PIPIA retention is at least 3 years from `created`
     {
-        let pipia_docs: Vec<&DevTrailDocument> =
+        let pipia_docs: Vec<&StrayMarkDocument> =
             docs.iter().filter(|d| d.doc_type == DocType::Pipia).collect();
         if pipia_docs.is_empty() {
             checks.push(ComplianceCheck {
@@ -1016,14 +1016,14 @@ fn pipia_retention_ok(created: Option<&str>, until: Option<&str>) -> bool {
 // ---------------------------------------------------------------------------
 
 pub fn check_china_gb45438(
-    docs: &[DevTrailDocument],
+    docs: &[StrayMarkDocument],
     _governance_dir: &Path,
 ) -> ComplianceReport {
     let mut checks = Vec::new();
 
     // GB45438-001: AILABEL exists when any document declares gb45438_applicable: true
     {
-        let need_label: Vec<&DevTrailDocument> = docs
+        let need_label: Vec<&StrayMarkDocument> = docs
             .iter()
             .filter(|d| d.frontmatter.gb45438_applicable == Some(true))
             .filter(|d| d.doc_type != DocType::Ailabel)
@@ -1077,7 +1077,7 @@ pub fn check_china_gb45438(
 
     // GB45438-002: AILABEL declares both an explicit and an implicit labeling track
     {
-        let ailabels: Vec<&DevTrailDocument> = docs
+        let ailabels: Vec<&StrayMarkDocument> = docs
             .iter()
             .filter(|d| d.doc_type == DocType::Ailabel)
             .collect();
@@ -1136,7 +1136,7 @@ pub fn check_china_gb45438(
 
     // GB45438-003: AILABEL covers at least one content type
     {
-        let ailabels: Vec<&DevTrailDocument> = docs
+        let ailabels: Vec<&StrayMarkDocument> = docs
             .iter()
             .filter(|d| d.doc_type == DocType::Ailabel)
             .collect();
@@ -1205,14 +1205,14 @@ pub fn check_china_gb45438(
 const CAC_APPROVED_STATUSES: &[&str] = &["provincial_approved", "national_approved"];
 
 pub fn check_china_cac(
-    docs: &[DevTrailDocument],
+    docs: &[StrayMarkDocument],
     _governance_dir: &Path,
 ) -> ComplianceReport {
     let mut checks = Vec::new();
 
     // CAC-001: CACFILE exists when any document declares cac_filing_required: true
     {
-        let need_filing: Vec<&DevTrailDocument> = docs
+        let need_filing: Vec<&StrayMarkDocument> = docs
             .iter()
             .filter(|d| d.frontmatter.cac_filing_required == Some(true))
             .filter(|d| d.doc_type != DocType::Cacfile)
@@ -1263,7 +1263,7 @@ pub fn check_china_cac(
 
     // CAC-002: CACFILE has a status set (not silently undecided)
     {
-        let cacfiles: Vec<&DevTrailDocument> = docs
+        let cacfiles: Vec<&StrayMarkDocument> = docs
             .iter()
             .filter(|d| d.doc_type == DocType::Cacfile)
             .collect();
@@ -1312,7 +1312,7 @@ pub fn check_china_cac(
 
     // CAC-003: Approved status implies cac_filing_number is populated
     {
-        let approved: Vec<&DevTrailDocument> = docs
+        let approved: Vec<&StrayMarkDocument> = docs
             .iter()
             .filter(|d| {
                 d.frontmatter
@@ -1382,14 +1382,14 @@ pub fn check_china_cac(
 // ---------------------------------------------------------------------------
 
 pub fn check_china_gb45652(
-    docs: &[DevTrailDocument],
+    docs: &[StrayMarkDocument],
     _governance_dir: &Path,
 ) -> ComplianceReport {
     let mut checks = Vec::new();
 
     // GB45652-001: At least one SBOM declares training-data compliance
     {
-        let sbom_docs: Vec<&DevTrailDocument> = docs
+        let sbom_docs: Vec<&StrayMarkDocument> = docs
             .iter()
             .filter(|d| d.doc_type == DocType::Sbom)
             .collect();
@@ -1436,7 +1436,7 @@ pub fn check_china_gb45652(
 
     // GB45652-002: MCARD references training-data compliance when applicable
     {
-        let mcards: Vec<&DevTrailDocument> = docs
+        let mcards: Vec<&StrayMarkDocument> = docs
             .iter()
             .filter(|d| d.doc_type == DocType::Mcard)
             .collect();
@@ -1494,11 +1494,11 @@ pub fn check_china_gb45652(
 // ---------------------------------------------------------------------------
 
 pub fn check_china_csl(
-    docs: &[DevTrailDocument],
+    docs: &[StrayMarkDocument],
     _governance_dir: &Path,
 ) -> ComplianceReport {
     let mut checks = Vec::new();
-    let inc_docs: Vec<&DevTrailDocument> =
+    let inc_docs: Vec<&StrayMarkDocument> =
         docs.iter().filter(|d| d.doc_type == DocType::Inc).collect();
 
     // CSL-001: Every INC has csl_severity_level populated
@@ -1601,7 +1601,7 @@ pub fn check_china_csl(
 
     // CSL-003: Major+ incidents have a documented 30-day post-mortem (resolved_date present)
     {
-        let major_or_above: Vec<&DevTrailDocument> = inc_docs
+        let major_or_above: Vec<&StrayMarkDocument> = inc_docs
             .iter()
             .filter(|d| {
                 d.frontmatter
@@ -1680,9 +1680,9 @@ mod tests {
         doc_type: DocType,
         fm: Frontmatter,
         body: &str,
-    ) -> DevTrailDocument {
-        DevTrailDocument {
-            path: PathBuf::from(format!(".devtrail/test/{}", filename)),
+    ) -> StrayMarkDocument {
+        StrayMarkDocument {
+            path: PathBuf::from(format!(".straymark/test/{}", filename)),
             filename: filename.to_string(),
             doc_type,
             frontmatter: fm,

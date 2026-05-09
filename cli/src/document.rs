@@ -3,7 +3,7 @@ use serde::Deserialize;
 use std::fmt;
 use std::path::{Path, PathBuf};
 
-/// All supported DevTrail document types
+/// All supported StrayMark document types
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DocType {
     Ailog,
@@ -93,7 +93,7 @@ impl DocType {
     ];
 
     /// DocType variants that are only enabled when `regional_scope` includes
-    /// "china". They are filtered out of `devtrail new` and other UX surfaces
+    /// "china". They are filtered out of `straymark new` and other UX surfaces
     /// for projects that have not opted into Chinese regulatory coverage.
     pub const CHINA_ONLY: &'static [DocType] = &[
         DocType::Pipia, DocType::Cacfile, DocType::Tc260ra, DocType::Ailabel,
@@ -126,7 +126,7 @@ impl DocType {
         }
     }
 
-    /// Subdirectory under .devtrail/ where this document type lives
+    /// Subdirectory under .straymark/ where this document type lives
     pub fn directory(&self) -> &'static str {
         match self {
             DocType::Ailog => "07-ai-audit/agent-logs",
@@ -178,7 +178,7 @@ impl fmt::Display for DocType {
     }
 }
 
-/// Frontmatter fields extracted from a DevTrail document.
+/// Frontmatter fields extracted from a StrayMark document.
 /// All fields are optional so the validator can report which are missing.
 #[derive(Debug, Clone, Deserialize, Default)]
 #[allow(dead_code)]
@@ -190,7 +190,7 @@ pub struct Frontmatter {
     pub agent: Option<String>,
     pub confidence: Option<String>,
     pub review_required: Option<bool>,
-    /// Reviewer identity (email | github-handle | DID). Set by `devtrail approve`
+    /// Reviewer identity (email | github-handle | DID). Set by `straymark approve`
     /// and by `## 3.5 Recording Approval` of the framework's documentation policy.
     pub reviewed_by: Option<String>,
     /// Date of formal approval (must be >= `created`).
@@ -284,9 +284,9 @@ pub struct Frontmatter {
     pub csl_report_deadline_hours: Option<u32>,
 }
 
-/// A parsed DevTrail document
+/// A parsed StrayMark document
 #[derive(Debug)]
-pub struct DevTrailDocument {
+pub struct StrayMarkDocument {
     pub path: PathBuf,
     pub filename: String,
     pub doc_type: DocType,
@@ -294,8 +294,8 @@ pub struct DevTrailDocument {
     pub body: String,
 }
 
-/// Parse a DevTrail document from a file path
-pub fn parse_document(path: &Path) -> Result<DevTrailDocument> {
+/// Parse a StrayMark document from a file path
+pub fn parse_document(path: &Path) -> Result<StrayMarkDocument> {
     let content = std::fs::read_to_string(path)
         .with_context(|| format!("Failed to read {}", path.display()))?;
 
@@ -313,7 +313,7 @@ pub fn parse_document(path: &Path) -> Result<DevTrailDocument> {
     let (frontmatter, body) = extract_frontmatter(&content)
         .with_context(|| format!("Failed to parse frontmatter in {}", path.display()))?;
 
-    Ok(DevTrailDocument {
+    Ok(StrayMarkDocument {
         path: path.to_path_buf(),
         filename,
         doc_type,
@@ -358,10 +358,10 @@ fn extract_frontmatter(content: &str) -> Result<(Frontmatter, String)> {
     Ok((frontmatter, body))
 }
 
-/// Discover all user-generated DevTrail documents under a .devtrail/ directory
-pub fn discover_documents(devtrail_dir: &Path) -> Vec<PathBuf> {
+/// Discover all user-generated StrayMark documents under a .straymark/ directory
+pub fn discover_documents(straymark_dir: &Path) -> Vec<PathBuf> {
     let mut results = Vec::new();
-    walk_for_documents(devtrail_dir, &mut results);
+    walk_for_documents(straymark_dir, &mut results);
     results.sort();
     results
 }

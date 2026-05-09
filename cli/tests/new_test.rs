@@ -2,12 +2,12 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
-/// Set up a minimal DevTrail installation with a template for the given type
-fn setup_devtrail_with_template(dir: &std::path::Path, doc_type: &str) {
-    let devtrail = dir.join(".devtrail");
-    std::fs::create_dir_all(devtrail.join("templates")).unwrap();
+/// Set up a minimal StrayMark installation with a template for the given type
+fn setup_straymark_with_template(dir: &std::path::Path, doc_type: &str) {
+    let straymark = dir.join(".straymark");
+    std::fs::create_dir_all(straymark.join("templates")).unwrap();
     std::fs::write(
-        devtrail.join("config.yml"),
+        straymark.join("config.yml"),
         "language: en\n",
     )
     .unwrap();
@@ -18,17 +18,17 @@ fn setup_devtrail_with_template(dir: &std::path::Path, doc_type: &str) {
         doc_type.to_uppercase()
     );
     std::fs::write(
-        devtrail.join("templates").join(&template_name),
+        straymark.join("templates").join(&template_name),
         template_content,
     )
     .unwrap();
 }
 
 #[test]
-fn test_new_requires_devtrail_installed() {
+fn test_new_requires_straymark_installed() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("new")
         .arg("--doc-type")
         .arg("ailog")
@@ -43,9 +43,9 @@ fn test_new_requires_devtrail_installed() {
 #[test]
 fn test_new_with_type_and_title_args() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_template(dir.path(), "AILOG");
+    setup_straymark_with_template(dir.path(), "AILOG");
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("new")
         .arg("--doc-type")
         .arg("ailog")
@@ -57,7 +57,7 @@ fn test_new_with_type_and_title_args() {
         .stdout(predicate::str::contains("Created:"));
 
     // Verify file was created in the correct directory
-    let agent_logs_dir = dir.path().join(".devtrail/07-ai-audit/agent-logs");
+    let agent_logs_dir = dir.path().join(".straymark/07-ai-audit/agent-logs");
     assert!(agent_logs_dir.exists(), "agent-logs directory should exist");
 
     let entries: Vec<_> = std::fs::read_dir(&agent_logs_dir)
@@ -76,10 +76,10 @@ fn test_new_with_type_and_title_args() {
 #[test]
 fn test_new_sequence_increments() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_template(dir.path(), "AILOG");
+    setup_straymark_with_template(dir.path(), "AILOG");
 
     // Create first document
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("new")
         .arg("--doc-type")
@@ -91,7 +91,7 @@ fn test_new_sequence_increments() {
         .success();
 
     // Create second document
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("new")
         .arg("--doc-type")
@@ -102,7 +102,7 @@ fn test_new_sequence_increments() {
         .assert()
         .success();
 
-    let agent_logs_dir = dir.path().join(".devtrail/07-ai-audit/agent-logs");
+    let agent_logs_dir = dir.path().join(".straymark/07-ai-audit/agent-logs");
     let entries: Vec<String> = std::fs::read_dir(&agent_logs_dir)
         .unwrap()
         .flatten()
@@ -117,9 +117,9 @@ fn test_new_sequence_increments() {
 #[test]
 fn test_new_unknown_type() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_template(dir.path(), "AILOG");
+    setup_straymark_with_template(dir.path(), "AILOG");
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("new")
         .arg("--doc-type")
         .arg("invalid")

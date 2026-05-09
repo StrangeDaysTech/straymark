@@ -9,36 +9,36 @@ use crate::inject;
 use crate::manifest::DistManifest;
 use crate::utils;
 
-/// Expected directories inside .devtrail/ (same as init.rs)
+/// Expected directories inside .straymark/ (same as init.rs)
 const EXPECTED_DIRS: &[&str] = &[
-    ".devtrail/00-governance/exceptions",
-    ".devtrail/01-requirements",
-    ".devtrail/02-design/decisions",
-    ".devtrail/03-implementation",
-    ".devtrail/04-testing",
-    ".devtrail/05-operations/incidents",
-    ".devtrail/05-operations/runbooks",
-    ".devtrail/06-evolution/technical-debt",
-    ".devtrail/07-ai-audit/agent-logs",
-    ".devtrail/07-ai-audit/decisions",
-    ".devtrail/07-ai-audit/ethical-reviews",
-    ".devtrail/08-security",
-    ".devtrail/09-ai-models",
+    ".straymark/00-governance/exceptions",
+    ".straymark/01-requirements",
+    ".straymark/02-design/decisions",
+    ".straymark/03-implementation",
+    ".straymark/04-testing",
+    ".straymark/05-operations/incidents",
+    ".straymark/05-operations/runbooks",
+    ".straymark/06-evolution/technical-debt",
+    ".straymark/07-ai-audit/agent-logs",
+    ".straymark/07-ai-audit/decisions",
+    ".straymark/07-ai-audit/ethical-reviews",
+    ".straymark/08-security",
+    ".straymark/09-ai-models",
 ];
 
 pub fn run(path: &str) -> Result<()> {
     let resolved = match utils::resolve_project_root(path) {
         Some(r) => r,
         None => {
-            utils::warn("DevTrail is not installed in this directory or repo root.");
-            utils::info("Run 'devtrail init' to initialize DevTrail.");
-            bail!("No DevTrail installation found");
+            utils::warn("StrayMark is not installed in this directory or repo root.");
+            utils::info("Run 'straymark init' to initialize StrayMark.");
+            bail!("No StrayMark installation found");
         }
     };
 
     if resolved.is_fallback {
         utils::info(&format!(
-            "Using DevTrail installation at repo root: {}",
+            "Using StrayMark installation at repo root: {}",
             resolved.path.display()
         ));
     }
@@ -46,7 +46,7 @@ pub fn run(path: &str) -> Result<()> {
     let target = resolved.path;
 
     println!(
-        "{} DevTrail in {}",
+        "{} StrayMark in {}",
         "Repairing".cyan().bold(),
         target.display()
     );
@@ -67,7 +67,7 @@ pub fn run(path: &str) -> Result<()> {
     let total_issues = missing_dir_count + if needs_download { 1 } else { 0 };
 
     if total_issues == 0 {
-        utils::success("DevTrail structure is healthy, nothing to repair.");
+        utils::success("StrayMark structure is healthy, nothing to repair.");
         return Ok(());
     }
 
@@ -106,7 +106,7 @@ pub fn run(path: &str) -> Result<()> {
         );
 
         let temp_dir = tempfile::tempdir().context("Failed to create temp directory")?;
-        let zip_path = temp_dir.path().join("devtrail.zip");
+        let zip_path = temp_dir.path().join("straymark.zip");
 
         download::download_zip(&release.zip_url, &zip_path)?;
 
@@ -119,7 +119,7 @@ pub fn run(path: &str) -> Result<()> {
     save_checksums(&target, &version)?;
 
     println!();
-    utils::success("DevTrail repaired successfully!");
+    utils::success("StrayMark repaired successfully!");
     println!();
 
     Ok(())
@@ -128,9 +128,9 @@ pub fn run(path: &str) -> Result<()> {
 /// Check if any framework files are missing and a download is needed
 fn check_needs_download(target: &Path) -> bool {
     let checks = [
-        ".devtrail/config.yml",
-        ".devtrail/dist-manifest.yml",
-        "DEVTRAIL.md",
+        ".straymark/config.yml",
+        ".straymark/dist-manifest.yml",
+        "STRAYMARK.md",
     ];
 
     // Check essential files
@@ -141,7 +141,7 @@ fn check_needs_download(target: &Path) -> bool {
     }
 
     // Check if templates dir is empty or missing
-    let templates_dir = target.join(".devtrail/templates");
+    let templates_dir = target.join(".straymark/templates");
     if !templates_dir.exists() {
         return true;
     }
@@ -163,7 +163,7 @@ fn check_needs_download(target: &Path) -> bool {
     }
 
     // Check governance docs
-    let governance_dir = target.join(".devtrail/00-governance");
+    let governance_dir = target.join(".straymark/00-governance");
     if governance_dir.exists() {
         let has_md_files = std::fs::read_dir(&governance_dir)
             .ok()
@@ -227,9 +227,9 @@ fn restore_missing_files(zip_path: &Path, target: &Path) -> Result<()> {
         restored += extract_missing_files(&mut archive, &prefix, pattern, target)?;
     }
 
-    // Restore injections if DEVTRAIL.md or directive files are missing
-    let devtrail_md = target.join("DEVTRAIL.md");
-    if !devtrail_md.exists() {
+    // Restore injections if STRAYMARK.md or directive files are missing
+    let straymark_md = target.join("STRAYMARK.md");
+    if !straymark_md.exists() {
         // Read templates for injection
         let mut templates: HashMap<String, String> = HashMap::new();
         for injection in &manifest.injections {
@@ -271,7 +271,7 @@ fn restore_missing_files(zip_path: &Path, target: &Path) -> Result<()> {
     }
 
     // Save manifest
-    let manifest_path = target.join(".devtrail/dist-manifest.yml");
+    let manifest_path = target.join(".straymark/dist-manifest.yml");
     if !manifest_path.exists() {
         let content = manifest.to_yaml()?;
         std::fs::write(&manifest_path, content)?;
@@ -327,7 +327,7 @@ fn extract_missing_files(
 }
 
 fn load_current_version(target: &Path) -> String {
-    let manifest_path = target.join(".devtrail/dist-manifest.yml");
+    let manifest_path = target.join(".straymark/dist-manifest.yml");
     match DistManifest::load(&manifest_path) {
         Ok(m) => m.version,
         Err(_) => "unknown".to_string(),
@@ -340,7 +340,7 @@ fn save_checksums(target: &Path, version: &str) -> Result<()> {
         files: std::collections::HashMap::new(),
     };
 
-    if let Ok(entries) = walkdir(target.join(".devtrail")) {
+    if let Ok(entries) = walkdir(target.join(".straymark")) {
         for entry in entries {
             if let Some(hash) = utils::file_hash(&entry) {
                 let relative = entry
@@ -353,9 +353,9 @@ fn save_checksums(target: &Path, version: &str) -> Result<()> {
         }
     }
 
-    let devtrail_path = target.join("DEVTRAIL.md");
-    if let Some(hash) = utils::file_hash(&devtrail_path) {
-        checksums.files.insert("DEVTRAIL.md".to_string(), hash);
+    let straymark_path = target.join("STRAYMARK.md");
+    if let Some(hash) = utils::file_hash(&straymark_path) {
+        checksums.files.insert("STRAYMARK.md".to_string(), hash);
     }
 
     checksums.save(target)?;

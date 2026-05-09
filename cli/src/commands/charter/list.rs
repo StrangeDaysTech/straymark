@@ -1,4 +1,4 @@
-//! `devtrail charter list` — enumerate Charters with optional status / origin filter.
+//! `straymark charter list` — enumerate Charters with optional status / origin filter.
 //!
 //! Output is a plain-text table to stdout. Files that fail to parse are
 //! reported as a warning to stderr but do not fail the command (Unix-style:
@@ -14,7 +14,7 @@ use crate::utils;
 
 pub fn run(path: &str, status_filter: &str, origin_filter: Option<&str>) -> Result<()> {
     let resolved = utils::resolve_project_root(path)
-        .ok_or_else(|| anyhow!("DevTrail not installed. Run 'devtrail init' first."))?;
+        .ok_or_else(|| anyhow!("StrayMark not installed. Run 'straymark init' first."))?;
     let project_root = &resolved.path;
 
     let (charters, errors) = charter::discover_and_parse(project_root);
@@ -32,7 +32,7 @@ pub fn run(path: &str, status_filter: &str, origin_filter: Option<&str>) -> Resu
 
     if filtered.is_empty() {
         if charters.is_empty() && errors.is_empty() {
-            println!("No Charters in this project. Run `devtrail charter new` to create one.");
+            println!("No Charters in this project. Run `straymark charter new` to create one.");
         } else {
             println!("No Charters match the given filter.");
         }

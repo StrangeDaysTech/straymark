@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 use serde::Serialize;
 
-use crate::document::{DevTrailDocument, DocType};
+use crate::document::{StrayMarkDocument, DocType};
 
 /// Time period for metrics calculation
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -98,7 +98,7 @@ fn parse_date(s: &str) -> Option<NaiveDate> {
 }
 
 /// Check if a document falls within a date range
-fn is_in_range(doc: &DevTrailDocument, start: NaiveDate, end: NaiveDate) -> bool {
+fn is_in_range(doc: &StrayMarkDocument, start: NaiveDate, end: NaiveDate) -> bool {
     doc.frontmatter
         .created
         .as_deref()
@@ -107,14 +107,14 @@ fn is_in_range(doc: &DevTrailDocument, start: NaiveDate, end: NaiveDate) -> bool
 }
 
 /// Filter documents by date range
-fn filter_by_range(docs: &[DevTrailDocument], start: NaiveDate, end: NaiveDate) -> Vec<&DevTrailDocument> {
+fn filter_by_range(docs: &[StrayMarkDocument], start: NaiveDate, end: NaiveDate) -> Vec<&StrayMarkDocument> {
     docs.iter().filter(|d| is_in_range(d, start, end)).collect()
 }
 
 /// Calculate metrics for a set of documents.
 /// `now` is injectable for testing determinism.
 pub fn calculate_metrics(
-    docs: &[DevTrailDocument],
+    docs: &[StrayMarkDocument],
     period: Period,
     now: NaiveDate,
 ) -> MetricsReport {
@@ -157,7 +157,7 @@ pub fn calculate_metrics(
     let total_docs = filtered.len();
 
     // Review compliance
-    let requiring_review: Vec<&&DevTrailDocument> = filtered
+    let requiring_review: Vec<&&StrayMarkDocument> = filtered
         .iter()
         .filter(|d| d.frontmatter.review_required == Some(true))
         .collect();
@@ -221,7 +221,7 @@ pub fn calculate_metrics(
         }];
 
         // Review completion trend
-        let prev_requiring: Vec<&&DevTrailDocument> = prev_filtered
+        let prev_requiring: Vec<&&StrayMarkDocument> = prev_filtered
             .iter()
             .filter(|d| d.frontmatter.review_required == Some(true))
             .collect();
@@ -308,9 +308,9 @@ mod tests {
         filename: &str,
         doc_type: DocType,
         fm: Frontmatter,
-    ) -> DevTrailDocument {
-        DevTrailDocument {
-            path: PathBuf::from(format!(".devtrail/test/{}", filename)),
+    ) -> StrayMarkDocument {
+        StrayMarkDocument {
+            path: PathBuf::from(format!(".straymark/test/{}", filename)),
             filename: filename.to_string(),
             doc_type,
             frontmatter: fm,

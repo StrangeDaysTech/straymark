@@ -1,7 +1,7 @@
 //! JSON Schema validation for Charter telemetry YAML.
 //!
-//! The schema is shipped at `<framework>/.devtrail/schemas/charter-telemetry.schema.v0.json`
-//! (the framework distribution drops it into the project at `devtrail init` time).
+//! The schema is shipped at `<framework>/.straymark/schemas/charter-telemetry.schema.v0.json`
+//! (the framework distribution drops it into the project at `straymark init` time).
 //! This module mirrors `charter_schema.rs` — load and compile the schema once,
 //! then validate parsed YAML.
 //!
@@ -18,7 +18,7 @@ use std::path::{Path, PathBuf};
 use crate::charter_schema::yaml_to_json_value;
 use crate::validation::{Severity, ValidationIssue};
 
-/// Path to the telemetry schema relative to a project's `.devtrail/` directory.
+/// Path to the telemetry schema relative to a project's `.straymark/` directory.
 pub const SCHEMA_RELATIVE_PATH: &str = "schemas/charter-telemetry.schema.v0.json";
 
 /// A loaded and compiled telemetry schema, ready to validate YAML.
@@ -27,14 +27,14 @@ pub struct TelemetrySchema {
 }
 
 impl TelemetrySchema {
-    /// Load and compile the telemetry schema from a project's `.devtrail/`
+    /// Load and compile the telemetry schema from a project's `.straymark/`
     /// directory. Returns an error if the schema file is missing, not valid
     /// JSON, or not a valid JSON Schema.
-    pub fn load(devtrail_dir: &Path) -> Result<Self> {
-        let path = devtrail_dir.join(SCHEMA_RELATIVE_PATH);
+    pub fn load(straymark_dir: &Path) -> Result<Self> {
+        let path = straymark_dir.join(SCHEMA_RELATIVE_PATH);
         let raw = std::fs::read_to_string(&path).with_context(|| {
             format!(
-                "Failed to read telemetry schema at {}. Run `devtrail repair` to restore framework files.",
+                "Failed to read telemetry schema at {}. Run `straymark repair` to restore framework files.",
                 path.display()
             )
         })?;
@@ -147,7 +147,7 @@ mod tests {
     use super::*;
 
     /// Minimal-shape telemetry schema for unit tests. The real schema lives
-    /// at `dist/.devtrail/schemas/charter-telemetry.schema.v0.json` and is
+    /// at `dist/.straymark/schemas/charter-telemetry.schema.v0.json` and is
     /// not bundled into the binary — these tests are for the wrapper logic.
     const TEST_SCHEMA: &str = r##"{
         "$schema": "https://json-schema.org/draft/2020-12/schema",

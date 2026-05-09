@@ -3,7 +3,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use std::io::Read;
 use std::path::Path;
 
-const GITHUB_REPO: &str = "StrangeDaysTech/devtrail";
+const GITHUB_REPO: &str = "StrangeDaysTech/straymark";
 const GITHUB_API_BASE: &str = "https://api.github.com";
 
 /// Information about a GitHub release (distribution ZIP)
@@ -29,7 +29,7 @@ pub struct FullReleaseInfo {
 
 /// Build an HTTP client with optional GitHub token authentication
 fn build_client() -> Result<reqwest::blocking::Client> {
-    let mut builder = reqwest::blocking::Client::builder().user_agent("devtrail-cli");
+    let mut builder = reqwest::blocking::Client::builder().user_agent("straymark-cli");
 
     if let Ok(token) = std::env::var("GITHUB_TOKEN") {
         use reqwest::header;
@@ -122,11 +122,11 @@ pub fn get_latest_release_full() -> Result<FullReleaseInfo> {
 pub fn get_latest_release() -> Result<ReleaseInfo> {
     let full = get_latest_release_by_prefix("fw-")?;
 
-    // Look for the devtrail distribution ZIP (devtrail-fw-*.zip)
+    // Look for the straymark distribution ZIP (straymark-fw-*.zip)
     let zip_url = full
         .assets
         .iter()
-        .find(|a| a.name.starts_with("devtrail-fw-") && a.name.ends_with(".zip"))
+        .find(|a| a.name.starts_with("straymark-fw-") && a.name.ends_with(".zip"))
         .map(|a| a.download_url.clone());
 
     // Fallback to zipball if no distribution asset found

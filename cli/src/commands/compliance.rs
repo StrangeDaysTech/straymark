@@ -3,7 +3,7 @@ use colored::Colorize;
 use std::path::PathBuf;
 
 use crate::compliance::{self, CheckStatus, ComplianceReport, Standard};
-use crate::config::DevTrailConfig;
+use crate::config::StrayMarkConfig;
 use crate::document;
 use crate::utils;
 
@@ -21,39 +21,39 @@ pub fn run(
                 .canonicalize()
                 .unwrap_or_else(|_| PathBuf::from(path));
             utils::info(&format!(
-                "DevTrail is not installed in {}",
+                "StrayMark is not installed in {}",
                 target.display()
             ));
-            utils::info("Run 'devtrail init' to initialize DevTrail in this directory.");
+            utils::info("Run 'straymark init' to initialize StrayMark in this directory.");
             return Ok(());
         }
     };
 
     if resolved.is_fallback {
         utils::info(&format!(
-            "Using DevTrail installation at repo root: {}",
+            "Using StrayMark installation at repo root: {}",
             resolved.path.display()
         ));
     }
 
     let target = resolved.path;
-    let devtrail_dir = target.join(".devtrail");
+    let straymark_dir = target.join(".straymark");
 
     // Discover and parse all documents
-    let paths = document::discover_documents(&devtrail_dir);
+    let paths = document::discover_documents(&straymark_dir);
     let docs: Vec<_> = paths
         .iter()
         .filter_map(|p| document::parse_document(p).ok())
         .collect();
 
-    let config = DevTrailConfig::load(&target).unwrap_or_default();
+    let config = StrayMarkConfig::load(&target).unwrap_or_default();
 
     // Resolve which standards to run.
     let standards = resolve_standards(&config, standard, region, all);
 
     if standards.is_empty() {
         utils::warn(&format!(
-            "No standards selected. regional_scope is {:?}. Use --standard, --region, or set regional_scope in .devtrail/config.yml.",
+            "No standards selected. regional_scope is {:?}. Use --standard, --region, or set regional_scope in .straymark/config.yml.",
             config.regional_scope
         ));
         return Ok(());
@@ -62,15 +62,15 @@ pub fn run(
     let mut reports: Vec<ComplianceReport> = Vec::new();
     for s in &standards {
         let r = match s {
-            Standard::EuAiAct => compliance::check_eu_ai_act(&docs, &devtrail_dir),
-            Standard::Iso42001 => compliance::check_iso_42001(&docs, &devtrail_dir),
-            Standard::NistAiRmf => compliance::check_nist_ai_rmf(&docs, &devtrail_dir),
-            Standard::ChinaTc260 => compliance::check_china_tc260(&docs, &devtrail_dir),
-            Standard::ChinaPipl => compliance::check_china_pipl(&docs, &devtrail_dir),
-            Standard::ChinaGb45438 => compliance::check_china_gb45438(&docs, &devtrail_dir),
-            Standard::ChinaCac => compliance::check_china_cac(&docs, &devtrail_dir),
-            Standard::ChinaGb45652 => compliance::check_china_gb45652(&docs, &devtrail_dir),
-            Standard::ChinaCsl => compliance::check_china_csl(&docs, &devtrail_dir),
+            Standard::EuAiAct => compliance::check_eu_ai_act(&docs, &straymark_dir),
+            Standard::Iso42001 => compliance::check_iso_42001(&docs, &straymark_dir),
+            Standard::NistAiRmf => compliance::check_nist_ai_rmf(&docs, &straymark_dir),
+            Standard::ChinaTc260 => compliance::check_china_tc260(&docs, &straymark_dir),
+            Standard::ChinaPipl => compliance::check_china_pipl(&docs, &straymark_dir),
+            Standard::ChinaGb45438 => compliance::check_china_gb45438(&docs, &straymark_dir),
+            Standard::ChinaCac => compliance::check_china_cac(&docs, &straymark_dir),
+            Standard::ChinaGb45652 => compliance::check_china_gb45652(&docs, &straymark_dir),
+            Standard::ChinaCsl => compliance::check_china_csl(&docs, &straymark_dir),
         };
         reports.push(r);
     }
@@ -89,12 +89,12 @@ pub fn run(
 ///
 /// Precedence:
 /// 1. `--standard <name>` — single standard, always honored.
-/// 2. `--all` — every standard known to DevTrail (independent of regional_scope).
+/// 2. `--all` — every standard known to StrayMark (independent of regional_scope).
 /// 3. `--region <name>` — every standard whose `region()` matches the value
 ///    (`all` matches every region; `china` requires no opt-in for explicit overrides).
 /// 4. Default — every standard whose region appears in `regional_scope`.
 fn resolve_standards(
-    config: &DevTrailConfig,
+    config: &StrayMarkConfig,
     standard: Option<&str>,
     region: Option<&str>,
     all: bool,
@@ -152,7 +152,7 @@ fn resolve_standards(
 
 fn print_text(reports: &[ComplianceReport], target: &std::path::Path, doc_count: usize) {
     println!();
-    println!("  {}", "DevTrail Compliance".bold().cyan());
+    println!("  {}", "StrayMark Compliance".bold().cyan());
     println!("  {}", target.display().to_string().dimmed());
     println!(
         "  {}",
@@ -234,7 +234,7 @@ fn print_json(reports: &[ComplianceReport]) {
 }
 
 fn print_markdown(reports: &[ComplianceReport], doc_count: usize) {
-    println!("# DevTrail Compliance Report");
+    println!("# StrayMark Compliance Report");
     println!();
     println!("**Documents analyzed:** {}", doc_count);
     println!();
@@ -271,8 +271,8 @@ fn print_markdown(reports: &[ComplianceReport], doc_count: usize) {
 mod tests {
     use super::*;
 
-    fn cfg(scope: &[&str]) -> DevTrailConfig {
-        DevTrailConfig {
+    fn cfg(scope: &[&str]) -> StrayMarkConfig {
+        StrayMarkConfig {
             regional_scope: scope.iter().map(|s| s.to_string()).collect(),
             ..Default::default()
         }

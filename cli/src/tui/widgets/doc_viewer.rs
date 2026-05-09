@@ -149,7 +149,7 @@ fn render_welcome(
         Line::from(""),
         Line::from(""),
         // Brand name stays English in every locale.
-        Line::from(Span::styled("  DevTrail Explorer", title)),
+        Line::from(Span::styled("  StrayMark Explorer", title)),
         Line::from(Span::styled(
             format!(
                 "  {}",

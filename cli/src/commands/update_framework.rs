@@ -12,11 +12,11 @@ use crate::utils;
 pub fn run() -> Result<()> {
     let target = std::env::current_dir().context("Failed to get current directory")?;
 
-    // Verify DevTrail is installed
-    if !target.join(".devtrail").exists() {
+    // Verify StrayMark is installed
+    if !target.join(".straymark").exists() {
         bail!(
-            ".devtrail/ not found. Use {} to initialize first.",
-            "devtrail init".yellow()
+            ".straymark/ not found. Use {} to initialize first.",
+            "straymark init".yellow()
         );
     }
 
@@ -55,7 +55,7 @@ pub fn run() -> Result<()> {
 
     // Download ZIP
     let temp_dir = tempfile::tempdir().context("Failed to create temp directory")?;
-    let zip_path = temp_dir.path().join("devtrail.zip");
+    let zip_path = temp_dir.path().join("straymark.zip");
 
     utils::info("Downloading...");
     download::download_zip(&release.zip_url, &zip_path)?;
@@ -87,7 +87,7 @@ pub fn run() -> Result<()> {
 
     // Print summary
     println!();
-    utils::success("DevTrail framework updated successfully!");
+    utils::success("StrayMark framework updated successfully!");
     println!("  Files updated: {}", stats.updated);
     println!("  Files skipped (user-modified): {}", stats.skipped);
     println!("  Files added: {}", stats.added);
@@ -250,7 +250,7 @@ fn inject_directives(target: &Path, source_root: &Path, manifest: &DistManifest)
 
 /// Save the manifest locally for future remove operations
 fn save_local_manifest(target: &Path, manifest: &DistManifest) -> Result<()> {
-    let manifest_path = target.join(".devtrail/dist-manifest.yml");
+    let manifest_path = target.join(".straymark/dist-manifest.yml");
     let content = manifest.to_yaml()?;
     std::fs::write(&manifest_path, content)
         .context("Failed to save local dist-manifest.yml")?;
@@ -263,7 +263,7 @@ fn save_checksums(target: &Path, version: &str) -> Result<()> {
         files: std::collections::HashMap::new(),
     };
 
-    if let Ok(entries) = walkdir(target.join(".devtrail")) {
+    if let Ok(entries) = walkdir(target.join(".straymark")) {
         for entry in entries {
             if let Some(hash) = utils::file_hash(&entry) {
                 let relative = entry
@@ -276,9 +276,9 @@ fn save_checksums(target: &Path, version: &str) -> Result<()> {
         }
     }
 
-    let devtrail_path = target.join("DEVTRAIL.md");
-    if let Some(hash) = utils::file_hash(&devtrail_path) {
-        checksums.files.insert("DEVTRAIL.md".to_string(), hash);
+    let straymark_path = target.join("STRAYMARK.md");
+    if let Some(hash) = utils::file_hash(&straymark_path) {
+        checksums.files.insert("STRAYMARK.md".to_string(), hash);
     }
 
     checksums.save(target)?;
@@ -363,8 +363,8 @@ mod tests {
     fn manifest_files() -> Vec<String> {
         // Matches `dist/dist-manifest.yml` (fw-4.3.0).
         vec![
-            ".devtrail/".to_string(),
-            "DEVTRAIL.md".to_string(),
+            ".straymark/".to_string(),
+            "STRAYMARK.md".to_string(),
             ".claude/skills/".to_string(),
             ".gemini/skills/".to_string(),
             ".agent/workflows/".to_string(),
@@ -375,7 +375,7 @@ mod tests {
     #[test]
     fn package_artifacts_are_rejected() {
         let files = manifest_files();
-        // Regression for the bug where `devtrail update` deposited these in the
+        // Regression for the bug where `straymark update` deposited these in the
         // adopter project. Both live at the ZIP root, neither is in `manifest.files`.
         assert!(!matches_manifest("dist-manifest.yml", &files));
         assert!(!matches_manifest("dist-templates/directives/CLAUDE.md", &files));
@@ -384,9 +384,9 @@ mod tests {
     #[test]
     fn declared_files_and_directories_match() {
         let files = manifest_files();
-        assert!(matches_manifest("DEVTRAIL.md", &files));
-        assert!(matches_manifest(".devtrail/00-governance/AGENT-RULES.md", &files));
-        assert!(matches_manifest(".claude/skills/devtrail-new/SKILL.md", &files));
+        assert!(matches_manifest("STRAYMARK.md", &files));
+        assert!(matches_manifest(".straymark/00-governance/AGENT-RULES.md", &files));
+        assert!(matches_manifest(".claude/skills/straymark-new/SKILL.md", &files));
         assert!(matches_manifest(
             ".github/workflows/docs-validation.yml",
             &files

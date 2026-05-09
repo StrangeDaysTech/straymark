@@ -2,16 +2,16 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
-/// Set up a minimal DevTrail installation with the Charter template. Mirrors
-/// what `devtrail init` would produce for the Charter feature, sufficient for
-/// `devtrail charter new` to operate.
-fn setup_devtrail_with_charter_template(dir: &std::path::Path) {
-    let devtrail = dir.join(".devtrail");
-    std::fs::create_dir_all(devtrail.join("templates")).unwrap();
-    std::fs::write(devtrail.join("config.yml"), "language: en\n").unwrap();
+/// Set up a minimal StrayMark installation with the Charter template. Mirrors
+/// what `straymark init` would produce for the Charter feature, sufficient for
+/// `straymark charter new` to operate.
+fn setup_straymark_with_charter_template(dir: &std::path::Path) {
+    let straymark = dir.join(".straymark");
+    std::fs::create_dir_all(straymark.join("templates")).unwrap();
+    std::fs::write(straymark.join("config.yml"), "language: en\n").unwrap();
 
     // Bundled template. We ship the actual template from
-    // dist/.devtrail/templates/charter-template.md in the framework; this test
+    // dist/.straymark/templates/charter-template.md in the framework; this test
     // helper inlines a structurally-equivalent copy so tests don't depend on
     // the dist/ path being available at test runtime.
     let template = r#"---
@@ -76,14 +76,14 @@ When closing this Charter (post-merge):
 
 1. Drift check.
 "#;
-    std::fs::write(devtrail.join("templates").join("charter-template.md"), template).unwrap();
+    std::fs::write(straymark.join("templates").join("charter-template.md"), template).unwrap();
 }
 
 #[test]
-fn charter_new_requires_devtrail_installed() {
+fn charter_new_requires_straymark_installed() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("charter")
         .arg("new")
         .arg("--title")
@@ -97,9 +97,9 @@ fn charter_new_requires_devtrail_installed() {
 #[test]
 fn charter_new_no_origin_creates_file_with_defaults() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("charter")
         .arg("new")
         .arg("--title")
@@ -133,9 +133,9 @@ fn charter_new_no_origin_creates_file_with_defaults() {
 #[test]
 fn charter_new_explicit_effort_is_substituted() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("new")
@@ -157,9 +157,9 @@ fn charter_new_explicit_effort_is_substituted() {
 #[test]
 fn charter_new_with_from_ailog_uncomments_origin() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("new")
@@ -188,13 +188,13 @@ fn charter_new_with_from_ailog_uncomments_origin() {
 #[test]
 fn charter_new_with_from_spec_uncomments_origin() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
     // Create a stub SpecKit spec file so --from-spec validation passes.
     let spec_dir = dir.path().join("specs").join("001-test");
     std::fs::create_dir_all(&spec_dir).unwrap();
     std::fs::write(spec_dir.join("spec.md"), "# Test Spec\n").unwrap();
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("new")
@@ -224,9 +224,9 @@ fn charter_new_with_from_spec_uncomments_origin() {
 #[test]
 fn charter_new_rejects_both_origins_at_clap_level() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("new")
@@ -245,9 +245,9 @@ fn charter_new_rejects_both_origins_at_clap_level() {
 #[test]
 fn charter_new_from_spec_rejects_missing_file() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("new")
@@ -264,10 +264,10 @@ fn charter_new_from_spec_rejects_missing_file() {
 #[test]
 fn charter_new_increments_sequence_number() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
 
     for (n, title) in [(1, "First"), (2, "Second"), (3, "Third")] {
-        Command::cargo_bin("devtrail")
+        Command::cargo_bin("straymark")
             .unwrap()
             .arg("charter")
             .arg("new")
@@ -292,9 +292,9 @@ fn charter_new_increments_sequence_number() {
 #[test]
 fn charter_new_rejects_invalid_effort_at_clap_level() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("new")
@@ -311,22 +311,22 @@ fn charter_new_rejects_invalid_effort_at_clap_level() {
 #[test]
 fn charter_new_uses_es_template_when_config_says_es() {
     let dir = TempDir::new().unwrap();
-    let devtrail = dir.path().join(".devtrail");
-    std::fs::create_dir_all(devtrail.join("templates").join("i18n").join("es")).unwrap();
-    std::fs::write(devtrail.join("config.yml"), "language: es\n").unwrap();
+    let straymark = dir.path().join(".straymark");
+    std::fs::create_dir_all(straymark.join("templates").join("i18n").join("es")).unwrap();
+    std::fs::write(straymark.join("config.yml"), "language: es\n").unwrap();
 
     // EN template (fallback).
     std::fs::write(
-        devtrail.join("templates").join("charter-template.md"),
+        straymark.join("templates").join("charter-template.md"),
         "---\ncharter_id: CHARTER-NN\nstatus: declared\neffort_estimate: M\ntrigger: \"[x]\"\n---\n\n# Charter: [BRIEF TITLE]\n\nEN body.\n",
     ).unwrap();
     // ES translation.
     std::fs::write(
-        devtrail.join("templates").join("i18n").join("es").join("charter-template.md"),
+        straymark.join("templates").join("i18n").join("es").join("charter-template.md"),
         "---\ncharter_id: CHARTER-NN\nstatus: declared\neffort_estimate: M\ntrigger: \"[x]\"\n---\n\n# Charter: [TÍTULO BREVE]\n\nES body.\n",
     ).unwrap();
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("new")
@@ -343,13 +343,13 @@ fn charter_new_uses_es_template_when_config_says_es() {
 }
 
 // ----------------------------------------------------------------------------
-// `devtrail charter list`
+// `straymark charter list`
 // ----------------------------------------------------------------------------
 
 #[test]
-fn charter_list_requires_devtrail_installed() {
+fn charter_list_requires_straymark_installed() {
     let dir = TempDir::new().unwrap();
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("list")
@@ -362,8 +362,8 @@ fn charter_list_requires_devtrail_installed() {
 #[test]
 fn charter_list_empty_when_no_charters() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
-    Command::cargo_bin("devtrail")
+    setup_straymark_with_charter_template(dir.path());
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("list")
@@ -376,10 +376,10 @@ fn charter_list_empty_when_no_charters() {
 #[test]
 fn charter_list_shows_all_charters_by_default() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
     create_three_charters(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("list")
@@ -394,14 +394,14 @@ fn charter_list_shows_all_charters_by_default() {
 #[test]
 fn charter_list_filter_status_declared() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
     create_three_charters(dir.path());
     // Mark the first one as closed.
     let p = dir.path().join("docs/charters/01-first.md");
     let content = std::fs::read_to_string(&p).unwrap();
     std::fs::write(&p, content.replace("status: declared", "status: closed")).unwrap();
 
-    let out = Command::cargo_bin("devtrail")
+    let out = Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("list")
@@ -420,12 +420,12 @@ fn charter_list_filter_status_declared() {
 #[test]
 fn charter_list_filter_origin_ailog() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
     let charters_dir = dir.path().join("docs/charters");
     std::fs::create_dir_all(&charters_dir).unwrap();
 
     // One Charter with --from-ailog (tested via the actual command).
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("new")
@@ -438,7 +438,7 @@ fn charter_list_filter_origin_ailog() {
         .success();
 
     // One without origin.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("new")
@@ -448,7 +448,7 @@ fn charter_list_filter_origin_ailog() {
         .assert()
         .success();
 
-    let out = Command::cargo_bin("devtrail")
+    let out = Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("list")
@@ -466,11 +466,11 @@ fn charter_list_filter_origin_ailog() {
 #[test]
 fn charter_list_no_match_shows_friendly_message() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
     create_three_charters(dir.path());
 
     // All three are declared by default, so --status closed matches none.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("list")
@@ -483,13 +483,13 @@ fn charter_list_no_match_shows_friendly_message() {
 }
 
 // ----------------------------------------------------------------------------
-// `devtrail charter status`
+// `straymark charter status`
 // ----------------------------------------------------------------------------
 
 #[test]
-fn charter_status_requires_devtrail_installed() {
+fn charter_status_requires_straymark_installed() {
     let dir = TempDir::new().unwrap();
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("status")
@@ -503,8 +503,8 @@ fn charter_status_requires_devtrail_installed() {
 #[test]
 fn charter_status_empty_when_no_charters() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
-    Command::cargo_bin("devtrail")
+    setup_straymark_with_charter_template(dir.path());
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("status")
@@ -518,10 +518,10 @@ fn charter_status_empty_when_no_charters() {
 #[test]
 fn charter_status_without_id_shows_recent() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
     create_three_charters(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("status")
@@ -538,10 +538,10 @@ fn charter_status_without_id_shows_recent() {
 #[test]
 fn charter_status_with_full_id_shows_detail() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
     create_three_charters(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("status")
@@ -559,10 +559,10 @@ fn charter_status_with_full_id_shows_detail() {
 #[test]
 fn charter_status_with_charter_nn_prefix_shows_detail() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
     create_three_charters(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("status")
@@ -577,10 +577,10 @@ fn charter_status_with_charter_nn_prefix_shows_detail() {
 #[test]
 fn charter_status_with_numeric_id_shows_detail() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
     create_three_charters(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("status")
@@ -595,10 +595,10 @@ fn charter_status_with_numeric_id_shows_detail() {
 #[test]
 fn charter_status_with_unknown_id_fails() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
     create_three_charters(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("status")
@@ -611,15 +611,15 @@ fn charter_status_with_unknown_id_fails() {
 }
 
 // ----------------------------------------------------------------------------
-// `devtrail validate --include-charters`
+// `straymark validate --include-charters`
 // ----------------------------------------------------------------------------
 
 #[test]
 fn validate_without_flag_skips_charter_checks() {
     // Verifies the opt-in: a project with a broken Charter (missing required
-    // field) still passes `devtrail validate` when --include-charters is absent.
+    // field) still passes `straymark validate` when --include-charters is absent.
     let dir = TempDir::new().unwrap();
-    setup_devtrail_full(dir.path());
+    setup_straymark_full(dir.path());
     let charters_dir = dir.path().join("docs/charters");
     std::fs::create_dir_all(&charters_dir).unwrap();
     // Write a Charter missing the required `trigger` field. Without
@@ -630,7 +630,7 @@ fn validate_without_flag_skips_charter_checks() {
     )
     .unwrap();
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("validate")
         .arg(dir.path().to_str().unwrap())
@@ -641,10 +641,10 @@ fn validate_without_flag_skips_charter_checks() {
 #[test]
 fn validate_with_flag_passes_for_valid_charter() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_full(dir.path());
+    setup_straymark_full(dir.path());
     create_charter_via_cli(dir.path(), "valid charter", &[]);
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("validate")
         .arg("--include-charters")
@@ -657,7 +657,7 @@ fn validate_with_flag_passes_for_valid_charter() {
 #[test]
 fn validate_with_flag_fails_on_missing_required_field() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_full(dir.path());
+    setup_straymark_full(dir.path());
     let charters_dir = dir.path().join("docs/charters");
     std::fs::create_dir_all(&charters_dir).unwrap();
     // Frontmatter is missing `trigger` — schema should reject.
@@ -667,7 +667,7 @@ fn validate_with_flag_fails_on_missing_required_field() {
     )
     .unwrap();
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("validate")
         .arg("--include-charters")
@@ -680,13 +680,13 @@ fn validate_with_flag_fails_on_missing_required_field() {
 #[test]
 fn validate_with_flag_fails_on_invalid_status_enum() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_full(dir.path());
+    setup_straymark_full(dir.path());
     create_charter_via_cli(dir.path(), "bad status", &[]);
     let p = dir.path().join("docs/charters/01-bad-status.md");
     let content = std::fs::read_to_string(&p).unwrap();
     std::fs::write(&p, content.replace("status: declared", "status: unknown-state")).unwrap();
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("validate")
         .arg("--include-charters")
@@ -699,14 +699,14 @@ fn validate_with_flag_fails_on_invalid_status_enum() {
 #[test]
 fn validate_fails_when_originating_ailog_does_not_exist() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_full(dir.path());
+    setup_straymark_full(dir.path());
     create_charter_via_cli(
         dir.path(),
         "missing ailog",
         &["--from-ailog", "AILOG-2026-04-28-099"],
     );
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("validate")
         .arg("--include-charters")
@@ -720,11 +720,11 @@ fn validate_fails_when_originating_ailog_does_not_exist() {
 #[test]
 fn validate_passes_when_originating_ailog_exists() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_full(dir.path());
+    setup_straymark_full(dir.path());
     // Create a real AILOG file so the reference resolves. The frontmatter
     // includes all META-001 required fields so the existing AILOG validator
     // (independent of Charter checks) does not flag this stub.
-    let agent_logs = dir.path().join(".devtrail/07-ai-audit/agent-logs");
+    let agent_logs = dir.path().join(".straymark/07-ai-audit/agent-logs");
     std::fs::write(
         agent_logs.join("AILOG-2026-04-28-021-real.md"),
         "---\n\
@@ -746,7 +746,7 @@ fn validate_passes_when_originating_ailog_exists() {
         &["--from-ailog", "AILOG-2026-04-28-021"],
     );
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("validate")
         .arg("--include-charters")
@@ -758,7 +758,7 @@ fn validate_passes_when_originating_ailog_exists() {
 #[test]
 fn validate_fails_when_originating_spec_path_missing() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_full(dir.path());
+    setup_straymark_full(dir.path());
     // Create a Charter with a spec path that exists at scaffold time, then
     // delete the spec to simulate a broken reference (e.g., spec was renamed).
     let spec_dir = dir.path().join("specs/001-test");
@@ -771,7 +771,7 @@ fn validate_fails_when_originating_spec_path_missing() {
     );
     std::fs::remove_file(spec_dir.join("spec.md")).unwrap();
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("validate")
         .arg("--include-charters")
@@ -785,7 +785,7 @@ fn validate_fails_when_originating_spec_path_missing() {
 #[test]
 fn validate_warns_when_charter_schema_missing() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path()); // no schema written
+    setup_straymark_with_charter_template(dir.path()); // no schema written
     let charters_dir = dir.path().join("docs/charters");
     std::fs::create_dir_all(&charters_dir).unwrap();
     std::fs::write(
@@ -794,7 +794,7 @@ fn validate_warns_when_charter_schema_missing() {
     )
     .unwrap();
 
-    let out = Command::cargo_bin("devtrail")
+    let out = Command::cargo_bin("straymark")
         .unwrap()
         .arg("validate")
         .arg("--include-charters")
@@ -813,17 +813,17 @@ fn validate_warns_when_charter_schema_missing() {
 // Helpers
 // ----------------------------------------------------------------------------
 
-/// Set up a DevTrail installation with both the template AND the real Charter
+/// Set up a StrayMark installation with both the template AND the real Charter
 /// schema (copied from dist/). Used by validate --include-charters tests.
-fn setup_devtrail_full(dir: &std::path::Path) {
-    setup_devtrail_with_charter_template(dir);
+fn setup_straymark_full(dir: &std::path::Path) {
+    setup_straymark_with_charter_template(dir);
     // Copy the real schema from the framework distribution.
-    let schemas_dir = dir.join(".devtrail/schemas");
+    let schemas_dir = dir.join(".straymark/schemas");
     std::fs::create_dir_all(&schemas_dir).unwrap();
     let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let real_schema = manifest_dir
         .join("..")
-        .join("dist/.devtrail/schemas/charter.schema.v0.json");
+        .join("dist/.straymark/schemas/charter.schema.v0.json");
     let schema_content = std::fs::read_to_string(&real_schema).unwrap_or_else(|e| {
         panic!(
             "test setup needs the real schema at {}: {}",
@@ -833,13 +833,13 @@ fn setup_devtrail_full(dir: &std::path::Path) {
     });
     std::fs::write(schemas_dir.join("charter.schema.v0.json"), schema_content).unwrap();
     // Also create the agent-logs directory so AILOG-ref tests have somewhere to look.
-    std::fs::create_dir_all(dir.join(".devtrail/07-ai-audit/agent-logs")).unwrap();
+    std::fs::create_dir_all(dir.join(".straymark/07-ai-audit/agent-logs")).unwrap();
 }
 
-/// Run `devtrail charter new` with the given title and extra flags. Asserts
+/// Run `straymark charter new` with the given title and extra flags. Asserts
 /// success. Used by validate tests to produce real on-disk Charters.
 fn create_charter_via_cli(dir: &std::path::Path, title: &str, extra_args: &[&str]) {
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("charter").arg("new").arg("--title").arg(title);
     for arg in extra_args {
         cmd.arg(arg);
@@ -847,11 +847,11 @@ fn create_charter_via_cli(dir: &std::path::Path, title: &str, extra_args: &[&str
     cmd.arg(dir.to_str().unwrap()).assert().success();
 }
 
-/// Create three Charters via the actual `devtrail charter new` command, so
+/// Create three Charters via the actual `straymark charter new` command, so
 /// list/status tests exercise real on-disk shapes (not synthetic stubs).
 fn create_three_charters(dir: &std::path::Path) {
     for title in ["first", "second", "third"] {
-        Command::cargo_bin("devtrail")
+        Command::cargo_bin("straymark")
             .unwrap()
             .arg("charter")
             .arg("new")
@@ -868,7 +868,7 @@ fn charter_new_does_not_overwrite_existing_file() {
     // Edge case: if the user manually created docs/charters/01-foo.md and then
     // tries `charter new --title "foo"`, we should refuse rather than clobber.
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
     let charters_dir = dir.path().join("docs").join("charters");
     std::fs::create_dir_all(&charters_dir).unwrap();
     std::fs::write(charters_dir.join("01-foo.md"), "preexisting; not a Charter\n").unwrap();
@@ -886,7 +886,7 @@ fn charter_new_does_not_overwrite_existing_file() {
     // We can only force a clash with concurrent invocations, which we don't
     // simulate here. The overwrite guard is defensive — verify it compiles
     // and the happy path produces a distinct filename.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("new")
@@ -906,9 +906,9 @@ fn charter_new_truncates_long_title_at_word_boundary() {
     // by 1-2 chars used to produce a mid-word fragment like "…required-t"
     // (cutting "true" to "t"). The fix truncates at the last `-` boundary.
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("new")
@@ -942,9 +942,9 @@ fn charter_new_slug_flag_overrides_title_derivation() {
     // meaningful trailing reference (e.g. "-04-f3"). The --slug flag lets
     // the operator provide an explicit short slug that preserves context.
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("new")
@@ -965,9 +965,9 @@ fn charter_new_slug_flag_normalizes_through_slugifier() {
     // The override is normalized through the same slugifier so the operator
     // cannot smuggle in characters that would break the filename.
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("new")
@@ -988,10 +988,10 @@ fn charter_new_slug_flag_normalizes_through_slugifier() {
 #[test]
 fn charter_new_from_ailog_backfills_origin_with_summary() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
 
     // Write an AILOG that the Charter will reference.
-    let agent_logs = dir.path().join(".devtrail/07-ai-audit/agent-logs");
+    let agent_logs = dir.path().join(".straymark/07-ai-audit/agent-logs");
     std::fs::create_dir_all(&agent_logs).unwrap();
     let ailog_body = r#"---
 id: AILOG-2026-04-28-021
@@ -1018,7 +1018,7 @@ Original handler was synchronous and blocked on DB I/O.
     )
     .unwrap();
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("new")
@@ -1050,9 +1050,9 @@ fn charter_new_from_ailog_falls_back_when_ailog_not_found() {
     // exist (typoed ID, or AILOG lives in a different repo), the body Origin
     // line keeps the original placeholder instead of failing.
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("new")
@@ -1078,9 +1078,9 @@ fn charter_new_empty_slug_flag_falls_back_to_title() {
     // An empty --slug "" should be ignored (not treated as a hard error),
     // falling back to the title-derived slug.
     let dir = TempDir::new().unwrap();
-    setup_devtrail_with_charter_template(dir.path());
+    setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("new")

@@ -21,49 +21,49 @@ pub fn run(
                 .canonicalize()
                 .unwrap_or_else(|_| PathBuf::from(path));
             utils::info(&format!(
-                "DevTrail is not installed in {}",
+                "StrayMark is not installed in {}",
                 target.display()
             ));
-            utils::info("Run 'devtrail init' to initialize DevTrail in this directory.");
+            utils::info("Run 'straymark init' to initialize StrayMark in this directory.");
             return Ok(());
         }
     };
 
     if resolved.is_fallback {
         utils::info(&format!(
-            "Using DevTrail installation at repo root: {}",
+            "Using StrayMark installation at repo root: {}",
             resolved.path.display()
         ));
     }
 
     let target = resolved.path;
-    let devtrail_dir = target.join(".devtrail");
+    let straymark_dir = target.join(".straymark");
 
-    // --staged mode: validate only git-staged .devtrail/ documents.
+    // --staged mode: validate only git-staged .straymark/ documents.
     // Charter validation in --staged mode is a Phase 2 enhancement; in v0
     // the flag is honored only in the all-mode path below.
     if staged {
-        return run_staged(&target, &devtrail_dir);
+        return run_staged(&target, &straymark_dir);
     }
 
     // Header
     println!();
-    println!("  {}", "DevTrail Validate".bold().cyan());
+    println!("  {}", "StrayMark Validate".bold().cyan());
     println!("  {}", target.display().to_string().dimmed());
     println!();
 
     // Run validation
-    let (mut result, mut doc_count) = validation::validate_all(&devtrail_dir);
+    let (mut result, mut doc_count) = validation::validate_all(&straymark_dir);
 
     if include_charters {
         let (charter_result, charter_count) =
-            validation::validate_charters(&target, &devtrail_dir);
+            validation::validate_charters(&target, &straymark_dir);
         result.merge(charter_result);
         doc_count += charter_count;
     }
 
     if check_pending_reviews {
-        for issue in validation::check_pending_reviews(&devtrail_dir, max_pending_days) {
+        for issue in validation::check_pending_reviews(&straymark_dir, max_pending_days) {
             result.warnings.push(issue);
         }
     }
@@ -73,8 +73,8 @@ pub fn run(
         println!(
             "  {} Create documents with {} or {}",
             "→".blue().bold(),
-            "devtrail new".cyan(),
-            "/devtrail-new".cyan()
+            "straymark new".cyan(),
+            "/straymark-new".cyan()
         );
         println!();
         return Ok(());
@@ -82,17 +82,17 @@ pub fn run(
 
     // Apply fixes if requested
     if fix {
-        apply_fixes(&devtrail_dir);
+        apply_fixes(&straymark_dir);
         // Re-validate after fixes
-        let (mut result, mut doc_count) = validation::validate_all(&devtrail_dir);
+        let (mut result, mut doc_count) = validation::validate_all(&straymark_dir);
         if include_charters {
             let (charter_result, charter_count) =
-                validation::validate_charters(&target, &devtrail_dir);
+                validation::validate_charters(&target, &straymark_dir);
             result.merge(charter_result);
             doc_count += charter_count;
         }
         if check_pending_reviews {
-            for issue in validation::check_pending_reviews(&devtrail_dir, max_pending_days) {
+            for issue in validation::check_pending_reviews(&straymark_dir, max_pending_days) {
                 result.warnings.push(issue);
             }
         }
@@ -104,7 +104,7 @@ pub fn run(
     exit_with_code(&result)
 }
 
-fn run_staged(project_root: &std::path::Path, devtrail_dir: &std::path::Path) -> Result<()> {
+fn run_staged(project_root: &std::path::Path, straymark_dir: &std::path::Path) -> Result<()> {
     // Get staged files from git
     let output = std::process::Command::new("git")
         .args(["diff", "--cached", "--name-only"])
@@ -121,7 +121,7 @@ fn run_staged(project_root: &std::path::Path, devtrail_dir: &std::path::Path) ->
     let stdout = String::from_utf8_lossy(&output.stdout);
     let staged_paths: Vec<PathBuf> = stdout
         .lines()
-        .filter(|line| line.starts_with(".devtrail/") && line.ends_with(".md"))
+        .filter(|line| line.starts_with(".straymark/") && line.ends_with(".md"))
         .map(|line| project_root.join(line))
         .collect();
 
@@ -135,18 +135,18 @@ fn run_staged(project_root: &std::path::Path, devtrail_dir: &std::path::Path) ->
 
     // Header
     println!();
-    println!("  {}", "DevTrail Validate (staged)".bold().cyan());
+    println!("  {}", "StrayMark Validate (staged)".bold().cyan());
     println!(
         "  {} file(s)",
         staged_paths.len().to_string().dimmed()
     );
     println!();
 
-    let (result, doc_count) = validation::validate_paths(&staged_paths, devtrail_dir);
+    let (result, doc_count) = validation::validate_paths(&staged_paths, straymark_dir);
 
     if doc_count == 0 {
         println!(
-            "  {} No DevTrail documents among staged files.",
+            "  {} No StrayMark documents among staged files.",
             "✓".green().bold()
         );
         return Ok(());
@@ -156,8 +156,8 @@ fn run_staged(project_root: &std::path::Path, devtrail_dir: &std::path::Path) ->
     exit_with_code(&result)
 }
 
-fn apply_fixes(devtrail_dir: &std::path::Path) {
-    let paths = crate::document::discover_documents(devtrail_dir);
+fn apply_fixes(straymark_dir: &std::path::Path) {
+    let paths = crate::document::discover_documents(straymark_dir);
     let mut fixed_count = 0;
 
     for path in &paths {

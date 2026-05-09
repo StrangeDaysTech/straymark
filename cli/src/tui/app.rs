@@ -103,8 +103,8 @@ pub struct App {
 
 impl App {
     pub fn new(project_root: &Path, is_fallback: bool, language: &str) -> Self {
-        let devtrail_dir = project_root.join(".devtrail");
-        let index = DocIndex::build(&devtrail_dir, language);
+        let straymark_dir = project_root.join(".straymark");
+        let index = DocIndex::build(&straymark_dir, language);
         let num_groups = index.groups.len();
 
         Self {
@@ -152,8 +152,8 @@ impl App {
         let next = Self::SWITCHER_LANGUAGES[(idx + 1) % Self::SWITCHER_LANGUAGES.len()];
         self.language = next.to_string();
 
-        let devtrail_dir = self.project_root.join(".devtrail");
-        self.index = DocIndex::build(&devtrail_dir, &self.language);
+        let straymark_dir = self.project_root.join(".straymark");
+        self.index = DocIndex::build(&straymark_dir, &self.language);
         self.doc_cache.clear();
         self.current_doc = None;
         self.doc_scroll = 0;
@@ -820,7 +820,7 @@ mod tests {
 
     fn fixture_app(language: &str) -> App {
         let tmp = tempfile::TempDir::new().unwrap();
-        let governance = tmp.path().join(".devtrail").join("00-governance");
+        let governance = tmp.path().join(".straymark").join("00-governance");
         std::fs::create_dir_all(&governance).unwrap();
         std::fs::write(governance.join("AGENT-RULES.md"), "# Rules").unwrap();
         // Hold the TempDir alive by leaking — fine for test scope.

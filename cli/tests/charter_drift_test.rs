@@ -1,4 +1,4 @@
-//! Integration tests for `devtrail charter drift`. Requires a real git repo
+//! Integration tests for `straymark charter drift`. Requires a real git repo
 //! and `bash` in PATH; tests are skipped on Windows runners that lack bash.
 
 use assert_cmd::Command;
@@ -8,8 +8,8 @@ use std::process::Command as StdCommand;
 use tempfile::TempDir;
 
 /// Inline copy of the framework's check-charter-drift.sh — the integration
-/// path expects the script under `.devtrail/scripts/`.
-const DRIFT_SCRIPT: &str = include_str!("../../dist/.devtrail/scripts/check-charter-drift.sh");
+/// path expects the script under `.straymark/scripts/`.
+const DRIFT_SCRIPT: &str = include_str!("../../dist/.straymark/scripts/check-charter-drift.sh");
 
 const CHARTER_TEMPLATE: &str = r#"---
 charter_id: CHARTER-NN
@@ -38,18 +38,18 @@ fn bash_available() -> bool {
         .unwrap_or(false)
 }
 
-fn setup_devtrail(dir: &Path) {
-    let devtrail = dir.join(".devtrail");
-    std::fs::create_dir_all(devtrail.join("templates")).unwrap();
-    std::fs::create_dir_all(devtrail.join("scripts")).unwrap();
-    std::fs::create_dir_all(devtrail.join("07-ai-audit/agent-logs")).unwrap();
-    std::fs::write(devtrail.join("config.yml"), "language: en\n").unwrap();
+fn setup_straymark(dir: &Path) {
+    let straymark = dir.join(".straymark");
+    std::fs::create_dir_all(straymark.join("templates")).unwrap();
+    std::fs::create_dir_all(straymark.join("scripts")).unwrap();
+    std::fs::create_dir_all(straymark.join("07-ai-audit/agent-logs")).unwrap();
+    std::fs::write(straymark.join("config.yml"), "language: en\n").unwrap();
     std::fs::write(
-        devtrail.join("templates").join("charter-template.md"),
+        straymark.join("templates").join("charter-template.md"),
         CHARTER_TEMPLATE,
     )
     .unwrap();
-    let script_path = devtrail.join("scripts").join("check-charter-drift.sh");
+    let script_path = straymark.join("scripts").join("check-charter-drift.sh");
     std::fs::write(&script_path, DRIFT_SCRIPT).unwrap();
     #[cfg(unix)]
     {
@@ -95,7 +95,7 @@ fn charter_drift_clean_when_declared_matches_modified() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_charter_with_files(dir.path(), &["src/foo.rs"], None);
     std::fs::create_dir_all(dir.path().join("src")).unwrap();
     std::fs::write(dir.path().join("src/foo.rs"), "// initial\n").unwrap();
@@ -107,7 +107,7 @@ fn charter_drift_clean_when_declared_matches_modified() {
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-q", "-m", "edit foo"]);
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "drift", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
@@ -123,7 +123,7 @@ fn charter_drift_detects_declared_but_not_modified() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_charter_with_files(dir.path(), &["src/foo.rs", "src/bar.rs"], None);
     std::fs::create_dir_all(dir.path().join("src")).unwrap();
     std::fs::write(dir.path().join("src/foo.rs"), "// initial\n").unwrap();
@@ -137,7 +137,7 @@ fn charter_drift_detects_declared_but_not_modified() {
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-q", "-m", "edit foo only"]);
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "drift", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
@@ -154,12 +154,12 @@ fn charter_drift_ailog_suppression_clears_documented_paths() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     // Write an AILOG that documents the drift path under ## Risk.
     let ailog_path = dir
         .path()
-        .join(".devtrail/07-ai-audit/agent-logs/AILOG-2026-05-02-001-document-bar.md");
+        .join(".straymark/07-ai-audit/agent-logs/AILOG-2026-05-02-001-document-bar.md");
     std::fs::write(
         &ailog_path,
         r#"---
@@ -206,7 +206,7 @@ Done.
     git(dir.path(), &["commit", "-q", "-m", "edit foo only"]);
 
     // Default behavior: AILOG suppression kicks in, drift is cleared.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "drift", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
@@ -223,11 +223,11 @@ fn charter_drift_no_ailog_suppress_disables_suppression() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     let ailog_path = dir
         .path()
-        .join(".devtrail/07-ai-audit/agent-logs/AILOG-2026-05-02-001-document-bar.md");
+        .join(".straymark/07-ai-audit/agent-logs/AILOG-2026-05-02-001-document-bar.md");
     std::fs::write(
         &ailog_path,
         r#"---
@@ -263,7 +263,7 @@ review_required: false
     git(dir.path(), &["commit", "-q", "-m", "edit foo only"]);
 
     // With --no-ailog-suppress, drift is reported even though it's documented.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -292,7 +292,7 @@ fn charter_drift_no_ailog_suppress_emits_info_line_when_n_zero() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_charter_with_files(dir.path(), &["src/foo.rs"], None);
     std::fs::create_dir_all(dir.path().join("src")).unwrap();
     std::fs::write(dir.path().join("src/foo.rs"), "// initial\n").unwrap();
@@ -303,7 +303,7 @@ fn charter_drift_no_ailog_suppress_emits_info_line_when_n_zero() {
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-q", "-m", "edit foo"]);
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -330,11 +330,11 @@ fn charter_drift_no_ailog_suppress_emits_info_line_when_n_nonzero() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     let ailog_path = dir
         .path()
-        .join(".devtrail/07-ai-audit/agent-logs/AILOG-2026-05-03-001-document-bar.md");
+        .join(".straymark/07-ai-audit/agent-logs/AILOG-2026-05-03-001-document-bar.md");
     std::fs::write(
         &ailog_path,
         r#"---
@@ -368,7 +368,7 @@ review_required: false
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-q", "-m", "edit foo only"]);
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -400,7 +400,7 @@ fn charter_drift_default_stays_silent_when_n_zero() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_charter_with_files(dir.path(), &["src/foo.rs"], None);
     std::fs::create_dir_all(dir.path().join("src")).unwrap();
     std::fs::write(dir.path().join("src/foo.rs"), "// initial\n").unwrap();
@@ -411,7 +411,7 @@ fn charter_drift_default_stays_silent_when_n_zero() {
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-q", "-m", "edit foo"]);
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "drift", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
@@ -433,7 +433,7 @@ fn charter_drift_resolves_glob_wildcards_in_declared_paths() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     // Build a Charter that declares a glob.
     let charters_dir = dir.path().join("docs").join("charters");
@@ -474,7 +474,7 @@ trigger: "bulk"
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-q", "-m", "edit all"]);
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "drift", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
@@ -497,7 +497,7 @@ fn charter_drift_ignores_path_references_in_change_column() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     // Build a Charter where the "Change" column contains a backtick-quoted path.
     let charters_dir = dir.path().join("docs").join("charters");
@@ -541,7 +541,7 @@ trigger: "test"
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-q", "-m", "edit foo and bar"]);
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "drift", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())

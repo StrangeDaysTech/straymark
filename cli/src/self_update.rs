@@ -9,7 +9,7 @@ use crate::utils;
 /// How the CLI was installed
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum InstallMethod {
-    /// Installed via `cargo install devtrail-cli`
+    /// Installed via `cargo install straymark-cli`
     Cargo,
     /// Installed via prebuilt binary from GitHub Releases
     GitHubBinary,
@@ -54,7 +54,7 @@ pub fn perform_update(method_override: Option<InstallMethod>) -> Result<()> {
     }
 }
 
-/// Update via `cargo install --force devtrail-cli`
+/// Update via `cargo install --force straymark-cli`
 fn perform_cargo_update() -> Result<()> {
     let current_version = env!("CARGO_PKG_VERSION");
     utils::info(&format!("Current version: cli-{}", current_version));
@@ -98,7 +98,7 @@ fn perform_cargo_update() -> Result<()> {
         utils::warn("cargo not found in PATH. Run the following command manually:");
         println!(
             "\n  {}\n",
-            "cargo install --force devtrail-cli".yellow().bold()
+            "cargo install --force straymark-cli".yellow().bold()
         );
         bail!("cargo is not available in PATH");
     }
@@ -119,7 +119,7 @@ fn perform_cargo_update() -> Result<()> {
     utils::info("Compiling from source, this may take a few minutes...");
 
     let status = std::process::Command::new("cargo")
-        .args(["install", "--force", "devtrail-cli"])
+        .args(["install", "--force", "straymark-cli"])
         .status()
         .context("Failed to run cargo install")?;
 
@@ -190,9 +190,9 @@ fn perform_github_update() -> Result<()> {
     // Extract binary
     utils::info("Extracting binary...");
     let binary_name = if cfg!(windows) {
-        "devtrail.exe"
+        "straymark.exe"
     } else {
-        "devtrail"
+        "straymark"
     };
 
     let extracted_binary = if cfg!(windows) {

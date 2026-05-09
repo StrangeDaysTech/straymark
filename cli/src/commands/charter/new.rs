@@ -1,4 +1,4 @@
-//! `devtrail charter new` — scaffold a Charter from the framework template.
+//! `straymark charter new` — scaffold a Charter from the framework template.
 //!
 //! Three origin paths:
 //! - `--from-ailog AILOG-ID`: post-MVP / maintenance mode (the Sentinel case).
@@ -15,7 +15,7 @@ use dialoguer::{theme::ColorfulTheme, Input};
 use std::path::{Path, PathBuf};
 
 use crate::charter::next_charter_number;
-use crate::config::DevTrailConfig;
+use crate::config::StrayMarkConfig;
 use crate::utils;
 
 /// Default effort when the user does not pass `--type`. M is the median bucket
@@ -37,14 +37,14 @@ pub fn run(
     }
 
     let resolved = utils::resolve_project_root(path)
-        .ok_or_else(|| anyhow!("DevTrail not installed. Run 'devtrail init' first."))?;
+        .ok_or_else(|| anyhow!("StrayMark not installed. Run 'straymark init' first."))?;
     let project_root = &resolved.path;
-    let devtrail_dir = project_root.join(".devtrail");
+    let straymark_dir = project_root.join(".straymark");
 
-    let resolved_language = DevTrailConfig::resolve_language(project_root);
+    let resolved_language = StrayMarkConfig::resolve_language(project_root);
     let lang = resolved_language.as_str();
 
-    // Title (interactive fallback matches `devtrail new`'s UX).
+    // Title (interactive fallback matches `straymark new`'s UX).
     let title = match title_arg {
         Some(t) => t.to_string(),
         None => Input::with_theme(&ColorfulTheme::default())
@@ -66,11 +66,11 @@ pub fn run(
     }
 
     // Resolve template (with i18n) and load.
-    let templates_dir = devtrail_dir.join("templates");
+    let templates_dir = straymark_dir.join("templates");
     let template_path = utils::resolve_localized_path(&templates_dir, "charter-template.md", lang);
     let template = std::fs::read_to_string(&template_path).with_context(|| {
         format!(
-            "Charter template not found at {}. Run `devtrail repair` to restore framework files.",
+            "Charter template not found at {}. Run `straymark repair` to restore framework files.",
             template_path.display()
         )
     })?;
@@ -305,7 +305,7 @@ fn validate_spec_path(project_root: &Path, spec_path: &str) -> Result<()> {
 /// operator needing to re-read the AILOG to summarize it.
 fn extract_ailog_context(project_root: &Path, ailog_id: &str) -> Option<String> {
     let agent_logs = project_root
-        .join(".devtrail")
+        .join(".straymark")
         .join("07-ai-audit")
         .join("agent-logs");
     if !agent_logs.exists() {
@@ -505,7 +505,7 @@ mod tests {
     use super::*;
 
     /// Minimal template that covers all substitution points the runner touches.
-    /// Mirrors the structure of dist/.devtrail/templates/charter-template.md
+    /// Mirrors the structure of dist/.straymark/templates/charter-template.md
     /// without the full body.
     const TEMPLATE: &str = r#"---
 charter_id: CHARTER-NN
@@ -730,7 +730,7 @@ ignored.
     }
 
     #[test]
-    fn slugify_matches_devtrail_new_pattern() {
+    fn slugify_matches_straymark_new_pattern() {
         assert_eq!(slugify("Hello World"), "hello-world");
         assert_eq!(slugify("Per-service anomaly thresholds"), "per-service-anomaly-thresholds");
         assert_eq!(slugify("UPPER_case mixed!"), "upper-case-mixed");

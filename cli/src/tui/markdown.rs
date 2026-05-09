@@ -644,7 +644,7 @@ mod tests {
         assert_eq!(wrap_cell_text("hola", 0), vec!["hola".to_string()]);
     }
 
-    /// Regression test for the crash reported against `devtrail explore`:
+    /// Regression test for the crash reported against `straymark explore`:
     /// width offset landing inside a 3-byte em-dash used to panic with
     /// "byte index is not a char boundary".
     #[test]
@@ -741,7 +741,7 @@ mod tests {
     }
 
     /// End-to-end regression: the exact table row that crashed
-    /// `devtrail explore` must render through the full pipeline
+    /// `straymark explore` must render through the full pipeline
     /// (parser + renderer + cell wrapping) without panicking.
     #[test]
     fn full_pipeline_em_dash_table_no_panic() {

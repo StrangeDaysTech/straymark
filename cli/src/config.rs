@@ -2,9 +2,9 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-/// DevTrail project configuration from .devtrail/config.yml
+/// StrayMark project configuration from .straymark/config.yml
 #[derive(Debug, Deserialize, Serialize)]
-pub struct DevTrailConfig {
+pub struct StrayMarkConfig {
     /// Language setting: "en", "es", or "zh-CN"
     #[serde(default = "default_language")]
     pub language: String,
@@ -18,7 +18,7 @@ pub struct DevTrailConfig {
     pub regional_scope: Vec<String>,
 }
 
-/// Configuration for the `devtrail analyze` command
+/// Configuration for the `straymark analyze` command
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ComplexityConfig {
     /// Cognitive complexity threshold (default: 8)
@@ -46,7 +46,7 @@ fn default_regional_scope() -> Vec<String> {
     vec!["global".to_string(), "eu".to_string()]
 }
 
-impl Default for DevTrailConfig {
+impl Default for StrayMarkConfig {
     fn default() -> Self {
         Self {
             language: default_language(),
@@ -56,10 +56,10 @@ impl Default for DevTrailConfig {
     }
 }
 
-impl DevTrailConfig {
-    /// Read config from .devtrail/config.yml at the given project root
+impl StrayMarkConfig {
+    /// Read config from .straymark/config.yml at the given project root
     pub fn load(project_root: &Path) -> Result<Self> {
-        let config_path = project_root.join(".devtrail/config.yml");
+        let config_path = project_root.join(".straymark/config.yml");
         if !config_path.exists() {
             return Ok(Self::default());
         }
@@ -79,7 +79,7 @@ impl DevTrailConfig {
     /// Resolve the effective display language for a project, applying all
     /// fallbacks in order:
     ///
-    /// 1. If `.devtrail/config.yml` exists on disk, the value of its
+    /// 1. If `.straymark/config.yml` exists on disk, the value of its
     ///    `language` key (defaulting to `"en"` when the field is absent).
     ///    A configured value — even the default `"en"` — is treated as an
     ///    explicit choice and is never overridden by env vars.
@@ -87,11 +87,11 @@ impl DevTrailConfig {
     ///    onto a supported locale (`en`, `es`, `zh-CN`).
     /// 3. Final fallback: `"en"`.
     ///
-    /// This is the single entry point used by `devtrail explore`,
-    /// `devtrail new`, and `devtrail status` so they all agree on which
+    /// This is the single entry point used by `straymark explore`,
+    /// `straymark new`, and `straymark status` so they all agree on which
     /// language to use.
     pub fn resolve_language(project_root: &Path) -> String {
-        let config_path = project_root.join(".devtrail/config.yml");
+        let config_path = project_root.join(".straymark/config.yml");
         if config_path.exists() {
             return Self::load(project_root)
                 .map(|c| c.language)
@@ -107,7 +107,7 @@ mod tests {
 
     #[test]
     fn test_default_regional_scope() {
-        let cfg = DevTrailConfig::default();
+        let cfg = StrayMarkConfig::default();
         assert!(cfg.has_region("global"));
         assert!(cfg.has_region("eu"));
         assert!(!cfg.has_region("china"));
@@ -115,7 +115,7 @@ mod tests {
 
     #[test]
     fn test_has_region_case_insensitive() {
-        let cfg = DevTrailConfig {
+        let cfg = StrayMarkConfig {
             regional_scope: vec!["China".into(), "GLOBAL".into()],
             ..Default::default()
         };
@@ -128,7 +128,7 @@ mod tests {
     #[test]
     fn resolve_language_uses_config_value_when_present() {
         let tmp = tempfile::TempDir::new().unwrap();
-        let dt = tmp.path().join(".devtrail");
+        let dt = tmp.path().join(".straymark");
         std::fs::create_dir_all(&dt).unwrap();
         std::fs::write(dt.join("config.yml"), "language: zh-CN\n").unwrap();
 
@@ -136,7 +136,7 @@ mod tests {
         // value must win — config is treated as a deliberate user choice.
         let prev = std::env::var("LANG").ok();
         unsafe { std::env::set_var("LANG", "fr_FR.UTF-8"); }
-        let lang = DevTrailConfig::resolve_language(tmp.path());
+        let lang = StrayMarkConfig::resolve_language(tmp.path());
         if let Some(p) = prev {
             unsafe { std::env::set_var("LANG", p); }
         } else {
@@ -148,7 +148,7 @@ mod tests {
     #[test]
     fn resolve_language_falls_back_to_default_when_no_config_no_env() {
         let tmp = tempfile::TempDir::new().unwrap();
-        // No .devtrail/config.yml in tmp.
+        // No .straymark/config.yml in tmp.
         // Clear env vars so the OS locale path can't return a real value.
         let prev_all = std::env::var("LC_ALL").ok();
         let prev_lang = std::env::var("LANG").ok();
@@ -156,7 +156,7 @@ mod tests {
             std::env::remove_var("LC_ALL");
             std::env::set_var("LANG", "C");
         }
-        let lang = DevTrailConfig::resolve_language(tmp.path());
+        let lang = StrayMarkConfig::resolve_language(tmp.path());
         // Restore env.
         unsafe {
             if let Some(p) = prev_all {
@@ -182,7 +182,7 @@ pub struct Checksums {
 
 impl Checksums {
     pub fn load(project_root: &Path) -> Result<Self> {
-        let path = project_root.join(".devtrail/.checksums.json");
+        let path = project_root.join(".straymark/.checksums.json");
         if !path.exists() {
             return Ok(Self::default());
         }
@@ -194,7 +194,7 @@ impl Checksums {
     }
 
     pub fn save(&self, project_root: &Path) -> Result<()> {
-        let path = project_root.join(".devtrail/.checksums.json");
+        let path = project_root.join(".straymark/.checksums.json");
         let contents =
             serde_json::to_string_pretty(self).context("Failed to serialize checksums")?;
         std::fs::write(&path, contents).context("Failed to write .checksums.json")?;
