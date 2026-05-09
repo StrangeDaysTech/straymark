@@ -1,7 +1,8 @@
 use anyhow::Result;
 use colored::Colorize;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
+use crate::charter::{self, CharterStatus};
 use crate::config::StrayMarkConfig;
 use crate::manifest::DistManifest;
 use crate::utils::{self, pad_right_visual, visual_width};
@@ -223,6 +224,13 @@ pub fn run(path: &str) -> Result<()> {
     );
     println!();
 
+    // ── Charters ──
+    // Charters are an optional pattern (bounded units of work). Surfaced as a
+    // dedicated block so adopters of `straymark charter new` see them in the
+    // canonical health view; projects without Charters see a one-line hint.
+    let charter_counts = count_charters(&target);
+    print_charters_block(&charter_counts);
+
     // ── Hints ──
     if total_missing > 0 {
         println!(
@@ -312,4 +320,100 @@ fn walk_files(dir: &std::path::Path) -> Vec<PathBuf> {
         }
     }
     files
+}
+
+/// Counts of Charters by lifecycle status. `total` includes parseable charters
+/// only; `unparseable` reports files that look like charters by filename but
+/// failed schema parse, so the user knows to fix them.
+struct CharterCounts {
+    declared: usize,
+    in_progress: usize,
+    closed: usize,
+    unparseable: usize,
+    total: usize,
+}
+
+fn count_charters(project_root: &Path) -> CharterCounts {
+    let (charters, errors) = charter::discover_and_parse(project_root);
+    let mut declared = 0;
+    let mut in_progress = 0;
+    let mut closed = 0;
+    for c in &charters {
+        match c.frontmatter.status {
+            CharterStatus::Declared => declared += 1,
+            CharterStatus::InProgress => in_progress += 1,
+            CharterStatus::Closed => closed += 1,
+        }
+    }
+    CharterCounts {
+        declared,
+        in_progress,
+        closed,
+        unparseable: errors.len(),
+        total: charters.len(),
+    }
+}
+
+fn print_charters_block(c: &CharterCounts) {
+    println!("  {}", "Charters".bold());
+    if c.total == 0 && c.unparseable == 0 {
+        println!(
+            "  {} {}",
+            "·".dimmed(),
+            "No Charters yet — run `straymark charter new` to declare one (see STRAYMARK.md §15).".dimmed(),
+        );
+        println!();
+        return;
+    }
+
+    let rows: Vec<(&str, usize, colored::Color)> = vec![
+        ("declared", c.declared, colored::Color::White),
+        ("in-progress", c.in_progress, colored::Color::Yellow),
+        ("closed", c.closed, colored::Color::Green),
+    ];
+    let label_w = rows
+        .iter()
+        .map(|(l, _, _)| visual_width(l))
+        .max()
+        .unwrap_or(11);
+    let count_w = 5;
+
+    println!();
+    println!(
+        "  {} {} {}",
+        pad_right_visual("Status", label_w).dimmed(),
+        "│".dimmed(),
+        pad_right_visual("Count", count_w).dimmed(),
+    );
+    println!(
+        "  {}",
+        format!("{}─┼─{}", "─".repeat(label_w), "─".repeat(count_w)).dimmed()
+    );
+
+    for (label, count, color) in &rows {
+        let count_str = format!("{count:>count_w$}");
+        let padded = pad_right_visual(label, label_w);
+        if *count > 0 {
+            println!("  {} │ {}", padded, count_str.color(*color).bold());
+        } else {
+            println!("  {} │ {}", padded.dimmed(), count_str.dimmed());
+        }
+    }
+
+    let total_str = format!("{:>count_w$}", c.total);
+    println!(
+        "  {} │ {}",
+        pad_right_visual("TOTAL", label_w).bold(),
+        total_str.cyan().bold(),
+    );
+
+    if c.unparseable > 0 {
+        println!(
+            "  {} {} unparseable Charter file{} — run `straymark charter list` to see the warning detail.",
+            "!".yellow().bold(),
+            c.unparseable,
+            if c.unparseable == 1 { "" } else { "s" },
+        );
+    }
+    println!();
 }
