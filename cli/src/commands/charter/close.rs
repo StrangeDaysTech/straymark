@@ -162,8 +162,11 @@ fn copy_template_for(
     dest: &Path,
     non_interactive: bool,
 ) -> Result<String> {
+    // Charter templates live under their own subdirectory (`templates/charter/`)
+    // since fw-4.12.0.
     let template_path = straymark_dir
         .join("templates")
+        .join("charter")
         .join("charter-telemetry-template.yaml");
     let template = std::fs::read_to_string(&template_path).with_context(|| {
         format!(

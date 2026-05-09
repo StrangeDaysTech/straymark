@@ -40,12 +40,15 @@ fn bash_available() -> bool {
 
 fn setup_straymark(dir: &Path) {
     let straymark = dir.join(".straymark");
-    std::fs::create_dir_all(straymark.join("templates")).unwrap();
+    std::fs::create_dir_all(straymark.join("templates").join("charter")).unwrap();
     std::fs::create_dir_all(straymark.join("scripts")).unwrap();
     std::fs::create_dir_all(straymark.join("07-ai-audit/agent-logs")).unwrap();
     std::fs::write(straymark.join("config.yml"), "language: en\n").unwrap();
     std::fs::write(
-        straymark.join("templates").join("charter-template.md"),
+        straymark
+            .join("templates")
+            .join("charter")
+            .join("charter-template.md"),
         CHARTER_TEMPLATE,
     )
     .unwrap();
