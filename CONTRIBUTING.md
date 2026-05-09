@@ -1,6 +1,6 @@
-# Contributing to DevTrail
+# Contributing to StrayMark
 
-Thank you for your interest in contributing to DevTrail! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to StrayMark! This document provides guidelines and information for contributors.
 
 **Languages**: English | [Español](docs/i18n/es/CONTRIBUTING.md) | [简体中文](docs/i18n/zh-CN/CONTRIBUTING.md)
 
@@ -35,7 +35,7 @@ This project requires all contributors to sign a **Contributor License Agreement
 3. The CLA only needs to be signed once — it covers all future contributions to this project.
 4. Once signed, CLA Assistant will update the PR check status and your contribution can proceed to review.
 
-If you have questions about the CLA, please open a [Discussion](https://github.com/StrangeDaysTech/devtrail/discussions).
+If you have questions about the CLA, please open a [Discussion](https://github.com/StrangeDaysTech/straymark/discussions).
 
 ---
 
@@ -96,17 +96,17 @@ Code contributions should:
 
 1. **Fork the repository**
 
-   Click "Fork" on the [GitHub repository page](https://github.com/StrangeDaysTech/devtrail).
+   Click "Fork" on the [GitHub repository page](https://github.com/StrangeDaysTech/straymark).
 
 2. **Clone your fork**
    ```bash
-   git clone https://github.com/your-username/devtrail.git
-   cd devtrail
+   git clone https://github.com/your-username/straymark.git
+   cd straymark
    ```
 
 3. **Install the pre-commit hook**
    ```bash
-   echo 'devtrail validate --staged' > .git/hooks/pre-commit
+   echo 'straymark validate --staged' > .git/hooks/pre-commit
    chmod +x .git/hooks/pre-commit
    ```
 
@@ -125,7 +125,7 @@ Code contributions should:
 
 6. **Make your changes and validate**
    ```bash
-   devtrail validate
+   straymark validate
    ```
 
 ---
@@ -134,7 +134,7 @@ Code contributions should:
 
 ### Before Submitting
 
-- [ ] Run `devtrail validate` successfully
+- [ ] Run `straymark validate` successfully
 - [ ] Update documentation if needed
 - [ ] Add yourself to CONTRIBUTORS.md (if applicable)
 - [ ] Write a clear PR description
@@ -178,7 +178,7 @@ Why is this change needed?
 How were these changes tested?
 
 ## Checklist
-- [ ] `devtrail validate` passes
+- [ ] `straymark validate` passes
 - [ ] Documentation updated
 - [ ] No sensitive information included
 ```
@@ -215,7 +215,7 @@ created: YYYY-MM-DD
 
 ### File Naming
 
-DevTrail documents:
+StrayMark documents:
 ```
 [TYPE]-[YYYY-MM-DD]-[NNN]-[description].md
 ```
@@ -239,13 +239,13 @@ DevTrail documents:
 If you're proposing a new document type:
 
 1. **Create the template**
-   - Add `TEMPLATE-NEWTYPE.md` to `dist/.devtrail/templates/`
+   - Add `TEMPLATE-NEWTYPE.md` to `dist/.straymark/templates/`
    - Follow existing template patterns
 
 2. **Update governance docs**
-   - `dist/.devtrail/00-governance/DOCUMENTATION-POLICY.md`
-   - `dist/.devtrail/00-governance/AGENT-RULES.md`
-   - `dist/.devtrail/QUICK-REFERENCE.md`
+   - `dist/.straymark/00-governance/DOCUMENTATION-POLICY.md`
+   - `dist/.straymark/00-governance/AGENT-RULES.md`
+   - `dist/.straymark/QUICK-REFERENCE.md`
 
 3. **Update agent configs**
    - `dist/dist-templates/directives/` (distribution templates)
@@ -278,7 +278,7 @@ Templates should include:
 
 ## CLI Development
 
-The DevTrail CLI is written in Rust and located in the `cli/` directory.
+The StrayMark CLI is written in Rust and located in the `cli/` directory.
 
 ### Building
 
@@ -310,13 +310,13 @@ cli/src/
 ├── main.rs              # Entry point + clap CLI definition
 ├── commands/
 │   ├── mod.rs           # Subcommand routing
-│   ├── init.rs          # devtrail init [path]
-│   ├── update.rs        # devtrail update (combined)
-│   ├── update_framework.rs # devtrail update-framework
-│   ├── update_cli.rs    # devtrail update-cli
-│   ├── remove.rs        # devtrail remove [--full]
-│   ├── status.rs        # devtrail status [path]
-│   └── about.rs         # devtrail about
+│   ├── init.rs          # straymark init [path]
+│   ├── update.rs        # straymark update (combined)
+│   ├── update_framework.rs # straymark update-framework
+│   ├── update_cli.rs    # straymark update-cli
+│   ├── remove.rs        # straymark remove [--full]
+│   ├── status.rs        # straymark status [path]
+│   └── about.rs         # straymark about
 ├── config.rs            # Config and checksums management
 ├── download.rs          # GitHub Releases API (prefix-filtered)
 ├── inject.rs            # Directive file injection (markers)
@@ -334,8 +334,8 @@ cli/src/
 
 If you have questions about contributing:
 
-1. Check existing [Issues](https://github.com/StrangeDaysTech/devtrail/issues)
-2. Check [Discussions](https://github.com/StrangeDaysTech/devtrail/discussions)
+1. Check existing [Issues](https://github.com/StrangeDaysTech/straymark/issues)
+2. Check [Discussions](https://github.com/StrangeDaysTech/straymark/discussions)
 3. Open a new Discussion for general questions
 4. Open an Issue for specific bugs or features
 
@@ -349,10 +349,10 @@ Contributors are recognized in:
 - Release notes for significant contributions
 - CONTRIBUTORS.md (for recurring contributors)
 
-Thank you for helping make DevTrail better!
+Thank you for helping make StrayMark better!
 
 ---
 
-*DevTrail — Because every change tells a story.*
+*StrayMark — Because every change tells a story.*
 
 [Strange Days Tech](https://strangedays.tech)

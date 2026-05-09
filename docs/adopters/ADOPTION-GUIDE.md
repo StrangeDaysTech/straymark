@@ -1,6 +1,6 @@
-# DevTrail - Adoption Guide
+# StrayMark - Adoption Guide
 
-**A comprehensive guide for adopting DevTrail in new or existing projects.**
+**A comprehensive guide for adopting StrayMark in new or existing projects.**
 
 [![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
 
@@ -10,7 +10,7 @@
 
 ## Table of Contents
 
-1. [What is DevTrail?](#what-is-devtrail-framework)
+1. [What is StrayMark?](#what-is-straymark-framework)
 2. [Who is it for?](#who-is-it-for)
 3. [Benefits](#benefits)
 4. [Standards Compliance](#standards-compliance)
@@ -22,9 +22,9 @@
 
 ---
 
-## What is DevTrail?
+## What is StrayMark?
 
-DevTrail is a **framework + CLI** that externalizes the cognitive discipline of senior software engineering work — explicit scope, declared decisions, named risks, recorded alternatives, audited trails — into versioned files that live alongside the code. The intent is to constrain the agent's decision space so AI-assisted work stays coherent across many turns instead of drifting into hidden technical debt.
+StrayMark is a **framework + CLI** that externalizes the cognitive discipline of senior software engineering work — explicit scope, declared decisions, named risks, recorded alternatives, audited trails — into versioned files that live alongside the code. The intent is to constrain the agent's decision space so AI-assisted work stays coherent across many turns instead of drifting into hidden technical debt.
 
 It provides:
 
@@ -39,15 +39,15 @@ It provides:
 
 > **"No significant change without a documented trace — and a constrained decision space for the agent."**
 
-DevTrail ensures that every meaningful change — whether by human or AI — is documented, attributed, and auditable. The discipline produces evidence compatible with **ISO/IEC 42001**, **EU AI Act**, and **NIST AI RMF** — but the goal is engineering quality first; compliance is what falls out when the discipline is real (see Principle #4 in [`Propuesta/devtrail-design-principles.md`](https://github.com/StrangeDaysTech/devtrail/blob/main/Propuesta/devtrail-design-principles.md)).
+StrayMark ensures that every meaningful change — whether by human or AI — is documented, attributed, and auditable. The discipline produces evidence compatible with **ISO/IEC 42001**, **EU AI Act**, and **NIST AI RMF** — but the goal is engineering quality first; compliance is what falls out when the discipline is real (see Principle #4 in [`Propuesta/straymark-design-principles.md`](https://github.com/StrangeDaysTech/straymark/blob/main/Propuesta/straymark-design-principles.md)).
 
 ### Why Now?
 
 AI agents make code fast. They don't make code coherent. After enough turns, an agent loses the thread: it re-introduces patterns the team rejected, accumulates hidden technical debt, and produces work that compiles but doesn't fit the system's grain. The faster the agent, the harder this debt is to see — until a regression, an incident, or a refactor surfaces it.
 
-In parallel, the regulatory floor is rising — the **EU AI Act becomes mandatory in August 2026**, and **ISO/IEC 42001** is now the international standard for AI Management Systems. Adopting DevTrail addresses the engineering problem first; the regulatory evidence is produced as a by-product of the discipline, ready when an auditor asks.
+In parallel, the regulatory floor is rising — the **EU AI Act becomes mandatory in August 2026**, and **ISO/IEC 42001** is now the international standard for AI Management Systems. Adopting StrayMark addresses the engineering problem first; the regulatory evidence is produced as a by-product of the discipline, ready when an auditor asks.
 
-### What DevTrail is NOT
+### What StrayMark is NOT
 
 - It is not a documentation generator — it provides structure, templates, and governance rules
 - It is not a replacement for code comments or API docs
@@ -62,7 +62,7 @@ In parallel, the regulatory floor is rising — the **EU AI Act becomes mandator
 
 ### Primary user
 
-DevTrail's primary user is the **senior engineer orchestrating AI agents on a non-trivial system** — someone with strong technical judgment who uses agents to take on work they couldn't realistically do alone, and who needs externalized cognitive discipline so the agent doesn't introduce systemic chaos. The framework's flows, defaults and language are tuned for that person; secondary audiences are served on top of that base, never at its expense.
+StrayMark's primary user is the **senior engineer orchestrating AI agents on a non-trivial system** — someone with strong technical judgment who uses agents to take on work they couldn't realistically do alone, and who needs externalized cognitive discipline so the agent doesn't introduce systemic chaos. The framework's flows, defaults and language are tuned for that person; secondary audiences are served on top of that base, never at its expense.
 
 ### Target Users
 
@@ -77,7 +77,7 @@ DevTrail's primary user is the **senior engineer orchestrating AI agents on a no
 
 ### Compatible Development Environments
 
-DevTrail provides configuration files for:
+StrayMark provides configuration files for:
 
 | Platform | Configuration File | Status |
 |----------|-------------------|--------|
@@ -89,9 +89,9 @@ DevTrail provides configuration files for:
 
 ### Compatible Methodologies
 
-DevTrail works with any development methodology:
+StrayMark works with any development methodology:
 
-| Methodology | How DevTrail Fits |
+| Methodology | How StrayMark Fits |
 |-------------|-------------------|
 | **Agile/Scrum** | REQ documents map to user stories; ADRs capture sprint decisions |
 | **Waterfall** | Full traceability from requirements through implementation |
@@ -121,7 +121,7 @@ DevTrail works with any development methodology:
 | **AI transparency** | Every AI action is logged with confidence levels |
 | **Human oversight** | Critical decisions require human approval |
 | **Ethical safeguards** | ETH and DPIA documents flag concerns for human decision |
-| **Governance metrics** | `devtrail metrics` tracks review rates, risk distribution, and trends |
+| **Governance metrics** | `straymark metrics` tracks review rates, risk distribution, and trends |
 
 ### For Regulatory Compliance (as a side effect)
 
@@ -130,18 +130,18 @@ DevTrail works with any development methodology:
 | **EU AI Act ready** | Risk classification, incident reporting, and transparency templates built in |
 | **ISO 42001 compatible** | Documentation structure aligns with certification audit requirements |
 | **NIST AI RMF mapped** | 12 GenAI risk categories and governance functions explicitly covered |
-| **Audit trail complete** | `devtrail audit` generates exportable timeline and traceability reports |
-| **Compliance scoring** | `devtrail compliance` provides percentage-based regulatory gap analysis |
+| **Audit trail complete** | `straymark audit` generates exportable timeline and traceability reports |
+| **Compliance scoring** | `straymark compliance` provides percentage-based regulatory gap analysis |
 
 ---
 
 ## Standards Compliance
 
-The discipline DevTrail externalizes — explicit scope, declared decisions, named risks, recorded alternatives — produces, as a side effect, evidence that maps cleanly onto the major engineering and AI governance frameworks. The tables below describe *how* DevTrail's artifacts align with each standard; the goal is the engineering work, the alignment is what falls out:
+The discipline StrayMark externalizes — explicit scope, declared decisions, named risks, recorded alternatives — produces, as a side effect, evidence that maps cleanly onto the major engineering and AI governance frameworks. The tables below describe *how* StrayMark's artifacts align with each standard; the goal is the engineering work, the alignment is what falls out:
 
 ### Software Engineering Standards
 
-| Standard | How DevTrail Helps |
+| Standard | How StrayMark Helps |
 |----------|-------------------|
 | **ISO/IEC/IEEE 29148:2018** | REQ documents follow structured requirements format with external interfaces and traceability |
 | **ISO/IEC 25010:2023** | 9 quality characteristics evaluated in ADRs and REQ non-functional requirements |
@@ -150,9 +150,9 @@ The discipline DevTrail externalizes — explicit scope, declared decisions, nam
 
 ### AI Management & Governance
 
-| Standard | How DevTrail Helps |
+| Standard | How StrayMark Helps |
 |----------|-------------------|
-| **ISO/IEC 42001:2023** | Vertebral standard — AI-GOVERNANCE-POLICY.md maps all Annex A controls to DevTrail documents |
+| **ISO/IEC 42001:2023** | Vertebral standard — AI-GOVERNANCE-POLICY.md maps all Annex A controls to StrayMark documents |
 | **EU AI Act** | Risk classification in ETH, incident reporting timelines in INC, regulatory fields in AILOG |
 | **NIST AI RMF 1.0 / 600-1** | 12 GenAI risk categories in ETH/AILOG, MAP/MEASURE/MANAGE/GOVERN coverage |
 | **ISO/IEC 23894:2023** | AI risk management aligned with ETH and AI-RISK-CATALOG (Fase 3) |
@@ -160,7 +160,7 @@ The discipline DevTrail externalizes — explicit scope, declared decisions, nam
 
 ### China Regulatory Coverage *(opt-in via `regional_scope: china`)*
 
-| Standard | How DevTrail Helps |
+| Standard | How StrayMark Helps |
 |----------|-------------------|
 | **TC260 AI Safety Governance Framework v2.0** | Five-level risk grading (TC260RA), `tc260_*` fields on ETH/MCARD/AILOG/SEC |
 | **PIPL — Personal Information Protection Law** | PIPIA template with PIPL Art. 55-56 sections, `pipl_*` fields, retention ≥ 3 years (`TYPE-003`) |
@@ -169,11 +169,11 @@ The discipline DevTrail externalizes — explicit scope, declared decisions, nam
 | **GB/T 45652-2025** | Training-data security section in SBOM and MCARD; `gb45652_training_data_compliance` field |
 | **CSL 2026** | INC extension with `csl_severity_level`, deadline-coherence rules (1h / 4h+72h+30d windows) |
 
-> Activate by adding `china` to `regional_scope` in `.devtrail/config.yml`. See the *Configuration* section below and the installed `CHINA-REGULATORY-FRAMEWORK.md` guide for details.
+> Activate by adding `china` to `regional_scope` in `.straymark/config.yml`. See the *Configuration* section below and the installed `CHINA-REGULATORY-FRAMEWORK.md` guide for details.
 
 ### Architecture Documentation
 
-| Standard | How DevTrail Helps |
+| Standard | How StrayMark Helps |
 |----------|-------------------|
 | **ADR (Architecture Decision Records)** | Native ADR support with extended metadata and immutability rules |
 | **arc42** | ADRs complement arc42 decision documentation |
@@ -181,7 +181,7 @@ The discipline DevTrail externalizes — explicit scope, declared decisions, nam
 
 ### Compliance & Governance
 
-| Regulation | How DevTrail Helps |
+| Regulation | How StrayMark Helps |
 |------------|-------------------|
 | **GDPR** | ETH documents for privacy, DPIA for data protection impact |
 | **SOC 2** | Change documentation and access logging via AILOG |
@@ -190,7 +190,7 @@ The discipline DevTrail externalizes — explicit scope, declared decisions, nam
 
 ### Observability (Optional)
 
-| Standard | How DevTrail Helps |
+| Standard | How StrayMark Helps |
 |----------|-------------------|
 | **OpenTelemetry** | Optional observability sections in REQ, TES, INC; tag `observabilidad` for instrumentation changes |
 
@@ -204,34 +204,34 @@ The discipline DevTrail externalizes — explicit scope, declared decisions, nam
 
 ```bash
 # Linux / macOS
-curl -fsSL https://raw.githubusercontent.com/StrangeDaysTech/devtrail/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/StrangeDaysTech/straymark/main/install.sh | sh
 ```
 
 ```powershell
 # Windows (PowerShell)
-irm https://raw.githubusercontent.com/StrangeDaysTech/devtrail/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/StrangeDaysTech/straymark/main/install.ps1 | iex
 ```
 
 Or install from source with Cargo:
 
 ```bash
-cargo install devtrail-cli
+cargo install straymark-cli
 ```
 
 Then initialize and commit:
 
 ```bash
 cd your-project
-devtrail init .
+straymark init .
 
-git add .devtrail/ DEVTRAIL.md
-git commit -m "chore: adopt DevTrail"
+git add .straymark/ STRAYMARK.md
+git commit -m "chore: adopt StrayMark"
 ```
 
 The CLI automatically:
-- Downloads the latest DevTrail release from GitHub
-- Sets up the `.devtrail/` directory structure
-- Creates `DEVTRAIL.md` with governance rules
+- Downloads the latest StrayMark release from GitHub
+- Sets up the `.straymark/` directory structure
+- Creates `STRAYMARK.md` with governance rules
 - Configures AI agent directives (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`, etc.)
 - Copies CI/CD workflows
 
@@ -239,17 +239,17 @@ The CLI automatically:
 
 1. **Download the latest release**
 
-   Go to [GitHub Releases](https://github.com/StrangeDaysTech/devtrail/releases) and download the latest `fw-*` release ZIP (e.g., `fw-4.10.0`).
+   Go to [GitHub Releases](https://github.com/StrangeDaysTech/straymark/releases) and download the latest `fw-*` release ZIP (e.g., `fw-4.10.0`).
 
 2. **Extract to your project**
    ```bash
-   unzip devtrail-fw-*.zip -d your-project/
+   unzip straymark-fw-*.zip -d your-project/
    ```
 
 3. **Commit the structure**
    ```bash
-   git add .devtrail/ DEVTRAIL.md
-   git commit -m "chore: adopt DevTrail for documentation governance"
+   git add .straymark/ STRAYMARK.md
+   git commit -m "chore: adopt StrayMark for documentation governance"
    ```
 
 ---
@@ -270,32 +270,32 @@ The CLI automatically:
 
    | Current State | Recommended Action |
    |---------------|-------------------|
-   | No documentation | Start fresh with DevTrail |
-   | Docs in `docs/` folder | Keep `docs/` for user-facing docs, add `.devtrail/` for development docs |
-   | Existing ADRs | Migrate to `.devtrail/02-design/decisions/` with new naming |
+   | No documentation | Start fresh with StrayMark |
+   | Docs in `docs/` folder | Keep `docs/` for user-facing docs, add `.straymark/` for development docs |
+   | Existing ADRs | Migrate to `.straymark/02-design/decisions/` with new naming |
    | Mixed documentation | Categorize and migrate gradually |
 
 ### Phase 2: Installation (Day 1-2)
 
-1. **Add DevTrail structure**
+1. **Add StrayMark structure**
    ```bash
    # Using CLI (recommended)
-   devtrail init .
+   straymark init .
 
    # Or manually: download the latest fw-* release from GitHub Releases
-   # https://github.com/StrangeDaysTech/devtrail/releases
+   # https://github.com/StrangeDaysTech/straymark/releases
    ```
 
 2. **Resolve conflicts with existing `docs/`**
 
-   DevTrail uses `.devtrail/` specifically to avoid conflicts:
+   StrayMark uses `.straymark/` specifically to avoid conflicts:
 
    ```
    your-project/
    ├── docs/                    ← Keep for API docs, user guides, etc.
    │   ├── api/
    │   └── user-guide/
-   ├── .devtrail/              ← Add for development documentation
+   ├── .straymark/              ← Add for development documentation
    │   ├── 00-governance/
    │   ├── 01-requirements/
    │   └── ...
@@ -309,10 +309,10 @@ The CLI automatically:
    For each existing ADR:
    ```bash
    # Old: docs/adr/001-use-postgresql.md
-   # New: .devtrail/02-design/decisions/ADR-2024-01-15-001-use-postgresql.md
+   # New: .straymark/02-design/decisions/ADR-2024-01-15-001-use-postgresql.md
    ```
 
-   Add DevTrail metadata to the front-matter:
+   Add StrayMark metadata to the front-matter:
    ```yaml
    ---
    id: ADR-2024-01-15-001
@@ -333,7 +333,7 @@ The CLI automatically:
 
    Create an AILOG documenting the migration:
    ```
-   .devtrail/07-ai-audit/agent-logs/AILOG-2025-01-27-001-devtrail-adoption.md
+   .straymark/07-ai-audit/agent-logs/AILOG-2025-01-27-001-straymark-adoption.md
    ```
 
 ### Phase 4: Team Adoption (Week 2-4)
@@ -344,23 +344,23 @@ The CLI automatically:
    ```markdown
    ## Documentation
 
-   This project uses [DevTrail](https://github.com/StrangeDaysTech/devtrail) for documentation governance.
+   This project uses [StrayMark](https://github.com/StrangeDaysTech/straymark) for documentation governance.
 
-   - All significant changes must be documented in `.devtrail/`
+   - All significant changes must be documented in `.straymark/`
    - AI-assisted changes require AILOG entries
    - Architectural decisions require ADR documents
 
-   See `.devtrail/QUICK-REFERENCE.md` for document types and naming.
+   See `.straymark/QUICK-REFERENCE.md` for document types and naming.
    ```
 
 2. **Enable pre-commit hooks (optional)**
    ```bash
    # Install the pre-commit hook
-   echo 'devtrail validate --staged' > .git/hooks/pre-commit
+   echo 'straymark validate --staged' > .git/hooks/pre-commit
    chmod +x .git/hooks/pre-commit
 
    # Or with Husky
-   npx husky add .husky/pre-commit "devtrail validate --staged"
+   npx husky add .husky/pre-commit "straymark validate --staged"
    ```
 
 3. **Enable GitHub Actions (optional)**
@@ -371,7 +371,7 @@ The CLI automatically:
 
 | Week | Focus |
 |------|-------|
-| Week 1 | Core team adopts DevTrail for new decisions |
+| Week 1 | Core team adopts StrayMark for new decisions |
 | Week 2 | Migrate critical existing ADRs |
 | Week 3 | Enable validation in CI/CD |
 | Week 4 | Full team adoption; document existing technical debt |
@@ -382,7 +382,7 @@ The CLI automatically:
 
 ### Regional Regulatory Scope
 
-`.devtrail/config.yml` controls which compliance frameworks are evaluated by `devtrail compliance` and which document types are exposed by `devtrail new`:
+`.straymark/config.yml` controls which compliance frameworks are evaluated by `straymark compliance` and which document types are exposed by `straymark new`:
 
 ```yaml
 regional_scope:
@@ -391,14 +391,14 @@ regional_scope:
   - china    # TC260 v2.0, PIPL/PIPIA, GB 45438, CAC, GB/T 45652, CSL 2026
 ```
 
-**Default if omitted**: `[global, eu]` — preserves the behavior of every DevTrail version prior to `fw-4.3.0`.
+**Default if omitted**: `[global, eu]` — preserves the behavior of every StrayMark version prior to `fw-4.3.0`.
 
 When you add `china` to the list:
 
-- Four China-specific document types become available via `devtrail new`: `PIPIA`, `CACFILE`, `TC260RA`, `AILABEL`.
-- Six new compliance checkers run with `devtrail compliance` (or via `--region china` / `--standard china-*`).
+- Four China-specific document types become available via `straymark new`: `PIPIA`, `CACFILE`, `TC260RA`, `AILABEL`.
+- Six new compliance checkers run with `straymark compliance` (or via `--region china` / `--standard china-*`).
 - Twelve scope-aware validation rules activate (`CROSS-004` to `CROSS-011`, `TYPE-003` to `TYPE-006`).
-- Five new governance guides are referenced from `.devtrail/00-governance/` (`CHINA-REGULATORY-FRAMEWORK.md`, plus per-framework guides for TC260, PIPL/PIPIA, CAC filing, and GB 45438 labeling) — all available in EN, ES, and zh-CN.
+- Five new governance guides are referenced from `.straymark/00-governance/` (`CHINA-REGULATORY-FRAMEWORK.md`, plus per-framework guides for TC260, PIPL/PIPIA, CAC filing, and GB 45438 labeling) — all available in EN, ES, and zh-CN.
 
 A project without `china` in `regional_scope` is unaffected: no new files, no new prompts, no new rules. Adding `china` later is fully reversible.
 
@@ -428,15 +428,15 @@ To add a new document type:
 
 1. **Create the template**
    ```
-   .devtrail/templates/TEMPLATE-NEWTYPE.md
+   .straymark/templates/TEMPLATE-NEWTYPE.md
    ```
 
 2. **Update governance docs**
 
    Add the new type to:
-   - `.devtrail/00-governance/DOCUMENTATION-POLICY.md`
-   - `.devtrail/00-governance/AGENT-RULES.md`
-   - `.devtrail/QUICK-REFERENCE.md`
+   - `.straymark/00-governance/DOCUMENTATION-POLICY.md`
+   - `.straymark/00-governance/AGENT-RULES.md`
+   - `.straymark/QUICK-REFERENCE.md`
 
 3. **Update agent configs**
 
@@ -467,11 +467,11 @@ You can rename folders, but update all references in:
 If using Claude Code, verify documentation compliance with the built-in skill:
 
 ```bash
-/devtrail-status
+/straymark-status
 ```
 
 This skill shows:
-- What DevTrail documents were created recently
+- What StrayMark documents were created recently
 - Which modified files may need documentation
 - Overall documentation compliance status
 
@@ -481,18 +481,18 @@ After adoption, verify your setup:
 
 ```bash
 # Run validation (cross-platform)
-devtrail validate
+straymark validate
 ```
 
 ### Checklist
 
-- [ ] `.devtrail/` folder structure exists
+- [ ] `.straymark/` folder structure exists
 - [ ] At least one agent config file exists (`CLAUDE.md`, `GEMINI.md`, etc.)
-- [ ] Governance documents are present in `.devtrail/00-governance/`
-- [ ] Templates are present in `.devtrail/templates/`
-- [ ] Git branching strategy documented in `.devtrail/03-implementation/`
+- [ ] Governance documents are present in `.straymark/00-governance/`
+- [ ] Templates are present in `.straymark/templates/`
+- [ ] Git branching strategy documented in `.straymark/03-implementation/`
 - [ ] `QUICK-REFERENCE.md` is accessible
-- [ ] `devtrail validate` runs without errors
+- [ ] `straymark validate` runs without errors
 - [ ] (Optional) Pre-commit hook is installed
 - [ ] (Optional) GitHub Actions workflow is enabled
 
@@ -502,15 +502,15 @@ devtrail validate
 
 From `fw-4.9.0`, when you co-implement Charters with an AI assistant in the loop (Claude Code, Gemini Code, Cursor), you can optionally run an external multi-model audit at Charter close. Two skills wrap the underlying CLI orchestration:
 
-- **`/devtrail-audit-prompt CHARTER-XX`** — writes the unified audit prompt at the canonical path `.devtrail/audits/<id>/audit-prompt.md`. Operator opens N auditor-side CLIs and runs `/devtrail-audit-execute` in each. No copy/paste.
-- **`/devtrail-audit-execute [CHARTER-XX]`** *(fw-4.9.0+)* — runs inside an auditor-side CLI (gemini-cli, claude-cli, copilot-cli, codex-cli). Reads the prompt, audits with tool use citing `path:line`, writes a report keyed on the auditor's model id.
-- **`/devtrail-audit-review CHARTER-XX`** — consolidates N reports into a six-section `review.md` (Executive summary / Scope / Per-auditor evaluation / Remediation plan P0-P4 / Discarded / Auditor ratings) and merges the `external_audit:` YAML into Charter telemetry.
+- **`/straymark-audit-prompt CHARTER-XX`** — writes the unified audit prompt at the canonical path `.straymark/audits/<id>/audit-prompt.md`. Operator opens N auditor-side CLIs and runs `/straymark-audit-execute` in each. No copy/paste.
+- **`/straymark-audit-execute [CHARTER-XX]`** *(fw-4.9.0+)* — runs inside an auditor-side CLI (gemini-cli, claude-cli, copilot-cli, codex-cli). Reads the prompt, audits with tool use citing `path:line`, writes a report keyed on the auditor's model id.
+- **`/straymark-audit-review CHARTER-XX`** — consolidates N reports into a six-section `review.md` (Executive summary / Scope / Per-auditor evaluation / Remediation plan P0-P4 / Discarded / Auditor ratings) and merges the `external_audit:` YAML into Charter telemetry.
 
-The agent will **proactively offer** the audit at one specific moment in the workflow — when implementation is done, drift check is clean, and `charter close` has not been invoked. Recommendation is YES/NO based on the Charter's risk surface and complexity (heuristics in `.devtrail/00-governance/AGENT-RULES.md` §12).
+The agent will **proactively offer** the audit at one specific moment in the workflow — when implementation is done, drift check is clean, and `charter close` has not been invoked. Recommendation is YES/NO based on the Charter's risk surface and complexity (heuristics in `.straymark/00-governance/AGENT-RULES.md` §12).
 
 **External audit is fully optional** and **never enforced**. The Charter's declarative scope + drift check + AILOG discipline already provides rigorous closure. Audit adds cross-model signal where the Charter touched security surface, introduced new components, or has high-complexity functions in the diff. Decline freely if the cost (2-3 LLM auditors) does not match the value for your case.
 
-For the underlying CLI commands (PREPARE / CALIBRATE / FINALIZE / `--merge-into`), see [`CLI-REFERENCE.md` § devtrail charter audit](./CLI-REFERENCE.md#devtrail-charter-audit-charter-id-range-revrev-calibrate--finalize-path-dir).
+For the underlying CLI commands (PREPARE / CALIBRATE / FINALIZE / `--merge-into`), see [`CLI-REFERENCE.md` § straymark charter audit](./CLI-REFERENCE.md#straymark-charter-audit-charter-id-range-revrev-calibrate--finalize-path-dir).
 
 ---
 
@@ -518,34 +518,34 @@ For the underlying CLI commands (PREPARE / CALIBRATE / FINALIZE / `--merge-into`
 
 ### General Questions
 
-**Q: Does DevTrail replace my existing documentation?**
+**Q: Does StrayMark replace my existing documentation?**
 
-A: No. DevTrail is for *development process documentation* (decisions, changes, reviews). Keep your existing `docs/` folder for user-facing documentation, API references, and guides.
+A: No. StrayMark is for *development process documentation* (decisions, changes, reviews). Keep your existing `docs/` folder for user-facing documentation, API references, and guides.
 
-**Q: Do I need to use AI coding assistants to benefit from DevTrail?**
+**Q: Do I need to use AI coding assistants to benefit from StrayMark?**
 
-A: No. DevTrail works for human-only teams too. The AI audit features (AILOG, AIDEC, ETH) become especially valuable when using AI assistants, but ADR, REQ, TDE, and other document types are useful for any team.
+A: No. StrayMark works for human-only teams too. The AI audit features (AILOG, AIDEC, ETH) become especially valuable when using AI assistants, but ADR, REQ, TDE, and other document types are useful for any team.
 
-**Q: How much overhead does DevTrail add?**
+**Q: How much overhead does StrayMark add?**
 
-A: DevTrail follows a "minimum viable documentation" principle. Only significant changes require documentation. Trivial changes (typos, formatting) are explicitly excluded.
+A: StrayMark follows a "minimum viable documentation" principle. Only significant changes require documentation. Trivial changes (typos, formatting) are explicitly excluded.
 
 ### Technical Questions
 
-**Q: Why use `.devtrail/` instead of `docs/`?**
+**Q: Why use `.straymark/` instead of `docs/`?**
 
-A: The `docs/` folder is commonly used for user-facing documentation, GitHub Pages, or generated API docs. Using `.devtrail/` avoids conflicts and clearly separates development documentation from user documentation.
+A: The `docs/` folder is commonly used for user-facing documentation, GitHub Pages, or generated API docs. Using `.straymark/` avoids conflicts and clearly separates development documentation from user documentation.
 
-**Q: Can I use DevTrail with monorepos?**
+**Q: Can I use StrayMark with monorepos?**
 
 A: Yes. You can either:
-- Have one `.devtrail/` at the root for the entire monorepo
-- Have separate `.devtrail/` folders in each package/service
+- Have one `.straymark/` at the root for the entire monorepo
+- Have separate `.straymark/` folders in each package/service
 - Use a hybrid approach with shared governance at root
 
 **Q: How do I handle sensitive information?**
 
-A: DevTrail explicitly prohibits documenting credentials, tokens, or secrets. The validation scripts check for common sensitive patterns and warn you. For genuinely sensitive decisions, document the *existence* of the decision without the sensitive details.
+A: StrayMark explicitly prohibits documenting credentials, tokens, or secrets. The validation scripts check for common sensitive patterns and warn you. For genuinely sensitive decisions, document the *existence* of the decision without the sensitive details.
 
 ### Adoption Questions
 
@@ -557,17 +557,17 @@ A: Start small:
 3. Demonstrate time saved when revisiting old decisions
 4. Gradually expand to other document types
 
-**Q: How do I handle documents created before adopting DevTrail?**
+**Q: How do I handle documents created before adopting StrayMark?**
 
 A: You have three options:
-1. **Migrate**: Convert old documents to DevTrail format (recommended for important docs)
-2. **Reference**: Keep old docs in place, reference them from DevTrail docs
-3. **Archive**: Move old docs to an archive folder, start fresh with DevTrail
+1. **Migrate**: Convert old documents to StrayMark format (recommended for important docs)
+2. **Reference**: Keep old docs in place, reference them from StrayMark docs
+3. **Archive**: Move old docs to an archive folder, start fresh with StrayMark
 
 **Q: What if my AI assistant doesn't follow the rules?**
 
-A: DevTrail rules are instructions, not enforcement. If an AI assistant creates non-compliant documentation:
-1. The pre-commit hook (`devtrail validate --staged`) will catch validation errors
+A: StrayMark rules are instructions, not enforcement. If an AI assistant creates non-compliant documentation:
+1. The pre-commit hook (`straymark validate --staged`) will catch validation errors
 2. CI/CD will flag issues in PRs
 3. You can manually fix and educate the AI in the next prompt
 
@@ -577,8 +577,8 @@ A: DevTrail rules are instructions, not enforcement. If an AI assistant creates 
 
 - **CLI Reference**: [CLI-REFERENCE.md](CLI-REFERENCE.md) — detailed command reference
 - **Workflows**: [WORKFLOWS.md](WORKFLOWS.md) — recommended daily usage patterns
-- **Issues**: [GitHub Issues](https://github.com/StrangeDaysTech/devtrail/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/StrangeDaysTech/devtrail/discussions)
+- **Issues**: [GitHub Issues](https://github.com/StrangeDaysTech/straymark/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/StrangeDaysTech/straymark/discussions)
 - **Contributing**: See [CONTRIBUTING.md](../../CONTRIBUTING.md)
 
 ---
@@ -587,7 +587,7 @@ A: DevTrail rules are instructions, not enforcement. If an AI assistant creates 
 
 <div align="center">
 
-**DevTrail** — Because every change tells a story.
+**StrayMark** — Because every change tells a story.
 
 [Back to README](../../README.md) • [Strange Days Tech](https://strangedays.tech)
 

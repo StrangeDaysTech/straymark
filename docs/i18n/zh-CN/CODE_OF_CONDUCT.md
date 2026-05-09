@@ -4,7 +4,7 @@
 
 ## 我们的承诺
 
-作为成员、贡献者和领导者，我们承诺让参与 DevTrail 社区成为一种无骚扰的体验，无论年龄、体型、可见或不可见的残疾、种族、性别特征、性别认同和表达、经验水平、教育程度、社会经济地位、国籍、个人外貌、种姓、肤色、宗教或性认同和性取向。
+作为成员、贡献者和领导者，我们承诺让参与 StrayMark 社区成为一种无骚扰的体验，无论年龄、体型、可见或不可见的残疾、种族、性别特征、性别认同和表达、经验水平、教育程度、社会经济地位、国籍、个人外貌、种姓、肤色、宗教或性认同和性取向。
 
 我们承诺以有助于建设开放、包容、多元、友好和健康社区的方式行事和互动。
 
@@ -53,7 +53,7 @@
 
 如果你经历或目睹了不可接受的行为，或有任何其他顾虑，请通过以下方式联系项目团队进行举报：
 
-**GitHub Issues**: [在此举报](https://github.com/StrangeDaysTech/devtrail/issues)
+**GitHub Issues**: [在此举报](https://github.com/StrangeDaysTech/straymark/issues)
 
 所有举报将被及时、公正地审查和调查。
 
@@ -101,7 +101,7 @@
 
 ## 申诉
 
-如果你认为被不实或不公正地指控违反本行为准则，可以在 [GitHub Issues](https://github.com/StrangeDaysTech/devtrail/issues) 上开启详细的 Issue 进行申诉。申诉将由与做出原始决定不同的社区领导者审查。
+如果你认为被不实或不公正地指控违反本行为准则，可以在 [GitHub Issues](https://github.com/StrangeDaysTech/straymark/issues) 上开启详细的 Issue 进行申诉。申诉将由与做出原始决定不同的社区领导者审查。
 
 ## 归属
 
@@ -127,7 +127,7 @@
 ---
 
 <p align="center">
-  <strong>DevTrail</strong><br>
+  <strong>StrayMark</strong><br>
   共同构建包容的社区<br>
   <a href="https://strangedays.tech">Strange Days Tech, S.A.S.</a>
 </p>

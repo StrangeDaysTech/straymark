@@ -4,7 +4,7 @@
 
 ## Nuestro Compromiso
 
-Nosotros, como miembros, contribuidores y líderes, nos comprometemos a hacer de la participación en la comunidad de DevTrail una experiencia libre de acoso para todos, independientemente de la edad, tamaño corporal, discapacidad visible o invisible, etnia, características sexuales, identidad y expresión de género, nivel de experiencia, educación, estatus socioeconómico, nacionalidad, apariencia personal, raza, casta, color, religión o identidad y orientación sexual.
+Nosotros, como miembros, contribuidores y líderes, nos comprometemos a hacer de la participación en la comunidad de StrayMark una experiencia libre de acoso para todos, independientemente de la edad, tamaño corporal, discapacidad visible o invisible, etnia, características sexuales, identidad y expresión de género, nivel de experiencia, educación, estatus socioeconómico, nacionalidad, apariencia personal, raza, casta, color, religión o identidad y orientación sexual.
 
 Nos comprometemos a actuar e interactuar de maneras que contribuyan a una comunidad abierta, acogedora, diversa, inclusiva y saludable.
 
@@ -53,7 +53,7 @@ Este Código de Conducta también aplica cuando un individuo representa oficialm
 
 Si experimentas o presencias comportamiento inaceptable, o tienes cualquier otra preocupación, por favor repórtalo contactando al equipo del proyecto en:
 
-**GitHub Issues**: [Reportar aquí](https://github.com/StrangeDaysTech/devtrail/issues)
+**GitHub Issues**: [Reportar aquí](https://github.com/StrangeDaysTech/straymark/issues)
 
 Todos los reportes serán revisados e investigados de manera pronta y justa.
 
@@ -101,7 +101,7 @@ Los líderes de la comunidad seguirán estas Guías de Impacto Comunitario para 
 
 ## Apelaciones
 
-Si crees que has sido acusado falsa o injustamente de violar este Código de Conducta, puedes apelar abriendo un issue detallado en [GitHub Issues](https://github.com/StrangeDaysTech/devtrail/issues). Las apelaciones serán revisadas por un líder de la comunidad diferente al que tomó la decisión original.
+Si crees que has sido acusado falsa o injustamente de violar este Código de Conducta, puedes apelar abriendo un issue detallado en [GitHub Issues](https://github.com/StrangeDaysTech/straymark/issues). Las apelaciones serán revisadas por un líder de la comunidad diferente al que tomó la decisión original.
 
 ## Atribución
 
@@ -127,7 +127,7 @@ Para respuestas a preguntas comunes sobre este código de conducta, ver las FAQ 
 ---
 
 <p align="center">
-  <strong>DevTrail</strong><br>
+  <strong>StrayMark</strong><br>
   Construyendo una comunidad inclusiva juntos<br>
   <a href="https://strangedays.tech">Strange Days Tech, S.A.S.</a>
 </p>

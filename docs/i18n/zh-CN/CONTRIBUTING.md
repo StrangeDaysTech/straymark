@@ -1,6 +1,6 @@
-# 为 DevTrail 做贡献
+# 为 StrayMark 做贡献
 
-感谢你有兴趣为 DevTrail 做贡献！本文档提供贡献者的指南和相关信息。
+感谢你有兴趣为 StrayMark 做贡献！本文档提供贡献者的指南和相关信息。
 
 **语言**: [English](../../../CONTRIBUTING.md) | [Español](../es/CONTRIBUTING.md) | 简体中文
 
@@ -35,7 +35,7 @@
 3. CLA 只需签署一次——涵盖你对本项目的所有未来贡献。
 4. 签署后，CLA Assistant 将更新 PR 检查状态，你的贡献即可进入审查流程。
 
-如果你对 CLA 有疑问，请开启一个[讨论](https://github.com/StrangeDaysTech/devtrail/discussions)。
+如果你对 CLA 有疑问，请开启一个[讨论](https://github.com/StrangeDaysTech/straymark/discussions)。
 
 ---
 
@@ -96,17 +96,17 @@
 
 1. **Fork 仓库**
 
-   在 [GitHub 仓库页面](https://github.com/StrangeDaysTech/devtrail) 点击 "Fork"。
+   在 [GitHub 仓库页面](https://github.com/StrangeDaysTech/straymark) 点击 "Fork"。
 
 2. **克隆你的 Fork**
    ```bash
-   git clone https://github.com/your-username/devtrail.git
-   cd devtrail
+   git clone https://github.com/your-username/straymark.git
+   cd straymark
    ```
 
 3. **安装 pre-commit 钩子**
    ```bash
-   echo 'devtrail validate --staged' > .git/hooks/pre-commit
+   echo 'straymark validate --staged' > .git/hooks/pre-commit
    chmod +x .git/hooks/pre-commit
    ```
 
@@ -125,7 +125,7 @@
 
 6. **进行修改并验证**
    ```bash
-   devtrail validate
+   straymark validate
    ```
 
 ---
@@ -134,7 +134,7 @@
 
 ### 提交前
 
-- [ ] 成功运行 `devtrail validate`
+- [ ] 成功运行 `straymark validate`
 - [ ] 根据需要更新文档
 - [ ] 将自己添加到 CONTRIBUTORS.md（如适用）
 - [ ] 编写清晰的 PR 描述
@@ -178,7 +178,7 @@ chore(ci): update GitHub Actions workflow
 这些变更是如何测试的？
 
 ## 检查清单
-- [ ] `devtrail validate` 通过
+- [ ] `straymark validate` 通过
 - [ ] 文档已更新
 - [ ] 未包含敏感信息
 ```
@@ -215,7 +215,7 @@ created: YYYY-MM-DD
 
 ### 文件命名
 
-DevTrail 文档：
+StrayMark 文档：
 ```
 [TYPE]-[YYYY-MM-DD]-[NNN]-[description].md
 ```
@@ -239,13 +239,13 @@ DevTrail 文档：
 如果你要提议新的文档类型：
 
 1. **创建模板**
-   - 将 `TEMPLATE-NEWTYPE.md` 添加到 `dist/.devtrail/templates/`
+   - 将 `TEMPLATE-NEWTYPE.md` 添加到 `dist/.straymark/templates/`
    - 遵循现有模板模式
 
 2. **更新治理文档**
-   - `dist/.devtrail/00-governance/DOCUMENTATION-POLICY.md`
-   - `dist/.devtrail/00-governance/AGENT-RULES.md`
-   - `dist/.devtrail/QUICK-REFERENCE.md`
+   - `dist/.straymark/00-governance/DOCUMENTATION-POLICY.md`
+   - `dist/.straymark/00-governance/AGENT-RULES.md`
+   - `dist/.straymark/QUICK-REFERENCE.md`
 
 3. **更新 Agent 配置**
    - `dist/dist-templates/directives/`（分发模板）
@@ -278,7 +278,7 @@ DevTrail 文档：
 
 ## CLI 开发
 
-DevTrail CLI 使用 Rust 编写，位于 `cli/` 目录。
+StrayMark CLI 使用 Rust 编写，位于 `cli/` 目录。
 
 ### 编译
 
@@ -310,13 +310,13 @@ cli/src/
 ├── main.rs              # 入口点 + clap CLI 定义
 ├── commands/
 │   ├── mod.rs           # 子命令路由
-│   ├── init.rs          # devtrail init [path]
-│   ├── update.rs        # devtrail update (组合)
-│   ├── update_framework.rs # devtrail update-framework
-│   ├── update_cli.rs    # devtrail update-cli
-│   ├── remove.rs        # devtrail remove [--full]
-│   ├── status.rs        # devtrail status [path]
-│   └── about.rs         # devtrail about
+│   ├── init.rs          # straymark init [path]
+│   ├── update.rs        # straymark update (组合)
+│   ├── update_framework.rs # straymark update-framework
+│   ├── update_cli.rs    # straymark update-cli
+│   ├── remove.rs        # straymark remove [--full]
+│   ├── status.rs        # straymark status [path]
+│   └── about.rs         # straymark about
 ├── config.rs            # 配置和校验和管理
 ├── download.rs          # GitHub Releases API（前缀过滤）
 ├── inject.rs            # 指令文件注入（标记）
@@ -334,8 +334,8 @@ cli/src/
 
 如果你对贡献有疑问：
 
-1. 查看现有 [Issues](https://github.com/StrangeDaysTech/devtrail/issues)
-2. 查看 [Discussions](https://github.com/StrangeDaysTech/devtrail/discussions)
+1. 查看现有 [Issues](https://github.com/StrangeDaysTech/straymark/issues)
+2. 查看 [Discussions](https://github.com/StrangeDaysTech/straymark/discussions)
 3. 开启新的 Discussion 提问
 4. 为特定 Bug 或功能开启 Issue
 
@@ -349,10 +349,10 @@ cli/src/
 - 重要贡献的发布说明
 - CONTRIBUTORS.md（针对持续贡献者）
 
-感谢你帮助改进 DevTrail！
+感谢你帮助改进 StrayMark！
 
 ---
 
-*DevTrail — 因为每一次变更都值得被记录。*
+*StrayMark — 因为每一次变更都值得被记录。*
 
 [Strange Days Tech](https://strangedays.tech)

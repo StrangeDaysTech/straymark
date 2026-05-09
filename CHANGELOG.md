@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to DevTrail will be documented in this file.
+All notable changes to StrayMark (formerly DevTrail; rebranded 2026-05-08, see [`ADR-2026-05-08-001`](docs/decisions/ADR-2026-05-08-rebranding-straymark.md)) will be documented in this file. Historical entries below preserve the "DevTrail" name where present — that was the project's name at the time of those releases.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project uses [independent versioning](README.md#versioning) for Framework (`fw-`) and CLI (`cli-`).

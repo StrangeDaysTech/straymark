@@ -1,17 +1,17 @@
 <div align="center">
 
-# DevTrail
+# StrayMark
 
 **La disciplina cognitiva que tus proyectos asistidos por IA necesitan**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../../../LICENSE)
-[![Crates.io](https://img.shields.io/crates/v/devtrail-cli.svg)](https://crates.io/crates/devtrail-cli)
+[![Crates.io](https://img.shields.io/crates/v/straymark-cli.svg)](https://crates.io/crates/straymark-cli)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![Handbook](https://img.shields.io/badge/docs-Handbook-orange.svg)](../../../dist/.devtrail/QUICK-REFERENCE.md)
+[![Handbook](https://img.shields.io/badge/docs-Handbook-orange.svg)](../../../dist/.straymark/QUICK-REFERENCE.md)
 [![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
 
 [Inicio Rápido](#inicio-rápido) •
-[¿Para quién es?](#para-quién-es-devtrail) •
+[¿Para quién es?](#para-quién-es-straymark) •
 [Principios de Diseño](#principios-de-diseño) •
 [Características](#características) •
 [Compliance](#compliance) •
@@ -31,7 +31,7 @@ Los ingenieros senior que orquestan estos agentes no necesitan *más* autonomía
 
 ## La Solución
 
-DevTrail es un **framework + CLI** que externaliza la disciplina cognitiva del trabajo de ingeniería de software senior — alcance explícito, decisiones declaradas, riesgos nombrados, alternativas registradas, rastros auditables — en archivos versionados que viven junto al código.
+StrayMark es un **framework + CLI** que externaliza la disciplina cognitiva del trabajo de ingeniería de software senior — alcance explícito, decisiones declaradas, riesgos nombrados, alternativas registradas, rastros auditables — en archivos versionados que viven junto al código.
 
 > **"Ningún cambio significativo sin un rastro documentado — y un espacio de decisión acotado para el agente."**
 
@@ -39,32 +39,32 @@ Como efecto secundario, la disciplina produce evidencia compatible con **ISO/IEC
 
 ---
 
-## ¿Para quién es DevTrail?
+## ¿Para quién es StrayMark?
 
-El usuario primario de DevTrail es el **ingeniero senior orquestando agentes de IA sobre un sistema no trivial** — alguien con criterio técnico fuerte que usa agentes para abordar trabajo que no podría hacer solo de forma realista, y que necesita disciplina cognitiva externalizada para que el agente no introduzca caos sistémico.
+El usuario primario de StrayMark es el **ingeniero senior orquestando agentes de IA sobre un sistema no trivial** — alguien con criterio técnico fuerte que usa agentes para abordar trabajo que no podría hacer solo de forma realista, y que necesita disciplina cognitiva externalizada para que el agente no introduzca caos sistémico.
 
-Si esa persona eres tú, los flujos, defaults y lenguaje de DevTrail están afinados para ti.
+Si esa persona eres tú, los flujos, defaults y lenguaje de StrayMark están afinados para ti.
 
-DevTrail también sirve a tres audiencias secundarias, sobre esa base — nunca a su costa:
+StrayMark también sirve a tres audiencias secundarias, sobre esa base — nunca a su costa:
 
 - **Tech leads y arquitectos** estandarizando cómo trabaja su equipo con asistentes de IA.
 - **Compliance officers y auditores** que necesitan evidencia de desarrollo de IA gobernado (ISO 42001, EU AI Act, NIST AI RMF, PIPL, TC260, …).
 - **Adoptantes en entornos regulados** (finanzas, salud, sector público, China) que necesitan trazabilidad integrada en el flujo en lugar de reconstruida después del hecho.
 
-DevTrail **no** intenta ser: un gateway de LLM, un evaluador de modelos, una capa de productividad estilo *"código 10× más rápido"* ni un sustituto del juicio del ingeniero. Ver [Límites Honestos](#límites-honestos) abajo.
+StrayMark **no** intenta ser: un gateway de LLM, un evaluador de modelos, una capa de productividad estilo *"código 10× más rápido"* ni un sustituto del juicio del ingeniero. Ver [Límites Honestos](#límites-honestos) abajo.
 
 ---
 
 ## Principios de Diseño
 
-Las decisiones de producto de DevTrail se anclan en doce principios explícitos. Están ordenados por jerarquía: cuando dos entran en conflicto, gana el que viene antes.
+Las decisiones de producto de StrayMark se anclan en doce principios explícitos. Están ordenados por jerarquía: cuando dos entran en conflicto, gana el que viene antes.
 
 1. **La herramienta sirve al oficio, no al producto.** La métrica es si el ingeniero produce trabajo del que se siente orgulloso — no adopción, retención ni revenue.
 2. **El usuario primario es el ingeniero senior orquestando agentes.** No el VP, no el CISO, no el compliance officer.
 3. **Open source estricto, sin asteriscos en el núcleo.** Framework, CLI y TUI son MIT, sin features capadas que empujen al pago.
 4. **El cumplimiento regulatorio es un side effect, no el producto.** ISO 42001, EU AI Act, NIST AI RMF son frames útiles; no son la meta.
 5. **Schema-driven antes que feature-driven.** Las entidades centrales (Stage Closure Bundle, Charter, Document) se definen primero como schemas versionados, las features después.
-6. **Disciplina cognitiva sobre productividad bruta.** DevTrail compite contra el caos que el código rápido con IA genera en proyectos serios — no contra la velocidad misma.
+6. **Disciplina cognitiva sobre productividad bruta.** StrayMark compite contra el caos que el código rápido con IA genera en proyectos serios — no contra la velocidad misma.
 7. **Local-first, Cloud como amplificador.** El CLI funciona completo, sin red. Cloud puede agregar valor (agregación cross-repo, evidencia firmada) pero nunca capa el núcleo.
 8. **La memoria del proyecto vive en el repo, no en una base de datos externa.** AILOGs, ADRs, AIDECs, Charters y bundles son archivos versionados junto al código, en markdown + JSON Schema.
 9. **Simplicidad sobre capacidad.** Cuando dos diseños cumplen el objetivo, gana el más simple. Los patrones cristalizan después de validarse en proyectos reales, no antes.
@@ -72,7 +72,7 @@ Las decisiones de producto de DevTrail se anclan en doce principios explícitos.
 11. **La comunidad cuida la herramienta, no al revés.** Las contribuciones y el feedback se toman en serio sin volverse democracia.
 12. **La velocidad del producto es la velocidad del aprendizaje.** Sin cristalización prematura; los schemas marcados `v0` hasta validarse contra un segundo dominio.
 
-El documento completo, con anotaciones empíricas de los ciclos de validación, vive en [`Propuesta/devtrail-design-principles.md`](https://github.com/StrangeDaysTech/devtrail/blob/main/Propuesta/devtrail-design-principles.md).
+El documento completo, con anotaciones empíricas de los ciclos de validación, vive en [`Propuesta/straymark-design-principles.md`](https://github.com/StrangeDaysTech/straymark/blob/main/Propuesta/straymark-design-principles.md).
 
 ---
 
@@ -125,21 +125,21 @@ Salvaguardas incorporadas que aseguran que los humanos mantengan el control:
 
 Comandos integrados que convierten la disciplina en feedback accionable:
 
-- **`devtrail charter <new|list|status|close|drift|audit>`** — Unidades acotadas declaradas ex-ante, auditadas ex-post. `close` registra telemetría; `drift` detecta drift archivos-vs-commits con supresión AILOG-aware; `audit` orquesta revisión externa multi-modelo (flujo de 3 pasos prepare/calibrate/finalize, orchestration-only — sin invocación de APIs de LLM). Para flujos IDE-driven, las skills inline `/devtrail-audit-prompt` y `/devtrail-audit-review` envuelven al CLI para mostrar prompts en la conversación y mergear findings en la telemetría.
-- **`devtrail approve <doc-id>`** — Registra una aprobación humana formal (escribe `reviewed_by` / `reviewed_at` / `review_outcome` y la sección body `## Approval` en una sola edición; cierra el gap canonizado en DOCUMENTATION-POLICY §3.5)
-- **`devtrail validate`** — 25+ reglas de validación para corrección documental (12 específicas de China son scope-aware); `--include-charters` extiende a `docs/charters/`; `--check-pending-reviews` lista el backlog de aprobaciones (warn-only)
-- **`devtrail metrics`** — KPIs de gobernanza, tasas de revisión, distribución de riesgo, tendencias
-- **`devtrail analyze`** — Análisis de complejidad de código (cognitiva + ciclomática) impulsado por [arborist-metrics](https://github.com/StrangeDaysTech/arborist), nuestra librería open-source en Rust para métricas de código multi-lenguaje
-- **`devtrail audit`** — Reportes de auditoría con línea temporal, mapas de trazabilidad y exportación HTML
-- **`devtrail compliance`** — Puntuación de cumplimiento regulatorio como side effect del trabajo documentado (EU AI Act, ISO 42001, NIST AI RMF; seis frameworks chinos opt-in vía `--region china`)
-- **`devtrail explore`** — TUI interactivo para navegar el grafo de documentación del proyecto, incluyendo una vista de Charters (estado del ciclo de vida, AILOG/spec de origen, ubicación del archivo)
+- **`straymark charter <new|list|status|close|drift|audit>`** — Unidades acotadas declaradas ex-ante, auditadas ex-post. `close` registra telemetría; `drift` detecta drift archivos-vs-commits con supresión AILOG-aware; `audit` orquesta revisión externa multi-modelo (flujo de 3 pasos prepare/calibrate/finalize, orchestration-only — sin invocación de APIs de LLM). Para flujos IDE-driven, las skills inline `/straymark-audit-prompt` y `/straymark-audit-review` envuelven al CLI para mostrar prompts en la conversación y mergear findings en la telemetría.
+- **`straymark approve <doc-id>`** — Registra una aprobación humana formal (escribe `reviewed_by` / `reviewed_at` / `review_outcome` y la sección body `## Approval` en una sola edición; cierra el gap canonizado en DOCUMENTATION-POLICY §3.5)
+- **`straymark validate`** — 25+ reglas de validación para corrección documental (12 específicas de China son scope-aware); `--include-charters` extiende a `docs/charters/`; `--check-pending-reviews` lista el backlog de aprobaciones (warn-only)
+- **`straymark metrics`** — KPIs de gobernanza, tasas de revisión, distribución de riesgo, tendencias
+- **`straymark analyze`** — Análisis de complejidad de código (cognitiva + ciclomática) impulsado por [arborist-metrics](https://github.com/StrangeDaysTech/arborist), nuestra librería open-source en Rust para métricas de código multi-lenguaje
+- **`straymark audit`** — Reportes de auditoría con línea temporal, mapas de trazabilidad y exportación HTML
+- **`straymark compliance`** — Puntuación de cumplimiento regulatorio como side effect del trabajo documentado (EU AI Act, ISO 42001, NIST AI RMF; seis frameworks chinos opt-in vía `--region china`)
+- **`straymark explore`** — TUI interactivo para navegar el grafo de documentación del proyecto, incluyendo una vista de Charters (estado del ciclo de vida, AILOG/spec de origen, ubicación del archivo)
 - **Hooks pre-commit** + **GitHub Actions** para validación CI/CD
 
 ---
 
 ## Límites Honestos
 
-DevTrail **no** hace lo siguiente:
+StrayMark **no** hace lo siguiente:
 
 - evaluar, comparar o rankear LLMs;
 - actuar como gateway o capa de routing de LLMs;
@@ -147,17 +147,17 @@ DevTrail **no** hace lo siguiente:
 - certificar automáticamente cumplimiento regulatorio — produce evidencia, no certificaciones;
 - reemplazar el juicio de un ingeniero senior.
 
-Si tu problema es uno de esos, DevTrail no es la herramienta.
+Si tu problema es uno de esos, StrayMark no es la herramienta.
 
 ---
 
 ## Compliance
 
-La disciplina que DevTrail externaliza — alcance explícito, decisiones declaradas, riesgos nombrados, alternativas registradas — produce, como efecto secundario, evidencia que mapea limpiamente a los principales marcos de gobernanza de IA. Por eso el cumplimiento se posiciona como *consecuencia de hacer bien el trabajo de ingeniería*, no como el producto en sí (Principio #4).
+La disciplina que StrayMark externaliza — alcance explícito, decisiones declaradas, riesgos nombrados, alternativas registradas — produce, como efecto secundario, evidencia que mapea limpiamente a los principales marcos de gobernanza de IA. Por eso el cumplimiento se posiciona como *consecuencia de hacer bien el trabajo de ingeniería*, no como el producto en sí (Principio #4).
 
 ### Alineación con estándares
 
-| Estándar | Integración con DevTrail |
+| Estándar | Integración con StrayMark |
 |----------|--------------------------|
 | **ISO/IEC 42001:2023** | Estándar vertebral — gobernanza de Sistemas de Gestión de IA |
 | **EU AI Act** | Clasificación de riesgo, reporte de incidentes, transparencia |
@@ -170,7 +170,7 @@ La disciplina que DevTrail externaliza — alcance explícito, decisiones declar
 
 ### Cobertura regulatoria de China — opt-in vía `regional_scope: china`
 
-| Estándar | Integración con DevTrail |
+| Estándar | Integración con StrayMark |
 |----------|--------------------------|
 | **TC260 AI Safety Governance Framework v2.0** | Cinco niveles de riesgo (TC260RA) |
 | **PIPL — Personal Information Protection Law** | Personal Information Protection Impact Assessment (PIPIA), retención ≥ 3 años |
@@ -179,7 +179,7 @@ La disciplina que DevTrail externaliza — alcance explícito, decisiones declar
 | **GB/T 45652-2025** | Seguridad de datos de pre-entrenamiento y fine-tuning (SBOM/MCARD) |
 | **CSL 2026** | Reporte de incidentes de ciberseguridad (ventanas 1h / 4h+72h+30d) en INC |
 
-DevTrail cubre seis regulaciones chinas de IA / datos como **scope regional opt-in**. Activa añadiendo `regional_scope: china` en `.devtrail/config.yml`; los proyectos sin esa configuración no se ven afectados. Cuando se activa, cuatro tipos de documento específicos de China (PIPIA, CACFILE, TC260RA, AILABEL) quedan disponibles, doce reglas de validación comienzan a aplicar las nuevas referencias cruzadas, y `devtrail compliance --region china` produce un score por marco. Las guías detalladas viven bajo `.devtrail/00-governance/` (`CHINA-REGULATORY-FRAMEWORK.md`, `TC260-IMPLEMENTATION-GUIDE.md`, `PIPL-PIPIA-GUIDE.md`, `CAC-FILING-GUIDE.md`, `GB-45438-LABELING-GUIDE.md`). El [README en chino](../zh-CN/README.md#中国法规支持) tiene la versión completa para adoptantes que operan en China continental.
+StrayMark cubre seis regulaciones chinas de IA / datos como **scope regional opt-in**. Activa añadiendo `regional_scope: china` en `.straymark/config.yml`; los proyectos sin esa configuración no se ven afectados. Cuando se activa, cuatro tipos de documento específicos de China (PIPIA, CACFILE, TC260RA, AILABEL) quedan disponibles, doce reglas de validación comienzan a aplicar las nuevas referencias cruzadas, y `straymark compliance --region china` produce un score por marco. Las guías detalladas viven bajo `.straymark/00-governance/` (`CHINA-REGULATORY-FRAMEWORK.md`, `TC260-IMPLEMENTATION-GUIDE.md`, `PIPL-PIPIA-GUIDE.md`, `CAC-FILING-GUIDE.md`, `GB-45438-LABELING-GUIDE.md`). El [README en chino](../zh-CN/README.md#中国法规支持) tiene la versión completa para adoptantes que operan en China continental.
 
 ---
 
@@ -191,62 +191,62 @@ DevTrail cubre seis regulaciones chinas de IA / datos como **scope regional opt-
 
 ```bash
 # Linux / macOS
-curl -fsSL https://raw.githubusercontent.com/StrangeDaysTech/devtrail/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/StrangeDaysTech/straymark/main/install.sh | sh
 ```
 
 ```powershell
 # Windows (PowerShell)
-irm https://raw.githubusercontent.com/StrangeDaysTech/devtrail/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/StrangeDaysTech/straymark/main/install.ps1 | iex
 ```
 
 O instalar desde el código fuente con Cargo:
 
 ```bash
-cargo install devtrail-cli
+cargo install straymark-cli
 ```
 
-> **Nota:** `devtrail update-cli` detecta automáticamente cómo instalaste el CLI. Las instalaciones con binario precompilado se actualizan desde GitHub Releases; las instalaciones con cargo se actualizan via `cargo install`. Puedes forzar el método con `--method=github` o `--method=cargo`.
+> **Nota:** `straymark update-cli` detecta automáticamente cómo instalaste el CLI. Las instalaciones con binario precompilado se actualizan desde GitHub Releases; las instalaciones con cargo se actualizan via `cargo install`. Puedes forzar el método con `--method=github` o `--method=cargo`.
 
 Luego inicializa en tu proyecto:
 
 ```bash
 cd tu-proyecto
-devtrail init .
+straymark init .
 ```
 
-El CLI descarga la última versión de DevTrail, configura el framework y los archivos de directivas de agentes IA automáticamente.
+El CLI descarga la última versión de StrayMark, configura el framework y los archivos de directivas de agentes IA automáticamente.
 
 ### Versionado
 
-DevTrail usa tags de versión independientes para cada componente:
+StrayMark usa tags de versión independientes para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Incluye |
 |------------|---------------|---------|---------|
 | Framework | `fw-` | `fw-4.10.0` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
-| CLI | `cli-` | `cli-3.10.0` | El binario `devtrail` |
+| CLI | `cli-` | `cli-3.10.0` | El binario `straymark` |
 
-Verifica las versiones instaladas con `devtrail status` o `devtrail about`.
+Verifica las versiones instaladas con `straymark status` o `straymark about`.
 
 ### Comandos CLI
 
 | Comando | Descripción |
 |---------|-------------|
-| `devtrail init [path]` | Inicializar DevTrail en un proyecto |
-| `devtrail update` | Actualizar framework y CLI |
-| `devtrail update-framework` | Actualizar solo el framework |
-| `devtrail update-cli` | Actualizar el binario del CLI |
-| `devtrail remove [--full]` | Eliminar DevTrail del proyecto |
-| `devtrail status [path]` | Mostrar estado de la instalación y estadísticas |
-| `devtrail repair [path]` | Restaurar directorios y archivos del framework faltantes |
-| `devtrail validate [path]` | Validar documentos por cumplimiento y corrección (use `--include-charters` para Charters, `--check-pending-reviews` para el backlog de aprobaciones) |
-| `devtrail charter <subcomando>` | Gestionar Charters: `new`, `list`, `status`, `close` (registra telemetría), `drift` (drift archivos-vs-commit con AILOG-awareness) |
-| `devtrail approve <doc-id>` | Registra una aprobación humana formal en un documento `review_required: true` (frontmatter + sección body canónica) |
-| `devtrail compliance [path]` | Verificar cumplimiento regulatorio (EU AI Act, ISO 42001, NIST) |
-| `devtrail metrics [path]` | Mostrar métricas de gobernanza y estadísticas |
-| `devtrail analyze [path]` | Analizar complejidad de código (métricas cognitiva + ciclomática) |
-| `devtrail audit [path]` | Generar reportes de auditoría con línea temporal y trazabilidad |
-| `devtrail explore [path]` | Explorar documentación interactivamente en terminal (TUI) |
-| `devtrail about` | Mostrar información de versión y licencia |
+| `straymark init [path]` | Inicializar StrayMark en un proyecto |
+| `straymark update` | Actualizar framework y CLI |
+| `straymark update-framework` | Actualizar solo el framework |
+| `straymark update-cli` | Actualizar el binario del CLI |
+| `straymark remove [--full]` | Eliminar StrayMark del proyecto |
+| `straymark status [path]` | Mostrar estado de la instalación y estadísticas |
+| `straymark repair [path]` | Restaurar directorios y archivos del framework faltantes |
+| `straymark validate [path]` | Validar documentos por cumplimiento y corrección (use `--include-charters` para Charters, `--check-pending-reviews` para el backlog de aprobaciones) |
+| `straymark charter <subcomando>` | Gestionar Charters: `new`, `list`, `status`, `close` (registra telemetría), `drift` (drift archivos-vs-commit con AILOG-awareness) |
+| `straymark approve <doc-id>` | Registra una aprobación humana formal en un documento `review_required: true` (frontmatter + sección body canónica) |
+| `straymark compliance [path]` | Verificar cumplimiento regulatorio (EU AI Act, ISO 42001, NIST) |
+| `straymark metrics [path]` | Mostrar métricas de gobernanza y estadísticas |
+| `straymark analyze [path]` | Analizar complejidad de código (métricas cognitiva + ciclomática) |
+| `straymark audit [path]` | Generar reportes de auditoría con línea temporal y trazabilidad |
+| `straymark explore [path]` | Explorar documentación interactivamente en terminal (TUI) |
+| `straymark about` | Mostrar información de versión y licencia |
 
 Ver [Referencia CLI](adopters/CLI-REFERENCE.md) para uso detallado.
 
@@ -254,16 +254,16 @@ Ver [Referencia CLI](adopters/CLI-REFERENCE.md) para uso detallado.
 
 ```bash
 # Descargar el último release ZIP del framework desde GitHub
-# Ve a https://github.com/StrangeDaysTech/devtrail/releases
+# Ve a https://github.com/StrangeDaysTech/straymark/releases
 # y descarga el último release fw-* (ej. fw-4.10.0)
 
 # Extraer y copiar a tu proyecto
-unzip devtrail-fw-*.zip -d tu-proyecto/
+unzip straymark-fw-*.zip -d tu-proyecto/
 cd tu-proyecto
 
 # Commit
-git add .devtrail/ DEVTRAIL.md
-git commit -m "chore: adoptar DevTrail"
+git add .straymark/ STRAYMARK.md
+git commit -m "chore: adoptar StrayMark"
 ```
 
 **Ver [ADOPTION-GUIDE.md](adopters/ADOPTION-GUIDE.md) para instrucciones detalladas, estrategias de migración y planes de implementación en equipos.**
@@ -272,12 +272,12 @@ git commit -m "chore: adoptar DevTrail"
 
 ## Documentación
 
-La documentación de DevTrail está organizada por audiencia:
+La documentación de StrayMark está organizada por audiencia:
 
 | Track | Para | Empieza aquí |
 |-------|------|--------------|
-| [**Adoptantes**](adopters/) | Equipos que adoptan DevTrail en sus proyectos | [ADOPTION-GUIDE.md](adopters/ADOPTION-GUIDE.md) |
-| [**Contribuidores**](../../../docs/contributors/) | Desarrolladores que contribuyen a DevTrail | [TRANSLATION-GUIDE.md](../../../docs/contributors/TRANSLATION-GUIDE.md) |
+| [**Adoptantes**](adopters/) | Equipos que adoptan StrayMark en sus proyectos | [ADOPTION-GUIDE.md](adopters/ADOPTION-GUIDE.md) |
+| [**Contribuidores**](../../../docs/contributors/) | Desarrolladores que contribuyen a StrayMark | [TRANSLATION-GUIDE.md](../../../docs/contributors/TRANSLATION-GUIDE.md) |
 
 **Adoptantes**: Sigue la [Guía de Adopción](adopters/ADOPTION-GUIDE.md) para instrucciones paso a paso, la [Referencia CLI](adopters/CLI-REFERENCE.md) para detalles de comandos, y la [Guía de Flujos de Trabajo](adopters/WORKFLOWS.md) para patrones de uso diario.
 
@@ -287,18 +287,18 @@ La documentación de DevTrail está organizada por audiencia:
 
 | Documento | Descripción |
 |-----------|-------------|
-| [**Referencia Rápida**](../../../dist/.devtrail/QUICK-REFERENCE.md) | Resumen de tipos de documentos y nomenclatura |
-| [DEVTRAIL.md](../../../dist/DEVTRAIL.md) | Reglas de gobernanza unificadas (fuente de verdad) |
+| [**Referencia Rápida**](../../../dist/.straymark/QUICK-REFERENCE.md) | Resumen de tipos de documentos y nomenclatura |
+| [STRAYMARK.md](../../../dist/STRAYMARK.md) | Reglas de gobernanza unificadas (fuente de verdad) |
 | [ADOPTION-GUIDE.md](adopters/ADOPTION-GUIDE.md) | Guía de adopción para proyectos nuevos/existentes |
 | [CLI-REFERENCE.md](adopters/CLI-REFERENCE.md) | Referencia completa de comandos CLI |
 | [WORKFLOWS.md](adopters/WORKFLOWS.md) | Flujos de trabajo diarios y patrones de equipo |
 
 ### Estructura Interna
 
-Una vez adoptado, DevTrail crea un directorio `.devtrail/` en tu proyecto para gobernanza de desarrollo:
+Una vez adoptado, StrayMark crea un directorio `.straymark/` en tu proyecto para gobernanza de desarrollo:
 
 ```
-.devtrail/
+.straymark/
 ├── 00-governance/           # Políticas y reglas
 ├── 01-requirements/         # Documentos REQ
 ├── 02-design/decisions/     # Documentos ADR
@@ -330,7 +330,7 @@ Ejemplo: `ADR-2025-01-27-001-usar-postgresql-para-persistencia.md`
 Un asistente de IA trabajando en tu código automáticamente:
 
 ```yaml
-# Crea: .devtrail/07-ai-audit/agent-logs/AILOG-2025-01-27-001-implementar-auth.md
+# Crea: .straymark/07-ai-audit/agent-logs/AILOG-2025-01-27-001-implementar-auth.md
 ---
 id: AILOG-2025-01-27-001
 title: Implementar autenticación JWT
@@ -358,7 +358,7 @@ AILOG-2025-01-27-001-implementar-auth.md
 Al elegir entre alternativas, las decisiones se documentan:
 
 ```yaml
-# Crea: .devtrail/07-ai-audit/decisions/AIDEC-2025-01-27-001-estrategia-auth.md
+# Crea: .straymark/07-ai-audit/decisions/AIDEC-2025-01-27-001-estrategia-auth.md
 ---
 id: AIDEC-2025-01-27-001
 title: Elegir JWT sobre autenticación basada en sesiones
@@ -375,7 +375,7 @@ justification: "Requisito de arquitectura sin estado..."
 Cuando la IA encuentra consideraciones éticas:
 
 ```yaml
-# Crea: .devtrail/07-ai-audit/ethical-reviews/ETH-2025-01-27-001-datos-usuario.md
+# Crea: .straymark/07-ai-audit/ethical-reviews/ETH-2025-01-27-001-datos-usuario.md
 ---
 id: ETH-2025-01-27-001
 title: Alcance de recolección de datos de usuario
@@ -398,7 +398,7 @@ Configura un hook de Git que ejecute la validación automáticamente antes de ca
 ```bash
 # Crear el hook pre-commit
 echo '#!/bin/sh
-devtrail validate --staged' > .git/hooks/pre-commit
+straymark validate --staged' > .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 ```
 
@@ -406,7 +406,7 @@ chmod +x .git/hooks/pre-commit
 
 ```bash
 # Multiplataforma (Linux, macOS, Windows)
-devtrail validate
+straymark validate
 ```
 
 ### GitHub Actions
@@ -422,36 +422,36 @@ El flujo de trabajo incluido (`.github/workflows/docs-validation.yml`) valida au
 
 ## Skills
 
-DevTrail incluye skills para agentes IA que habilitan la **creación activa de documentación**.
+StrayMark incluye skills para agentes IA que habilitan la **creación activa de documentación**.
 
-> **Sistema Binario**: DevTrail usa un sistema pasivo (agentes auto-documentan via instrucciones de contexto) y un sistema activo (usuarios invocan skills para crear documentación manualmente o cuando el agente omitió algo).
+> **Sistema Binario**: StrayMark usa un sistema pasivo (agentes auto-documentan via instrucciones de contexto) y un sistema activo (usuarios invocan skills para crear documentación manualmente o cuando el agente omitió algo).
 
 ### Skills Disponibles
 
 | Skill | Propósito | Claude | Gemini |
 |-------|-----------|--------|--------|
-| `/devtrail-status` | Verificar cumplimiento de documentación | ✅ | ✅ |
-| `/devtrail-new` | Crear cualquier tipo de documento (unificado) | ✅ | ✅ |
-| `/devtrail-ailog` | Creación rápida de AILOG | ✅ | ✅ |
-| `/devtrail-aidec` | Creación rápida de AIDEC | ✅ | ✅ |
-| `/devtrail-adr` | Creación rápida de ADR | ✅ | ✅ |
+| `/straymark-status` | Verificar cumplimiento de documentación | ✅ | ✅ |
+| `/straymark-new` | Crear cualquier tipo de documento (unificado) | ✅ | ✅ |
+| `/straymark-ailog` | Creación rápida de AILOG | ✅ | ✅ |
+| `/straymark-aidec` | Creación rápida de AIDEC | ✅ | ✅ |
+| `/straymark-adr` | Creación rápida de ADR | ✅ | ✅ |
 
 ### Ejemplos de Uso
 
 ```bash
 # Verificar estado de documentación
-/devtrail-status
+/straymark-status
 
 # Crear documentación (agente sugiere tipo)
-/devtrail-new
+/straymark-new
 
 # Forzar tipo específico
-/devtrail-new ailog
+/straymark-new ailog
 
 # Accesos directos
-/devtrail-ailog
-/devtrail-aidec
-/devtrail-adr
+/straymark-ailog
+/straymark-aidec
+/straymark-adr
 ```
 
 ### Comandos CLI (Uso Manual)
@@ -460,13 +460,13 @@ Para usuarios que prefieren línea de comandos o usan agentes sin soporte de ski
 
 ```bash
 # Creación interactiva de documentos
-devtrail new
+straymark new
 
 # Crear tipo específico directamente
-devtrail new --doc-type ailog
+straymark new --doc-type ailog
 
 # Verificar estado de documentación
-devtrail status
+straymark status
 ```
 
 ### Reporte de Agentes
@@ -475,25 +475,25 @@ Los agentes IA reportan su estado de documentación al final de cada tarea:
 
 | Estado | Significado |
 |--------|-------------|
-| `DevTrail: Created AILOG-...` | Documentación fue creada |
-| `DevTrail: No documentation required` | Cambio menor (<10 líneas) |
-| `DevTrail: Documentation pending` | Puede necesitar revisión manual |
+| `StrayMark: Created AILOG-...` | Documentación fue creada |
+| `StrayMark: No documentation required` | Cambio menor (<10 líneas) |
+| `StrayMark: Documentation pending` | Puede necesitar revisión manual |
 
 ### Arquitectura Multi-Agente
 
-DevTrail proporciona soporte nativo de skills para múltiples agentes IA a través de una arquitectura en capas:
+StrayMark proporciona soporte nativo de skills para múltiples agentes IA a través de una arquitectura en capas:
 
 ```
 tu-proyecto/
 ├── .agent/workflows/       # 🌐 Agnóstico (Antigravity, futuros agentes)
-│   ├── devtrail-new.md
-│   ├── devtrail-status.md
+│   ├── straymark-new.md
+│   ├── straymark-status.md
 │   └── ...
 ├── .gemini/skills/         # 🔵 Gemini CLI (Google)
-│   ├── devtrail-new/SKILL.md
+│   ├── straymark-new/SKILL.md
 │   └── ...
 └── .claude/skills/         # 🟣 Claude Code (Anthropic)
-    ├── devtrail-new/SKILL.md
+    ├── straymark-new/SKILL.md
     └── ...
 ```
 
@@ -524,9 +524,9 @@ Todas las implementaciones de skills son **funcionalmente idénticas**—solo di
 
 | SO | Validación |
 |----|------------|
-| Linux | `devtrail validate` |
-| macOS | `devtrail validate` |
-| Windows | `devtrail validate` |
+| Linux | `straymark validate` |
+| macOS | `straymark validate` |
+| Windows | `straymark validate` |
 
 ### Plataformas CI/CD
 
@@ -568,7 +568,7 @@ Nuestro ecosistema open-source:
 
 | Proyecto | Descripción |
 |----------|-------------|
-| **[DevTrail](https://github.com/StrangeDaysTech/devtrail)** | La disciplina cognitiva que tus proyectos asistidos por IA necesitan |
+| **[StrayMark](https://github.com/StrangeDaysTech/straymark)** | La disciplina cognitiva que tus proyectos asistidos por IA necesitan |
 | **[arborist-metrics](https://github.com/StrangeDaysTech/arborist)** | Librería de análisis de complejidad de código multi-lenguaje para Rust — [crates.io](https://crates.io/crates/arborist-metrics) |
 
 [Sitio Web](https://strangedays.tech) • [GitHub](https://github.com/StrangeDaysTech)
@@ -579,8 +579,8 @@ Nuestro ecosistema open-source:
 
 <div align="center">
 
-**DevTrail** — Disciplina de ingeniería, externalizada. Compliance, como side effect.
+**StrayMark** — Disciplina de ingeniería, externalizada. Compliance, como side effect.
 
-[Volver arriba](#devtrail)
+[Volver arriba](#straymark)
 
 </div>

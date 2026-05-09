@@ -1,21 +1,21 @@
-# DevTrail — Development Instructions
+# StrayMark — Development Instructions
 
-This is the DevTrail project repository. It contains two main components:
+This is the StrayMark project repository. It contains two main components:
 
 - **Framework** (`dist/`): documentation templates, governance policies, and agent directives
-- **CLI** (`cli/`): the `devtrail` Rust binary that manages the framework in user projects
+- **CLI** (`cli/`): the `straymark` Rust binary that manages the framework in user projects
 
 ## Project Structure
 
 ```
-devtrail/
+straymark/
 ├── cli/                    # Rust CLI source code
 │   ├── src/
 │   │   ├── main.rs         # Entry point, command routing
 │   │   ├── commands/       # Subcommands: init, update, remove, status, repair, validate, new, compliance, metrics, analyze, audit, explore, about
 │   │   ├── tui/            # Terminal UI for `explore` (ratatui + crossterm)
 │   │   ├── analysis_engine.rs # Code complexity analysis (arborist-metrics)
-│   │   ├── config.rs       # DevTrailConfig, Checksums, ComplexityConfig
+│   │   ├── config.rs       # StrayMarkConfig, Checksums, ComplexityConfig
 │   │   ├── download.rs     # GitHub API, ZIP downloads
 │   │   ├── inject.rs       # Directive injection system
 │   │   ├── manifest.rs     # dist-manifest.yml parser
@@ -26,8 +26,8 @@ devtrail/
 │   ├── Cargo.toml
 │   └── Cargo.lock
 ├── dist/                   # Framework distribution files
-│   ├── .devtrail/          # Templates, governance, config
-│   ├── DEVTRAIL.md         # Unified governance rules
+│   ├── .straymark/          # Templates, governance, config
+│   ├── STRAYMARK.md         # Unified governance rules
 │   └── dist-manifest.yml   # What gets installed
 ├── docs/                   # Project documentation (EN + ES)
 ├── .github/workflows/      # CI/CD
@@ -38,7 +38,7 @@ devtrail/
 
 ## Versioning
 
-DevTrail uses **independent versions** for framework and CLI:
+StrayMark uses **independent versions** for framework and CLI:
 
 | Component | Tag format | Current | Example |
 |-----------|-----------|---------|---------|
@@ -114,7 +114,7 @@ gh release view cli-X.Y.Z --json assets --jq '.assets[].name'
 # Should show 4 binaries
 ```
 
-Users can now run `devtrail update-cli` to get the new version.
+Users can now run `straymark update-cli` to get the new version.
 
 ## Release Workflow — Framework
 
@@ -132,10 +132,10 @@ Update version references in docs:
 - `docs/i18n/es/adopters/CLI-REFERENCE.md` (ES — versioning table)
 - `docs/i18n/zh-CN/adopters/CLI-REFERENCE.md` (zh-CN — versioning table)
 - `README.md`, `docs/i18n/es/README.md`, and `docs/i18n/zh-CN/README.md` (versioning tables)
-- `dist/.devtrail/00-governance/QUICK-REFERENCE.md` (EN + ES + zh-CN footer)
-- `dist/.devtrail/00-governance/AGENT-RULES.md` (EN + ES + zh-CN footer)
-- `dist/.devtrail/00-governance/DOCUMENTATION-POLICY.md` (EN + ES + zh-CN footer)
-- `dist/.devtrail/00-governance/C4-DIAGRAM-GUIDE.md` (EN + ES + zh-CN footer)
+- `dist/.straymark/00-governance/QUICK-REFERENCE.md` (EN + ES + zh-CN footer)
+- `dist/.straymark/00-governance/AGENT-RULES.md` (EN + ES + zh-CN footer)
+- `dist/.straymark/00-governance/DOCUMENTATION-POLICY.md` (EN + ES + zh-CN footer)
+- `dist/.straymark/00-governance/C4-DIAGRAM-GUIDE.md` (EN + ES + zh-CN footer)
 
 Update `CHANGELOG.md` (root) following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format:
 - Add a new `## Framework X.Y.Z` section at the top (below the header)
@@ -160,7 +160,7 @@ git push origin fw-X.Y.Z
 
 The `release-framework.yml` workflow triggers automatically:
 1. Verifies `dist-manifest.yml` version matches the tag
-2. Packages `dist/` contents into `devtrail-fw-X.Y.Z.zip`
+2. Packages `dist/` contents into `straymark-fw-X.Y.Z.zip`
 3. Creates the GitHub release with the ZIP as asset
 
 **If CI needs re-running**, trigger manually:
@@ -173,30 +173,30 @@ gh workflow run release-framework.yml -f tag=fw-X.Y.Z
 
 ```bash
 gh release view fw-X.Y.Z --json assets --jq '.assets[].name'
-# Should show: devtrail-fw-X.Y.Z.zip
+# Should show: straymark-fw-X.Y.Z.zip
 ```
 
-Users can now run `devtrail update-framework` to get the new version.
+Users can now run `straymark update-framework` to get the new version.
 
 ## CLI Commands Reference
 
 | Command | Description |
 |---------|-------------|
-| `devtrail init [path]` | Initialize DevTrail in a project |
-| `devtrail update` | Update both framework and CLI |
-| `devtrail update-framework` | Update only the framework |
-| `devtrail update-cli` | Update the CLI binary |
-| `devtrail remove [--full]` | Remove DevTrail from project |
-| `devtrail status [path]` | Show installation health and doc stats |
-| `devtrail repair [path]` | Restore missing directories and framework files |
-| `devtrail validate [path] [--staged]` | Validate documents for compliance and correctness |
-| `devtrail new [path] [-t type] [--title]` | Create a new DevTrail document from a template |
-| `devtrail compliance [path]` | Check regulatory compliance (EU AI Act, ISO 42001, NIST) |
-| `devtrail metrics [path]` | Show governance metrics and documentation statistics |
-| `devtrail analyze [path]` | Analyze code complexity (cognitive + cyclomatic metrics) |
-| `devtrail audit [path]` | Generate audit trail reports with timeline and traceability |
-| `devtrail explore [path]` | Interactive TUI documentation browser |
-| `devtrail about` | Show version and license info |
+| `straymark init [path]` | Initialize StrayMark in a project |
+| `straymark update` | Update both framework and CLI |
+| `straymark update-framework` | Update only the framework |
+| `straymark update-cli` | Update the CLI binary |
+| `straymark remove [--full]` | Remove StrayMark from project |
+| `straymark status [path]` | Show installation health and doc stats |
+| `straymark repair [path]` | Restore missing directories and framework files |
+| `straymark validate [path] [--staged]` | Validate documents for compliance and correctness |
+| `straymark new [path] [-t type] [--title]` | Create a new StrayMark document from a template |
+| `straymark compliance [path]` | Check regulatory compliance (EU AI Act, ISO 42001, NIST) |
+| `straymark metrics [path]` | Show governance metrics and documentation statistics |
+| `straymark analyze [path]` | Analyze code complexity (cognitive + cyclomatic metrics) |
+| `straymark audit [path]` | Generate audit trail reports with timeline and traceability |
+| `straymark explore [path]` | Interactive TUI documentation browser |
+| `straymark about` | Show version and license info |
 
 ## Development
 

@@ -1,6 +1,6 @@
-# Translation Guide - DevTrail
+# Translation Guide - StrayMark
 
-This guide provides rules and guidelines for translating DevTrail documentation to other languages.
+This guide provides rules and guidelines for translating StrayMark documentation to other languages.
 
 ---
 
@@ -18,9 +18,9 @@ This guide provides rules and guidelines for translating DevTrail documentation 
 
 ## Language Configuration
 
-DevTrail uses a configuration file to set the project's language:
+StrayMark uses a configuration file to set the project's language:
 
-**File**: `.devtrail/config.yml`
+**File**: `.straymark/config.yml`
 
 ```yaml
 # Language setting for templates and documentation
@@ -31,14 +31,14 @@ language: en
 
 ### How It Works
 
-1. AI agents read `.devtrail/config.yml` at the start of each session
+1. AI agents read `.straymark/config.yml` at the start of each session
 2. Based on the `language` value, they use templates from the appropriate path:
 
 | Language | Template Path |
 |----------|---------------|
-| `en` (default) | `.devtrail/templates/TEMPLATE-*.md` |
-| `es` | `.devtrail/templates/i18n/es/TEMPLATE-*.md` |
-| `zh-CN` | `.devtrail/templates/i18n/zh-CN/TEMPLATE-*.md` |
+| `en` (default) | `.straymark/templates/TEMPLATE-*.md` |
+| `es` | `.straymark/templates/i18n/es/TEMPLATE-*.md` |
+| `zh-CN` | `.straymark/templates/i18n/zh-CN/TEMPLATE-*.md` |
 
 3. If the config file doesn't exist or `language` is not set, English is used as default
 
@@ -62,8 +62,8 @@ The AI agent will then use Spanish templates when creating documentation.
 |----------|-------|----------|
 | **Main Documentation** | README.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md | `docs/i18n/{lang}/` |
 | **Adopter Documentation** | ADOPTION-GUIDE.md, CLI-REFERENCE.md, WORKFLOWS.md | `docs/i18n/{lang}/adopters/` |
-| **Templates** | TEMPLATE-*.md (8 files) | `.devtrail/templates/i18n/{lang}/` |
-| **Governance** | PRINCIPLES.md, DOCUMENTATION-POLICY.md, AGENT-RULES.md, GIT-BRANCHING-STRATEGY.md, QUICK-REFERENCE.md | `.devtrail/00-governance/i18n/{lang}/` |
+| **Templates** | TEMPLATE-*.md (8 files) | `.straymark/templates/i18n/{lang}/` |
+| **Governance** | PRINCIPLES.md, DOCUMENTATION-POLICY.md, AGENT-RULES.md, GIT-BRANCHING-STRATEGY.md, QUICK-REFERENCE.md | `.straymark/00-governance/i18n/{lang}/` |
 
 ### Files NOT to Translate
 
@@ -180,9 +180,9 @@ Keep these values in English:
 
 ```markdown
 <!-- Keep paths exactly as shown -->
-.devtrail/
-.devtrail/07-ai-audit/agent-logs/
-.devtrail/templates/TEMPLATE-AILOG.md
+.straymark/
+.straymark/07-ai-audit/agent-logs/
+.straymark/templates/TEMPLATE-AILOG.md
 ```
 
 ### 5. File Naming Convention Pattern
@@ -226,7 +226,7 @@ Basado en [REQ-2025-01-15-003].          # Keep reference format
 
 ```
 Strange Days Tech
-DevTrail
+StrayMark
 Claude Code
 Cursor
 GitHub Copilot
@@ -240,7 +240,7 @@ Gemini CLI
 ### Directory Layout
 
 ```
-devtrail/
+straymark/
 ├── docs/
 │   ├── adopters/
 │   │   └── ADOPTION-GUIDE.md        # English adopter docs
@@ -261,7 +261,7 @@ devtrail/
 │       │       └── ADOPTION-GUIDE.md
 │       └── [other-lang]/            # Future languages
 │
-└── .devtrail/
+└── .straymark/
     ├── templates/
     │   ├── TEMPLATE-*.md            # English (default)
     │   └── i18n/
@@ -287,7 +287,7 @@ Translated files keep the same filename as the original:
 |----------|-------------|
 | `README.md` | `docs/i18n/es/README.md` |
 | `docs/adopters/ADOPTION-GUIDE.md` | `docs/i18n/es/adopters/ADOPTION-GUIDE.md` |
-| `TEMPLATE-AILOG.md` | `.devtrail/templates/i18n/es/TEMPLATE-AILOG.md` |
+| `TEMPLATE-AILOG.md` | `.straymark/templates/i18n/es/TEMPLATE-AILOG.md` |
 
 ---
 
@@ -326,7 +326,7 @@ Before submitting a translation, verify:
 - [ ] Document type prefixes unchanged (AILOG, AIDEC, ADR, etc.)
 - [ ] YAML keys unchanged (id, title, status, agent, confidence, etc.)
 - [ ] Enum values unchanged (draft, accepted, high, medium, low, etc.)
-- [ ] File paths unchanged (.devtrail/, 07-ai-audit/, etc.)
+- [ ] File paths unchanged (.straymark/, 07-ai-audit/, etc.)
 - [ ] Agent identifiers unchanged (claude-code-v1.0, etc.)
 - [ ] Cross-reference format unchanged ([ADR-YYYY-MM-DD-NNN])
 
@@ -370,6 +370,6 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md) for general contribution guidelines
 
 ---
 
-*DevTrail — Because every change tells a story.*
+*StrayMark — Because every change tells a story.*
 
 [Strange Days Tech](https://strangedays.tech)
