@@ -1,6 +1,6 @@
-# DevTrail - Flujos de Trabajo Recomendados
+# StrayMark - Flujos de Trabajo Recomendados
 
-**Patrones y cadencias para usar DevTrail en el día a día.**
+**Patrones y cadencias para usar StrayMark en el día a día.**
 
 [![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
 
@@ -12,7 +12,7 @@
 
 1. [Después de la Configuración Inicial](#después-de-la-configuración-inicial)
 2. [Desarrollo Diario](#desarrollo-diario)
-3. [Mantener DevTrail Actualizado](#mantener-devtrail-actualizado)
+3. [Mantener StrayMark Actualizado](#mantener-straymark-actualizado)
 4. [Verificar el Estado del Proyecto](#verificar-el-estado-del-proyecto)
 5. [Usar Skills (Documentación Activa)](#usar-skills-documentación-activa)
 6. [Patrones de Equipo](#patrones-de-equipo)
@@ -22,12 +22,12 @@
 
 ## Después de la Configuración Inicial
 
-Ejecutaste `devtrail init .` e hiciste commit del resultado. ¿Ahora qué?
+Ejecutaste `straymark init .` e hiciste commit del resultado. ¿Ahora qué?
 
 1. **Abre tu proyecto** con tu asistente de codificación IA (Claude Code, Cursor, Gemini CLI, etc.)
-2. El asistente **leerá automáticamente** las directivas de DevTrail (`CLAUDE.md`, `GEMINI.md`, etc.)
-3. A partir de este punto, el asistente **crea documentación** en `.devtrail/` como parte de su flujo de trabajo normal
-4. **No se necesita configuración adicional** — DevTrail funciona de forma pasiva a través de los archivos de directivas
+2. El asistente **leerá automáticamente** las directivas de StrayMark (`CLAUDE.md`, `GEMINI.md`, etc.)
+3. A partir de este punto, el asistente **crea documentación** en `.straymark/` como parte de su flujo de trabajo normal
+4. **No se necesita configuración adicional** — StrayMark funciona de forma pasiva a través de los archivos de directivas
 
 ---
 
@@ -36,7 +36,7 @@ Ejecutaste `devtrail init .` e hiciste commit del resultado. ¿Ahora qué?
 ### El Ciclo Pasivo
 
 1. Trabaja normalmente con tu asistente IA — escribe features, corrige bugs, refactoriza
-2. La IA crea documentos en `.devtrail/` según las reglas de gobernanza:
+2. La IA crea documentos en `.straymark/` según las reglas de gobernanza:
    - **AILOG** para implementaciones significativas (>10 líneas cambiadas)
    - **AIDEC** al elegir entre alternativas
    - **ADR** para decisiones arquitectónicas
@@ -55,27 +55,27 @@ Usa el sistema activo (skills) cuando:
 
 ---
 
-## Mantener DevTrail Actualizado
+## Mantener StrayMark Actualizado
 
 ### Cadencia Recomendada
 
 - **Mensualmente** o cuando veas un nuevo release en GitHub
-- Consulta la [página de releases](https://github.com/StrangeDaysTech/devtrail/releases) para changelogs
+- Consulta la [página de releases](https://github.com/StrangeDaysTech/straymark/releases) para changelogs
 
 ### Comandos de Actualización
 
 | Objetivo | Comando |
 |----------|---------|
-| Actualizar framework y CLI | `devtrail update` |
-| Actualizar solo plantillas y docs de gobernanza | `devtrail update-framework` |
-| Actualizar solo el binario CLI | `devtrail update-cli` |
+| Actualizar framework y CLI | `straymark update` |
+| Actualizar solo plantillas y docs de gobernanza | `straymark update-framework` |
+| Actualizar solo el binario CLI | `straymark update-cli` |
 
 Framework y CLI tienen **versiones independientes** — puedes actualizar uno sin el otro. Ver [Entender las Versiones](#entender-las-versiones).
 
 ### Después de Actualizar
 
 1. Revisa los cambios en archivos de directivas y docs de gobernanza
-2. Haz commit de los archivos actualizados: `git add .devtrail/ && git commit -m "chore: update DevTrail framework"`
+2. Haz commit de los archivos actualizados: `git add .straymark/ && git commit -m "chore: update StrayMark framework"`
 3. Si personalizaste archivos del framework, verifica si hay conflictos
 
 ---
@@ -85,7 +85,7 @@ Framework y CLI tienen **versiones independientes** — puedes actualizar uno si
 ### Estado via CLI
 
 ```bash
-devtrail status
+straymark status
 ```
 
 Muestra: versión del framework, versión del CLI, integridad de la estructura de directorios y estadísticas de documentos por tipo. Úsalo para verificar que la instalación está saludable.
@@ -93,10 +93,10 @@ Muestra: versión del framework, versión del CLI, integridad de la estructura d
 ### Cumplimiento de Documentación (Skill)
 
 ```bash
-/devtrail-status
+/straymark-status
 ```
 
-El skill `/devtrail-status` (disponible en Claude Code y Gemini CLI) analiza:
+El skill `/straymark-status` (disponible en Claude Code y Gemini CLI) analiza:
 
 - Qué cambios de código recientes carecen de documentación correspondiente
 - Cumplimiento de documentos contra las reglas de gobernanza
@@ -106,7 +106,7 @@ El skill `/devtrail-status` (disponible en Claude Code y Gemini CLI) analiza:
 
 ## Usar Skills (Documentación Activa)
 
-DevTrail tiene dos sistemas de documentación:
+StrayMark tiene dos sistemas de documentación:
 
 | Sistema | Cómo funciona | Cuándo usar |
 |---------|---------------|-------------|
@@ -117,20 +117,20 @@ DevTrail tiene dos sistemas de documentación:
 
 | Skill | Propósito |
 |-------|-----------|
-| `/devtrail-status` | Verificar cumplimiento de documentación |
-| `/devtrail-new` | Crear cualquier tipo de documento (sugiere el más adecuado) |
-| `/devtrail-ailog` | Creación rápida de AILOG |
-| `/devtrail-aidec` | Creación rápida de AIDEC |
-| `/devtrail-adr` | Creación rápida de ADR |
-| `/devtrail-audit-prompt CHARTER-XX` *(fw-4.8.0+, refactorizada en fw-4.9.0)* | Genera el audit prompt unificado en el path canónico `.devtrail/audits/<id>/audit-prompt.md`. Envuelve `devtrail charter audit --prepare`. El operador entonces abre N CLIs auditoras y corre `/devtrail-audit-execute` en cada una — sin copy/paste. |
-| `/devtrail-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | **Corre dentro de una CLI auditora** (gemini-cli, claude-cli, copilot-cli, codex-cli). Lee el prompt del disco, audita con tool use citando `path:línea`, escribe un report con el id del modelo. Argumento opcional — auto-descubre prompts pendientes de este modelo. |
-| `/devtrail-audit-review CHARTER-XX` *(fw-4.8.0+, expandida en fw-4.9.0)* | Contraparte de `audit-prompt`. Lee N reports, verifica findings contra el código real, produce `review.md` consolidado de 6 secciones (Resumen ejecutivo / Alcance / Evaluación por auditor / Plan de remediación P0-P4 / Descartados / Calificación de auditores), y mergea YAML `external_audit:` en la telemetría. |
+| `/straymark-status` | Verificar cumplimiento de documentación |
+| `/straymark-new` | Crear cualquier tipo de documento (sugiere el más adecuado) |
+| `/straymark-ailog` | Creación rápida de AILOG |
+| `/straymark-aidec` | Creación rápida de AIDEC |
+| `/straymark-adr` | Creación rápida de ADR |
+| `/straymark-audit-prompt CHARTER-XX` *(fw-4.8.0+, refactorizada en fw-4.9.0)* | Genera el audit prompt unificado en el path canónico `.straymark/audits/<id>/audit-prompt.md`. Envuelve `straymark charter audit --prepare`. El operador entonces abre N CLIs auditoras y corre `/straymark-audit-execute` en cada una — sin copy/paste. |
+| `/straymark-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | **Corre dentro de una CLI auditora** (gemini-cli, claude-cli, copilot-cli, codex-cli). Lee el prompt del disco, audita con tool use citando `path:línea`, escribe un report con el id del modelo. Argumento opcional — auto-descubre prompts pendientes de este modelo. |
+| `/straymark-audit-review CHARTER-XX` *(fw-4.8.0+, expandida en fw-4.9.0)* | Contraparte de `audit-prompt`. Lee N reports, verifica findings contra el código real, produce `review.md` consolidado de 6 secciones (Resumen ejecutivo / Alcance / Evaluación por auditor / Plan de remediación P0-P4 / Descartados / Calificación de auditores), y mergea YAML `external_audit:` en la telemetría. |
 
 Para detalles completos de skills, consulta el [README](../README.md#skills).
 
 ### Charter audit checkpoint *(fw-4.8.0+)*
 
-Cuando estés co-implementando un Charter, el agente proactivamente ofrecerá una auditoría externa en un momento específico: cuando la implementación esté lista, el drift esté limpio, y `charter close` aún no se haya invocado. La recomendación es SÍ/NO basada en la superficie de riesgo y complejidad del Charter (heurísticas completas en `.devtrail/00-governance/AGENT-RULES.md` §12).
+Cuando estés co-implementando un Charter, el agente proactivamente ofrecerá una auditoría externa en un momento específico: cuando la implementación esté lista, el drift esté limpio, y `charter close` aún no se haya invocado. La recomendación es SÍ/NO basada en la superficie de riesgo y complejidad del Charter (heurísticas completas en `.straymark/00-governance/AGENT-RULES.md` §12).
 
 La auditoría externa es **completamente opcional** y **nunca enforced**. El scope declarativo del Charter + drift check + disciplina AILOG ya proporcionan cierre riguroso sin ella. La auditoría agrega señal cross-modelo cuando el Charter tocó superficie de seguridad, introdujo componentes nuevos, o tiene funciones de alta complejidad en el diff. Declina libremente si el costo (2-3 auditores LLM) no se ajusta al valor de tu caso.
 
@@ -140,13 +140,13 @@ La auditoría externa es **completamente opcional** y **nunca enforced**. El sco
 
 ### Revisión de PRs
 
-- Verifica que los cambios de código significativos incluyan documentos correspondientes en `.devtrail/`
+- Verifica que los cambios de código significativos incluyan documentos correspondientes en `.straymark/`
 - Revisa cualquier documento con `review_required: true`
 - Verifica que los AILOGs describan con precisión lo que hizo la IA
 
 ### Onboarding de Nuevos Miembros
 
-1. Apúntalos a `.devtrail/QUICK-REFERENCE.md` para una vista rápida
+1. Apúntalos a `.straymark/QUICK-REFERENCE.md` para una vista rápida
 2. Pídeles que lean los ADRs recientes para entender el contexto arquitectónico
 3. Muéstrales AILOGs de features recientes para ver cómo funciona la documentación en la práctica
 
@@ -172,15 +172,15 @@ Si tu proyecto opera en China continental o procesa información personal de usu
 
 ### Configuración Inicial
 
-1. Edita `.devtrail/config.yml` y añade `china` a `regional_scope`:
+1. Edita `.straymark/config.yml` y añade `china` a `regional_scope`:
    ```yaml
    regional_scope:
      - global
      - eu      # si también está sujeto a EU
      - china
    ```
-2. Ejecuta `devtrail compliance --region china` para ver el baseline (todos los checks fallarán hasta crear los documentos correspondientes).
-3. Lee las guías instaladas en `.devtrail/00-governance/`:
+2. Ejecuta `straymark compliance --region china` para ver el baseline (todos los checks fallarán hasta crear los documentos correspondientes).
+3. Lee las guías instaladas en `.straymark/00-governance/`:
    - `CHINA-REGULATORY-FRAMEWORK.md` — visión general y matriz de cobertura
    - `TC260-IMPLEMENTATION-GUIDE.md` — clasificación de riesgo en 5 niveles
    - `PIPL-PIPIA-GUIDE.md` — cuándo se requiere PIPIA y qué debe contener
@@ -200,7 +200,7 @@ Conjunto de documentos a crear juntos (cross-linked vía `related:`):
 | `PIPIA` | Evaluación de impacto de info personal (Art. 55-56) | Cuando se procesa info personal |
 | `SBOM` | Inventario de datos de entrenamiento + cumplimiento GB/T 45652 | Siempre |
 
-`devtrail compliance --region china` confirma que el conjunto está completo.
+`straymark compliance --region china` confirma que el conjunto está completo.
 
 ### Cuando Ocurre un Incidente
 
@@ -211,7 +211,7 @@ csl_severity_level: relatively_major   # o particularly_serious | major | genera
 csl_report_deadline_hours: 4           # 1 para particularly_serious, 4 para relatively_major
 ```
 
-`devtrail validate` aplica la coherencia severidad-deadline (`CROSS-008`, `CROSS-009`). Los incidentes major+ deben cerrarse (status `accepted`) en 30 días para que el check `CSL-003` apruebe.
+`straymark validate` aplica la coherencia severidad-deadline (`CROSS-008`, `CROSS-009`). Los incidentes major+ deben cerrarse (status `accepted`) en 30 días para que el check `CSL-003` apruebe.
 
 ### Transferencia Transfronteriza de Datos
 
@@ -221,20 +221,20 @@ Cuando un proceso involucra transferencia de información personal fuera de Chin
 
 ```bash
 # Antes de mergear una rama de feature que toca servicios IA
-devtrail validate                    # cross-rules incluyendo CROSS-004..011
-devtrail compliance --region china   # score por framework
+straymark validate                    # cross-rules incluyendo CROSS-004..011
+straymark compliance --region china   # score por framework
 ```
 
 ---
 
 ## Entender las Versiones
 
-DevTrail usa **versionado independiente** para sus dos componentes:
+StrayMark usa **versionado independiente** para sus dos componentes:
 
 | Componente | Prefijo de tag | Contiene | Se actualiza con |
 |------------|---------------|----------|-----------------|
-| **Framework** | `fw-` | Plantillas, docs de gobernanza, directivas, scripts | `devtrail update-framework` |
-| **CLI** | `cli-` | El binario `devtrail` | `devtrail update-cli` |
+| **Framework** | `fw-` | Plantillas, docs de gobernanza, directivas, scripts | `straymark update-framework` |
+| **CLI** | `cli-` | El binario `straymark` | `straymark update-cli` |
 
 ### ¿Por Qué Versiones Independientes?
 
@@ -245,8 +245,8 @@ DevTrail usa **versionado independiente** para sus dos componentes:
 ### Verificar Tus Versiones
 
 ```bash
-devtrail about     # Verificación rápida de versiones
-devtrail status    # Reporte completo de salud incluyendo versiones
+straymark about     # Verificación rápida de versiones
+straymark status    # Reporte completo de salud incluyendo versiones
 ```
 
 Para información detallada del CLI, consulta la [Referencia CLI](CLI-REFERENCE.md#versionado).
@@ -255,7 +255,7 @@ Para información detallada del CLI, consulta la [Referencia CLI](CLI-REFERENCE.
 
 <div align="center">
 
-**DevTrail** — Porque cada cambio cuenta una historia.
+**StrayMark** — Porque cada cambio cuenta una historia.
 
 [Volver a docs](../../README.md) • [README](../README.md) • [Strange Days Tech](https://strangedays.tech)
 

@@ -1,6 +1,6 @@
-# DevTrail - Referencia CLI
+# StrayMark - Referencia CLI
 
-**Referencia completa de la herramienta de línea de comandos `devtrail`.**
+**Referencia completa de la herramienta de línea de comandos `straymark`.**
 
 [![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
 
@@ -20,66 +20,66 @@
 
 ## Instalación
 
-Instala el CLI de DevTrail usando uno de los métodos a continuación. Para instrucciones completas de configuración, consulta el [README](../README.md#inicio-rápido).
+Instala el CLI de StrayMark usando uno de los métodos a continuación. Para instrucciones completas de configuración, consulta el [README](../README.md#inicio-rápido).
 
 **Instalación rápida (binario precompilado):**
 
 ```bash
 # Linux / macOS
-curl -fsSL https://raw.githubusercontent.com/StrangeDaysTech/devtrail/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/StrangeDaysTech/straymark/main/install.sh | sh
 ```
 
 ```powershell
 # Windows (PowerShell)
-irm https://raw.githubusercontent.com/StrangeDaysTech/devtrail/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/StrangeDaysTech/straymark/main/install.ps1 | iex
 ```
 
 **Desde el código fuente:**
 
 ```bash
-cargo install devtrail-cli
+cargo install straymark-cli
 ```
 
 ---
 
 ## Versionado
 
-DevTrail usa **tags de versión independientes** para cada componente:
+StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
 | Framework | `fw-` | `fw-4.10.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.10.0` | El binario `devtrail` |
+| CLI | `cli-` | `cli-3.10.0` | El binario `straymark` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
 
 **Verificar versiones instaladas:**
 
 ```bash
-devtrail about    # Muestra versión CLI + versión framework (si está instalado)
-devtrail status   # Muestra estado completo de la instalación incluyendo versiones
+straymark about    # Muestra versión CLI + versión framework (si está instalado)
+straymark status   # Muestra estado completo de la instalación incluyendo versiones
 ```
 
 ---
 
 ## Comandos
 
-### `devtrail init [path] [--hooks]`
+### `straymark init [path] [--hooks]`
 
-Inicializa DevTrail en un directorio de proyecto.
+Inicializa StrayMark en un directorio de proyecto.
 
 **Argumentos y flags:**
 
 | Argumento/Flag | Por defecto | Descripción |
 |----------------|-------------|-------------|
 | `path` | `.` (directorio actual) | Directorio del proyecto destino |
-| `--hooks` *(cli-3.7.0+)* | off | Tras `init`, instala el hook pre-PR del framework (`.devtrail/hooks/pre-pr.sh`) como `.git/hooks/pre-push`. Ejecuta `devtrail charter drift` automáticamente antes de cada push. Opt-in por principio #6 (disciplina cognitiva > productividad cruda). Se rehúsa a sobreescribir un `pre-push` ya existente; se omite silenciosamente si no es un repositorio git. |
+| `--hooks` *(cli-3.7.0+)* | off | Tras `init`, instala el hook pre-PR del framework (`.straymark/hooks/pre-pr.sh`) como `.git/hooks/pre-push`. Ejecuta `straymark charter drift` automáticamente antes de cada push. Opt-in por principio #6 (disciplina cognitiva > productividad cruda). Se rehúsa a sobreescribir un `pre-push` ya existente; se omite silenciosamente si no es un repositorio git. |
 
 **Qué hace:**
 
 1. Descarga el último release del framework (`fw-*`) desde GitHub
-2. Crea la estructura de directorios `.devtrail/`
-3. Crea `DEVTRAIL.md` con las reglas de gobernanza
+2. Crea la estructura de directorios `.straymark/`
+3. Crea `STRAYMARK.md` con las reglas de gobernanza
 4. Configura archivos de directivas de agentes IA (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`, etc.)
 5. Copia workflows de CI/CD
 6. *(`--hooks`)* instala el hook pre-PR
@@ -87,27 +87,27 @@ Inicializa DevTrail en un directorio de proyecto.
 **Ejemplo:**
 
 ```bash
-$ devtrail init .
-✔ Downloaded DevTrail fw-4.10.0
-✔ Created .devtrail/ directory structure
-✔ Created DEVTRAIL.md
+$ straymark init .
+✔ Downloaded StrayMark fw-4.10.0
+✔ Created .straymark/ directory structure
+✔ Created STRAYMARK.md
 ✔ Configured AI agent directives
-DevTrail initialized successfully!
-Next: git add .devtrail/ DEVTRAIL.md && git commit -m "chore: adopt DevTrail"
+StrayMark initialized successfully!
+Next: git add .straymark/ STRAYMARK.md && git commit -m "chore: adopt StrayMark"
 ```
 
 ---
 
-### `devtrail update`
+### `straymark update`
 
 Actualiza **ambos** framework y CLI a sus últimas versiones. Equivale a ejecutar `update-framework` seguido de `update-cli`.
 
-Si `.devtrail/` no existe en el directorio actual, la actualización del framework se omite con una advertencia.
+Si `.straymark/` no existe en el directorio actual, la actualización del framework se omite con una advertencia.
 
 **Ejemplo:**
 
 ```bash
-$ devtrail update
+$ straymark update
 Updating framework...
 ✔ Framework updated to fw-4.10.0
 Updating CLI...
@@ -116,7 +116,7 @@ Updating CLI...
 
 ---
 
-### `devtrail update-framework`
+### `straymark update-framework`
 
 Actualiza solo los archivos del framework. Busca el último release `fw-*` en GitHub.
 
@@ -125,61 +125,61 @@ Actualiza solo los archivos del framework. Busca el último release `fw-*` en Gi
 **Ejemplo:**
 
 ```bash
-$ devtrail update-framework
+$ straymark update-framework
 ✔ Framework updated to fw-4.10.0
 ```
 
 ---
 
-### `devtrail update-cli`
+### `straymark update-cli`
 
-Auto-actualiza el binario `devtrail`. Detecta automáticamente el método de instalación y usa el mecanismo de actualización apropiado:
+Auto-actualiza el binario `straymark`. Detecta automáticamente el método de instalación y usa el mecanismo de actualización apropiado:
 
 - **Binario precompilado** (instalado via `install.sh` / `install.ps1`): Descarga el último binario de GitHub Releases
-- **Cargo** (instalado via `cargo install`): Ejecuta `cargo install --force devtrail-cli`
+- **Cargo** (instalado via `cargo install`): Ejecuta `cargo install --force straymark-cli`
 
 Usa `--method` para forzar el método: `--method=github` o `--method=cargo`.
 
 **Ejemplo:**
 
 ```bash
-$ devtrail update-cli
+$ straymark update-cli
 ✔ CLI updated to cli-3.5.2
 
-$ devtrail update-cli --method=cargo
+$ straymark update-cli --method=cargo
 Compiling from source, this may take a few minutes...
 ✔ CLI updated to cli-3.5.2
 ```
 
 ---
 
-### `devtrail remove [--full]`
+### `straymark remove [--full]`
 
-Elimina DevTrail del proyecto actual.
+Elimina StrayMark del proyecto actual.
 
 **Flags:**
 
 | Flag | Descripción |
 |------|-------------|
-| `--full` | Elimina todo, incluyendo documentos creados por el usuario en `.devtrail/`. Pide confirmación. |
+| `--full` | Elimina todo, incluyendo documentos creados por el usuario en `.straymark/`. Pide confirmación. |
 
-**Comportamiento por defecto** (sin `--full`): elimina la estructura del framework pero preserva los documentos que creaste dentro de `.devtrail/`.
+**Comportamiento por defecto** (sin `--full`): elimina la estructura del framework pero preserva los documentos que creaste dentro de `.straymark/`.
 
 **Ejemplo:**
 
 ```bash
-$ devtrail remove
-✔ DevTrail framework removed. User documents preserved in .devtrail/.
+$ straymark remove
+✔ StrayMark framework removed. User documents preserved in .straymark/.
 
-$ devtrail remove --full
-⚠ This will delete all DevTrail files including your documents.
+$ straymark remove --full
+⚠ This will delete all StrayMark files including your documents.
 Continue? [y/N]: y
-✔ DevTrail completely removed.
+✔ StrayMark completely removed.
 ```
 
 ---
 
-### `devtrail status [path]`
+### `straymark status [path]`
 
 Muestra el estado de la instalación y estadísticas de documentación.
 
@@ -201,8 +201,8 @@ Muestra el estado de la instalación y estadísticas de documentación.
 **Ejemplo:**
 
 ```bash
-$ devtrail status
-DevTrail Status
+$ straymark status
+StrayMark Status
 ───────────────
 Path:              /home/user/my-project
 Framework version: fw-4.10.0
@@ -224,9 +224,9 @@ Documents:
 
 ---
 
-### `devtrail repair [path]`
+### `straymark repair [path]`
 
-Repara una instalación de DevTrail rota restaurando directorios y archivos del framework faltantes.
+Repara una instalación de StrayMark rota restaurando directorios y archivos del framework faltantes.
 
 **Argumentos:**
 
@@ -238,29 +238,29 @@ Repara una instalación de DevTrail rota restaurando directorios y archivos del 
 
 1. Verifica directorios faltantes y los restaura con `.gitkeep`
 2. Descarga el release del framework **una sola vez** si se necesitan archivos (templates, governance, config)
-3. Re-inyecta directivas si falta `DEVTRAIL.md`
+3. Re-inyecta directivas si falta `STRAYMARK.md`
 4. Recalcula checksums después de la reparación
 5. Nunca modifica ni elimina documentos generados por el usuario
 
 **Ejemplo:**
 
 ```bash
-$ devtrail repair
-Repairing DevTrail in /home/user/mi-proyecto
+$ straymark repair
+Repairing StrayMark in /home/user/mi-proyecto
   → Found 1 issue(s) to repair
 → Restoring 1 missing directory...
-✓ Restored .devtrail/templates/
+✓ Restored .straymark/templates/
 → Downloading framework to restore missing files...
 ✓ Restored 16 file(s) from framework
 
-✓ DevTrail repaired successfully!
+✓ StrayMark repaired successfully!
 ```
 
 ---
 
-### `devtrail validate [path] [--fix] [--staged] [--include-charters] [--check-pending-reviews [--max-pending-days N]]`
+### `straymark validate [path] [--fix] [--staged] [--include-charters] [--check-pending-reviews [--max-pending-days N]]`
 
-Valida documentos DevTrail verificando cumplimiento y corrección.
+Valida documentos StrayMark verificando cumplimiento y corrección.
 
 **Argumentos y flags:**
 
@@ -289,9 +289,9 @@ Cuando `regional_scope` incluye `china`, se activan doce reglas adicionales (`CR
 
 ---
 
-### `devtrail new [path] [-t <tipo>] [--title <titulo>]`
+### `straymark new [path] [-t <tipo>] [--title <titulo>]`
 
-Crea un nuevo documento DevTrail a partir de una plantilla.
+Crea un nuevo documento StrayMark a partir de una plantilla.
 
 **Argumentos y flags:**
 
@@ -307,30 +307,30 @@ Si no se especifica `--doc-type` o `--title`, se solicitan de forma interactiva.
 
 ```bash
 # Creación interactiva
-$ devtrail new
+$ straymark new
 
 # Crear un AILOG con título (no-interactivo)
-$ devtrail new -t ailog --title "Implementar autenticación JWT"
+$ straymark new -t ailog --title "Implementar autenticación JWT"
 
 # Crear un ADR
-$ devtrail new --doc-type adr --title "Elegir PostgreSQL como base de datos"
+$ straymark new --doc-type adr --title "Elegir PostgreSQL como base de datos"
 ```
 
 **Ejemplo de salida:**
 
 ```
-$ devtrail new -t ailog --title "Refactorizar módulo de pagos"
+$ straymark new -t ailog --title "Refactorizar módulo de pagos"
 
-  ✔ Created: .devtrail/07-ai-audit/agent-logs/AILOG-2026-04-01-001-refactorizar-modulo-de-pagos.md
+  ✔ Created: .straymark/07-ai-audit/agent-logs/AILOG-2026-04-01-001-refactorizar-modulo-de-pagos.md
 
   Next steps:
     1. Edit the document to fill in details
-    2. Commit: git add .devtrail/07-ai-audit/agent-logs/AILOG-2026-04-01-001-refactorizar-modulo-de-pagos.md
+    2. Commit: git add .straymark/07-ai-audit/agent-logs/AILOG-2026-04-01-001-refactorizar-modulo-de-pagos.md
 ```
 
 ---
 
-### `devtrail approve <doc-id> --outcome <outcome> --reviewer <id> [--at YYYY-MM-DD] [--notes "..."] [--path <dir>]`
+### `straymark approve <doc-id> --outcome <outcome> --reviewer <id> [--at YYYY-MM-DD] [--notes "..."] [--path <dir>]`
 
 *Disponible desde **cli-3.7.0** + **fw-4.6.0**. `--quiet` y warning de alto riesgo añadidos en cli-3.8.0.*
 
@@ -356,7 +356,7 @@ Registra una aprobación humana formal sobre un documento con `review_required: 
 
 ```bash
 # Driven por flags (CI / scripts)
-$ devtrail approve AIDEC-2026-05-02-001 \
+$ straymark approve AIDEC-2026-05-02-001 \
     --outcome approved \
     --reviewer pepe@example.com \
     --notes "Revisado contra ADR-007. LGTM."
@@ -364,38 +364,38 @@ $ devtrail approve AIDEC-2026-05-02-001 \
   ✔ AIDEC-2026-05-02-001 marked as approved.
     Reviewer: pepe@example.com
     Date:     2026-05-02
-    File:     .devtrail/07-ai-audit/decisions/AIDEC-2026-05-02-001-foo.md
+    File:     .straymark/07-ai-audit/decisions/AIDEC-2026-05-02-001-foo.md
 
 # Ciclo iterativo: revisions_requested → re-aprobación
-$ devtrail approve AIDEC-... --outcome revisions_requested --reviewer reviewer@x.io
+$ straymark approve AIDEC-... --outcome revisions_requested --reviewer reviewer@x.io
 # (autor itera)
-$ devtrail approve AIDEC-... --outcome approved --reviewer reviewer@x.io
+$ straymark approve AIDEC-... --outcome approved --reviewer reviewer@x.io
 # Frontmatter muestra la última (approved); el cuerpo conserva AMBOS bloques cronológicamente.
 
 # Visibilidad del backlog
-$ devtrail validate --check-pending-reviews --max-pending-days 14
+$ straymark validate --check-pending-reviews --max-pending-days 14
 ```
 
-> Ver `dist/.devtrail/00-governance/DOCUMENTATION-POLICY.md` §3.5 "Recording Approval" para la definición canónica del flujo (semántica de cierre, formato del cuerpo, convención multi-revisor).
+> Ver `dist/.straymark/00-governance/DOCUMENTATION-POLICY.md` §3.5 "Recording Approval" para la definición canónica del flujo (semántica de cierre, formato del cuerpo, convención multi-revisor).
 
 ---
 
-### `devtrail charter <subcomando>`
+### `straymark charter <subcomando>`
 
-Gestiona **Charters**: unidades acotadas y auditables de trabajo, declaradas ex-ante y validadas ex-post. Un Charter empareja scope declarativo (archivos a tocar, riesgos, comandos de verificación ejecutables) con el ancla de auditoría ex-post (drift detection, auditoría multi-modelo). Los Charters viven en `docs/charters/NN-slug.md` (a nivel del project root, **no** bajo `.devtrail/`).
+Gestiona **Charters**: unidades acotadas y auditables de trabajo, declaradas ex-ante y validadas ex-post. Un Charter empareja scope declarativo (archivos a tocar, riesgos, comandos de verificación ejecutables) con el ancla de auditoría ex-post (drift detection, auditoría multi-modelo). Los Charters viven en `docs/charters/NN-slug.md` (a nivel del project root, **no** bajo `.straymark/`).
 
-> **Nota histórica.** En el experimento Sentinel `/plan-audit` que cristalizó este patrón (abril 2026, 6 ciclos), los Charters se llamaban *Plans*. El CLI DevTrail usa **Charter** going-forward para evitar la colisión nominal con el `plan.md` de GitHub SpecKit. Los archivos históricos de Sentinel preservan "Plan" deliberadamente. El alcance conceptual completo y la justificación del rename viven en `Propuesta/que-es-un-charter.md`.
+> **Nota histórica.** En el experimento Sentinel `/plan-audit` que cristalizó este patrón (abril 2026, 6 ciclos), los Charters se llamaban *Plans*. El CLI StrayMark usa **Charter** going-forward para evitar la colisión nominal con el `plan.md` de GitHub SpecKit. Los archivos históricos de Sentinel preservan "Plan" deliberadamente. El alcance conceptual completo y la justificación del rename viven en `Propuesta/que-es-un-charter.md`.
 
 **Subcomandos:**
 
-- `devtrail charter new` — crea un nuevo Charter desde el template del framework
-- `devtrail charter list` — enumera Charters con filtros opcionales
-- `devtrail charter status` — muestra detalle de un Charter, o los 5 más recientes
-- `devtrail charter close` *(cli-3.7.0+)* — registra la telemetría post-ejecución y mueve el Charter a `closed`
-- `devtrail charter drift` *(cli-3.7.0+)* — chequea drift archivo-vs-commit con supresión AILOG-aware
-- `devtrail charter audit` *(cli-3.8.0+)* — orquesta una revisión externa multi-modelo (orchestration-only, ver más abajo)
+- `straymark charter new` — crea un nuevo Charter desde el template del framework
+- `straymark charter list` — enumera Charters con filtros opcionales
+- `straymark charter status` — muestra detalle de un Charter, o los 5 más recientes
+- `straymark charter close` *(cli-3.7.0+)* — registra la telemetría post-ejecución y mueve el Charter a `closed`
+- `straymark charter drift` *(cli-3.7.0+)* — chequea drift archivo-vs-commit con supresión AILOG-aware
+- `straymark charter audit` *(cli-3.8.0+)* — orquesta una revisión externa multi-modelo (orchestration-only, ver más abajo)
 
-#### `devtrail charter new [-t XS|S|M|L] [--from-ailog <id> | --from-spec <path>] [--title <titulo>] [path]`
+#### `straymark charter new [-t XS|S|M|L] [--from-ailog <id> | --from-spec <path>] [--title <titulo>] [path]`
 
 Crea un Charter desde el template del framework en `docs/charters/NN-slug.md`. Si no se pasa `--title`, se solicita interactivamente. Los dos flags de origen son mutuamente excluyentes a nivel de clap.
 
@@ -413,16 +413,16 @@ Cuando ningún flag de origen se pasa, ambos `originating_ailogs` y `originating
 
 ```bash
 # Standalone (sin origen) — prompt interactivo de título
-$ devtrail charter new --type M
+$ straymark charter new --type M
 
 # Modo mantenimiento / post-MVP — Charter rooteado en un AILOG existente
-$ devtrail charter new -t S --from-ailog AILOG-2026-04-28-021 --title "thresholds por servicio"
+$ straymark charter new -t S --from-ailog AILOG-2026-04-28-021 --title "thresholds por servicio"
 
 # Modo greenfield — Charter implementando un spec de SpecKit
-$ devtrail charter new -t L --from-spec specs/001-pagos/spec.md --title "integrar provider de pagos"
+$ straymark charter new -t L --from-spec specs/001-pagos/spec.md --title "integrar provider de pagos"
 ```
 
-#### `devtrail charter list [--status declared|in-progress|closed|all] [--origin ailog|spec|any] [path]`
+#### `straymark charter list [--status declared|in-progress|closed|all] [--origin ailog|spec|any] [path]`
 
 Enumera Charters como tabla.
 
@@ -434,7 +434,7 @@ Enumera Charters como tabla.
 
 Los archivos que no parsean se reportan como warnings en stderr sin abortar el comando — la tabla muestra lo que puede.
 
-#### `devtrail charter status [CHARTER-ID] [--path <dir>]`
+#### `straymark charter status [CHARTER-ID] [--path <dir>]`
 
 Con un ID: imprime el detalle completo del Charter (frontmatter, ubicación del archivo, lista de secciones del cuerpo). Sin ID: imprime los 5 Charters más recientes por NN descendente.
 
@@ -443,9 +443,9 @@ Con un ID: imprime el detalle completo del Charter (frontmatter, ubicación del 
 | `CHARTER-ID` | — | Identificador del Charter. Acepta el `charter_id` completo (`CHARTER-01-test`), el prefijo `CHARTER-NN` (`CHARTER-01`), o solo el NN numérico (`01` o `1`). El match numérico es permisivo respecto al zero-padding. |
 | `--path` | `.` | Directorio del proyecto. Es flag (no positional) para evitar colisión con el positional opcional `CHARTER-ID`. |
 
-#### `devtrail charter close <CHARTER-ID> [--from-template] [--non-interactive] [--path <dir>]`
+#### `straymark charter close <CHARTER-ID> [--from-template] [--non-interactive] [--path <dir>]`
 
-Registra la telemetría post-ejecución y mueve el status del Charter a `closed`. La telemetría se escribe en `.devtrail/charters/CHARTER-NN.telemetry.yaml` (archivo lateral, **no** embebido en el frontmatter del Charter — el frontmatter es declarativo ex-ante; la telemetría es voluminosa ex-post). El shape se valida contra `.devtrail/schemas/charter-telemetry.schema.v0.json`.
+Registra la telemetría post-ejecución y mueve el status del Charter a `closed`. La telemetría se escribe en `.straymark/charters/CHARTER-NN.telemetry.yaml` (archivo lateral, **no** embebido en el frontmatter del Charter — el frontmatter es declarativo ex-ante; la telemetría es voluminosa ex-post). El shape se valida contra `.straymark/schemas/charter-telemetry.schema.v0.json`.
 
 Dos modos:
 
@@ -465,7 +465,7 @@ Dos modos:
 **Ejemplo:**
 
 ```bash
-$ devtrail charter close CHARTER-01
+$ straymark charter close CHARTER-01
 
   Closing CHARTER-01-test-charter
     Title: Test charter
@@ -478,13 +478,13 @@ $ devtrail charter close CHARTER-01
   ...
 
   ✔ Charter CHARTER-01 closed.
-    Telemetry: .devtrail/charters/CHARTER-01.telemetry.yaml
+    Telemetry: .straymark/charters/CHARTER-01.telemetry.yaml
     Status updated: in-progress/declared → closed
 ```
 
-#### `devtrail charter drift <CHARTER-ID> [--range <REV..REV>] [--no-ailog-suppress] [--path <dir>]`
+#### `straymark charter drift <CHARTER-ID> [--range <REV..REV>] [--no-ailog-suppress] [--path <dir>]`
 
-Detecta drift archivo-vs-commit al cierre del Charter. Envuelve el script del framework `.devtrail/scripts/check-charter-drift.sh` (cero falsos positivos validados empíricamente en PLAN-05 retrospectivo + PLAN-06 prospectivo en Sentinel). El valor agregado del CLI sobre el script crudo es la **AILOG-awareness**: los paths reportados como "declarados pero no modificados" se silencian cuando aparecen en la sección `## Risk` / `## Riesgos` / `## 风险` de algún AILOG referenciado por `originating_ailogs` del Charter. Usa `--no-ailog-suppress` para deshabilitarlo.
+Detecta drift archivo-vs-commit al cierre del Charter. Envuelve el script del framework `.straymark/scripts/check-charter-drift.sh` (cero falsos positivos validados empíricamente en PLAN-05 retrospectivo + PLAN-06 prospectivo en Sentinel). El valor agregado del CLI sobre el script crudo es la **AILOG-awareness**: los paths reportados como "declarados pero no modificados" se silencian cuando aparecen en la sección `## Risk` / `## Riesgos` / `## 风险` de algún AILOG referenciado por `originating_ailogs` del Charter. Usa `--no-ailog-suppress` para deshabilitarlo.
 
 | Argumento/Flag | Default | Descripción |
 |---|---|---|
@@ -498,7 +498,7 @@ Detecta drift archivo-vs-commit al cierre del Charter. Envuelve el script del fr
 **Ejemplo:**
 
 ```bash
-$ devtrail charter drift CHARTER-01 --range origin/main..HEAD
+$ straymark charter drift CHARTER-01 --range origin/main..HEAD
 === Charter drift check ===
   Charter: docs/charters/01-test.md
   Range:   origin/main..HEAD
@@ -522,29 +522,29 @@ El chequeo de drift resuelve dos formas de wildcard en `## Files to modify`:
 
 | Forma | Ejemplo | Caso de uso |
 |---|---|---|
-| Elipsis | `` `.devtrail/07-ai-audit/agent-logs/AILOG-...md` `` | Cualquier path modificado con ese prefijo satisface el wildcard. Usado históricamente cuando un número desconocido de AILOGs serían creados durante la ejecución. |
-| Glob | `` `AILOG-*.md` `` o `` `src/services/foo-*.rs` `` | Cualquier path modificado que matchee el glob (`*` → `.*`) satisface el wildcard. Usado para declaraciones bulk de Charter donde un set parametrizado es tocado. Añadido en fw-4.9.0 tras la fricción surgida en Sentinel CHARTER-04 ([issue #81](https://github.com/StrangeDaysTech/devtrail/issues/81)). |
+| Elipsis | `` `.straymark/07-ai-audit/agent-logs/AILOG-...md` `` | Cualquier path modificado con ese prefijo satisface el wildcard. Usado históricamente cuando un número desconocido de AILOGs serían creados durante la ejecución. |
+| Glob | `` `AILOG-*.md` `` o `` `src/services/foo-*.rs` `` | Cualquier path modificado que matchee el glob (`*` → `.*`) satisface el wildcard. Usado para declaraciones bulk de Charter donde un set parametrizado es tocado. Añadido en fw-4.9.0 tras la fricción surgida en Sentinel CHARTER-04 ([issue #81](https://github.com/StrangeDaysTech/straymark/issues/81)). |
 
 Ambas formas se manejan en ambas direcciones: un wildcard declarado suprime tanto warnings de "declarado pero no modificado" (cuando al menos un archivo matching fue modificado) como warnings de "modificado pero no declarado" (cuando un path modificado matchea un wildcard declarado).
 
 #### Por diseño: rutas de gobernanza siempre están en scope
 
-Los paths bajo `docs/charters/*` y `.devtrail/07-ai-audit/*` **nunca** se reportan como "modificado pero no declarado". Es opinionated por diseño — esos paths son siempre legítimos cuando el Charter mismo o el AILOG de ejecución son tocados. Validado empíricamente en Sentinel CHARTER-04: un `git add -A` accidental stageó archivos no-tracked del usuario (`.claude/skills/`, `cmd/sentinel/sentinel`); la regla suprimió correctamente el ruido de gobernanza sin esconder la expansión genuina de archivos del proyecto ([issue #81 W2](https://github.com/StrangeDaysTech/devtrail/issues/81#issuecomment-update)).
+Los paths bajo `docs/charters/*` y `.straymark/07-ai-audit/*` **nunca** se reportan como "modificado pero no declarado". Es opinionated por diseño — esos paths son siempre legítimos cuando el Charter mismo o el AILOG de ejecución son tocados. Validado empíricamente en Sentinel CHARTER-04: un `git add -A` accidental stageó archivos no-tracked del usuario (`.claude/skills/`, `cmd/sentinel/sentinel`); la regla suprimió correctamente el ruido de gobernanza sin esconder la expansión genuina de archivos del proyecto ([issue #81 W2](https://github.com/StrangeDaysTech/straymark/issues/81#issuecomment-update)).
 
-Si corres un Charter cuyo scope explícito es churn de gobernanza (p.ej. un Charter de aprobación bulk que toca solo `.devtrail/07-ai-audit/`), el chequeo reportará 0 archivos modificados y necesitarás verificar el scope leyendo el AILOG. Un flag `--strict-scope` que deshabilite la regla "siempre en scope" está sobre la mesa para una minor futura si un adopter real reporta la asimetría como fricción.
+Si corres un Charter cuyo scope explícito es churn de gobernanza (p.ej. un Charter de aprobación bulk que toca solo `.straymark/07-ai-audit/`), el chequeo reportará 0 archivos modificados y necesitarás verificar el scope leyendo el AILOG. Un flag `--strict-scope` que deshabilite la regla "siempre en scope" está sobre la mesa para una minor futura si un adopter real reporta la asimetría como fricción.
 
-#### `devtrail charter audit <CHARTER-ID> [--range <REV..REV>] [--prepare | --merge-reports] [--merge-into <PATH>] [--path <dir>]`
+#### `straymark charter audit <CHARTER-ID> [--range <REV..REV>] [--prepare | --merge-reports] [--merge-into <PATH>] [--path <dir>]`
 
-*Disponible desde **cli-3.8.0** + **fw-4.7.0**. Flujo unificado v1 shippeado en **cli-3.10.0** + **fw-4.9.0** — reemplaza los 3 pasos v0 (PREPARE/CALIBRATE/FINALIZE) por 2 (PREPARE/MERGE-REPORTS), unifica la plantilla del auditor, y mueve los paths canónicos a `.devtrail/audits/`.*
+*Disponible desde **cli-3.8.0** + **fw-4.7.0**. Flujo unificado v1 shippeado en **cli-3.10.0** + **fw-4.9.0** — reemplaza los 3 pasos v0 (PREPARE/CALIBRATE/FINALIZE) por 2 (PREPARE/MERGE-REPORTS), unifica la plantilla del auditor, y mueve los paths canónicos a `.straymark/audits/`.*
 
-Orquesta una revisión externa multi-modelo de la ejecución de un Charter. **Orchestration-only** — el CLI prepara la plantilla unificada del audit, valida los reports de auditores contra el schema, y emite/mergea el bloque YAML `external_audit`. **NO invoca APIs de LLM.** El operador corre N CLIs auditoras (gemini-cli, claude-cli, copilot-cli, codex-cli — la que tenga) configuradas con acceso read-only al filesystem; cada una invoca el skill `/devtrail-audit-execute` para leer el prompt, auditar con tool use citando `path:line`, y escribir el report.
+Orquesta una revisión externa multi-modelo de la ejecución de un Charter. **Orchestration-only** — el CLI prepara la plantilla unificada del audit, valida los reports de auditores contra el schema, y emite/mergea el bloque YAML `external_audit`. **NO invoca APIs de LLM.** El operador corre N CLIs auditoras (gemini-cli, claude-cli, copilot-cli, codex-cli — la que tenga) configuradas con acceso read-only al filesystem; cada una invoca el skill `/straymark-audit-execute` para leer el prompt, auditar con tool use citando `path:line`, y escribir el report.
 
 Dos pasos, cada uno invocable independientemente:
 
 | Paso | Flag | Qué pasa |
 |---|---|---|
-| 1. PREPARE | `--prepare` (default) | Resuelve la plantilla unificada del audit contra el Charter + git diff + AILOGs origen. La escribe en `.devtrail/audits/<CHARTER-ID>/audit-prompt.md`. |
-| 2. MERGE-REPORTS | `--merge-reports` | Lee todos los archivos `report-*.md` en `.devtrail/audits/<CHARTER-ID>/` (uno por auditor que terminó). Valida cada uno contra `audit-output.schema.v0.json`. Emite el array YAML `external_audit` — combina con `--merge-into <PATH>` para anexarlo directamente a la telemetría del Charter. |
+| 1. PREPARE | `--prepare` (default) | Resuelve la plantilla unificada del audit contra el Charter + git diff + AILOGs origen. La escribe en `.straymark/audits/<CHARTER-ID>/audit-prompt.md`. |
+| 2. MERGE-REPORTS | `--merge-reports` | Lee todos los archivos `report-*.md` en `.straymark/audits/<CHARTER-ID>/` (uno por auditor que terminó). Valida cada uno contra `audit-output.schema.v0.json`. Emite el array YAML `external_audit` — combina con `--merge-into <PATH>` para anexarlo directamente a la telemetría del Charter. |
 
 | Argumento/Flag | Default | Descripción |
 |---|---|---|
@@ -557,68 +557,68 @@ Dos pasos, cada uno invocable independientemente:
 
 **Flags v0 deprecated (ocultos en `--help`):**
 
-- `--calibrate` — emite warning y sale con error. El paso v0 calibrate se reemplaza por la skill `/devtrail-audit-review` que reconcilia N reports inline con acceso al filesystem (sin prompt paste-based separado).
+- `--calibrate` — emite warning y sale con error. El paso v0 calibrate se reemplaza por la skill `/straymark-audit-review` que reconcilia N reports inline con acceso al filesystem (sin prompt paste-based separado).
 - `--finalize` — alias deprecated de `--merge-reports` con comportamiento backwards-compat. Emite warning y rutea por la nueva ruta.
 
 ##### Recomendación de heterogeneidad (no enforced en v0)
 
 El par de auditores debería ser de **familias de modelo distintas**: uno Anthropic + uno Google + uno OpenAI, en cualquier combinación, nunca dos de la misma familia. La heterogeneidad inter-familia es lo que hace que la convergencia en findings sea de alta señal — auditores de la misma familia comparten blind spots.
 
-v1 soporta **N≥2 auditores** (ya no fijo a 2). El operador puede optar por 3 o 4 auditores para Charters de alto riesgo, incluyendo modelos especializados. La skill `/devtrail-audit-review` itera sobre todos los archivos `report-*.md` en el audit dir.
+v1 soporta **N≥2 auditores** (ya no fijo a 2). El operador puede optar por 3 o 4 auditores para Charters de alto riesgo, incluyendo modelos especializados. La skill `/straymark-audit-review` itera sobre todos los archivos `report-*.md` en el audit dir.
 
-El rol calibrador se mueve de una plantilla paste-based (v0) al agente principal in-conversation vía la skill `/devtrail-audit-review` — su tarea es definicional (reconciliar veredictos ya producidos), por lo que la heterogeneidad respecto al implementador NO es requerida.
+El rol calibrador se mueve de una plantilla paste-based (v0) al agente principal in-conversation vía la skill `/straymark-audit-review` — su tarea es definicional (reconciliar veredictos ya producidos), por lo que la heterogeneidad respecto al implementador NO es requerida.
 
 ##### Layout canónico producido (v1)
 
 ```
-.devtrail/audits/CHARTER-NN/
+.straymark/audits/CHARTER-NN/
 ├── audit-prompt.md                          # resuelto por --prepare (single unified prompt)
-├── report-claude-sonnet-4-6.md              # escrito por /devtrail-audit-execute en claude-cli
-├── report-gemini-2-5-pro.md                 # escrito por /devtrail-audit-execute en gemini-cli
+├── report-claude-sonnet-4-6.md              # escrito por /straymark-audit-execute en claude-cli
+├── report-gemini-2-5-pro.md                 # escrito por /straymark-audit-execute en gemini-cli
 ├── report-gpt-5-3-codex.md                  # 3er auditor opcional
-├── review.md                                # escrito por /devtrail-audit-review (análisis consolidado de 6 secciones)
-└── external-audit-pending.yaml              # escrito por /devtrail-audit-review cuando la telemetría aún no existe (Branch B)
+├── review.md                                # escrito por /straymark-audit-review (análisis consolidado de 6 secciones)
+└── external-audit-pending.yaml              # escrito por /straymark-audit-review cuando la telemetría aún no existe (Branch B)
 ```
 
-El directorio está namespaceado bajo `.devtrail/` para evitar colisiones con carpetas `audit/` que el adoptante haya definido. El shape `<UNIT-TYPE>-<UNIT-ID>` deja espacio para futuras categorías de unidad de auditoría más allá de Charter (ej. `MODULE-payments/`, `RELEASE-v2.0/`) sin reestructurar.
+El directorio está namespaceado bajo `.straymark/` para evitar colisiones con carpetas `audit/` que el adoptante haya definido. El shape `<UNIT-TYPE>-<UNIT-ID>` deja espacio para futuras categorías de unidad de auditoría más allá de Charter (ej. `MODULE-payments/`, `RELEASE-v2.0/`) sin reestructurar.
 
-Los adopters pueden `git add` el directorio entero `.devtrail/audits/` para un audit trail completamente versionado, o `.gitignore` si prefieren un ciclo efímero.
+Los adopters pueden `git add` el directorio entero `.straymark/audits/` para un audit trail completamente versionado, o `.gitignore` si prefieren un ciclo efímero.
 
 **Ejemplo (v1, con los wrappers de skills — recomendado para flujos IDE-driven):**
 
 ```bash
 # En el IDE principal (Claude Code, Gemini Code, Cursor, ...):
-> /devtrail-audit-prompt CHARTER-05
-  → corre `devtrail charter audit CHARTER-05 --prepare`
-  → escribe .devtrail/audits/CHARTER-05/audit-prompt.md
+> /straymark-audit-prompt CHARTER-05
+  → corre `straymark charter audit CHARTER-05 --prepare`
+  → escribe .straymark/audits/CHARTER-05/audit-prompt.md
   → instruye al operador abrir CLIs auditoras
 
 # En claude-cli (con acceso read al repo):
-> /devtrail-audit-execute CHARTER-05
-  → escribe .devtrail/audits/CHARTER-05/report-claude-sonnet-4-6.md
+> /straymark-audit-execute CHARTER-05
+  → escribe .straymark/audits/CHARTER-05/report-claude-sonnet-4-6.md
   → recuerda al operador esperar a TODAS las auditorías antes de review
 
 # En gemini-cli:
-> /devtrail-audit-execute CHARTER-05
-  → escribe .devtrail/audits/CHARTER-05/report-gemini-2-5-pro.md
+> /straymark-audit-execute CHARTER-05
+  → escribe .straymark/audits/CHARTER-05/report-gemini-2-5-pro.md
 
 # De vuelta en el IDE principal, después de que TODAS las auditorías terminen:
-> /devtrail-audit-review CHARTER-05
+> /straymark-audit-review CHARTER-05
   → lee N reports, verifica cada finding contra el código
-  → escribe .devtrail/audits/CHARTER-05/review.md (consolidado de 6 secciones)
-  → corre `devtrail charter audit CHARTER-05 --merge-reports --merge-into <telemetría>`
+  → escribe .straymark/audits/CHARTER-05/review.md (consolidado de 6 secciones)
+  → corre `straymark charter audit CHARTER-05 --merge-reports --merge-into <telemetría>`
   → external_audit YAML mergeado en la telemetría del Charter
 ```
 
-> **¿Por qué orchestration-only?** Implementar 3 HTTP clients (OpenAI / Google / Anthropic) son 1-2 semanas + mantenimiento perpetuo. v1 audit-skills extiende el orchestration-only a un segundo modo (CLI auditor-side con tool use enforcement) donde el operador corre sus propias CLIs auditoras y los prompts de DevTrail enforzan la disciplina (`citar path:línea de archivos efectivamente abiertos`). DevTrail no maneja API keys, no invoca APIs, no mantiene HTTP clients.
+> **¿Por qué orchestration-only?** Implementar 3 HTTP clients (OpenAI / Google / Anthropic) son 1-2 semanas + mantenimiento perpetuo. v1 audit-skills extiende el orchestration-only a un segundo modo (CLI auditor-side con tool use enforcement) donde el operador corre sus propias CLIs auditoras y los prompts de StrayMark enforzan la disciplina (`citar path:línea de archivos efectivamente abiertos`). StrayMark no maneja API keys, no invoca APIs, no mantiene HTTP clients.
 
-> **Alternativa con skill *(fw-4.9.0+, expandida en fw-4.9.0)*.** Tres skills envuelven el CLI para flujos IDE-driven: `/devtrail-audit-prompt CHARTER-ID` (llama a `--prepare`), `/devtrail-audit-execute CHARTER-ID` (corre en CLIs auditoras para leer el prompt y escribir un report), y `/devtrail-audit-review CHARTER-ID` (consolida N reports en `review.md` y mergea YAML). Con estas skills el operador nunca copia/pega prompts ni reports — el intercambio sucede vía paths canónicos del filesystem bajo `.devtrail/audits/`. Ver la sección [Skills](#skills) más abajo. El CLI sigue siendo la fuente única de verdad — las skills solo añaden UX-inline.
+> **Alternativa con skill *(fw-4.9.0+, expandida en fw-4.9.0)*.** Tres skills envuelven el CLI para flujos IDE-driven: `/straymark-audit-prompt CHARTER-ID` (llama a `--prepare`), `/straymark-audit-execute CHARTER-ID` (corre en CLIs auditoras para leer el prompt y escribir un report), y `/straymark-audit-review CHARTER-ID` (consolida N reports en `review.md` y mergea YAML). Con estas skills el operador nunca copia/pega prompts ni reports — el intercambio sucede vía paths canónicos del filesystem bajo `.straymark/audits/`. Ver la sección [Skills](#skills) más abajo. El CLI sigue siendo la fuente única de verdad — las skills solo añaden UX-inline.
 
 ---
 
-### `devtrail compliance [path] [--standard <nombre>] [--region <nombre>] [--all] [--output <formato>]`
+### `straymark compliance [path] [--standard <nombre>] [--region <nombre>] [--all] [--output <formato>]`
 
-Verifica cumplimiento regulatorio. Por defecto evalúa los estándares cuya región esté incluida en `regional_scope` de `.devtrail/config.yml` (default `[global, eu]`). Seis frameworks chinos disponibles opt-in cuando `china` se añade a `regional_scope`.
+Verifica cumplimiento regulatorio. Por defecto evalúa los estándares cuya región esté incluida en `regional_scope` de `.straymark/config.yml` (default `[global, eu]`). Seis frameworks chinos disponibles opt-in cuando `china` se añade a `regional_scope`.
 
 **Argumentos y flags:**
 
@@ -645,19 +645,19 @@ Precedencia: `--standard` > `--all` > `--region` > el `regional_scope` del proye
 
 ```bash
 # Default: solo estándares cuya región esté en regional_scope
-$ devtrail compliance
+$ straymark compliance
 
 # Los seis frameworks chinos (requiere regional_scope: china)
-$ devtrail compliance --region china
+$ straymark compliance --region china
 
 # Un solo framework chino
-$ devtrail compliance --standard china-pipl --output json
+$ straymark compliance --standard china-pipl --output json
 
 # Todos los estándares ignorando regional_scope
-$ devtrail compliance --all
+$ straymark compliance --all
 ```
 
-> **Activación**: para evaluar los frameworks chinos automáticamente, añadir a `.devtrail/config.yml`:
+> **Activación**: para evaluar los frameworks chinos automáticamente, añadir a `.straymark/config.yml`:
 >
 > ```yaml
 > regional_scope:
@@ -668,7 +668,7 @@ $ devtrail compliance --all
 
 ---
 
-### `devtrail metrics [path] [--period <periodo>] [--output <formato>]`
+### `straymark metrics [path] [--period <periodo>] [--output <formato>]`
 
 Muestra métricas de gobernanza y estadísticas de documentación.
 
@@ -690,7 +690,7 @@ Muestra métricas de gobernanza y estadísticas de documentación.
 
 ---
 
-### `devtrail analyze [path] [--threshold <N>] [--output <formato>] [--top <N>]`
+### `straymark analyze [path] [--threshold <N>] [--output <formato>] [--top <N>]`
 
 Analiza la complejidad del código fuente usando métricas cognitivas y ciclomáticas, impulsado por [arborist-metrics](https://crates.io/crates/arborist-metrics).
 
@@ -705,9 +705,9 @@ Analiza la complejidad del código fuente usando métricas cognitivas y ciclomá
 
 **Lenguajes soportados:** Rust, Python, JavaScript, TypeScript, Java, Go, C, C++, C#, PHP, Kotlin, Swift
 
-**Resolución de umbral:** flag CLI → `.devtrail/config.yml` → predeterminado (8)
+**Resolución de umbral:** flag CLI → `.straymark/config.yml` → predeterminado (8)
 
-**Configuración** (opcional, en `.devtrail/config.yml`):
+**Configuración** (opcional, en `.straymark/config.yml`):
 
 ```yaml
 complexity:
@@ -718,22 +718,22 @@ complexity:
 
 ```bash
 # Analizar directorio actual
-$ devtrail analyze
+$ straymark analyze
 
 # Umbral personalizado y top 10
-$ devtrail analyze --threshold 5 --top 10
+$ straymark analyze --threshold 5 --top 10
 
 # Salida JSON para integración CI
-$ devtrail analyze --output json
+$ straymark analyze --output json
 
 # Analizar un proyecto específico
-$ devtrail analyze /ruta/al/proyecto
+$ straymark analyze /ruta/al/proyecto
 ```
 
 **Ejemplo de salida:**
 
 ```
-  DevTrail Analyze
+  StrayMark Analyze
   /home/user/project
   Threshold: cognitive complexity > 8
 
@@ -752,13 +752,13 @@ $ devtrail analyze /ruta/al/proyecto
     → Average cognitive complexity: 3.8
 ```
 
-> **Nota:** Este comando funciona sin `devtrail init`. Opera sobre archivos fuente, no documentos DevTrail. La feature `analyze` se puede desactivar en compilación con `--no-default-features`.
+> **Nota:** Este comando funciona sin `straymark init`. Opera sobre archivos fuente, no documentos StrayMark. La feature `analyze` se puede desactivar en compilación con `--no-default-features`.
 
-> **Trigger de documentación:** Los agentes de IA usan `devtrail analyze --output json` como método primario para determinar cuándo crear documentos AILOG. Si `summary.above_threshold > 0` en la salida JSON, el agente debe crear un AILOG. Cuando el CLI no está disponible, los agentes usan la heurística de >20 líneas de lógica de negocio como alternativa.
+> **Trigger de documentación:** Los agentes de IA usan `straymark analyze --output json` como método primario para determinar cuándo crear documentos AILOG. Si `summary.above_threshold > 0` en la salida JSON, el agente debe crear un AILOG. Cuando el CLI no está disponible, los agentes usan la heurística de >20 líneas de lógica de negocio como alternativa.
 
 ---
 
-### `devtrail audit [path] [--from <fecha>] [--to <fecha>] [--system <nombre>] [--output <formato>]`
+### `straymark audit [path] [--from <fecha>] [--to <fecha>] [--system <nombre>] [--output <formato>]`
 
 Genera reportes de trazas de auditoría con línea temporal, mapa de trazabilidad y resumen de cumplimiento.
 
@@ -790,9 +790,9 @@ Genera reportes de trazas de auditoría con línea temporal, mapa de trazabilida
 
 ---
 
-### `devtrail explore [path]`
+### `straymark explore [path]`
 
-Explora y lee la documentación de DevTrail interactivamente en una interfaz de terminal (TUI).
+Explora y lee la documentación de StrayMark interactivamente en una interfaz de terminal (TUI).
 
 **Argumentos:**
 
@@ -809,7 +809,7 @@ Explora y lee la documentación de DevTrail interactivamente en una interfaz de 
 **Orden de resolución del idioma** (desde cli-3.5.2):
 
 1. Flag `--lang <código>`, cuando se especifica
-2. Campo `language` en `.devtrail/config.yml`, cuando el archivo existe (un valor explícito — incluso `language: en` — se respeta como una decisión deliberada del usuario)
+2. Campo `language` en `.straymark/config.yml`, cuando el archivo existe (un valor explícito — incluso `language: en` — se respeta como una decisión deliberada del usuario)
 3. Variables de entorno `$LC_ALL` / `$LANG`, mapeadas a un idioma soportado (p.ej., `zh_CN.UTF-8` → `zh-CN`, `es_MX.UTF-8` → `es`). Chino tradicional (`zh_TW` / `zh_HK`) y otros locales no soportados pasan al siguiente fallback.
 4. `en`
 
@@ -821,7 +821,7 @@ Explora y lee la documentación de DevTrail interactivamente en una interfaz de 
 - Navegación entre documentos relacionados mediante hipervínculos
 - Búsqueda por nombre de archivo, título, tags o fecha
 - Modo pantalla completa, con `j` / `k` como teclas alternas para `↓` / `↑`
-- Consciente de localización: los docs del framework (`QUICK-REFERENCE`, `AGENT-RULES`, guías regulatorias de China, etc.) se sirven en el idioma definido por `language` en `.devtrail/config.yml` o por `--lang`
+- Consciente de localización: los docs del framework (`QUICK-REFERENCE`, `AGENT-RULES`, guías regulatorias de China, etc.) se sirven en el idioma definido por `language` en `.straymark/config.yml` o por `--lang`
 
 **Atajos de teclado:**
 
@@ -840,29 +840,29 @@ Explora y lee la documentación de DevTrail interactivamente en una interfaz de 
 **Ejemplos:**
 
 ```bash
-$ devtrail explore                       # usa config.language (default en)
-$ devtrail explore --lang zh-CN          # navegar docs del framework en chino simplificado
-$ devtrail explore --lang es             # override de sesión a español
+$ straymark explore                       # usa config.language (default en)
+$ straymark explore --lang zh-CN          # navegar docs del framework en chino simplificado
+$ straymark explore --lang es             # override de sesión a español
 ```
 
 > **Nota:** El comando `explore` requiere la feature `tui` (habilitada por defecto). Para compilar sin ella: `cargo build --no-default-features`.
 
 ---
 
-### `devtrail about`
+### `straymark about`
 
 Muestra información de versión, autoría y licencia.
 
 **Ejemplo:**
 
 ```bash
-$ devtrail about
-DevTrail CLI
+$ straymark about
+StrayMark CLI
   CLI version:       cli-3.5.2
   Framework version: fw-4.10.0
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
-  Repository:        https://github.com/StrangeDaysTech/devtrail
+  Repository:        https://github.com/StrangeDaysTech/straymark
   Website:           https://strangedays.tech
 ```
 
@@ -870,7 +870,7 @@ DevTrail CLI
 
 ## Skills
 
-DevTrail incluye un conjunto de skills (slash commands) para usar dentro de un asistente IA (Claude Code, Gemini Code, Cursor, runtimes de agente genérico). Cada skill se instala en 3 formas paralelas durante `devtrail init`:
+StrayMark incluye un conjunto de skills (slash commands) para usar dentro de un asistente IA (Claude Code, Gemini Code, Cursor, runtimes de agente genérico). Cada skill se instala en 3 formas paralelas durante `straymark init`:
 
 - `dist/.claude/skills/<skill>/SKILL.md` (Claude — frontmatter con `allowed-tools`)
 - `dist/.gemini/skills/<skill>/SKILL.md` (Gemini — frontmatter sin `allowed-tools`)
@@ -878,26 +878,26 @@ DevTrail incluye un conjunto de skills (slash commands) para usar dentro de un a
 
 | Skill | Propósito | Archivos producidos |
 |---|---|---|
-| `/devtrail-status` | Verificar cumplimiento de documentación para cambios recientes. | ninguno (read-only) |
-| `/devtrail-new` | Crear cualquier tipo de documento interactivamente. Sugiere el más adecuado al contexto. | `.devtrail/<dir-tipo>/<TIPO>-YYYY-MM-DD-NNN-*.md` |
-| `/devtrail-ailog` | Atajo de creación rápida de AILOG. | `.devtrail/07-ai-audit/agent-logs/AILOG-*.md` |
-| `/devtrail-aidec` | Atajo de creación rápida de AIDEC. | `.devtrail/07-ai-audit/decisions/AIDEC-*.md` |
-| `/devtrail-adr` | Atajo de creación rápida de ADR. | `.devtrail/04-architecture/decisions/ADR-*.md` |
-| `/devtrail-mcard` | Flujo interactivo de creación de Model Card. | `.devtrail/09-ai-models/MCARD-*.md` |
-| `/devtrail-sec` | Flujo interactivo SEC (security assessment). | `.devtrail/08-security/SEC-*.md` |
-| `/devtrail-audit-prompt CHARTER-ID` *(fw-4.9.0+, refactorizada en fw-4.9.0)* | Genera la plantilla unificada del audit prompt para un Charter en el path canónico. Envuelve `devtrail charter audit --prepare`. El operador entonces abre N CLIs auditoras en el mismo repo e invoca `/devtrail-audit-execute` en cada una — sin copy/paste. | `.devtrail/audits/<CHARTER-ID>/audit-prompt.md` |
-| `/devtrail-audit-execute [CHARTER-ID]` *(fw-4.9.0+)* | **Corre dentro de una CLI auditora** (gemini-cli, claude-cli, copilot-cli, codex-cli, ...). Lee el prompt preparado del disco, audita con tool use citando `path:línea`, escribe un report con el id del modelo en el nombre. El argumento CHARTER-ID es opcional — auto-descubre prompts que aún no tienen report de este modelo. | `.devtrail/audits/<CHARTER-ID>/report-<sluggified-model-id>.md` |
-| `/devtrail-audit-review CHARTER-ID` *(fw-4.9.0+, expandida en fw-4.9.0)* | Contraparte de `/devtrail-audit-prompt`. Lee N reports en `.devtrail/audits/<CHARTER-ID>/`, verifica cada finding contra el código real (Explore agents en paralelo), produce un `review.md` consolidado de seis secciones (Resumen ejecutivo, Alcance, Evaluación por auditor, Plan de remediación P0-P4, Hallazgos descartados, Calificación de auditores), y corre `devtrail charter audit --merge-reports --merge-into` para anexar `external_audit:` en la telemetría del Charter. Si la telemetría aún no existe (Charter no cerrado), escribe `external-audit-pending.yaml` para merge posterior al close. | `.devtrail/audits/<CHARTER-ID>/review.md`, array `external_audit:` mergeado en telemetría (o pending YAML) |
+| `/straymark-status` | Verificar cumplimiento de documentación para cambios recientes. | ninguno (read-only) |
+| `/straymark-new` | Crear cualquier tipo de documento interactivamente. Sugiere el más adecuado al contexto. | `.straymark/<dir-tipo>/<TIPO>-YYYY-MM-DD-NNN-*.md` |
+| `/straymark-ailog` | Atajo de creación rápida de AILOG. | `.straymark/07-ai-audit/agent-logs/AILOG-*.md` |
+| `/straymark-aidec` | Atajo de creación rápida de AIDEC. | `.straymark/07-ai-audit/decisions/AIDEC-*.md` |
+| `/straymark-adr` | Atajo de creación rápida de ADR. | `.straymark/04-architecture/decisions/ADR-*.md` |
+| `/straymark-mcard` | Flujo interactivo de creación de Model Card. | `.straymark/09-ai-models/MCARD-*.md` |
+| `/straymark-sec` | Flujo interactivo SEC (security assessment). | `.straymark/08-security/SEC-*.md` |
+| `/straymark-audit-prompt CHARTER-ID` *(fw-4.9.0+, refactorizada en fw-4.9.0)* | Genera la plantilla unificada del audit prompt para un Charter en el path canónico. Envuelve `straymark charter audit --prepare`. El operador entonces abre N CLIs auditoras en el mismo repo e invoca `/straymark-audit-execute` en cada una — sin copy/paste. | `.straymark/audits/<CHARTER-ID>/audit-prompt.md` |
+| `/straymark-audit-execute [CHARTER-ID]` *(fw-4.9.0+)* | **Corre dentro de una CLI auditora** (gemini-cli, claude-cli, copilot-cli, codex-cli, ...). Lee el prompt preparado del disco, audita con tool use citando `path:línea`, escribe un report con el id del modelo en el nombre. El argumento CHARTER-ID es opcional — auto-descubre prompts que aún no tienen report de este modelo. | `.straymark/audits/<CHARTER-ID>/report-<sluggified-model-id>.md` |
+| `/straymark-audit-review CHARTER-ID` *(fw-4.9.0+, expandida en fw-4.9.0)* | Contraparte de `/straymark-audit-prompt`. Lee N reports en `.straymark/audits/<CHARTER-ID>/`, verifica cada finding contra el código real (Explore agents en paralelo), produce un `review.md` consolidado de seis secciones (Resumen ejecutivo, Alcance, Evaluación por auditor, Plan de remediación P0-P4, Hallazgos descartados, Calificación de auditores), y corre `straymark charter audit --merge-reports --merge-into` para anexar `external_audit:` en la telemetría del Charter. Si la telemetría aún no existe (Charter no cerrado), escribe `external-audit-pending.yaml` para merge posterior al close. | `.straymark/audits/<CHARTER-ID>/review.md`, array `external_audit:` mergeado en telemetría (o pending YAML) |
 
 ### Skill vs CLI
 
-Las tres skills de auditoría son **wrappers** sobre los comandos del CLI y la disciplina del flujo. Los paths canónicos bajo `.devtrail/audits/`, la plantilla unificada del prompt, la validación de schema, y el shape de `external_audit` viven en el CLI + framework — las skills manejan la parte UX-inline: dispatchan al operador a través del audit cycle sin gestión manual de archivos. **El operador nunca copia/pega prompts ni reports** — las skills intercambian artefactos vía los paths canónicos del filesystem.
+Las tres skills de auditoría son **wrappers** sobre los comandos del CLI y la disciplina del flujo. Los paths canónicos bajo `.straymark/audits/`, la plantilla unificada del prompt, la validación de schema, y el shape de `external_audit` viven en el CLI + framework — las skills manejan la parte UX-inline: dispatchan al operador a través del audit cycle sin gestión manual de archivos. **El operador nunca copia/pega prompts ni reports** — las skills intercambian artefactos vía los paths canónicos del filesystem.
 
-Adoptantes que usen DevTrail sin asistente IA en el loop pueden manejar el mismo workflow directamente vía `devtrail charter audit` (`--prepare` / `--merge-reports [--merge-into <path>]`). El audit prompt en `.devtrail/audits/<id>/audit-prompt.md` funciona igualmente bien pegado en un LLM de chat si no hay CLI auditora disponible — la skill solo automatiza el intercambio de archivos.
+Adoptantes que usen StrayMark sin asistente IA en el loop pueden manejar el mismo workflow directamente vía `straymark charter audit` (`--prepare` / `--merge-reports [--merge-into <path>]`). El audit prompt en `.straymark/audits/<id>/audit-prompt.md` funciona igualmente bien pegado en un LLM de chat si no hay CLI auditora disponible — la skill solo automatiza el intercambio de archivos.
 
 ### Audit checkpoint *(fw-4.9.0+)*
 
-`.devtrail/00-governance/AGENT-RULES.md` §12 codifica un checkpoint del workflow donde el agente proactivamente ofrece la auditoría en un momento específico — cuando la implementación del Charter está lista, drift está limpio, y `charter close` no se ha invocado aún. La recomendación es SÍ/NO basada en heurísticas (superficie de seguridad, componentes nuevos, riesgos AILOG, complejidad). La auditoría externa es **completamente opcional**; el checkpoint es **soft** — nunca bloquea `charter close`, nunca enforced (decisión de diseño v0+v1 permanente).
+`.straymark/00-governance/AGENT-RULES.md` §12 codifica un checkpoint del workflow donde el agente proactivamente ofrece la auditoría en un momento específico — cuando la implementación del Charter está lista, drift está limpio, y `charter close` no se ha invocado aún. La recomendación es SÍ/NO basada en heurísticas (superficie de seguridad, componentes nuevos, riesgos AILOG, complejidad). La auditoría externa es **completamente opcional**; el checkpoint es **soft** — nunca bloquea `charter close`, nunca enforced (decisión de diseño v0+v1 permanente).
 
 ---
 
@@ -920,7 +920,7 @@ Adoptantes que usen DevTrail sin asistente IA en el loop pueden manejar el mismo
 
 <div align="center">
 
-**DevTrail** — Porque cada cambio cuenta una historia.
+**StrayMark** — Porque cada cambio cuenta una historia.
 
 [Volver a docs](../../README.md) • [README](../README.md) • [Strange Days Tech](https://strangedays.tech)
 
