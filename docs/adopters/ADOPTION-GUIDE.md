@@ -239,7 +239,7 @@ The CLI automatically:
 
 1. **Download the latest release**
 
-   Go to [GitHub Releases](https://github.com/StrangeDaysTech/straymark/releases) and download the latest `fw-*` release ZIP (e.g., `fw-4.10.0`).
+   Go to [GitHub Releases](https://github.com/StrangeDaysTech/straymark/releases) and download the latest `fw-*` release ZIP (e.g., `fw-4.11.0`).
 
 2. **Extract to your project**
    ```bash
