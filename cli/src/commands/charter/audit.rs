@@ -98,7 +98,12 @@ pub fn run(
     // Resolve the Charter.
     let (charters, _errors) = charter::discover_and_parse(project_root);
     let charter = charter::find_by_id(&charters, charter_id)
-        .ok_or_else(|| anyhow!("Charter {} not found in docs/charters/", charter_id))?
+        .ok_or_else(|| {
+            anyhow!(
+                "Charter {} not found in .straymark/charters/.\n  hint: run `straymark charter list` to see discovered Charters.",
+                charter_id
+            )
+        })?
         .clone();
 
     let canonical_id = canonical_charter_id(&charter.frontmatter.charter_id);

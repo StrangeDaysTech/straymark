@@ -20,7 +20,7 @@ use chrono::Local;
 use colored::Colorize;
 use std::path::{Path, PathBuf};
 
-use crate::charter::{self, Charter, CharterStatus};
+use crate::charter::{self, charters_dir, Charter, CharterStatus};
 use crate::prompts;
 use crate::telemetry_schema::TelemetrySchema;
 use crate::utils;
@@ -39,13 +39,19 @@ pub fn run(
     // Resolve the Charter.
     let (charters, _errors) = charter::discover_and_parse(project_root);
     let charter = charter::find_by_id(&charters, charter_id)
-        .ok_or_else(|| anyhow!("Charter {} not found in docs/charters/", charter_id))?
+        .ok_or_else(|| {
+            anyhow!(
+                "Charter {} not found in .straymark/charters/.\n  hint: run `straymark charter list` to see discovered Charters.",
+                charter_id
+            )
+        })?
         .clone();
 
-    // Decide telemetry destination.
-    let charters_state_dir = straymark_dir.join("charters");
-    utils::ensure_dir(&charters_state_dir)?;
-    let telemetry_path = telemetry_path_for(&charters_state_dir, &charter);
+    // Decide telemetry destination — declarative .md and telemetry .yaml share
+    // the same directory by design (see charters_dir docstring).
+    let telemetry_dir = charters_dir(project_root);
+    utils::ensure_dir(&telemetry_dir)?;
+    let telemetry_path = telemetry_path_for(&telemetry_dir, &charter);
 
     // F7 (cli-3.8.0): differentiate first-run vs subsequent-run output.
     // Pre-existence check happens BEFORE any write so we can report

@@ -109,8 +109,8 @@ fn charter_new_no_origin_creates_file_with_defaults() {
         .success()
         .stdout(predicate::str::contains("Created:"));
 
-    let charters_dir = dir.path().join("docs").join("charters");
-    assert!(charters_dir.exists(), "docs/charters/ should exist");
+    let charters_dir = dir.path().join(".straymark").join("charters");
+    assert!(charters_dir.exists(), ".straymark/charters/ should exist");
     let entries: Vec<_> = std::fs::read_dir(&charters_dir).unwrap().flatten().collect();
     assert_eq!(entries.len(), 1, "should have exactly one Charter file");
 
@@ -147,7 +147,7 @@ fn charter_new_explicit_effort_is_substituted() {
         .assert()
         .success();
 
-    let path = dir.path().join("docs/charters/01-big-work.md");
+    let path = dir.path().join(".straymark/charters/01-big-work.md");
     let content = std::fs::read_to_string(&path).unwrap();
     assert!(content.contains("effort_estimate: L"), "{}", content);
     // Prose mirror line also reflects the chosen effort.
@@ -171,7 +171,7 @@ fn charter_new_with_from_ailog_uncomments_origin() {
         .assert()
         .success();
 
-    let path = dir.path().join("docs/charters/01-from-ailog.md");
+    let path = dir.path().join(".straymark/charters/01-from-ailog.md");
     let content = std::fs::read_to_string(&path).unwrap();
     // Frontmatter origin uncommented and populated.
     assert!(
@@ -206,7 +206,7 @@ fn charter_new_with_from_spec_uncomments_origin() {
         .assert()
         .success();
 
-    let path = dir.path().join("docs/charters/01-from-spec.md");
+    let path = dir.path().join(".straymark/charters/01-from-spec.md");
     let content = std::fs::read_to_string(&path).unwrap();
     assert!(
         content.contains("originating_spec: specs/001-test/spec.md"),
@@ -278,11 +278,11 @@ fn charter_new_increments_sequence_number() {
             .success();
 
         let expected_filename = format!("{:02}-{}.md", n, title.to_lowercase());
-        let path = dir.path().join("docs/charters").join(&expected_filename);
+        let path = dir.path().join(".straymark/charters").join(&expected_filename);
         assert!(path.exists(), "expected {} to exist", path.display());
     }
 
-    let entries: Vec<_> = std::fs::read_dir(dir.path().join("docs/charters"))
+    let entries: Vec<_> = std::fs::read_dir(dir.path().join(".straymark/charters"))
         .unwrap()
         .flatten()
         .collect();
@@ -337,7 +337,7 @@ fn charter_new_uses_es_template_when_config_says_es() {
         .success();
 
     let content =
-        std::fs::read_to_string(dir.path().join("docs/charters/01-hola-mundo.md")).unwrap();
+        std::fs::read_to_string(dir.path().join(".straymark/charters/01-hola-mundo.md")).unwrap();
     assert!(content.contains("ES body"), "expected ES template selected, got: {}", content);
     assert!(content.contains("# Charter: Hola Mundo"));
 }
@@ -397,7 +397,7 @@ fn charter_list_filter_status_declared() {
     setup_straymark_with_charter_template(dir.path());
     create_three_charters(dir.path());
     // Mark the first one as closed.
-    let p = dir.path().join("docs/charters/01-first.md");
+    let p = dir.path().join(".straymark/charters/01-first.md");
     let content = std::fs::read_to_string(&p).unwrap();
     std::fs::write(&p, content.replace("status: declared", "status: closed")).unwrap();
 
@@ -421,7 +421,7 @@ fn charter_list_filter_status_declared() {
 fn charter_list_filter_origin_ailog() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_charter_template(dir.path());
-    let charters_dir = dir.path().join("docs/charters");
+    let charters_dir = dir.path().join(".straymark/charters");
     std::fs::create_dir_all(&charters_dir).unwrap();
 
     // One Charter with --from-ailog (tested via the actual command).
@@ -620,7 +620,7 @@ fn validate_without_flag_skips_charter_checks() {
     // field) still passes `straymark validate` when --include-charters is absent.
     let dir = TempDir::new().unwrap();
     setup_straymark_full(dir.path());
-    let charters_dir = dir.path().join("docs/charters");
+    let charters_dir = dir.path().join(".straymark/charters");
     std::fs::create_dir_all(&charters_dir).unwrap();
     // Write a Charter missing the required `trigger` field. Without
     // --include-charters the validator should not even look at it.
@@ -658,7 +658,7 @@ fn validate_with_flag_passes_for_valid_charter() {
 fn validate_with_flag_fails_on_missing_required_field() {
     let dir = TempDir::new().unwrap();
     setup_straymark_full(dir.path());
-    let charters_dir = dir.path().join("docs/charters");
+    let charters_dir = dir.path().join(".straymark/charters");
     std::fs::create_dir_all(&charters_dir).unwrap();
     // Frontmatter is missing `trigger` — schema should reject.
     std::fs::write(
@@ -682,7 +682,7 @@ fn validate_with_flag_fails_on_invalid_status_enum() {
     let dir = TempDir::new().unwrap();
     setup_straymark_full(dir.path());
     create_charter_via_cli(dir.path(), "bad status", &[]);
-    let p = dir.path().join("docs/charters/01-bad-status.md");
+    let p = dir.path().join(".straymark/charters/01-bad-status.md");
     let content = std::fs::read_to_string(&p).unwrap();
     std::fs::write(&p, content.replace("status: declared", "status: unknown-state")).unwrap();
 
@@ -786,7 +786,7 @@ fn validate_fails_when_originating_spec_path_missing() {
 fn validate_warns_when_charter_schema_missing() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_charter_template(dir.path()); // no schema written
-    let charters_dir = dir.path().join("docs/charters");
+    let charters_dir = dir.path().join(".straymark/charters");
     std::fs::create_dir_all(&charters_dir).unwrap();
     std::fs::write(
         charters_dir.join("01-x.md"),
@@ -865,11 +865,11 @@ fn create_three_charters(dir: &std::path::Path) {
 
 #[test]
 fn charter_new_does_not_overwrite_existing_file() {
-    // Edge case: if the user manually created docs/charters/01-foo.md and then
+    // Edge case: if the user manually created .straymark/charters/01-foo.md and then
     // tries `charter new --title "foo"`, we should refuse rather than clobber.
     let dir = TempDir::new().unwrap();
     setup_straymark_with_charter_template(dir.path());
-    let charters_dir = dir.path().join("docs").join("charters");
+    let charters_dir = dir.path().join(".straymark").join("charters");
     std::fs::create_dir_all(&charters_dir).unwrap();
     std::fs::write(charters_dir.join("01-foo.md"), "preexisting; not a Charter\n").unwrap();
     // The pre-existing file does not match the Charter naming pattern (still
@@ -919,7 +919,7 @@ fn charter_new_truncates_long_title_at_word_boundary() {
         .success();
 
     // The slug should not include a partial "true" fragment.
-    let charters_dir = dir.path().join("docs/charters");
+    let charters_dir = dir.path().join(".straymark/charters");
     let entries: Vec<_> = std::fs::read_dir(&charters_dir).unwrap().flatten().collect();
     assert_eq!(entries.len(), 1);
     let filename = entries[0]
@@ -956,7 +956,7 @@ fn charter_new_slug_flag_overrides_title_derivation() {
         .assert()
         .success();
 
-    let charters_dir = dir.path().join("docs/charters");
+    let charters_dir = dir.path().join(".straymark/charters");
     assert!(charters_dir.join("01-batching-listtimeseries-04-f3.md").exists());
 }
 
@@ -979,7 +979,7 @@ fn charter_new_slug_flag_normalizes_through_slugifier() {
         .assert()
         .success();
 
-    let charters_dir = dir.path().join("docs/charters");
+    let charters_dir = dir.path().join(".straymark/charters");
     assert!(charters_dir.join("01-upper-and-special.md").exists());
 }
 
@@ -1030,7 +1030,7 @@ Original handler was synchronous and blocked on DB I/O.
         .assert()
         .success();
 
-    let path = dir.path().join("docs/charters/01-follow-up-async-refactor.md");
+    let path = dir.path().join(".straymark/charters/01-follow-up-async-refactor.md");
     let content = std::fs::read_to_string(&path).unwrap();
 
     // Origin line embeds the extracted Summary lead.
@@ -1064,7 +1064,7 @@ fn charter_new_from_ailog_falls_back_when_ailog_not_found() {
         .assert()
         .success();
 
-    let path = dir.path().join("docs/charters/01-refers-to-missing-ailog.md");
+    let path = dir.path().join(".straymark/charters/01-refers-to-missing-ailog.md");
     let content = std::fs::read_to_string(&path).unwrap();
     assert!(content.contains("originating_ailogs: [AILOG-2026-04-28-999]"));
     assert!(
@@ -1092,5 +1092,5 @@ fn charter_new_empty_slug_flag_falls_back_to_title() {
         .assert()
         .success();
 
-    assert!(dir.path().join("docs/charters/01-hello-world.md").exists());
+    assert!(dir.path().join(".straymark/charters/01-hello-world.md").exists());
 }

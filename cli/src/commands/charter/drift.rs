@@ -45,7 +45,12 @@ pub fn run(
     // Resolve the Charter file.
     let (charters, _errors) = charter::discover_and_parse(project_root);
     let charter = charter::find_by_id(&charters, charter_id)
-        .ok_or_else(|| anyhow!("Charter {} not found in docs/charters/", charter_id))?
+        .ok_or_else(|| {
+            anyhow!(
+                "Charter {} not found in .straymark/charters/.\n  hint: run `straymark charter list` to see discovered Charters.",
+                charter_id
+            )
+        })?
         .clone();
 
     let charter_path_rel = charter
@@ -356,7 +361,7 @@ mod tests {
     #[test]
     fn extract_omitted_handles_typical_output() {
         let stdout = r#"=== Charter drift check ===
-  Charter: docs/charters/01-foo.md
+  Charter: .straymark/charters/01-foo.md
   Range:   HEAD~1..HEAD
   Declared: 5 files
   Modified: 3 files

@@ -181,7 +181,7 @@ fn charter_close_syncs_body_status_mirror_line() {
     setup_straymark(dir.path());
     create_charter(dir.path(), "Mirror Sync");
 
-    let charter_path = dir.path().join("docs/charters/01-mirror-sync.md");
+    let charter_path = dir.path().join(".straymark/charters/01-mirror-sync.md");
     let before = std::fs::read_to_string(&charter_path).unwrap();
     assert!(before.contains(":** declared. Effort:"), "{before}");
 
@@ -224,7 +224,7 @@ fn charter_close_writes_closed_at_when_absent() {
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
     create_charter(dir.path(), "Closed At Test");
-    let charter_path = dir.path().join("docs/charters/01-closed-at-test.md");
+    let charter_path = dir.path().join(".straymark/charters/01-closed-at-test.md");
     let before = std::fs::read_to_string(&charter_path).unwrap();
     assert!(!before.contains("closed_at:"), "scaffold should not pre-write closed_at");
 
@@ -268,7 +268,7 @@ fn charter_close_replaces_existing_closed_at_with_today() {
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
 
-    let charter_path = dir.path().join("docs/charters/01-stale.md");
+    let charter_path = dir.path().join(".straymark/charters/01-stale.md");
     let stale = r#"---
 charter_id: CHARTER-01
 status: in-progress
@@ -290,7 +290,7 @@ trigger: "test"
 
 1. ok.
 "#;
-    std::fs::create_dir_all(dir.path().join("docs/charters")).unwrap();
+    std::fs::create_dir_all(dir.path().join(".straymark/charters")).unwrap();
     std::fs::write(&charter_path, stale).unwrap();
 
     Command::cargo_bin("straymark")
@@ -319,7 +319,7 @@ fn charter_close_bumps_status_to_closed() {
     setup_straymark(dir.path());
     create_charter(dir.path(), "Status Bump");
 
-    let charter_path = dir.path().join("docs/charters/01-status-bump.md");
+    let charter_path = dir.path().join(".straymark/charters/01-status-bump.md");
     let before = std::fs::read_to_string(&charter_path).unwrap();
     assert!(before.contains("status: declared"));
 

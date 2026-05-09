@@ -46,7 +46,7 @@ fn audit_dir(dir: &Path, charter_id: &str) -> std::path::PathBuf {
 }
 
 fn write_charter(dir: &Path) {
-    let charters = dir.join("docs/charters");
+    let charters = dir.join(".straymark/charters");
     std::fs::create_dir_all(&charters).unwrap();
     let body = r#"---
 charter_id: CHARTER-01
@@ -148,7 +148,7 @@ fn audit_prepare_writes_unified_prompt_to_canonical_location() {
 
     // Placeholder substitution happened in the body (outside HTML comments).
     assert!(resolved.contains("CHARTER-01"));
-    assert!(resolved.contains("docs/charters/01-audit-test.md"));
+    assert!(resolved.contains(".straymark/charters/01-audit-test.md"));
     // Diff was inlined.
     assert!(resolved.contains("// edited") || resolved.contains("// initial"));
 
