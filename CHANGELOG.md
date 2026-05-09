@@ -7,6 +7,47 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.12.0 / CLI 3.12.0 — Charter discoverability + path alignment
+
+Closes the two Charter-related gaps surfaced by real adopters in the issue tracker: **Charter were structurally invisible to the CLI** ([#119](https://github.com/StrangeDaysTech/straymark/issues/119) — `straymark charter list/audit/close` hardcoded `docs/charters/` while the framework already validated `.straymark/charters/`) and **Charter were conceptually invisible to onboarding agents** ([#113](https://github.com/StrangeDaysTech/straymark/issues/113) — agents following the canonical entry points could not discover Charter as a workflow concept).
+
+### Added (Framework)
+
+- **`STRAYMARK.md` §15 — Charter as bounded units of work.** Dedicated section explaining what a Charter is, when to declare one, the lifecycle (`declared` → `in-progress` → `closed`), and how it relates to AILOG / ADR / SpecKit. Charter trigger row added to §6 (When to Document); Charter row added to §9 (Autonomy Limits), §10 (folder map), §11 (When to Load), §13 (Quick Type Reference).
+- **`SPECKIT-CHARTER-BRIDGE.md`** in `dist/.straymark/00-governance/` (EN + ES + zh-CN). Documents *when* a SpecKit feature yields a Charter (4 yes-conditions, 3 no-conditions), 4 granularity heuristics ("one Charter per shippable cut, NOT per User Story"), creation timing within the SpecKit pipeline, frontmatter linkage in both directions (`originating_spec` / `originating_charter`), 5 anti-patterns, 5 non-fit cases.
+- **Skill `/straymark-charter-new`** across the three skill surfaces (`.claude/skills/`, `.gemini/skills/`, `.agent/workflows/`). Drives `straymark charter new` with the right flags (`--from-spec` vs `--from-ailog` vs none, effort estimate). Skill explicitly does *not* flip status, run drift, or run audit — those have their own surfaces.
+- **Charter trigger** in the directive templates (`dist/dist-templates/directives/{CLAUDE.md,GEMINI.md,copilot-instructions.md}`) — agents see Charter alongside AILOG / AIDEC / ADR / ETH triggers in the pre-commit checklist.
+- **`Charters` block in `straymark status`** — declared / in-progress / closed counts (or a friendly hint when empty); colorized status keyed on lifecycle stage; surfaces unparseable Charter files as a warning row.
+
+### Changed (Framework)
+
+- **Charter templates moved to `dist/.straymark/templates/charter/`** subdirectory (with `i18n/es/` co-located inside). Visually distinguishable from auxiliary doc templates, addresses one of the contributing factors of #113 (templates indistinguishable from auxiliary).
+- **`QUICK-REFERENCE.md` (EN + ES + zh-CN)** — adds "Bounded Units of Work — Charter" subsection alongside the doc-type tables, `charters/` entry in the folder tree, Charter trigger row in When-to-Document, `/straymark-charter-new` in the skills table.
+- **`/straymark-status` and `/straymark-new` skills (×3 surfaces)** — `/straymark-status` now scans `.straymark/charters/` and surfaces gaps; `/straymark-new` recognizes Charter intent and *redirects* to `/straymark-charter-new` (Charter is not a `straymark new` doc type).
+
+### Fixed (CLI)
+
+- **`straymark charter list/audit/close/drift/new` honor `.straymark/charters/`** as the canonical Charter location, matching what `straymark init` and `straymark status` already validate. Eliminates 5 hardcoded `docs/charters/` references through a new `charter::charters_dir(project_root)` single source of truth.
+- **Improved error messages** in `audit/close/drift`: instead of opaque `Charter X not found in docs/charters/`, the CLI now reports the searched path and hints at `straymark charter list`:
+
+  ```
+  error: Charter CHARTER-02 not found in .straymark/charters/.
+    hint: run `straymark charter list` to see discovered Charters.
+  ```
+
+- **`dist/.straymark/scripts/check-charter-drift.sh`** matches against `.straymark/charters/*` instead of `docs/charters/*`.
+
+### Breaking change (CLI, pre-1.0)
+
+- Projects with charters under the legacy `docs/charters/` (Sentinel pre-rebrand layout) need to relocate them. Migration is one command: `git mv docs/charters .straymark/charters`. Pre-1.0 SemVer permits the change; the improved error message points operators at it.
+
+### Adopter guidance
+
+- Existing projects on `fw-4.11.0` get the new framework files (skills, templates, governance docs, directive triggers) via `straymark update-framework`.
+- Charter telemetry sidecars (`*.telemetry.yaml`) now share `.straymark/charters/` with the declarative `.md` files by design — no migration needed; `straymark charter close` already wrote them there in 4.11.0.
+
+---
+
 ## Framework 4.11.0 / CLI 3.11.0 — StrayMark rebranding
 
 The project formerly known as DevTrail is now **StrayMark**. The decision was made on 2026-05-08 by the operator after external trademark conflict research, motivated by **legal certainty over the project's mark**. See [`ADR-2026-05-08-001`](docs/decisions/ADR-2026-05-08-rebranding-straymark.md) for the full record.

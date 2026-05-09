@@ -186,4 +186,4 @@ Contribuido vía [issue #111](https://github.com/StrangeDaysTech/straymark/issue
 
 ---
 
-*StrayMark v4.11.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.12.0 | [Strange Days Tech](https://strangedays.tech)*
