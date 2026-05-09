@@ -3,7 +3,8 @@
 #
 # Ported from Sentinel scripts/check-plan-drift.sh (validated empirically with
 # zero false positives across PLAN-05 retrospective + PLAN-06 prospective).
-# StrayMark surface: docs/charters/CHARTER-NN.md instead of docs/plans/NN-*.md.
+# StrayMark surface: Charters live at .straymark/charters/NN-slug.md (this is
+# the rebrand of Sentinel's docs/plans/NN-*.md layout).
 #
 # This script catches drifts of OMISSION (file declared in Charter, never touched)
 # and SCOPE EXPANSION (file modified but not declared). Both kinds were caught by
@@ -14,8 +15,8 @@
 #   .straymark/scripts/check-charter-drift.sh <charter-file> <git-range>
 #
 # Examples:
-#   .straymark/scripts/check-charter-drift.sh docs/charters/01-format-v4.md fd65e87..473f6e0
-#   .straymark/scripts/check-charter-drift.sh docs/charters/01-format-v4.md HEAD~1..HEAD
+#   .straymark/scripts/check-charter-drift.sh .straymark/charters/01-format-v4.md fd65e87..473f6e0
+#   .straymark/scripts/check-charter-drift.sh .straymark/charters/01-format-v4.md HEAD~1..HEAD
 #
 # Exit codes:
 #   0 — no drift detected (or only documented out-of-scope extras)
@@ -37,7 +38,7 @@ set -euo pipefail
 
 if [ $# -lt 2 ]; then
   echo "Usage: $0 <charter-file> <git-range>" >&2
-  echo "Example: $0 docs/charters/01-format-v4.md fd65e87..473f6e0" >&2
+  echo "Example: $0 .straymark/charters/01-format-v4.md fd65e87..473f6e0" >&2
   exit 2
 fi
 
@@ -143,7 +144,7 @@ modified_extra=""
 while IFS= read -r mod; do
   # Allow Charter-doc and AILOG paths through without alarm — those are always
   # in scope when the Charter itself or the AILOG of execution gets touched.
-  if [[ "$mod" == docs/charters/* || "$mod" == .straymark/07-ai-audit/* ]]; then
+  if [[ "$mod" == .straymark/charters/* || "$mod" == .straymark/07-ai-audit/* ]]; then
     continue
   fi
   if ! echo "$declared" | grep -qx "$mod"; then

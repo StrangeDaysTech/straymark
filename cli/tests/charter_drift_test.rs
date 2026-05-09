@@ -74,7 +74,7 @@ fn git(dir: &Path, args: &[&str]) {
 }
 
 fn write_charter_with_files(dir: &Path, declared: &[&str], originating_ailog: Option<&str>) {
-    let charters_dir = dir.join("docs").join("charters");
+    let charters_dir = dir.join(".straymark").join("charters");
     std::fs::create_dir_all(&charters_dir).unwrap();
     let mut content = String::from("---\ncharter_id: CHARTER-01\nstatus: declared\neffort_estimate: M\ntrigger: \"test trigger\"\n");
     if let Some(ailog) = originating_ailog {
@@ -436,7 +436,7 @@ fn charter_drift_resolves_glob_wildcards_in_declared_paths() {
     setup_straymark(dir.path());
 
     // Build a Charter that declares a glob.
-    let charters_dir = dir.path().join("docs").join("charters");
+    let charters_dir = dir.path().join(".straymark").join("charters");
     std::fs::create_dir_all(&charters_dir).unwrap();
     let charter = r#"---
 charter_id: CHARTER-01
@@ -500,7 +500,7 @@ fn charter_drift_ignores_path_references_in_change_column() {
     setup_straymark(dir.path());
 
     // Build a Charter where the "Change" column contains a backtick-quoted path.
-    let charters_dir = dir.path().join("docs").join("charters");
+    let charters_dir = dir.path().join(".straymark").join("charters");
     std::fs::create_dir_all(&charters_dir).unwrap();
     let charter = r#"---
 charter_id: CHARTER-01

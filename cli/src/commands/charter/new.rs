@@ -14,7 +14,7 @@ use colored::Colorize;
 use dialoguer::{theme::ColorfulTheme, Input};
 use std::path::{Path, PathBuf};
 
-use crate::charter::next_charter_number;
+use crate::charter::{charters_dir, next_charter_number};
 use crate::config::StrayMarkConfig;
 use crate::utils;
 
@@ -114,10 +114,10 @@ pub fn run(
         ailog_context,
     );
 
-    // Write to docs/charters/.
-    let charters_dir = project_root.join("docs").join("charters");
-    utils::ensure_dir(&charters_dir)?;
-    let out_path = charters_dir.join(&filename);
+    // Write to .straymark/charters/.
+    let out_dir = charters_dir(project_root);
+    utils::ensure_dir(&out_dir)?;
+    let out_path = out_dir.join(&filename);
     if out_path.exists() {
         bail!(
             "Charter file already exists: {} (next number computed as {:02} but a file with this slug exists)",

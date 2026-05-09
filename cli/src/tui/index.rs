@@ -207,11 +207,12 @@ impl DocIndex {
         }
 
         // Synthetic "Charters" group at the end. Charters live at
-        // <project_root>/docs/charters/, NOT under .straymark/. We append them
-        // as a 10th-style pseudo-group so the existing NavSelection tree
-        // model handles them without modification. The group is added only
-        // when at least one Charter exists — adopters who don't use the
-        // pattern see no empty stub.
+        // .straymark/charters/, alongside the rest of the framework state
+        // (declarative .md and telemetry .yaml share the directory). We
+        // append them as a 10th-style pseudo-group so the existing
+        // NavSelection tree model handles them without modification. The
+        // group is added only when at least one Charter exists — adopters
+        // who don't use the pattern see no empty stub.
         let project_root = straymark_dir.parent().unwrap_or(straymark_dir);
         let charter_files = scan_charters(project_root, &mut relations);
         if !charter_files.is_empty() {
@@ -221,7 +222,7 @@ impl DocIndex {
                 // with a real GROUP_DEFS entry that always uses NN-name.
                 name: "_charters".to_string(),
                 label: t("Charters", language).to_string(),
-                path: project_root.join("docs").join("charters"),
+                path: crate::charter::charters_dir(project_root),
                 subgroups: Vec::new(),
                 files: charter_files,
             });
@@ -754,7 +755,7 @@ mod tests {
         let project_root = tmp.path();
         let straymark_dir = project_root.join(".straymark");
         std::fs::create_dir_all(&straymark_dir).unwrap();
-        let charters_dir = project_root.join("docs").join("charters");
+        let charters_dir = project_root.join(".straymark").join("charters");
         std::fs::create_dir_all(&charters_dir).unwrap();
         std::fs::write(
             charters_dir.join("01-real.md"),
@@ -814,7 +815,7 @@ mod tests {
         let tmp = tempfile::TempDir::new().unwrap();
         let straymark_dir = tmp.path().join(".straymark");
         std::fs::create_dir_all(&straymark_dir).unwrap();
-        // No docs/charters/ directory.
+        // No .straymark/charters/ directory.
 
         let index = DocIndex::build(&straymark_dir, "en");
         assert!(
@@ -829,7 +830,7 @@ mod tests {
         let project_root = tmp.path();
         let straymark_dir = project_root.join(".straymark");
         std::fs::create_dir_all(&straymark_dir).unwrap();
-        let charters_dir = project_root.join("docs").join("charters");
+        let charters_dir = project_root.join(".straymark").join("charters");
         std::fs::create_dir_all(&charters_dir).unwrap();
         std::fs::write(
             charters_dir.join("01-x.md"),

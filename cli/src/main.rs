@@ -90,7 +90,7 @@ enum Commands {
         /// Validate only git-staged files (for pre-commit hooks)
         #[arg(long)]
         staged: bool,
-        /// Also validate Charters in docs/charters/ against the Charter schema
+        /// Also validate Charters in .straymark/charters/ against the Charter schema
         /// and referential integrity (originating_ailogs IDs exist;
         /// originating_spec path exists). Default: false, to avoid breaking
         /// projects that don't yet use the Charter pattern.

@@ -6,8 +6,8 @@
 //! module provides typed access to a Charter document on disk.
 //!
 //! Conceptually distinct from `DocType` (governance documents): Charters live
-//! at `docs/charters/NN-slug.md` (project-root level), use sequential filenames
-//! without a date prefix, and their schema is its own contract. See
+//! at `.straymark/charters/NN-slug.md`, use sequential filenames without a date
+//! prefix, and their schema is its own contract. See
 //! `Propuesta/que-es-un-charter.md` for the conceptual scope.
 
 use anyhow::{anyhow, Context, Result};
@@ -120,12 +120,23 @@ pub fn parse_charter_str(path: &Path, content: &str) -> Result<Charter> {
     })
 }
 
-/// Discover all Charter files in a project. Charters live at `docs/charters/*.md`
-/// with filenames `NN-slug.md` (sequential prefix). Returns paths sorted by
-/// filename so callers get stable ordering. Files that don't match the
-/// `NN-slug.md` pattern are skipped (e.g., a stray `README.md`).
+/// Filesystem location of Charter documents, relative to the project root.
+///
+/// All `straymark charter` subcommands (new/list/status/audit/close/drift) and
+/// `straymark status` discover Charters here. Telemetry sidecars
+/// (`*.telemetry.yaml`) live alongside the declarative `.md` files in the same
+/// directory — declarative ex-ante and telemetry ex-post share one folder.
+pub fn charters_dir(project_root: &Path) -> PathBuf {
+    project_root.join(".straymark").join("charters")
+}
+
+/// Discover all Charter files in a project. Charters live at
+/// `.straymark/charters/*.md` with filenames `NN-slug.md` (sequential prefix).
+/// Returns paths sorted by filename so callers get stable ordering. Files that
+/// don't match the `NN-slug.md` pattern are skipped (e.g., a stray `README.md`
+/// or a `*.telemetry.yaml` sidecar).
 pub fn discover_charters(project_root: &Path) -> Vec<PathBuf> {
-    let dir = project_root.join("docs").join("charters");
+    let dir = charters_dir(project_root);
     if !dir.exists() {
         return Vec::new();
     }
@@ -298,7 +309,7 @@ pub fn display_origin(fm: &CharterFrontmatter) -> String {
 }
 
 /// Determine the next sequential Charter number for a project. Reads
-/// `docs/charters/` and returns `max(NN) + 1`, or 1 if no Charters exist yet.
+/// `.straymark/charters/` and returns `max(NN) + 1`, or 1 if no Charters exist yet.
 ///
 /// Note: this is intentionally racy on parallel branches (R2 in the Phase 1
 /// plan). Two contributors running `charter new` simultaneously can both
@@ -516,7 +527,7 @@ Body.
     #[test]
     fn discover_returns_sorted_charter_files_only() {
         let tmp = TempDir::new().unwrap();
-        let charters_dir = tmp.path().join("docs").join("charters");
+        let charters_dir = tmp.path().join(".straymark").join("charters");
         write(&charters_dir.join("03-third.md"), VALID_FRONTMATTER);
         write(&charters_dir.join("01-first.md"), VALID_FRONTMATTER);
         write(&charters_dir.join("02-second.md"), VALID_FRONTMATTER);
@@ -542,7 +553,7 @@ Body.
     #[test]
     fn next_number_is_max_plus_one() {
         let tmp = TempDir::new().unwrap();
-        let charters_dir = tmp.path().join("docs").join("charters");
+        let charters_dir = tmp.path().join(".straymark").join("charters");
         write(&charters_dir.join("01-a.md"), VALID_FRONTMATTER);
         write(&charters_dir.join("05-b.md"), VALID_FRONTMATTER);
         write(&charters_dir.join("03-c.md"), VALID_FRONTMATTER);
@@ -552,7 +563,7 @@ Body.
     #[test]
     fn next_number_skips_non_numbered_files() {
         let tmp = TempDir::new().unwrap();
-        let charters_dir = tmp.path().join("docs").join("charters");
+        let charters_dir = tmp.path().join(".straymark").join("charters");
         write(&charters_dir.join("01-a.md"), VALID_FRONTMATTER);
         write(&charters_dir.join("README.md"), "# Charters\n");
         write(&charters_dir.join("draft-no-number.md"), VALID_FRONTMATTER);
@@ -609,7 +620,7 @@ Body.
             .map(|rest| format!("{}.md", rest.to_lowercase()))
             .unwrap_or_else(|| format!("{}.md", id.to_lowercase()));
         Charter {
-            path: PathBuf::from(format!("docs/charters/{}", filename)),
+            path: PathBuf::from(format!(".straymark/charters/{}", filename)),
             frontmatter: fm,
             body: body.to_string(),
         }
@@ -767,7 +778,7 @@ Body.
     #[test]
     fn discover_and_parse_separates_good_and_bad() {
         let tmp = TempDir::new().unwrap();
-        let charters_dir = tmp.path().join("docs").join("charters");
+        let charters_dir = tmp.path().join(".straymark").join("charters");
         write(&charters_dir.join("01-good.md"), VALID_FRONTMATTER);
         // A file with leading digits + dash but broken frontmatter.
         write(

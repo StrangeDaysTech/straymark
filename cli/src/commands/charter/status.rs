@@ -178,7 +178,7 @@ mod tests {
 
     fn make(id: &str, body: &str) -> Charter {
         Charter {
-            path: PathBuf::from(format!("docs/charters/{}.md", id.to_lowercase())),
+            path: PathBuf::from(format!(".straymark/charters/{}.md", id.to_lowercase())),
             frontmatter: CharterFrontmatter {
                 charter_id: id.to_string(),
                 status: CharterStatus::Declared,
