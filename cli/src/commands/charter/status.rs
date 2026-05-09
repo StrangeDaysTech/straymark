@@ -1,4 +1,4 @@
-//! `devtrail charter status [CHARTER-ID]` — show detail for a Charter.
+//! `straymark charter status [CHARTER-ID]` — show detail for a Charter.
 //!
 //! With an ID: prints frontmatter, file location, body section list, and
 //! placeholders for telemetry / drift-check (Phase 2 features).
@@ -17,7 +17,7 @@ const RECENT_LIMIT: usize = 5;
 
 pub fn run(path: &str, charter_id: Option<&str>) -> Result<()> {
     let resolved = utils::resolve_project_root(path)
-        .ok_or_else(|| anyhow!("DevTrail not installed. Run 'devtrail init' first."))?;
+        .ok_or_else(|| anyhow!("StrayMark not installed. Run 'straymark init' first."))?;
     let project_root = &resolved.path;
 
     let (charters, errors) = charter::discover_and_parse(project_root);
@@ -34,7 +34,7 @@ pub fn run(path: &str, charter_id: Option<&str>) -> Result<()> {
         Some(id) => {
             let c = charter::find_by_id(&charters, id).ok_or_else(|| {
                 anyhow!(
-                    "Charter not found: '{}'. Run `devtrail charter list` to see available Charters.",
+                    "Charter not found: '{}'. Run `straymark charter list` to see available Charters.",
                     id
                 )
             })?;
@@ -42,7 +42,7 @@ pub fn run(path: &str, charter_id: Option<&str>) -> Result<()> {
         }
         None => {
             if charters.is_empty() && errors.is_empty() {
-                println!("No Charters in this project. Run `devtrail charter new` to create one.");
+                println!("No Charters in this project. Run `straymark charter new` to create one.");
                 return Ok(());
             }
             print_recent(&charters);
@@ -86,8 +86,8 @@ fn print_detail(c: &Charter, project_root: &std::path::Path) {
 
     println!();
     println!("  {}", "Phase 2 features (not yet available):".dimmed());
-    println!("    {}", "telemetry — devtrail charter close (planned cli-3.7.0)".dimmed());
-    println!("    {}", "drift-check — devtrail charter drift (planned cli-3.7.0)".dimmed());
+    println!("    {}", "telemetry — straymark charter close (planned cli-3.7.0)".dimmed());
+    println!("    {}", "drift-check — straymark charter drift (planned cli-3.7.0)".dimmed());
     println!();
 }
 
@@ -129,8 +129,8 @@ fn print_recent(charters: &[Charter]) {
     println!();
     println!(
         "  Run {} for detail, or {} to see all.",
-        "devtrail charter status CHARTER-NN".bold(),
-        "devtrail charter list".bold()
+        "straymark charter status CHARTER-NN".bold(),
+        "straymark charter list".bold()
     );
     println!();
 }

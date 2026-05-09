@@ -4,7 +4,7 @@ status: closed
 effort_estimate: M
 trigger: "First false-positive anomaly ticket from a service with irregular traffic"
 originating_ailogs: [AILOG-2026-01-15-001]
-note: "Anonymized example derived from Sentinel PLAN-05 (per-service-anomaly-thresholds). See devtrail-cli-roadmap.md §3.1 for the porting context."
+note: "Anonymized example derived from Sentinel PLAN-05 (per-service-anomaly-thresholds). See straymark-cli-roadmap.md §3.1 for the porting context."
 closed_at: "2026-01-28"
 ---
 
@@ -17,7 +17,7 @@ closed_at: "2026-01-28"
 <!-- Anonymized example derived from Sentinel PLAN-05.
      Format conventions match charter-template.md (6 conventions distilled from the
      Sentinel /plan-audit experiment). Structural conventions preserved verbatim;
-     identifiers anonymized. See devtrail-cli-roadmap.md §3.1. -->
+     identifiers anonymized. See straymark-cli-roadmap.md §3.1. -->
 
 ## Context
 
@@ -74,7 +74,7 @@ Central trade-off: the detector acquires a dependency on `PolicyQuerier` (today 
 | `src/services/audit/classifier.<ext>` | WARNING rule for the new topic. |
 | `src/integration/integration_test.<ext>` | End-to-end integration test: PUT request → policy row updated → heartbeat with irregular traffic → with override does not flag anomaly, without override does. |
 | `specs/contracts/events.md` | New event entry `policy.anomaly_thresholds.changed` + subscription matrix. |
-| `.devtrail/07-ai-audit/agent-logs/AILOG-...md` | New, `risk_level: medium` (admin endpoint + changes detector inner loop). |
+| `.straymark/07-ai-audit/agent-logs/AILOG-...md` | New, `risk_level: medium` (admin endpoint + changes detector inner loop). |
 
 ## Verification
 

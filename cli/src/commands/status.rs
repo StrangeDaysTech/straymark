@@ -2,11 +2,11 @@ use anyhow::Result;
 use colored::Colorize;
 use std::path::PathBuf;
 
-use crate::config::DevTrailConfig;
+use crate::config::StrayMarkConfig;
 use crate::manifest::DistManifest;
 use crate::utils::{self, pad_right_visual, visual_width};
 
-/// Expected directories inside .devtrail/
+/// Expected directories inside .straymark/
 const EXPECTED_DIRS: &[&str] = &[
     "00-governance",
     "01-requirements",
@@ -26,9 +26,9 @@ const EXPECTED_DIRS: &[&str] = &[
 
 /// Expected files (relative to project root)
 const EXPECTED_FILES: &[(&str, &str)] = &[
-    (".devtrail/config.yml", "config.yml"),
-    (".devtrail/dist-manifest.yml", "dist-manifest.yml"),
-    ("DEVTRAIL.md", "DEVTRAIL.md"),
+    (".straymark/config.yml", "config.yml"),
+    (".straymark/dist-manifest.yml", "dist-manifest.yml"),
+    ("STRAYMARK.md", "STRAYMARK.md"),
 ];
 
 /// Document type prefixes for counting
@@ -55,23 +55,23 @@ pub fn run(path: &str) -> Result<()> {
                 .canonicalize()
                 .unwrap_or_else(|_| PathBuf::from(path));
             utils::info(&format!(
-                "DevTrail is not installed in {}",
+                "StrayMark is not installed in {}",
                 target.display()
             ));
-            utils::info("Run 'devtrail init' to initialize DevTrail in this directory.");
+            utils::info("Run 'straymark init' to initialize StrayMark in this directory.");
             return Ok(());
         }
     };
 
     if resolved.is_fallback {
         utils::info(&format!(
-            "Using DevTrail installation at repo root: {}",
+            "Using StrayMark installation at repo root: {}",
             resolved.path.display()
         ));
     }
 
     let target = resolved.path;
-    let devtrail_dir = target.join(".devtrail");
+    let straymark_dir = target.join(".straymark");
 
     let version = load_version(&target);
     let language = load_language(&target);
@@ -79,7 +79,7 @@ pub fn run(path: &str) -> Result<()> {
 
     // ── Header ──
     println!();
-    println!("  {}", "DevTrail Status".bold().cyan());
+    println!("  {}", "StrayMark Status".bold().cyan());
     println!();
 
     // ── Project Info ──
@@ -117,7 +117,7 @@ pub fn run(path: &str) -> Result<()> {
     // Collect all structure items with their status
     let mut struct_items: Vec<(String, bool)> = Vec::new();
     for dir in EXPECTED_DIRS {
-        let dir_path = devtrail_dir.join(dir);
+        let dir_path = straymark_dir.join(dir);
         struct_items.push((format!("{dir}/"), dir_path.exists()));
     }
     for &(rel_path, label) in EXPECTED_FILES {
@@ -178,7 +178,7 @@ pub fn run(path: &str) -> Result<()> {
     }
 
     // ── Documentation ──
-    let counts = count_documents(&devtrail_dir);
+    let counts = count_documents(&straymark_dir);
     let total: usize = counts.iter().map(|(_, _, c)| c).sum();
 
     println!();
@@ -228,14 +228,14 @@ pub fn run(path: &str) -> Result<()> {
         println!(
             "  {} Run {} to restore missing directories and files",
             "→".blue().bold(),
-            "devtrail repair".cyan().bold()
+            "straymark repair".cyan().bold()
         );
     }
     if total > 0 {
         println!(
             "  {} Run {} to browse documentation interactively",
             "→".blue().bold(),
-            "devtrail explore".cyan().bold()
+            "straymark explore".cyan().bold()
         );
     }
     if total_missing > 0 || total > 0 {
@@ -261,7 +261,7 @@ fn print_border(prefix: &str, w1: usize, mid: &str, w2: usize, suffix: &str) {
 }
 
 fn load_version(project_root: &std::path::Path) -> String {
-    let manifest_path = project_root.join(".devtrail/dist-manifest.yml");
+    let manifest_path = project_root.join(".straymark/dist-manifest.yml");
     match DistManifest::load(&manifest_path) {
         Ok(m) => m.version,
         Err(_) => {
@@ -275,11 +275,11 @@ fn load_language(project_root: &std::path::Path) -> String {
     // Use the same resolver as `explore` / `new` so all three commands
     // agree on the effective language (config when present, else OS locale,
     // else "en").
-    DevTrailConfig::resolve_language(project_root)
+    StrayMarkConfig::resolve_language(project_root)
 }
 
-fn count_documents(devtrail_dir: &std::path::Path) -> Vec<(&'static str, &'static str, usize)> {
-    let files = walk_files(devtrail_dir);
+fn count_documents(straymark_dir: &std::path::Path) -> Vec<(&'static str, &'static str, usize)> {
+    let files = walk_files(straymark_dir);
     DOC_TYPES
         .iter()
         .map(|&(doc_type, label)| {

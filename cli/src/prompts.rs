@@ -88,7 +88,7 @@ pub fn prompt_string_array(label: &str) -> Result<Vec<String>> {
 
 /// Prompt for a multi-line block. Reads lines from stdin until a line
 /// containing only `.` or EOF (Ctrl-D) is seen. Returns the joined lines
-/// without the terminator. Slated for use by `devtrail approve --notes` in
+/// without the terminator. Slated for use by `straymark approve --notes` in
 /// Phase 2 PR 5.
 #[allow(dead_code)]
 pub fn prompt_multiline(label: &str) -> Result<String> {

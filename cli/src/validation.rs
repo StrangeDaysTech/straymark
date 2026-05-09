@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
-use crate::config::DevTrailConfig;
-use crate::document::{self, DevTrailDocument, DocType};
+use crate::config::StrayMarkConfig;
+use crate::document::{self, StrayMarkDocument, DocType};
 
 /// Severity of a validation issue
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -64,11 +64,11 @@ const SOFT_SENSITIVE_PATTERNS: &[&str] = &[
     "token:", "Bearer ",
 ];
 
-/// True if the project's regional_scope (loaded from `.devtrail/config.yml` at the
-/// project root that contains the given `.devtrail/` directory) includes "china".
-fn china_in_scope(devtrail_dir: &Path) -> bool {
-    let project_root = devtrail_dir.parent().unwrap_or(devtrail_dir);
-    let config = DevTrailConfig::load(project_root).unwrap_or_default();
+/// True if the project's regional_scope (loaded from `.straymark/config.yml` at the
+/// project root that contains the given `.straymark/` directory) includes "china".
+fn china_in_scope(straymark_dir: &Path) -> bool {
+    let project_root = straymark_dir.parent().unwrap_or(straymark_dir);
+    let config = StrayMarkConfig::load(project_root).unwrap_or_default();
     config.has_region("china")
 }
 
@@ -76,28 +76,28 @@ fn china_in_scope(devtrail_dir: &Path) -> bool {
 /// referential integrity rules:
 /// - Schema (shape, enums, required fields, mutual exclusion of origin types).
 /// - `originating_ailogs` IDs resolve to real AILOG files under
-///   `.devtrail/07-ai-audit/agent-logs/`.
+///   `.straymark/07-ai-audit/agent-logs/`.
 /// - `originating_spec` path exists relative to the project root.
 ///
 /// Returns the result + number of Charters considered (parsed + parse-failed).
 /// If the schema file itself cannot be loaded, emits a single warning and
 /// skips schema-level checks; referential integrity is still attempted.
-pub fn validate_charters(project_root: &Path, devtrail_dir: &Path) -> (ValidationResult, usize) {
+pub fn validate_charters(project_root: &Path, straymark_dir: &Path) -> (ValidationResult, usize) {
     let mut result = ValidationResult::default();
 
     // Try to load the schema. Missing schema is a warning, not a hard failure
     // (the project may have been initialized before the schema shipped, or
     // the file may have been removed).
-    let schema = match crate::charter_schema::CharterSchema::load(devtrail_dir) {
+    let schema = match crate::charter_schema::CharterSchema::load(straymark_dir) {
         Ok(s) => Some(s),
         Err(e) => {
             result.warnings.push(ValidationIssue {
-                file: devtrail_dir.join(crate::charter_schema::SCHEMA_RELATIVE_PATH),
+                file: straymark_dir.join(crate::charter_schema::SCHEMA_RELATIVE_PATH),
                 rule: "CHARTER-SCHEMA-MISSING".to_string(),
                 message: format!("Charter schema not loadable: {e}"),
                 severity: Severity::Warning,
                 fix_hint: Some(
-                    "Run `devtrail repair` to restore framework files.".to_string(),
+                    "Run `straymark repair` to restore framework files.".to_string(),
                 ),
             });
             None
@@ -152,7 +152,7 @@ pub fn validate_charters(project_root: &Path, devtrail_dir: &Path) -> (Validatio
         // CHARTER-AILOG-REF: every originating AILOG ID must resolve to a file.
         if let Some(ailogs) = &typed.originating_ailogs {
             for ailog_id in ailogs {
-                if !ailog_exists(devtrail_dir, ailog_id) {
+                if !ailog_exists(straymark_dir, ailog_id) {
                     result.errors.push(ValidationIssue {
                         file: path.clone(),
                         rule: "CHARTER-AILOG-REF".to_string(),
@@ -162,7 +162,7 @@ pub fn validate_charters(project_root: &Path, devtrail_dir: &Path) -> (Validatio
                         ),
                         severity: Severity::Error,
                         fix_hint: Some(format!(
-                            "Either create the AILOG (e.g., `devtrail new --doc-type ailog`) or \
+                            "Either create the AILOG (e.g., `straymark new --doc-type ailog`) or \
                              remove '{}' from originating_ailogs if it was a typo.",
                             ailog_id
                         )),
@@ -197,12 +197,12 @@ pub fn validate_charters(project_root: &Path, devtrail_dir: &Path) -> (Validatio
 }
 
 /// True if an AILOG file matching the given ID exists under
-/// `.devtrail/07-ai-audit/agent-logs/`. The match is by filename prefix:
+/// `.straymark/07-ai-audit/agent-logs/`. The match is by filename prefix:
 /// `AILOG-2026-04-28-021` matches `AILOG-2026-04-28-021-anything.md` but not
 /// `AILOG-2026-04-28-0210-something.md` (boundary: next char must be `-` or
 /// `.md` extension).
-fn ailog_exists(devtrail_dir: &Path, ailog_id: &str) -> bool {
-    let agent_logs = devtrail_dir.join("07-ai-audit").join("agent-logs");
+fn ailog_exists(straymark_dir: &Path, ailog_id: &str) -> bool {
+    let agent_logs = straymark_dir.join("07-ai-audit").join("agent-logs");
     if !agent_logs.exists() {
         return false;
     }
@@ -228,17 +228,17 @@ fn ailog_exists(devtrail_dir: &Path, ailog_id: &str) -> bool {
     false
 }
 
-/// Validate all documents found under a .devtrail/ directory
-pub fn validate_all(devtrail_dir: &Path) -> (ValidationResult, usize) {
-    let paths = document::discover_documents(devtrail_dir);
+/// Validate all documents found under a .straymark/ directory
+pub fn validate_all(straymark_dir: &Path) -> (ValidationResult, usize) {
+    let paths = document::discover_documents(straymark_dir);
     let doc_count = paths.len();
     let mut result = ValidationResult::default();
-    let china = china_in_scope(devtrail_dir);
+    let china = china_in_scope(straymark_dir);
 
     for path in &paths {
         match document::parse_document(path) {
             Ok(doc) => {
-                result.merge(validate_document(&doc, devtrail_dir, china));
+                result.merge(validate_document(&doc, straymark_dir, china));
             }
             Err(e) => {
                 result.errors.push(ValidationIssue {
@@ -253,7 +253,7 @@ pub fn validate_all(devtrail_dir: &Path) -> (ValidationResult, usize) {
     }
 
     // REF-002: Detect orphan documents (no traceability links)
-    check_orphan_documents(&mut result, &paths, devtrail_dir);
+    check_orphan_documents(&mut result, &paths, straymark_dir);
 
     (result, doc_count)
 }
@@ -262,15 +262,15 @@ pub fn validate_all(devtrail_dir: &Path) -> (ValidationResult, usize) {
 /// Skips orphan document checking since that is not meaningful for partial validation.
 /// Surface documents whose `review_required: true` is older than a threshold
 /// and still has no `review_outcome`. Per DOCUMENTATION-POLICY §3.5: warn-only,
-/// never errors. Adopters opt in via `devtrail validate --check-pending-reviews`.
+/// never errors. Adopters opt in via `straymark validate --check-pending-reviews`.
 ///
 /// Returns one `ValidationIssue` per pending document, all `Severity::Warning`.
-pub fn check_pending_reviews(devtrail_dir: &Path, max_pending_days: i64) -> Vec<ValidationIssue> {
+pub fn check_pending_reviews(straymark_dir: &Path, max_pending_days: i64) -> Vec<ValidationIssue> {
     use chrono::{Local, NaiveDate};
 
     let mut issues = Vec::new();
     let today = Local::now().date_naive();
-    let paths = document::discover_documents(devtrail_dir);
+    let paths = document::discover_documents(straymark_dir);
 
     for path in paths {
         let doc = match document::parse_document(&path) {
@@ -315,7 +315,7 @@ pub fn check_pending_reviews(devtrail_dir: &Path, max_pending_days: i64) -> Vec<
             ),
             severity: Severity::Warning,
             fix_hint: Some(format!(
-                "Run `devtrail approve {} --outcome <approved|revisions_requested|rejected> --reviewer <id>` once a human has reviewed.",
+                "Run `straymark approve {} --outcome <approved|revisions_requested|rejected> --reviewer <id>` once a human has reviewed.",
                 id
             )),
         });
@@ -323,10 +323,10 @@ pub fn check_pending_reviews(devtrail_dir: &Path, max_pending_days: i64) -> Vec<
     issues
 }
 
-pub fn validate_paths(paths: &[PathBuf], devtrail_dir: &Path) -> (ValidationResult, usize) {
+pub fn validate_paths(paths: &[PathBuf], straymark_dir: &Path) -> (ValidationResult, usize) {
     let mut result = ValidationResult::default();
     let mut doc_count = 0;
-    let china = china_in_scope(devtrail_dir);
+    let china = china_in_scope(straymark_dir);
 
     for path in paths {
         if !path.exists() {
@@ -339,7 +339,7 @@ pub fn validate_paths(paths: &[PathBuf], devtrail_dir: &Path) -> (ValidationResu
         match document::parse_document(path) {
             Ok(doc) => {
                 doc_count += 1;
-                result.merge(validate_document(&doc, devtrail_dir, china));
+                result.merge(validate_document(&doc, straymark_dir, china));
             }
             Err(e) => {
                 doc_count += 1;
@@ -363,8 +363,8 @@ pub fn validate_paths(paths: &[PathBuf], devtrail_dir: &Path) -> (ValidationResu
 /// REF-002: Check for documents with no traceability links.
 /// A document is orphan if it has no `related` field AND is not referenced
 /// by any other document's `related` field.
-fn check_orphan_documents(result: &mut ValidationResult, paths: &[PathBuf], _devtrail_dir: &Path) {
-    let parsed: Vec<DevTrailDocument> = paths
+fn check_orphan_documents(result: &mut ValidationResult, paths: &[PathBuf], _straymark_dir: &Path) {
+    let parsed: Vec<StrayMarkDocument> = paths
         .iter()
         .filter_map(|p| document::parse_document(p).ok())
         .collect();
@@ -424,8 +424,8 @@ fn check_orphan_documents(result: &mut ValidationResult, paths: &[PathBuf], _dev
 
 /// Validate a single parsed document
 fn validate_document(
-    doc: &DevTrailDocument,
-    devtrail_dir: &Path,
+    doc: &StrayMarkDocument,
+    straymark_dir: &Path,
     china_in_scope: bool,
 ) -> ValidationResult {
     let mut result = ValidationResult::default();
@@ -437,7 +437,7 @@ fn validate_document(
     check_cross_rules(&mut result, doc);
     check_type_specific(&mut result, doc);
     check_date_consistency(&mut result, doc);
-    check_related_exist(&mut result, doc, devtrail_dir);
+    check_related_exist(&mut result, doc, straymark_dir);
     check_sensitive_info(&mut result, doc);
     check_observability(&mut result, doc);
 
@@ -450,7 +450,7 @@ fn validate_document(
 }
 
 /// NAMING-001: Verify filename follows TYPE-YYYY-MM-DD-NNN-description.md
-fn check_naming(result: &mut ValidationResult, doc: &DevTrailDocument) {
+fn check_naming(result: &mut ValidationResult, doc: &StrayMarkDocument) {
     let name = &doc.filename;
     let prefix = doc.doc_type.prefix();
 
@@ -569,7 +569,7 @@ fn check_naming(result: &mut ValidationResult, doc: &DevTrailDocument) {
 }
 
 /// META-001: Check presence of required fields
-fn check_required_meta(result: &mut ValidationResult, doc: &DevTrailDocument) {
+fn check_required_meta(result: &mut ValidationResult, doc: &StrayMarkDocument) {
     let fm = &doc.frontmatter;
     let file = &doc.path;
 
@@ -598,7 +598,7 @@ fn check_required_meta(result: &mut ValidationResult, doc: &DevTrailDocument) {
 }
 
 /// META-002: Check that frontmatter id matches filename prefix
-fn check_id_matches_filename(result: &mut ValidationResult, doc: &DevTrailDocument) {
+fn check_id_matches_filename(result: &mut ValidationResult, doc: &StrayMarkDocument) {
     if let Some(id) = &doc.frontmatter.id {
         let expected_prefix = doc.doc_type.prefix();
         if !id.starts_with(expected_prefix) {
@@ -617,7 +617,7 @@ fn check_id_matches_filename(result: &mut ValidationResult, doc: &DevTrailDocume
 }
 
 /// META-003: Check that status has a valid value
-fn check_valid_status(result: &mut ValidationResult, doc: &DevTrailDocument) {
+fn check_valid_status(result: &mut ValidationResult, doc: &StrayMarkDocument) {
     if let Some(status) = &doc.frontmatter.status {
         if !VALID_STATUSES.contains(&status.as_str()) {
             result.add(ValidationIssue {
@@ -636,7 +636,7 @@ fn check_valid_status(result: &mut ValidationResult, doc: &DevTrailDocument) {
 }
 
 /// CROSS-001, CROSS-002, CROSS-003: Cross-field validation rules
-fn check_cross_rules(result: &mut ValidationResult, doc: &DevTrailDocument) {
+fn check_cross_rules(result: &mut ValidationResult, doc: &StrayMarkDocument) {
     let fm = &doc.frontmatter;
 
     // CROSS-001: high/critical risk_level requires review_required: true
@@ -719,7 +719,7 @@ fn check_cross_rules(result: &mut ValidationResult, doc: &DevTrailDocument) {
 }
 
 /// TYPE-001, TYPE-002: Type-specific field requirements
-fn check_type_specific(result: &mut ValidationResult, doc: &DevTrailDocument) {
+fn check_type_specific(result: &mut ValidationResult, doc: &StrayMarkDocument) {
     let fm = &doc.frontmatter;
 
     // TYPE-001: INC must have severity
@@ -749,7 +749,7 @@ fn check_type_specific(result: &mut ValidationResult, doc: &DevTrailDocument) {
 }
 
 /// Returns true when `related` includes any entry whose ID starts with `prefix`.
-fn related_has_prefix(doc: &DevTrailDocument, prefix: &str) -> bool {
+fn related_has_prefix(doc: &StrayMarkDocument, prefix: &str) -> bool {
     doc.frontmatter
         .related
         .as_ref()
@@ -758,7 +758,7 @@ fn related_has_prefix(doc: &DevTrailDocument, prefix: &str) -> bool {
 
 /// CROSS-004…CROSS-011: cross-field validation rules for the China regulatory profile.
 /// Only invoked when `regional_scope` includes "china".
-fn check_china_cross_rules(result: &mut ValidationResult, doc: &DevTrailDocument) {
+fn check_china_cross_rules(result: &mut ValidationResult, doc: &StrayMarkDocument) {
     let fm = &doc.frontmatter;
 
     // CROSS-004: tc260_risk_level high|very_high|extremely_severe ⇒ review_required: true
@@ -910,7 +910,7 @@ fn check_china_cross_rules(result: &mut ValidationResult, doc: &DevTrailDocument
 
 /// TYPE-003…TYPE-006: type-specific rules for China-only document types.
 /// Only invoked when `regional_scope` includes "china".
-fn check_china_type_specific(result: &mut ValidationResult, doc: &DevTrailDocument) {
+fn check_china_type_specific(result: &mut ValidationResult, doc: &StrayMarkDocument) {
     let fm = &doc.frontmatter;
 
     // TYPE-003: PIPIA must have pipl_retention_until ≥ created + 3 years
@@ -1021,26 +1021,26 @@ fn retention_satisfies_three_years(created: &str, until_date: &str) -> bool {
 }
 
 /// REF-001: Check that documents listed in related: exist
-/// Only validates references that look like DevTrail document IDs (e.g., AILOG-2025-01-27-001).
+/// Only validates references that look like StrayMark document IDs (e.g., AILOG-2025-01-27-001).
 /// Skips task IDs (T025), requirement IDs (FR-019, US2), risk IDs (RISK-001),
 /// external paths, and other non-document references to avoid false positives.
-fn check_related_exist(result: &mut ValidationResult, doc: &DevTrailDocument, devtrail_dir: &Path) {
+fn check_related_exist(result: &mut ValidationResult, doc: &StrayMarkDocument, straymark_dir: &Path) {
     if let Some(related) = &doc.frontmatter.related {
         for rel_id in related {
             if rel_id.is_empty() {
                 continue;
             }
-            // Only validate references that look like DevTrail document IDs
+            // Only validate references that look like StrayMark document IDs
             // (start with a known document type prefix followed by a dash)
-            if !looks_like_devtrail_id(rel_id) {
+            if !looks_like_straymark_id(rel_id) {
                 continue;
             }
             // Search for a file matching this id
-            if !find_document_by_id(devtrail_dir, rel_id) {
+            if !find_document_by_id(straymark_dir, rel_id) {
                 result.add(ValidationIssue {
                     file: doc.path.clone(),
                     rule: "REF-001".to_string(),
-                    message: format!("Related document '{}' not found in .devtrail/", rel_id),
+                    message: format!("Related document '{}' not found in .straymark/", rel_id),
                     severity: Severity::Warning,
                     fix_hint: None,
                 });
@@ -1049,17 +1049,17 @@ fn check_related_exist(result: &mut ValidationResult, doc: &DevTrailDocument, de
     }
 }
 
-/// Check if a reference looks like a DevTrail document ID.
+/// Check if a reference looks like a StrayMark document ID.
 /// Matches patterns like "AILOG-2025-01-27-001" or "ADR-2025-01-27-001-title".
 /// Returns false for task IDs (T025), requirement IDs (FR-019, US2), paths, etc.
-fn looks_like_devtrail_id(id: &str) -> bool {
+fn looks_like_straymark_id(id: &str) -> bool {
     DocType::ALL_PREFIXES.iter().any(|prefix| {
         id.starts_with(prefix) && id.get(prefix.len()..prefix.len() + 1) == Some("-")
     })
 }
 
 /// META-004: Check that filename date matches created field
-fn check_date_consistency(result: &mut ValidationResult, doc: &DevTrailDocument) {
+fn check_date_consistency(result: &mut ValidationResult, doc: &StrayMarkDocument) {
     let Some(created) = &doc.frontmatter.created else {
         return;
     };
@@ -1096,8 +1096,8 @@ fn check_date_consistency(result: &mut ValidationResult, doc: &DevTrailDocument)
 
 
 /// Search for a document whose filename starts with the given id
-fn find_document_by_id(devtrail_dir: &Path, id: &str) -> bool {
-    let docs = document::discover_documents(devtrail_dir);
+fn find_document_by_id(straymark_dir: &Path, id: &str) -> bool {
+    let docs = document::discover_documents(straymark_dir);
     docs.iter().any(|p| {
         p.file_name()
             .and_then(|n| n.to_str())
@@ -1107,7 +1107,7 @@ fn find_document_by_id(devtrail_dir: &Path, id: &str) -> bool {
 }
 
 /// SEC-001: Check for sensitive information patterns
-fn check_sensitive_info(result: &mut ValidationResult, doc: &DevTrailDocument) {
+fn check_sensitive_info(result: &mut ValidationResult, doc: &StrayMarkDocument) {
     let full_content = doc.body.to_string();
     for pattern in SENSITIVE_PATTERNS {
         if full_content.contains(pattern) {
@@ -1135,7 +1135,7 @@ fn check_sensitive_info(result: &mut ValidationResult, doc: &DevTrailDocument) {
 }
 
 /// OBS-001: If document has tag 'observabilidad' or 'observability', check for relevant sections
-fn check_observability(result: &mut ValidationResult, doc: &DevTrailDocument) {
+fn check_observability(result: &mut ValidationResult, doc: &StrayMarkDocument) {
     let has_obs_tag = doc.frontmatter.tags.as_ref().is_some_and(|tags| {
         tags.iter().any(|t| t == "observabilidad" || t == "observability")
     });
@@ -1161,7 +1161,7 @@ fn check_observability(result: &mut ValidationResult, doc: &DevTrailDocument) {
 }
 
 /// Apply automatic fixes to a document
-pub fn apply_fixes(doc: &DevTrailDocument) -> Option<String> {
+pub fn apply_fixes(doc: &StrayMarkDocument) -> Option<String> {
     let content = match std::fs::read_to_string(&doc.path) {
         Ok(c) => c,
         Err(_) => return None,
@@ -1229,9 +1229,9 @@ mod tests {
     use super::*;
     use crate::document::Frontmatter;
 
-    fn make_doc(filename: &str, doc_type: DocType, fm: Frontmatter, body: &str) -> DevTrailDocument {
-        DevTrailDocument {
-            path: PathBuf::from(format!(".devtrail/test/{}", filename)),
+    fn make_doc(filename: &str, doc_type: DocType, fm: Frontmatter, body: &str) -> StrayMarkDocument {
+        StrayMarkDocument {
+            path: PathBuf::from(format!(".straymark/test/{}", filename)),
             filename: filename.to_string(),
             doc_type,
             frontmatter: fm,

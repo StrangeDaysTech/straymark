@@ -4,7 +4,7 @@ use chrono::NaiveDate;
 use serde::Serialize;
 
 use crate::compliance::{self, ComplianceReport};
-use crate::document::DevTrailDocument;
+use crate::document::StrayMarkDocument;
 
 /// A single entry in the audit timeline
 #[derive(Debug, Clone, Serialize)]
@@ -53,10 +53,10 @@ fn parse_date(s: &str) -> Option<NaiveDate> {
 
 /// Filter documents by optional date range
 fn filter_by_dates<'a>(
-    docs: &'a [DevTrailDocument],
+    docs: &'a [StrayMarkDocument],
     from: Option<NaiveDate>,
     to: Option<NaiveDate>,
-) -> Vec<&'a DevTrailDocument> {
+) -> Vec<&'a StrayMarkDocument> {
     docs.iter()
         .filter(|d| {
             let date = d.frontmatter.created.as_deref().and_then(parse_date);
@@ -73,9 +73,9 @@ fn filter_by_dates<'a>(
 
 /// Filter documents by system name (matches tags or title, case-insensitive)
 fn filter_by_system<'a>(
-    docs: Vec<&'a DevTrailDocument>,
+    docs: Vec<&'a StrayMarkDocument>,
     system: &str,
-) -> Vec<&'a DevTrailDocument> {
+) -> Vec<&'a StrayMarkDocument> {
     let needle = system.to_lowercase();
     docs.into_iter()
         .filter(|d| {
@@ -94,7 +94,7 @@ fn filter_by_system<'a>(
 }
 
 /// Build the chronological timeline from documents
-fn build_timeline(docs: &[&DevTrailDocument]) -> Vec<TimelineEntry> {
+fn build_timeline(docs: &[&StrayMarkDocument]) -> Vec<TimelineEntry> {
     let mut entries: Vec<TimelineEntry> = docs
         .iter()
         .map(|d| TimelineEntry {
@@ -136,9 +136,9 @@ fn build_timeline(docs: &[&DevTrailDocument]) -> Vec<TimelineEntry> {
 }
 
 /// Build traceability chains from document relationships
-fn build_traceability(docs: &[&DevTrailDocument]) -> Vec<TraceabilityChain> {
+fn build_traceability(docs: &[&StrayMarkDocument]) -> Vec<TraceabilityChain> {
     // Build lookup by ID and by filename stem
-    let mut doc_by_id: HashMap<String, &DevTrailDocument> = HashMap::new();
+    let mut doc_by_id: HashMap<String, &StrayMarkDocument> = HashMap::new();
     let mut referenced_ids: HashSet<String> = HashSet::new();
 
     for doc in docs {
@@ -259,7 +259,7 @@ fn build_traceability(docs: &[&DevTrailDocument]) -> Vec<TraceabilityChain> {
 }
 
 /// Calculate risk distribution
-fn risk_distribution(docs: &[&DevTrailDocument]) -> Vec<(String, usize)> {
+fn risk_distribution(docs: &[&StrayMarkDocument]) -> Vec<(String, usize)> {
     let levels = ["low", "medium", "high", "critical"];
     levels
         .iter()
@@ -277,11 +277,11 @@ fn risk_distribution(docs: &[&DevTrailDocument]) -> Vec<(String, usize)> {
 /// `from` and `to` are optional date bounds.
 /// `system` filters by system/component name.
 pub fn generate_audit(
-    docs: &[DevTrailDocument],
+    docs: &[StrayMarkDocument],
     from: Option<NaiveDate>,
     to: Option<NaiveDate>,
     system: Option<&str>,
-    devtrail_dir: &std::path::Path,
+    straymark_dir: &std::path::Path,
 ) -> AuditReport {
     // Apply filters
     let mut filtered = filter_by_dates(docs, from, to);
@@ -296,9 +296,9 @@ pub fn generate_audit(
 
     // Compliance summary (run all checkers on full doc set)
     let compliance_summary = vec![
-        compliance::check_eu_ai_act(docs, devtrail_dir),
-        compliance::check_iso_42001(docs, devtrail_dir),
-        compliance::check_nist_ai_rmf(docs, devtrail_dir),
+        compliance::check_eu_ai_act(docs, straymark_dir),
+        compliance::check_iso_42001(docs, straymark_dir),
+        compliance::check_nist_ai_rmf(docs, straymark_dir),
     ];
 
     // Determine period labels
@@ -336,9 +336,9 @@ mod tests {
     use crate::document::{DocType, Frontmatter};
     use std::path::PathBuf;
 
-    fn make_doc(filename: &str, doc_type: DocType, fm: Frontmatter) -> DevTrailDocument {
-        DevTrailDocument {
-            path: PathBuf::from(format!(".devtrail/test/{}", filename)),
+    fn make_doc(filename: &str, doc_type: DocType, fm: Frontmatter) -> StrayMarkDocument {
+        StrayMarkDocument {
+            path: PathBuf::from(format!(".straymark/test/{}", filename)),
             filename: filename.to_string(),
             doc_type,
             frontmatter: fm,

@@ -1,6 +1,6 @@
-//! `devtrail charter drift` — file-vs-commit drift check at Charter close.
+//! `straymark charter drift` — file-vs-commit drift check at Charter close.
 //!
-//! Wraps the framework's `.devtrail/scripts/check-charter-drift.sh` (ported
+//! Wraps the framework's `.straymark/scripts/check-charter-drift.sh` (ported
 //! from Sentinel `scripts/check-plan-drift.sh`, validated empirically with
 //! zero false positives across PLAN-05 retrospective + PLAN-06 prospective).
 //! The CLI value-add over the raw script is **AILOG-awareness** (mitigation
@@ -38,9 +38,9 @@ pub fn run(
     no_ailog_suppress: bool,
 ) -> Result<()> {
     let resolved = utils::resolve_project_root(path)
-        .ok_or_else(|| anyhow!("DevTrail not installed. Run 'devtrail init' first."))?;
+        .ok_or_else(|| anyhow!("StrayMark not installed. Run 'straymark init' first."))?;
     let project_root = &resolved.path;
-    let devtrail_dir = project_root.join(".devtrail");
+    let straymark_dir = project_root.join(".straymark");
 
     // Resolve the Charter file.
     let (charters, _errors) = charter::discover_and_parse(project_root);
@@ -55,10 +55,10 @@ pub fn run(
         .to_path_buf();
 
     // Locate the drift script.
-    let script_path = devtrail_dir.join("scripts").join("check-charter-drift.sh");
+    let script_path = straymark_dir.join("scripts").join("check-charter-drift.sh");
     if !script_path.exists() {
         bail!(
-            "Drift script not found at {}. Run `devtrail repair` to restore framework files \
+            "Drift script not found at {}. Run `straymark repair` to restore framework files \
              (the script ships with fw-4.6.0 and later).",
             script_path.display()
         );
@@ -259,7 +259,7 @@ fn compute_ailog_suppressions(
     };
 
     let agent_logs_dir = project_root
-        .join(".devtrail")
+        .join(".straymark")
         .join("07-ai-audit")
         .join("agent-logs");
     if !agent_logs_dir.exists() {

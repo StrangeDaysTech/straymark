@@ -1,5 +1,5 @@
 //! Sanity tests for the v1 unified audit prompt template
-//! (`dist/.devtrail/audit-prompts/audit-prompt.md`) and the schema
+//! (`dist/.straymark/audit-prompts/audit-prompt.md`) and the schema
 //! evolution that accompanies it. These verify that:
 //!
 //! - The unified template ships and is well-formed (7 universal sections,
@@ -15,18 +15,18 @@
 use std::path::PathBuf;
 
 const UNIFIED_TEMPLATE: &str = include_str!(
-    "../../dist/.devtrail/audit-prompts/audit-prompt.md"
+    "../../dist/.straymark/audit-prompts/audit-prompt.md"
 );
 
 const AUDIT_OUTPUT_SCHEMA: &str = include_str!(
-    "../../dist/.devtrail/schemas/audit-output.schema.v0.json"
+    "../../dist/.straymark/schemas/audit-output.schema.v0.json"
 );
 
 fn template_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")
         .join("dist")
-        .join(".devtrail")
+        .join(".straymark")
         .join("audit-prompts")
         .join("audit-prompt.md")
 }
@@ -48,7 +48,7 @@ fn unified_template_ships_at_canonical_path() {
 
 #[test]
 fn unified_template_has_seven_universal_sections() {
-    // Per Propuesta/devtrail-audit-cli-flow.md §2 D12, the lift from
+    // Per Propuesta/straymark-audit-cli-flow.md §2 D12, the lift from
     // Sentinel preserves these seven sections integrally. Each is
     // identifiable by a stable heading or distinctive opener that survives
     // markdown rendering in any viewer the operator uses.

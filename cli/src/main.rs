@@ -24,9 +24,9 @@ mod tui;
 mod utils;
 mod validation;
 
-/// DevTrail CLI - Documentation Governance for AI-Assisted Development
+/// StrayMark CLI - Documentation Governance for AI-Assisted Development
 #[derive(Parser)]
-#[command(name = "devtrail", version, about, long_about = None)]
+#[command(name = "straymark", version, about, long_about = None)]
 #[command(propagate_version = true)]
 struct Cli {
     #[command(subcommand)]
@@ -35,13 +35,13 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Initialize DevTrail in a project directory
+    /// Initialize StrayMark in a project directory
     Init {
         /// Target directory (default: current directory)
         #[arg(default_value = ".")]
         path: String,
         /// After init, install the framework's pre-PR hook (runs
-        /// `devtrail charter drift` automatically before `git push`).
+        /// `straymark charter drift` automatically before `git push`).
         /// Opt-in per principle #6 — friction with consent. Requires the
         /// project to be a git repository.
         #[arg(long)]
@@ -53,7 +53,7 @@ enum Commands {
         #[arg(long, default_value = "auto", value_parser = ["auto", "github", "cargo"])]
         method: String,
     },
-    /// Update the DevTrail framework to the latest version
+    /// Update the StrayMark framework to the latest version
     UpdateFramework,
     /// Update the CLI binary to the latest version
     UpdateCli {
@@ -61,25 +61,25 @@ enum Commands {
         #[arg(long, default_value = "auto", value_parser = ["auto", "github", "cargo"])]
         method: String,
     },
-    /// Remove DevTrail from the project
+    /// Remove StrayMark from the project
     Remove {
         /// Remove everything including user-generated documents (requires confirmation)
         #[arg(long)]
         full: bool,
     },
-    /// Show DevTrail installation status and documentation statistics
+    /// Show StrayMark installation status and documentation statistics
     Status {
         /// Target directory (default: current directory)
         #[arg(default_value = ".")]
         path: String,
     },
-    /// Repair DevTrail structure by restoring missing directories and files
+    /// Repair StrayMark structure by restoring missing directories and files
     Repair {
         /// Target directory (default: current directory)
         #[arg(default_value = ".")]
         path: String,
     },
-    /// Validate DevTrail documents for compliance and correctness
+    /// Validate StrayMark documents for compliance and correctness
     Validate {
         /// Target directory (default: current directory)
         #[arg(default_value = ".")]
@@ -158,7 +158,7 @@ enum Commands {
         #[arg(long, default_value = "text", value_parser = ["text", "markdown", "json"])]
         output: String,
     },
-    /// Create a new DevTrail document from a template
+    /// Create a new StrayMark document from a template
     New {
         /// Target directory (default: current directory)
         #[arg(default_value = ".")]
@@ -224,14 +224,14 @@ enum Commands {
         #[arg(long)]
         top: Option<usize>,
     },
-    /// Explore DevTrail documentation interactively
+    /// Explore StrayMark documentation interactively
     #[cfg(feature = "tui")]
     Explore {
         /// Target directory (default: current directory)
         #[arg(default_value = ".")]
         path: String,
         /// Display language override (e.g., en, es, zh-CN). Defaults to
-        /// `language` from .devtrail/config.yml.
+        /// `language` from .straymark/config.yml.
         #[arg(long)]
         lang: Option<String>,
     },
@@ -324,11 +324,11 @@ enum CharterCommands {
         #[arg(long)]
         range: Option<String>,
         /// Generate the unified audit prompt and write it to
-        /// .devtrail/audits/CHARTER-NN/audit-prompt.md. Default action when
+        /// .straymark/audits/CHARTER-NN/audit-prompt.md. Default action when
         /// no other flag is passed. Equivalent to the v0 PREPARE step.
         #[arg(long, conflicts_with_all = ["merge_reports", "calibrate", "finalize"])]
         prepare: bool,
-        /// Read all report-*.md files in .devtrail/audits/CHARTER-NN/,
+        /// Read all report-*.md files in .straymark/audits/CHARTER-NN/,
         /// validate them against audit-output.schema.v0.json, and emit the
         /// external_audit YAML block. Combine with --merge-into to append
         /// the block directly into the Charter's telemetry YAML.
@@ -336,7 +336,7 @@ enum CharterCommands {
         merge_reports: bool,
         /// Deprecated v0 flag. The v1 flow does not have a separate calibrate
         /// step — the calibrator role is handled by the main agent via the
-        /// /devtrail-audit-review skill. Emits a warning and exits.
+        /// /straymark-audit-review skill. Emits a warning and exits.
         #[arg(long, hide = true, conflicts_with_all = ["prepare", "merge_reports", "finalize"])]
         calibrate: bool,
         /// Deprecated v0 flag. Use --merge-reports instead. Emits a

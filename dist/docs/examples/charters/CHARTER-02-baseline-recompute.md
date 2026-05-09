@@ -4,7 +4,7 @@ status: closed
 effort_estimate: XS
 trigger: "Operator post-onboarding fast-track: anomaly dashboard shows correlated spikes after batch service onboarding"
 originating_ailogs: [AILOG-2026-01-20-002]
-note: "Anonymized example derived from Sentinel PLAN-06 (baseline-recompute-job). See devtrail-cli-roadmap.md §3.1 for the porting context."
+note: "Anonymized example derived from Sentinel PLAN-06 (baseline-recompute-job). See straymark-cli-roadmap.md §3.1 for the porting context."
 closed_at: "2026-01-30"
 ---
 
@@ -17,7 +17,7 @@ closed_at: "2026-01-30"
 <!-- Anonymized example derived from Sentinel PLAN-06.
      Format conventions match charter-template.md (6 conventions distilled from the
      Sentinel /plan-audit experiment). Structural conventions preserved verbatim;
-     identifiers anonymized. See devtrail-cli-roadmap.md §3.1. -->
+     identifiers anonymized. See straymark-cli-roadmap.md §3.1. -->
 
 ## Context
 
@@ -57,7 +57,7 @@ A prior issue left `RefreshActivityBaselines` exported in the Repository interfa
 | `src/services/audit/consumer.<ext>` | Add `"monitor.baselines.refreshed"` to `auditTopics`. |
 | `src/services/audit/classifier.<ext>` | WARNING rule for the new topic. |
 | `specs/contracts/events.md` | New event entry `monitor.baselines.refreshed` + subscription matrix. |
-| `.devtrail/07-ai-audit/agent-logs/AILOG-...md` | New, `risk_level: low` (idempotent operation, RBAC SUPER_ADMIN, no schema changes). |
+| `.straymark/07-ai-audit/agent-logs/AILOG-...md` | New, `risk_level: low` (idempotent operation, RBAC SUPER_ADMIN, no schema changes). |
 
 ## Verification
 
@@ -116,7 +116,7 @@ curl -X POST "https://${SERVICE_HOST}/api/v1/admin/baselines/refresh" \
 7. Unit tests (handler 3 + service 2).
 8. AILOG (`risk_level: low`, `review_required: false` — idempotent operation, no schema changes).
 9. Local verification passes clean.
-10. **Auto-checklist drift** (Phase 2 of the CLI roadmap): `devtrail charter drift CHARTER-02 <range>`. If it reports omissions, complete; if scope expansion, document in AILOG. Until Phase 2 ships, run Sentinel's `check-plan-drift.sh` manually.
+10. **Auto-checklist drift** (Phase 2 of the CLI roadmap): `straymark charter drift CHARTER-02 <range>`. If it reports omissions, complete; if scope expansion, document in AILOG. Until Phase 2 ships, run Sentinel's `check-plan-drift.sh` manually.
 11. Commit + push + open PR.
 
 ## Charter Closure

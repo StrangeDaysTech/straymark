@@ -1,4 +1,4 @@
-//! Integration tests for `devtrail charter close`. Only the
+//! Integration tests for `straymark charter close`. Only the
 //! `--from-template --non-interactive` path is testable without a TTY; the
 //! interactive flow is exercised manually and via the unit tests in
 //! `cli/src/commands/charter/close.rs`.
@@ -31,7 +31,7 @@ trigger: "[1-line]"
 1. Sync.
 "#;
 
-const TELEMETRY_TEMPLATE: &str = r#"# DevTrail Charter telemetry — fill at Charter close.
+const TELEMETRY_TEMPLATE: &str = r#"# StrayMark Charter telemetry — fill at Charter close.
 charter_telemetry:
   charter_id: "CHARTER-NN"
   charter_title: "<short title>"
@@ -45,38 +45,38 @@ charter_telemetry:
 "#;
 
 const TELEMETRY_SCHEMA: &str = include_str!(
-    "../../dist/.devtrail/schemas/charter-telemetry.schema.v0.json"
+    "../../dist/.straymark/schemas/charter-telemetry.schema.v0.json"
 );
 
-/// Set up a minimal DevTrail installation with both the Charter template and
-/// the telemetry template + schema. Mirrors what `devtrail init` would produce
+/// Set up a minimal StrayMark installation with both the Charter template and
+/// the telemetry template + schema. Mirrors what `straymark init` would produce
 /// after fw-4.6.0 ships.
-fn setup_devtrail(dir: &Path) {
-    let devtrail = dir.join(".devtrail");
-    std::fs::create_dir_all(devtrail.join("templates")).unwrap();
-    std::fs::create_dir_all(devtrail.join("schemas")).unwrap();
-    std::fs::write(devtrail.join("config.yml"), "language: en\n").unwrap();
+fn setup_straymark(dir: &Path) {
+    let straymark = dir.join(".straymark");
+    std::fs::create_dir_all(straymark.join("templates")).unwrap();
+    std::fs::create_dir_all(straymark.join("schemas")).unwrap();
+    std::fs::write(straymark.join("config.yml"), "language: en\n").unwrap();
     std::fs::write(
-        devtrail.join("templates").join("charter-template.md"),
+        straymark.join("templates").join("charter-template.md"),
         CHARTER_TEMPLATE,
     )
     .unwrap();
     std::fs::write(
-        devtrail
+        straymark
             .join("templates")
             .join("charter-telemetry-template.yaml"),
         TELEMETRY_TEMPLATE,
     )
     .unwrap();
     std::fs::write(
-        devtrail.join("schemas").join("charter-telemetry.schema.v0.json"),
+        straymark.join("schemas").join("charter-telemetry.schema.v0.json"),
         TELEMETRY_SCHEMA,
     )
     .unwrap();
 }
 
 fn create_charter(dir: &Path, title: &str) {
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .arg("charter")
         .arg("new")
@@ -88,10 +88,10 @@ fn create_charter(dir: &Path, title: &str) {
 }
 
 #[test]
-fn charter_close_requires_devtrail_installed() {
+fn charter_close_requires_straymark_installed() {
     let dir = TempDir::new().unwrap();
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -110,9 +110,9 @@ fn charter_close_requires_devtrail_installed() {
 #[test]
 fn charter_close_unknown_charter_fails_clearly() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -131,10 +131,10 @@ fn charter_close_unknown_charter_fails_clearly() {
 #[test]
 fn charter_close_from_template_non_interactive_writes_telemetry_file() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     create_charter(dir.path(), "Test Charter");
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -152,7 +152,7 @@ fn charter_close_from_template_non_interactive_writes_telemetry_file() {
 
     let telemetry_path = dir
         .path()
-        .join(".devtrail/charters/CHARTER-01.telemetry.yaml");
+        .join(".straymark/charters/CHARTER-01.telemetry.yaml");
     assert!(telemetry_path.exists(), "telemetry file should exist");
 
     let content = std::fs::read_to_string(&telemetry_path).unwrap();
@@ -178,14 +178,14 @@ fn charter_close_syncs_body_status_mirror_line() {
     // frontmatter said `closed` while body still said `declared` — silent drift
     // between the document's own claim ("mirrored from frontmatter") and reality.
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     create_charter(dir.path(), "Mirror Sync");
 
     let charter_path = dir.path().join("docs/charters/01-mirror-sync.md");
     let before = std::fs::read_to_string(&charter_path).unwrap();
     assert!(before.contains(":** declared. Effort:"), "{before}");
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -222,13 +222,13 @@ fn charter_close_writes_closed_at_when_absent() {
     // YYYY-MM-DD line in frontmatter. Sentinel CHARTER-02..05 telemetry had
     // to add it manually 4× consecutively. The CLI now does it on close.
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     create_charter(dir.path(), "Closed At Test");
     let charter_path = dir.path().join("docs/charters/01-closed-at-test.md");
     let before = std::fs::read_to_string(&charter_path).unwrap();
     assert!(!before.contains("closed_at:"), "scaffold should not pre-write closed_at");
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -266,7 +266,7 @@ fn charter_close_replaces_existing_closed_at_with_today() {
     // edit, or a re-close after status got reverted), the date should be
     // refreshed to today rather than left stale.
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     let charter_path = dir.path().join("docs/charters/01-stale.md");
     let stale = r#"---
@@ -293,7 +293,7 @@ trigger: "test"
     std::fs::create_dir_all(dir.path().join("docs/charters")).unwrap();
     std::fs::write(&charter_path, stale).unwrap();
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -316,14 +316,14 @@ trigger: "test"
 #[test]
 fn charter_close_bumps_status_to_closed() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     create_charter(dir.path(), "Status Bump");
 
     let charter_path = dir.path().join("docs/charters/01-status-bump.md");
     let before = std::fs::read_to_string(&charter_path).unwrap();
     assert!(before.contains("status: declared"));
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -353,10 +353,10 @@ fn charter_close_idempotent_under_non_interactive() {
     // Running --from-template --non-interactive twice should not clobber
     // edits the user made between runs (we re-read the existing file).
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     create_charter(dir.path(), "Idempotent");
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -373,14 +373,14 @@ fn charter_close_idempotent_under_non_interactive() {
     // Simulate the user editing the telemetry file.
     let telemetry_path = dir
         .path()
-        .join(".devtrail/charters/CHARTER-01.telemetry.yaml");
+        .join(".straymark/charters/CHARTER-01.telemetry.yaml");
     let edited = std::fs::read_to_string(&telemetry_path)
         .unwrap()
         .replace("ninguno", "menor");
     std::fs::write(&telemetry_path, &edited).unwrap();
 
     // Second run: should NOT overwrite the edit.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -409,10 +409,10 @@ fn charter_close_first_run_prints_template_created_message() {
     // template skeleton; output should tell the operator to edit and re-run,
     // NOT pretend the close is finalized.
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     create_charter(dir.path(), "F7 First Run");
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -436,11 +436,11 @@ fn charter_close_subsequent_run_prints_finalized_message() {
     // F7: subsequent invocation (telemetry already exists, presumably edited)
     // should run schema validation and report "finalized" on success.
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     create_charter(dir.path(), "F7 Subsequent Run");
 
     // First invocation: writes the template.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -457,7 +457,7 @@ fn charter_close_subsequent_run_prints_finalized_message() {
     // Simulate the operator editing the telemetry file with valid content.
     let telemetry_path = dir
         .path()
-        .join(".devtrail/charters/CHARTER-01.telemetry.yaml");
+        .join(".straymark/charters/CHARTER-01.telemetry.yaml");
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();
     let valid_yaml = format!(
         r#"charter_telemetry:
@@ -475,7 +475,7 @@ fn charter_close_subsequent_run_prints_finalized_message() {
     std::fs::write(&telemetry_path, valid_yaml).unwrap();
 
     // Second invocation: schema validates, output says finalized.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -500,11 +500,11 @@ fn charter_close_subsequent_run_with_invalid_yaml_fails_clearly() {
     // F7: subsequent invocation that fails schema validation should bail
     // with a clear message, not silently print "finalized".
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     create_charter(dir.path(), "F7 Invalid Telemetry");
 
     // First invocation drops the template.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -521,7 +521,7 @@ fn charter_close_subsequent_run_with_invalid_yaml_fails_clearly() {
     // Now break the telemetry file (invalid scope_changes value).
     let telemetry_path = dir
         .path()
-        .join(".devtrail/charters/CHARTER-01.telemetry.yaml");
+        .join(".straymark/charters/CHARTER-01.telemetry.yaml");
     std::fs::write(
         &telemetry_path,
         r#"charter_telemetry:
@@ -538,7 +538,7 @@ fn charter_close_subsequent_run_with_invalid_yaml_fails_clearly() {
     )
     .unwrap();
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",

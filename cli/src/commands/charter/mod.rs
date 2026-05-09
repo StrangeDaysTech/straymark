@@ -1,4 +1,4 @@
-//! `devtrail charter` — Charter lifecycle subcommands.
+//! `straymark charter` — Charter lifecycle subcommands.
 //!
 //! Phase 1 shipped `new` (scaffold from template), `list` (enumerate with filters),
 //! and `status` (detail view).

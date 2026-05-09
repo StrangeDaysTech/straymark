@@ -1,14 +1,14 @@
-//! Integration tests for `devtrail approve`.
+//! Integration tests for `straymark approve`.
 
 use assert_cmd::Command;
 use predicates::prelude::*;
 use std::path::Path;
 use tempfile::TempDir;
 
-fn setup_devtrail(dir: &Path) {
-    let devtrail = dir.join(".devtrail");
-    std::fs::create_dir_all(devtrail.join("07-ai-audit/decisions")).unwrap();
-    std::fs::write(devtrail.join("config.yml"), "language: en\n").unwrap();
+fn setup_straymark(dir: &Path) {
+    let straymark = dir.join(".straymark");
+    std::fs::create_dir_all(straymark.join("07-ai-audit/decisions")).unwrap();
+    std::fs::write(straymark.join("config.yml"), "language: en\n").unwrap();
 }
 
 fn write_aidec(dir: &Path, id: &str, review_required: bool) -> std::path::PathBuf {
@@ -22,7 +22,7 @@ fn write_aidec_with_risk(
     risk_level: &str,
 ) -> std::path::PathBuf {
     let path = dir.join(format!(
-        ".devtrail/07-ai-audit/decisions/{}-test-decision.md",
+        ".straymark/07-ai-audit/decisions/{}-test-decision.md",
         id
     ));
     let body = format!(
@@ -47,7 +47,7 @@ Body.
 
 - (none)
 
-<!-- Template: DevTrail | https://strangedays.tech -->
+<!-- Template: StrayMark | https://strangedays.tech -->
 "#,
         id = id,
         rq = if review_required { "true" } else { "false" },
@@ -58,10 +58,10 @@ Body.
 }
 
 #[test]
-fn approve_requires_devtrail_installed() {
+fn approve_requires_straymark_installed() {
     let dir = TempDir::new().unwrap();
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "approve",
@@ -81,9 +81,9 @@ fn approve_requires_devtrail_installed() {
 #[test]
 fn approve_unknown_doc_fails_clearly() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "approve",
@@ -105,10 +105,10 @@ fn approve_unknown_doc_fails_clearly() {
 #[test]
 fn approve_writes_frontmatter_and_body() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     let aidec = write_aidec(dir.path(), "AIDEC-2026-05-02-001", true);
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "approve",
@@ -146,7 +146,7 @@ fn approve_writes_frontmatter_and_body() {
 
     // Approval section appears BEFORE the template signature line.
     let approval_pos = content.find("## Approval").unwrap();
-    let signature_pos = content.find("<!-- Template: DevTrail").unwrap();
+    let signature_pos = content.find("<!-- Template: StrayMark").unwrap();
     assert!(approval_pos < signature_pos);
 
     // Original frontmatter and body are preserved.
@@ -159,10 +159,10 @@ fn approve_writes_frontmatter_and_body() {
 #[test]
 fn approve_warns_when_review_not_required_but_succeeds() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_aidec(dir.path(), "AIDEC-2026-05-02-002", false);
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "approve",
@@ -187,11 +187,11 @@ fn approve_re_application_without_force_is_idempotent_skip() {
     // longer silently overwrites frontmatter and appends a duplicate body
     // block. The default is now an idempotent skip with a clear message.
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     let aidec = write_aidec(dir.path(), "AIDEC-2026-05-02-003", true);
 
     // First approval (legitimate).
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "approve",
@@ -211,7 +211,7 @@ fn approve_re_application_without_force_is_idempotent_skip() {
     let content_after_first = std::fs::read_to_string(&aidec).unwrap();
 
     // Re-approval WITHOUT --force is an idempotent skip.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "approve",
@@ -245,11 +245,11 @@ fn approve_re_application_with_force_replaces_and_appends_block() {
     //  - multi-reviewer hand-off (different reviewer adding to history)
     // Frontmatter is latest-wins; body preserves the chronological history.
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     let aidec = write_aidec(dir.path(), "AIDEC-2026-05-02-003", true);
 
     // First approval.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "approve",
@@ -267,7 +267,7 @@ fn approve_re_application_with_force_replaces_and_appends_block() {
         .success();
 
     // Re-approval WITH --force.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "approve",
@@ -301,10 +301,10 @@ fn approve_re_application_with_force_replaces_and_appends_block() {
 #[test]
 fn approve_invalid_outcome_rejected_by_clap() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_aidec(dir.path(), "AIDEC-2026-05-02-004", true);
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "approve",
@@ -326,10 +326,10 @@ fn approve_invalid_outcome_rejected_by_clap() {
 #[test]
 fn approve_warns_on_high_risk_document() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_aidec_with_risk(dir.path(), "AIDEC-2026-05-03-001", true, "high");
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "approve",
@@ -353,10 +353,10 @@ fn approve_warns_on_high_risk_document() {
 #[test]
 fn approve_warns_on_critical_risk_document() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_aidec_with_risk(dir.path(), "AIDEC-2026-05-03-002", true, "critical");
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "approve",
@@ -378,10 +378,10 @@ fn approve_warns_on_critical_risk_document() {
 #[test]
 fn approve_no_warning_for_low_or_medium_risk() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_aidec_with_risk(dir.path(), "AIDEC-2026-05-03-003", true, "low");
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "approve",
@@ -401,10 +401,10 @@ fn approve_no_warning_for_low_or_medium_risk() {
 #[test]
 fn approve_quiet_suppresses_normal_output_but_keeps_high_risk_warning() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_aidec_with_risk(dir.path(), "AIDEC-2026-05-03-004", true, "high");
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "approve",
@@ -434,11 +434,11 @@ fn approve_quiet_suppresses_idempotent_skip_message() {
     // Re-approving an already-approved document under --quiet should still
     // be an idempotent no-op, but with no console output.
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_aidec(dir.path(), "AIDEC-2026-05-03-005", true);
 
     // First approval — verbose so we know the file is set up.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "approve",
@@ -454,7 +454,7 @@ fn approve_quiet_suppresses_idempotent_skip_message() {
         .success();
 
     // Second invocation — quiet, should produce no stdout.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "approve",
@@ -479,10 +479,10 @@ fn approve_quiet_suppresses_review_required_false_warning() {
     // High-risk warning is NOT silenceable; this test only covers the
     // info-warning path.
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_aidec(dir.path(), "AIDEC-2026-05-03-006", false);
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "approve",

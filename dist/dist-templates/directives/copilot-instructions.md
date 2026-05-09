@@ -1,18 +1,18 @@
-# DevTrail - GitHub Copilot Configuration
+# StrayMark - GitHub Copilot Configuration
 
-<!-- devtrail:begin -->
-> **Read and follow the rules in [../DEVTRAIL.md](../DEVTRAIL.md).**
-> That file contains all DevTrail documentation governance rules for this project.
-<!-- devtrail:end -->
+<!-- straymark:begin -->
+> **Read and follow the rules in [../STRAYMARK.md](../STRAYMARK.md).**
+> That file contains all StrayMark documentation governance rules for this project.
+<!-- straymark:end -->
 
 ---
 
-## DevTrail Rules for Copilot
+## StrayMark Rules for Copilot
 
 When assisting with code changes in this project, follow these documentation rules:
 
 **Document when:**
-- Complex code change → suggest running `devtrail analyze`; if `above_threshold > 0`, suggest AILOG (fallback: >20 lines)
+- Complex code change → suggest running `straymark analyze`; if `above_threshold > 0`, suggest AILOG (fallback: >20 lines)
 - Choosing between alternatives → suggest creating AIDEC
 - Changing auth/PII/security → suggest AILOG (risk_level: high) + ETH draft
 - Changing public API or DB schema → suggest AILOG + consider ADR
@@ -33,4 +33,4 @@ When assisting with code changes in this project, follow these documentation rul
 
 ---
 
-*DevTrail | [Strange Days Tech](https://strangedays.tech) — Because every change tells a story.*
+*StrayMark | [Strange Days Tech](https://strangedays.tech) — Because every change tells a story.*

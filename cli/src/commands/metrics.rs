@@ -15,26 +15,26 @@ pub fn run(path: &str, period: &str, output: &str) -> Result<()> {
                 .canonicalize()
                 .unwrap_or_else(|_| PathBuf::from(path));
             utils::info(&format!(
-                "DevTrail is not installed in {}",
+                "StrayMark is not installed in {}",
                 target.display()
             ));
-            utils::info("Run 'devtrail init' to initialize DevTrail in this directory.");
+            utils::info("Run 'straymark init' to initialize StrayMark in this directory.");
             return Ok(());
         }
     };
 
     if resolved.is_fallback {
         utils::info(&format!(
-            "Using DevTrail installation at repo root: {}",
+            "Using StrayMark installation at repo root: {}",
             resolved.path.display()
         ));
     }
 
     let target = resolved.path;
-    let devtrail_dir = target.join(".devtrail");
+    let straymark_dir = target.join(".straymark");
 
     // Discover and parse all documents
-    let paths = document::discover_documents(&devtrail_dir);
+    let paths = document::discover_documents(&straymark_dir);
     let docs: Vec<_> = paths
         .iter()
         .filter_map(|p| document::parse_document(p).ok())
@@ -55,7 +55,7 @@ pub fn run(path: &str, period: &str, output: &str) -> Result<()> {
 
 fn print_text(report: &MetricsReport, target: &std::path::Path) {
     println!();
-    println!("  {}", "DevTrail Metrics".bold().cyan());
+    println!("  {}", "StrayMark Metrics".bold().cyan());
     println!("  {}", target.display().to_string().dimmed());
     println!(
         "  {} {} — {}",
@@ -169,7 +169,7 @@ fn print_json(report: &MetricsReport) {
 }
 
 fn print_markdown(report: &MetricsReport) {
-    println!("# DevTrail Metrics Report");
+    println!("# StrayMark Metrics Report");
     println!();
     println!(
         "**Period:** {} ({} to {})",

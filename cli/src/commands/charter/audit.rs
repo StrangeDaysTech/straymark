@@ -1,4 +1,4 @@
-//! `devtrail charter audit` — orchestrate the dual-audit + calibrator cycle.
+//! `straymark charter audit` — orchestrate the dual-audit + calibrator cycle.
 //!
 //! Phase 3 v0 is **orchestration-only**: the command resolves prompts, awaits
 //! the operator's auditor responses, validates outputs against the schema,
@@ -91,9 +91,9 @@ pub fn run(
     }
 
     let resolved = utils::resolve_project_root(path)
-        .ok_or_else(|| anyhow!("DevTrail not installed. Run 'devtrail init' first."))?;
+        .ok_or_else(|| anyhow!("StrayMark not installed. Run 'straymark init' first."))?;
     let project_root = &resolved.path;
-    let devtrail_dir = project_root.join(".devtrail");
+    let straymark_dir = project_root.join(".straymark");
 
     // Resolve the Charter.
     let (charters, _errors) = charter::discover_and_parse(project_root);
@@ -103,10 +103,10 @@ pub fn run(
 
     let canonical_id = canonical_charter_id(&charter.frontmatter.charter_id);
 
-    // v1 canonical path: .devtrail/audits/<CHARTER-ID>/. The audit-prompt is
+    // v1 canonical path: .straymark/audits/<CHARTER-ID>/. The audit-prompt is
     // written directly to this dir; reports land here as report-*.md; the
     // future review.md consolidated by the audit-review skill lands here too.
-    let audit_dir = devtrail_dir.join("audits").join(&canonical_id);
+    let audit_dir = straymark_dir.join("audits").join(&canonical_id);
     utils::ensure_dir(&audit_dir)?;
 
     let range = match range {
@@ -115,13 +115,13 @@ pub fn run(
     };
 
     // Deprecated v0 flag: --calibrate. v1 has no separate calibrate step
-    // (the main agent fills the calibrator role via /devtrail-audit-review
+    // (the main agent fills the calibrator role via /straymark-audit-review
     // skill). Emit guidance and exit nonzero so callers notice.
     if calibrate {
         eprintln!(
             "{} --calibrate was the v0 way to resolve the calibrator prompt. \
              v1 of the audit flow eliminates that step — the main agent \
-             reconciles N reports inline via the /devtrail-audit-review skill. \
+             reconciles N reports inline via the /straymark-audit-review skill. \
              To merge reports into telemetry, use --merge-reports.",
             "warn:".yellow().bold()
         );
@@ -139,7 +139,7 @@ pub fn run(
         );
         return run_merge_reports(
             project_root,
-            &devtrail_dir,
+            &straymark_dir,
             &audit_dir,
             &charter,
             &canonical_id,
@@ -150,7 +150,7 @@ pub fn run(
     if merge_reports {
         return run_merge_reports(
             project_root,
-            &devtrail_dir,
+            &straymark_dir,
             &audit_dir,
             &charter,
             &canonical_id,
@@ -161,14 +161,14 @@ pub fn run(
     // Default action: prepare. The --prepare flag is accepted for
     // self-documenting invocations but is also the implicit default.
     let _ = prepare;
-    run_prepare(project_root, &devtrail_dir, &audit_dir, &charter, &range)
+    run_prepare(project_root, &straymark_dir, &audit_dir, &charter, &range)
 }
 
 // ── Step 1: prepare ────────────────────────────────────────────────────────
 
 fn run_prepare(
     project_root: &Path,
-    devtrail_dir: &Path,
+    straymark_dir: &Path,
     audit_dir: &Path,
     charter: &Charter,
     range: &str,
@@ -182,12 +182,12 @@ fn run_prepare(
 
     let context = build_audit_context(project_root, charter, range)?;
 
-    let template_path = devtrail_dir
+    let template_path = straymark_dir
         .join("audit-prompts")
         .join("audit-prompt.md");
     let template = std::fs::read_to_string(&template_path).with_context(|| {
         format!(
-            "Audit prompt template not found at {}. Run `devtrail repair` to restore framework files.",
+            "Audit prompt template not found at {}. Run `straymark repair` to restore framework files.",
             template_path.display()
         )
     })?;
@@ -207,7 +207,7 @@ fn run_prepare(
         "    1. Open one or more auditor CLIs (gemini-cli, claude-cli, copilot-cli, etc.)"
     );
     println!("       in this repo and invoke {} in each.",
-        format!("/devtrail-audit-execute {}", charter.frontmatter.charter_id).cyan());
+        format!("/straymark-audit-execute {}", charter.frontmatter.charter_id).cyan());
     println!(
         "       Recommended: at least 2 auditors of different model families."
     );
@@ -226,7 +226,7 @@ fn run_prepare(
     );
     println!(
         "       return to this agent and run: {}",
-        format!("/devtrail-audit-review {}", charter.frontmatter.charter_id).cyan()
+        format!("/straymark-audit-review {}", charter.frontmatter.charter_id).cyan()
     );
     println!("    4. The review skill consolidates the reports and merges YAML");
     println!("       into telemetry.");
@@ -238,14 +238,14 @@ fn run_prepare(
 // v1 unifies the v0 `--calibrate` + `--finalize` two-step into a single
 // `--merge-reports` action. The calibrator role (cross-finding reconciliation,
 // severity recalibration, missed-finding detection, remediation plan) is now
-// performed by the main agent via the /devtrail-audit-review skill, which
-// produces `.devtrail/audits/<id>/review.md` consolidated. The CLI's job
+// performed by the main agent via the /straymark-audit-review skill, which
+// produces `.straymark/audits/<id>/review.md` consolidated. The CLI's job
 // here is mechanical: validate each report against the schema, build per-
 // auditor summaries, and emit the YAML block (or merge into telemetry).
 
 fn run_merge_reports(
     project_root: &Path,
-    devtrail_dir: &Path,
+    straymark_dir: &Path,
     audit_dir: &Path,
     charter: &Charter,
     canonical_id: &str,
@@ -283,7 +283,7 @@ fn run_merge_reports(
     if report_paths.is_empty() {
         bail!(
             "No reports found in {}. Expected one or more files matching report-*.md \
-             written by the /devtrail-audit-execute skill (or saved manually by the \
+             written by the /straymark-audit-execute skill (or saved manually by the \
              operator). Run --prepare first if you have not generated the audit prompt.",
             relative_path(project_root, audit_dir).display()
         );
@@ -300,7 +300,7 @@ fn run_merge_reports(
         );
     }
 
-    let schema = AuditOutputSchema::load(devtrail_dir)?;
+    let schema = AuditOutputSchema::load(straymark_dir)?;
     let mut auditor_summaries: Vec<AuditorSummary> = Vec::new();
     for path in &report_paths {
         let raw = std::fs::read_to_string(path)
@@ -367,7 +367,7 @@ fn merge_external_audit_into(
     if !telemetry_path.exists() {
         bail!(
             "Telemetry file not found: {}\n  \
-             Run `devtrail charter close <CHARTER-ID>` first to create the telemetry,\n  \
+             Run `straymark charter close <CHARTER-ID>` first to create the telemetry,\n  \
              then re-run with --merge-into. Or omit --merge-into to print the YAML\n  \
              for manual paste.",
             telemetry_path.display()
@@ -399,7 +399,7 @@ fn merge_external_audit_into(
         bail!(
             "{} already has an `external_audit:` block. Re-audit (appending\n  \
              to an existing array) is not supported in v0. Re-run\n  \
-             `devtrail charter audit <id> --finalize` (without --merge-into) to\n  \
+             `straymark charter audit <id> --finalize` (without --merge-into) to\n  \
              print the new YAML, then merge manually if you want to append.",
             telemetry_path.display()
         );
@@ -461,7 +461,7 @@ fn build_audit_context(
         git_diff,
         ailog_paths,
         ailog_contents,
-        schema_path: ".devtrail/schemas/audit-output.schema.v0.json".to_string(),
+        schema_path: ".straymark/schemas/audit-output.schema.v0.json".to_string(),
         // {{project_context}} is intentionally empty by default. Adopters
         // who want to give auditors a project-stack hint can edit the
         // template to substitute it manually, or a future release may
@@ -476,7 +476,7 @@ fn read_originating_ailogs(project_root: &Path, charter: &Charter) -> Result<(St
         _ => return Ok(("(none)".to_string(), "(none)".to_string())),
     };
     let agent_logs = project_root
-        .join(".devtrail")
+        .join(".straymark")
         .join("07-ai-audit")
         .join("agent-logs");
     let mut paths = Vec::new();

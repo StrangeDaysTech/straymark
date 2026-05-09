@@ -21,23 +21,23 @@ pub fn run(
                 .canonicalize()
                 .unwrap_or_else(|_| PathBuf::from(path));
             utils::info(&format!(
-                "DevTrail is not installed in {}",
+                "StrayMark is not installed in {}",
                 target.display()
             ));
-            utils::info("Run 'devtrail init' to initialize DevTrail in this directory.");
+            utils::info("Run 'straymark init' to initialize StrayMark in this directory.");
             return Ok(());
         }
     };
 
     if resolved.is_fallback {
         utils::info(&format!(
-            "Using DevTrail installation at repo root: {}",
+            "Using StrayMark installation at repo root: {}",
             resolved.path.display()
         ));
     }
 
     let target = resolved.path;
-    let devtrail_dir = target.join(".devtrail");
+    let straymark_dir = target.join(".straymark");
 
     // Parse date arguments
     let from_date = match from {
@@ -63,13 +63,13 @@ pub fn run(
     };
 
     // Discover and parse all documents
-    let paths = document::discover_documents(&devtrail_dir);
+    let paths = document::discover_documents(&straymark_dir);
     let docs: Vec<_> = paths
         .iter()
         .filter_map(|p| document::parse_document(p).ok())
         .collect();
 
-    let report = audit_engine::generate_audit(&docs, from_date, to_date, system, &devtrail_dir);
+    let report = audit_engine::generate_audit(&docs, from_date, to_date, system, &straymark_dir);
 
     match output {
         "json" => print_json(&report),
@@ -83,7 +83,7 @@ pub fn run(
 
 fn print_text(report: &AuditReport, target: &std::path::Path) {
     println!();
-    println!("  {}", "DevTrail Audit Report".bold().cyan());
+    println!("  {}", "StrayMark Audit Report".bold().cyan());
     println!("  {}", target.display().to_string().dimmed());
     println!(
         "  {} {} — {}",
@@ -193,7 +193,7 @@ fn print_json(report: &AuditReport) {
 }
 
 fn print_markdown(report: &AuditReport) {
-    println!("# DevTrail Audit Report");
+    println!("# StrayMark Audit Report");
     println!();
 
     // Executive summary
@@ -291,7 +291,7 @@ fn print_html(report: &AuditReport) {
 <head>
 <meta charset=\"UTF-8\">
 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-<title>DevTrail Audit Report</title>
+<title>StrayMark Audit Report</title>
 <style>
   body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1b26; color: #a9b1d6; max-width: 960px; margin: 0 auto; padding: 2rem; }}
   h1 {{ color: #7aa2f7; border-bottom: 2px solid #3b4261; padding-bottom: 0.5rem; }}
@@ -318,7 +318,7 @@ fn print_html(report: &AuditReport) {
 </style>
 </head>
 <body>
-<h1>DevTrail Audit Report</h1>"
+<h1>StrayMark Audit Report</h1>"
     );
 
     // Summary

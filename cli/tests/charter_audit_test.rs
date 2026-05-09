@@ -1,4 +1,4 @@
-//! Integration tests for `devtrail charter audit` (v1 unified flow).
+//! Integration tests for `straymark charter audit` (v1 unified flow).
 
 use assert_cmd::Command;
 use predicates::prelude::*;
@@ -7,10 +7,10 @@ use std::process::Command as StdCommand;
 use tempfile::TempDir;
 
 const AUDIT_PROMPT_UNIFIED: &str = include_str!(
-    "../../dist/.devtrail/audit-prompts/audit-prompt.md"
+    "../../dist/.straymark/audit-prompts/audit-prompt.md"
 );
 const AUDIT_OUTPUT_SCHEMA: &str = include_str!(
-    "../../dist/.devtrail/schemas/audit-output.schema.v0.json"
+    "../../dist/.straymark/schemas/audit-output.schema.v0.json"
 );
 
 fn bash_available() -> bool {
@@ -21,20 +21,20 @@ fn bash_available() -> bool {
         .unwrap_or(false)
 }
 
-fn setup_devtrail(dir: &Path) {
-    let devtrail = dir.join(".devtrail");
-    std::fs::create_dir_all(devtrail.join("audit-prompts")).unwrap();
-    std::fs::create_dir_all(devtrail.join("schemas")).unwrap();
-    std::fs::create_dir_all(devtrail.join("07-ai-audit/agent-logs")).unwrap();
-    std::fs::create_dir_all(devtrail.join("templates")).unwrap();
-    std::fs::write(devtrail.join("config.yml"), "language: en\n").unwrap();
+fn setup_straymark(dir: &Path) {
+    let straymark = dir.join(".straymark");
+    std::fs::create_dir_all(straymark.join("audit-prompts")).unwrap();
+    std::fs::create_dir_all(straymark.join("schemas")).unwrap();
+    std::fs::create_dir_all(straymark.join("07-ai-audit/agent-logs")).unwrap();
+    std::fs::create_dir_all(straymark.join("templates")).unwrap();
+    std::fs::write(straymark.join("config.yml"), "language: en\n").unwrap();
     std::fs::write(
-        devtrail.join("audit-prompts/audit-prompt.md"),
+        straymark.join("audit-prompts/audit-prompt.md"),
         AUDIT_PROMPT_UNIFIED,
     )
     .unwrap();
     std::fs::write(
-        devtrail.join("schemas/audit-output.schema.v0.json"),
+        straymark.join("schemas/audit-output.schema.v0.json"),
         AUDIT_OUTPUT_SCHEMA,
     )
     .unwrap();
@@ -42,7 +42,7 @@ fn setup_devtrail(dir: &Path) {
 
 /// Helper: returns the v1 canonical audit dir for a Charter under `dir`.
 fn audit_dir(dir: &Path, charter_id: &str) -> std::path::PathBuf {
-    dir.join(".devtrail").join("audits").join(charter_id)
+    dir.join(".straymark").join("audits").join(charter_id)
 }
 
 fn write_charter(dir: &Path) {
@@ -94,9 +94,9 @@ fn init_repo_with_diff(dir: &Path) {
 }
 
 #[test]
-fn audit_requires_devtrail_installed() {
+fn audit_requires_straymark_installed() {
     let dir = TempDir::new().unwrap();
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "audit", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
@@ -108,8 +108,8 @@ fn audit_requires_devtrail_installed() {
 #[test]
 fn audit_unknown_charter_fails() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
-    Command::cargo_bin("devtrail")
+    setup_straymark(dir.path());
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "audit", "CHARTER-99", "--path"])
         .arg(dir.path().to_str().unwrap())
@@ -125,11 +125,11 @@ fn audit_prepare_writes_unified_prompt_to_canonical_location() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_charter(dir.path());
     init_repo_with_diff(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "audit", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
@@ -137,10 +137,10 @@ fn audit_prepare_writes_unified_prompt_to_canonical_location() {
         .success()
         .stdout(predicate::str::contains("PREPARE"))
         .stdout(predicate::str::contains("audit-prompt.md"))
-        .stdout(predicate::str::contains("/devtrail-audit-execute"))
-        .stdout(predicate::str::contains("/devtrail-audit-review"));
+        .stdout(predicate::str::contains("/straymark-audit-execute"))
+        .stdout(predicate::str::contains("/straymark-audit-review"));
 
-    // v1 canonical path: .devtrail/audits/CHARTER-01/audit-prompt.md
+    // v1 canonical path: .straymark/audits/CHARTER-01/audit-prompt.md
     // (singular file, not a prompts/ subdirectory with two files).
     let resolved_path = audit_dir(dir.path(), "CHARTER-01").join("audit-prompt.md");
     let resolved = std::fs::read_to_string(&resolved_path)
@@ -178,7 +178,7 @@ fn audit_prepare_writes_unified_prompt_to_canonical_location() {
     );
 
     // v1: the v0 paths under audit/charters/ must NOT be written by the
-    // v1 CLI. Only the canonical .devtrail/audits/<id>/audit-prompt.md is
+    // v1 CLI. Only the canonical .straymark/audits/<id>/audit-prompt.md is
     // produced.
     let v0_primary = dir
         .path()
@@ -210,12 +210,12 @@ fn audit_merge_reports_with_no_reports_fails_helpfully() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_charter(dir.path());
     init_repo_with_diff(dir.path());
 
     // Skip prepare and any report files; jump straight to merge-reports.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "audit", "CHARTER-01", "--merge-reports", "--path"])
         .arg(dir.path().to_str().unwrap())
@@ -231,7 +231,7 @@ fn audit_merge_reports_validates_against_schema() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_charter(dir.path());
     init_repo_with_diff(dir.path());
 
@@ -254,7 +254,7 @@ prompt_used: audit-prompt.md
     )
     .unwrap();
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "audit", "CHARTER-01", "--merge-reports", "--path"])
         .arg(dir.path().to_str().unwrap())
@@ -269,12 +269,12 @@ fn audit_merge_reports_handles_n_reports_with_unified_role() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_charter(dir.path());
     init_repo_with_diff(dir.path());
 
     // Prepare (writes the unified prompt).
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "audit", "CHARTER-01", "--prepare", "--path"])
         .arg(dir.path().to_str().unwrap())
@@ -314,7 +314,7 @@ evidence_citations: {findings}
         std::fs::write(canonical.join(format!("report-{slug}.md")), body).unwrap();
     }
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "audit", "CHARTER-01", "--merge-reports", "--path"])
         .arg(dir.path().to_str().unwrap())
@@ -335,7 +335,7 @@ fn audit_merge_reports_warns_on_single_report_but_proceeds() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_charter(dir.path());
     init_repo_with_diff(dir.path());
 
@@ -362,7 +362,7 @@ findings_by_category:
     )
     .unwrap();
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "audit", "CHARTER-01", "--merge-reports", "--path"])
         .arg(dir.path().to_str().unwrap())
@@ -378,18 +378,18 @@ fn audit_deprecated_calibrate_emits_warning_and_exits() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_charter(dir.path());
     init_repo_with_diff(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "audit", "CHARTER-01", "--calibrate", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
         .failure()
         .stderr(predicate::str::contains("v0 way"))
-        .stderr(predicate::str::contains("/devtrail-audit-review"))
+        .stderr(predicate::str::contains("/straymark-audit-review"))
         .stderr(predicate::str::contains("--merge-reports"));
 }
 
@@ -399,7 +399,7 @@ fn audit_deprecated_finalize_redirects_to_merge_reports() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_charter(dir.path());
     init_repo_with_diff(dir.path());
 
@@ -427,7 +427,7 @@ findings_by_category:
     .unwrap();
 
     // --finalize should warn but proceed via the merge-reports path.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "audit", "CHARTER-01", "--finalize", "--path"])
         .arg(dir.path().to_str().unwrap())
@@ -441,10 +441,10 @@ findings_by_category:
 #[test]
 fn audit_action_flags_are_mutually_exclusive() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     // --prepare and --merge-reports must not co-occur (clap-enforced).
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -459,7 +459,7 @@ fn audit_action_flags_are_mutually_exclusive() {
         .failure();
 
     // Deprecated flags also conflict with each other and with the new ones.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -476,15 +476,15 @@ fn audit_action_flags_are_mutually_exclusive() {
 
 // ── --merge-into: PR 2 of audit-skills rollout (updated for v1 paths) ─────
 
-/// Set up a Charter with two valid v1 reports under .devtrail/audits/CHARTER-01/,
+/// Set up a Charter with two valid v1 reports under .straymark/audits/CHARTER-01/,
 /// so we can drive --merge-reports + --merge-into repeatedly.
 fn setup_finalized_audit(dir: &Path) {
-    setup_devtrail(dir);
+    setup_straymark(dir);
     write_charter(dir);
     init_repo_with_diff(dir);
 
     // PREPARE writes the unified audit-prompt.md to the canonical path.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "audit", "CHARTER-01", "--prepare", "--path"])
         .arg(dir.to_str().unwrap())
@@ -539,7 +539,7 @@ audit_quality: medium
 /// Build a minimal Charter telemetry file (the shape charter close emits).
 fn write_minimal_telemetry(dir: &Path) -> std::path::PathBuf {
     let path = dir
-        .join(".devtrail/charters/CHARTER-01.telemetry.yaml");
+        .join(".straymark/charters/CHARTER-01.telemetry.yaml");
     std::fs::create_dir_all(path.parent().unwrap()).unwrap();
     std::fs::write(
         &path,
@@ -569,7 +569,7 @@ fn audit_merge_into_appends_external_audit_to_telemetry() {
     setup_finalized_audit(dir.path());
     let telemetry_path = write_minimal_telemetry(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -614,9 +614,9 @@ fn audit_merge_into_missing_telemetry_fails_with_helpful_message() {
     }
     let dir = TempDir::new().unwrap();
     setup_finalized_audit(dir.path());
-    let missing = dir.path().join(".devtrail/charters/CHARTER-01.telemetry.yaml");
+    let missing = dir.path().join(".straymark/charters/CHARTER-01.telemetry.yaml");
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -631,7 +631,7 @@ fn audit_merge_into_missing_telemetry_fails_with_helpful_message() {
         .assert()
         .failure()
         .stderr(predicate::str::contains("Telemetry file not found"))
-        .stderr(predicate::str::contains("devtrail charter close"));
+        .stderr(predicate::str::contains("straymark charter close"));
 }
 
 #[test]
@@ -648,7 +648,7 @@ fn audit_merge_into_rejects_existing_external_audit() {
     existing.push_str("\n  external_audit:\n    - auditor: \"old-auditor\"\n      findings_total: 0\n");
     std::fs::write(&telemetry_path, &existing).unwrap();
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -668,11 +668,11 @@ fn audit_merge_into_rejects_existing_external_audit() {
 #[test]
 fn audit_merge_into_requires_merge_reports_or_finalize() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     // Without --merge-reports (or deprecated --finalize), the CLI should
     // reject --merge-into with a clear error.
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",
@@ -741,11 +741,11 @@ fn audit_default_range_uses_origin_main_when_available() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_charter(dir.path());
     let _remote = init_repo_with_remote_main(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "audit", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
@@ -754,7 +754,7 @@ fn audit_default_range_uses_origin_main_when_available() {
 
     let prompt = std::fs::read_to_string(
         dir.path()
-            .join(".devtrail/audits/CHARTER-01/audit-prompt.md"),
+            .join(".straymark/audits/CHARTER-01/audit-prompt.md"),
     )
     .unwrap();
     assert!(
@@ -775,11 +775,11 @@ fn audit_default_range_falls_back_to_head_minus_one_without_remote() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_charter(dir.path());
     init_repo_with_diff(dir.path()); // no remote configured
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args(["charter", "audit", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
@@ -791,7 +791,7 @@ fn audit_default_range_falls_back_to_head_minus_one_without_remote() {
 
     let prompt = std::fs::read_to_string(
         dir.path()
-            .join(".devtrail/audits/CHARTER-01/audit-prompt.md"),
+            .join(".straymark/audits/CHARTER-01/audit-prompt.md"),
     )
     .unwrap();
     assert!(
@@ -812,11 +812,11 @@ fn audit_explicit_range_overrides_default_resolution() {
         return;
     }
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
     write_charter(dir.path());
     init_repo_with_diff(dir.path());
 
-    Command::cargo_bin("devtrail")
+    Command::cargo_bin("straymark")
         .unwrap()
         .args([
             "charter",

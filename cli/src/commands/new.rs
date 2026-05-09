@@ -4,18 +4,18 @@ use colored::Colorize;
 use dialoguer::{theme::ColorfulTheme, Input, Select};
 use std::path::PathBuf;
 
-use crate::config::DevTrailConfig;
+use crate::config::StrayMarkConfig;
 use crate::document::DocType;
 use crate::utils;
 
 pub fn run(path: &str, doc_type_arg: Option<&str>, title_arg: Option<&str>) -> Result<()> {
     let resolved = utils::resolve_project_root(path)
-        .ok_or_else(|| anyhow::anyhow!("DevTrail not installed. Run 'devtrail init' first."))?;
+        .ok_or_else(|| anyhow::anyhow!("StrayMark not installed. Run 'straymark init' first."))?;
     let target = resolved.path;
-    let devtrail_dir = target.join(".devtrail");
+    let straymark_dir = target.join(".straymark");
 
-    let config = DevTrailConfig::load(&target).unwrap_or_default();
-    let resolved_language = DevTrailConfig::resolve_language(&target);
+    let config = StrayMarkConfig::load(&target).unwrap_or_default();
+    let resolved_language = StrayMarkConfig::resolve_language(&target);
     let lang = resolved_language.as_str();
     let china = config.has_region("china");
 
@@ -35,7 +35,7 @@ pub fn run(path: &str, doc_type_arg: Option<&str>, title_arg: Option<&str>) -> R
             })?;
             if dt.is_china_only() && !china {
                 bail!(
-                    "Document type '{}' requires `regional_scope: china` in .devtrail/config.yml",
+                    "Document type '{}' requires `regional_scope: china` in .straymark/config.yml",
                     dt.prefix().to_lowercase()
                 );
             }
@@ -58,11 +58,11 @@ pub fn run(path: &str, doc_type_arg: Option<&str>, title_arg: Option<&str>) -> R
     // Generate slug, date, sequence
     let slug = slugify(&title);
     let today = Local::now().format("%Y-%m-%d").to_string();
-    let doc_dir = devtrail_dir.join(doc_type.directory());
+    let doc_dir = straymark_dir.join(doc_type.directory());
     let seq = next_sequence_number(&doc_dir, doc_type, &today);
 
     // Load and fill template
-    let template_path = resolve_template_path(&devtrail_dir, doc_type, lang);
+    let template_path = resolve_template_path(&straymark_dir, doc_type, lang);
     let template = std::fs::read_to_string(&template_path)
         .with_context(|| format!("Template not found: {}", template_path.display()))?;
 
@@ -200,12 +200,12 @@ fn next_sequence_number(doc_dir: &std::path::Path, doc_type: DocType, today: &st
 }
 
 fn resolve_template_path(
-    devtrail_dir: &std::path::Path,
+    straymark_dir: &std::path::Path,
     doc_type: DocType,
     lang: &str,
 ) -> PathBuf {
     let template_name = format!("TEMPLATE-{}.md", doc_type.prefix());
-    let templates_dir = devtrail_dir.join("templates");
+    let templates_dir = straymark_dir.join("templates");
     utils::resolve_localized_path(&templates_dir, &template_name, lang)
 }
 

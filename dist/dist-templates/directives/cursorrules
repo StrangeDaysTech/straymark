@@ -1,13 +1,13 @@
-# DevTrail - Cursor Configuration
+# StrayMark - Cursor Configuration
 
-<!-- devtrail:begin -->
-<!-- devtrail:end -->
+<!-- straymark:begin -->
+<!-- straymark:end -->
 
-## DevTrail Documentation Rules
+## StrayMark Documentation Rules
 
 Identity: Use `cursor-v{version}` in the `agent:` field.
 
-Document when: complex code — run `devtrail analyze <files> --output json`, AILOG if `above_threshold > 0` (fallback: >20 lines), alternatives (AIDEC), auth/PII (AILOG+ETH), API/DB changes (AILOG+ADR), ML/prompts (AILOG+review).
+Document when: complex code — run `straymark analyze <files> --output json`, AILOG if `above_threshold > 0` (fallback: >20 lines), alternatives (AIDEC), auth/PII (AILOG+ETH), API/DB changes (AILOG+ADR), ML/prompts (AILOG+review).
 
 Review required: ETH, ADR, SEC, MCARD, DPIA → always. risk_level high/critical → always.
 

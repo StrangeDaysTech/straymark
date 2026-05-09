@@ -7,13 +7,13 @@ pub fn run(method: &str) -> Result<()> {
     let target = std::env::current_dir()?;
 
     // Update framework (skip if not initialized)
-    if target.join(".devtrail").exists() {
+    if target.join(".straymark").exists() {
         println!("{}", "── Framework ──".bold());
         if let Err(e) = super::update_framework::run() {
             utils::warn(&format!("Framework update failed: {}", e));
         }
     } else {
-        utils::warn("DevTrail framework not initialized — skipping framework update.");
+        utils::warn("StrayMark framework not initialized — skipping framework update.");
     }
 
     // Update CLI

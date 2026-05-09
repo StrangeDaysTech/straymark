@@ -25,7 +25,7 @@ pub fn file_hash(path: &Path) -> Option<String> {
     Some(format!("{:x}", hash))
 }
 
-/// Check if a path looks like a user-generated DevTrail document
+/// Check if a path looks like a user-generated StrayMark document
 /// (matches pattern: *-YYYY-MM-DD-NNN-*.md)
 pub fn is_user_document(path: &Path) -> bool {
     let name = match path.file_name().and_then(|n| n.to_str()) {
@@ -50,26 +50,26 @@ pub fn ensure_dir(path: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
-/// Result of resolving the DevTrail project root
+/// Result of resolving the StrayMark project root
 pub struct ResolvedPath {
-    /// The resolved project root where .devtrail/ exists
+    /// The resolved project root where .straymark/ exists
     pub path: std::path::PathBuf,
     /// Whether we fell back to the git repo root (not the original path)
     pub is_fallback: bool,
 }
 
-/// Resolve the DevTrail project root from a given path.
+/// Resolve the StrayMark project root from a given path.
 ///
-/// 1. If `path` has `.devtrail/`, use it directly
+/// 1. If `path` has `.straymark/`, use it directly
 /// 2. If not, try the git repo root
-/// 3. If neither has `.devtrail/`, return None
+/// 3. If neither has `.straymark/`, return None
 pub fn resolve_project_root(path: &str) -> Option<ResolvedPath> {
     let target = std::path::PathBuf::from(path)
         .canonicalize()
         .unwrap_or_else(|_| std::path::PathBuf::from(path));
 
     // Check the given path first
-    if target.join(".devtrail").exists() {
+    if target.join(".straymark").exists() {
         return Some(ResolvedPath {
             path: target,
             is_fallback: false,
@@ -93,7 +93,7 @@ pub fn resolve_project_root(path: &str) -> Option<ResolvedPath> {
 
     if let Some(root) = git_root {
         // Don't fallback to the same path we already checked
-        if root != target && root.join(".devtrail").exists() {
+        if root != target && root.join(".straymark").exists() {
             return Some(ResolvedPath {
                 path: root,
                 is_fallback: true,
@@ -105,7 +105,7 @@ pub fn resolve_project_root(path: &str) -> Option<ResolvedPath> {
 }
 
 /// Read `$LC_ALL` (preferred when set) or `$LANG` and map a POSIX locale
-/// string like `zh_CN.UTF-8` or `es_MX` to one of the languages DevTrail
+/// string like `zh_CN.UTF-8` or `es_MX` to one of the languages StrayMark
 /// supports (`en`, `es`, `zh-CN`). Returns `None` when no env var is set
 /// or when the territory points at an unsupported variant (e.g.,
 /// Traditional Chinese in `zh_TW` / `zh_HK`). Callers fall back to `"en"`.
@@ -118,7 +118,7 @@ pub fn detect_os_locale() -> Option<String> {
 }
 
 /// Parse a POSIX locale string (e.g. `zh_CN.UTF-8`, `es`, `C`) and map it
-/// to a DevTrail-supported language code. Public for unit testing.
+/// to a StrayMark-supported language code. Public for unit testing.
 pub fn parse_posix_locale(raw: &str) -> Option<String> {
     // Strip charset (`.UTF-8`) and modifier (`@euro`) suffixes first.
     let trimmed = raw.split('.').next()?.split('@').next()?;
@@ -130,7 +130,7 @@ pub fn parse_posix_locale(raw: &str) -> Option<String> {
     let territory = parts.next();
     match (lang, territory) {
         ("zh", Some("CN")) | ("zh", Some("SG")) | ("zh", None) => Some("zh-CN".to_string()),
-        // Traditional Chinese (TW / HK / MO) — DevTrail only ships zh-CN.
+        // Traditional Chinese (TW / HK / MO) — StrayMark only ships zh-CN.
         ("zh", _) => None,
         ("es", _) => Some("es".to_string()),
         ("en", _) | ("C", _) | ("POSIX", _) => Some("en".to_string()),
@@ -141,8 +141,8 @@ pub fn parse_posix_locale(raw: &str) -> Option<String> {
 /// Resolve `<dir>/<filename>` honoring an optional translation under
 /// `<dir>/i18n/<lang>/<filename>`. When `lang` is `"en"` (or any value where
 /// the localized variant is absent), returns the root path unchanged. This is
-/// the single source of truth for i18n file resolution shared by `devtrail
-/// new` (templates) and `devtrail explore` (governance docs).
+/// the single source of truth for i18n file resolution shared by `straymark
+/// new` (templates) and `straymark explore` (governance docs).
 pub fn resolve_localized_path(dir: &Path, filename: &str, lang: &str) -> PathBuf {
     if lang != "en" {
         let candidate = dir.join("i18n").join(lang).join(filename);

@@ -1,19 +1,19 @@
 [package]
-name = "devtrail-cli"
+name = "straymark-cli"
 version = "3.10.0"
 edition = "2021"
-description = "CLI for DevTrail — the cognitive discipline your AI-assisted projects need"
+description = "CLI for StrayMark — the cognitive discipline your AI-assisted projects need"
 license = "MIT"
-repository = "https://github.com/StrangeDaysTech/devtrail"
+repository = "https://github.com/StrangeDaysTech/straymark"
 homepage = "https://strangedays.tech"
 readme = "README.md"
-keywords = ["devtrail", "documentation", "governance", "ai", "cli"]
+keywords = ["straymark", "documentation", "governance", "ai", "cli"]
 categories = ["command-line-utilities", "development-tools"]
 authors = ["Strange Days Tech, S.A.S."]
 include = ["src/**/*", "Cargo.toml", "Cargo.lock", "README.md"]
 
 [[bin]]
-name = "devtrail"
+name = "straymark"
 path = "src/main.rs"
 
 [dependencies]

@@ -3,7 +3,7 @@ use colored::Colorize;
 use std::path::PathBuf;
 
 use crate::analysis_engine::{self, AnalysisReport, FunctionEntry};
-use crate::config::DevTrailConfig;
+use crate::config::StrayMarkConfig;
 use crate::utils::{self, pad_right_visual, truncate_visual, visual_width};
 
 pub fn run(path: &str, threshold: Option<u32>, output: &str, top: Option<usize>) -> Result<()> {
@@ -11,9 +11,9 @@ pub fn run(path: &str, threshold: Option<u32>, output: &str, top: Option<usize>)
         .canonicalize()
         .unwrap_or_else(|_| PathBuf::from(path));
 
-    // Try to load config from .devtrail/ if available
+    // Try to load config from .straymark/ if available
     let config_threshold = utils::resolve_project_root(path)
-        .and_then(|resolved| DevTrailConfig::load(&resolved.path).ok())
+        .and_then(|resolved| StrayMarkConfig::load(&resolved.path).ok())
         .map(|c| c.complexity.threshold);
 
     // Priority: CLI flag > config > default (8)
@@ -42,7 +42,7 @@ pub fn run(path: &str, threshold: Option<u32>, output: &str, top: Option<usize>)
 
 fn print_text(report: &AnalysisReport, target: &std::path::Path) {
     println!();
-    println!("  {}", "DevTrail Analyze".bold().cyan());
+    println!("  {}", "StrayMark Analyze".bold().cyan());
     println!("  {}", target.display().to_string().dimmed());
     println!(
         "  {} cognitive complexity > {}",
@@ -161,7 +161,7 @@ fn print_json(report: &AnalysisReport) {
 }
 
 fn print_markdown(report: &AnalysisReport, target: &std::path::Path) {
-    println!("# DevTrail Analyze Report");
+    println!("# StrayMark Analyze Report");
     println!();
     println!("**Path:** `{}`", target.display());
     println!("**Threshold:** cognitive complexity > {}", report.threshold);

@@ -10,7 +10,7 @@ fn agent_rules_path(lang: &str) -> PathBuf {
     let base = PathBuf::from(manifest_dir)
         .join("..")
         .join("dist")
-        .join(".devtrail")
+        .join(".straymark")
         .join("00-governance");
     match lang {
         "en" => base.join("AGENT-RULES.md"),
@@ -37,11 +37,11 @@ fn agent_rules_en_has_audit_checkpoint_section() {
         "must describe trigger conditions"
     );
     assert!(
-        body.contains("/devtrail-audit-prompt"),
+        body.contains("/straymark-audit-prompt"),
         "must reference the audit-prompt skill"
     );
     assert!(
-        body.contains("/devtrail-audit-review"),
+        body.contains("/straymark-audit-review"),
         "must reference the audit-review skill"
     );
     assert!(
@@ -65,8 +65,8 @@ fn agent_rules_es_has_audit_checkpoint_section() {
         body.contains("\n## 12. Checkpoint de Auditoría"),
         "ES AGENT-RULES.md must declare §12 Checkpoint de Auditoría"
     );
-    assert!(body.contains("/devtrail-audit-prompt"));
-    assert!(body.contains("/devtrail-audit-review"));
+    assert!(body.contains("/straymark-audit-prompt"));
+    assert!(body.contains("/straymark-audit-review"));
     assert!(
         body.contains("decisión de diseño v0+v1 permanente"),
         "must surface the permanent no-enforcement commitment in ES"
@@ -80,8 +80,8 @@ fn agent_rules_zh_has_audit_checkpoint_section() {
         body.contains("\n## 12. 审计检查点"),
         "zh-CN AGENT-RULES.md must declare §12 Audit Checkpoint"
     );
-    assert!(body.contains("/devtrail-audit-prompt"));
-    assert!(body.contains("/devtrail-audit-review"));
+    assert!(body.contains("/straymark-audit-prompt"));
+    assert!(body.contains("/straymark-audit-review"));
     assert!(
         body.contains("v0+v1 永久设计决策"),
         "must surface the permanent no-enforcement commitment in zh-CN"
@@ -94,10 +94,10 @@ fn audit_checkpoint_section_three_langs_share_load_bearing_anchors() {
     // they reference language-agnostic identifiers (skill names, file
     // paths, propuesta sections).
     let anchors = [
-        "/devtrail-audit-prompt",
-        "/devtrail-audit-review",
+        "/straymark-audit-prompt",
+        "/straymark-audit-review",
         "complexity.threshold",
-        "Propuesta/devtrail-audit-skills.md",
+        "Propuesta/straymark-audit-skills.md",
     ];
     for lang in ["en", "es", "zh-CN"] {
         let body = read(lang);

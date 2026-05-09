@@ -1,8 +1,8 @@
 use anyhow::{Context, Result};
 use std::path::Path;
 
-const MARKER_BEGIN: &str = "<!-- devtrail:begin -->";
-const MARKER_END: &str = "<!-- devtrail:end -->";
+const MARKER_BEGIN: &str = "<!-- straymark:begin -->";
+const MARKER_END: &str = "<!-- straymark:end -->";
 
 /// Extract the marker block (begin marker through end marker, inclusive) from a template string.
 /// Returns None if markers are not found.
@@ -21,7 +21,7 @@ fn build_marker_block(template: &str, embed_content: Option<&str>) -> Result<Str
     match embed_content {
         Some(content) => Ok(format!("{}\n{}\n{}", MARKER_BEGIN, content.trim(), MARKER_END)),
         None => extract_marker_block(template)
-            .context("Template is missing devtrail markers"),
+            .context("Template is missing straymark markers"),
     }
 }
 
@@ -67,7 +67,7 @@ pub fn inject_directive(target: &Path, template_content: &str, embed_content: Op
     Ok(())
 }
 
-/// Remove DevTrail injection from a directive file
+/// Remove StrayMark injection from a directive file
 pub fn remove_injection(target: &Path) -> Result<bool> {
     if !target.exists() {
         return Ok(false);
@@ -126,9 +126,9 @@ mod tests {
 
     #[test]
     fn test_extract_marker_block() {
-        let template = "# Header\n\n<!-- devtrail:begin -->\nsome content\n<!-- devtrail:end -->\n\nfooter";
+        let template = "# Header\n\n<!-- straymark:begin -->\nsome content\n<!-- straymark:end -->\n\nfooter";
         let block = extract_marker_block(template).unwrap();
-        assert_eq!(block, "<!-- devtrail:begin -->\nsome content\n<!-- devtrail:end -->");
+        assert_eq!(block, "<!-- straymark:begin -->\nsome content\n<!-- straymark:end -->");
     }
 
     #[test]
@@ -139,43 +139,43 @@ mod tests {
 
     #[test]
     fn test_build_marker_block_with_embed() {
-        let template = "# Header\n\n<!-- devtrail:begin -->\n<!-- devtrail:end -->\n";
+        let template = "# Header\n\n<!-- straymark:begin -->\n<!-- straymark:end -->\n";
         let block = build_marker_block(template, Some("embedded content")).unwrap();
-        assert_eq!(block, "<!-- devtrail:begin -->\nembedded content\n<!-- devtrail:end -->");
+        assert_eq!(block, "<!-- straymark:begin -->\nembedded content\n<!-- straymark:end -->");
     }
 
     #[test]
     fn test_build_marker_block_without_embed() {
-        let template = "# Header\n\n<!-- devtrail:begin -->\nstatic ref\n<!-- devtrail:end -->\n";
+        let template = "# Header\n\n<!-- straymark:begin -->\nstatic ref\n<!-- straymark:end -->\n";
         let block = build_marker_block(template, None).unwrap();
-        assert_eq!(block, "<!-- devtrail:begin -->\nstatic ref\n<!-- devtrail:end -->");
+        assert_eq!(block, "<!-- straymark:begin -->\nstatic ref\n<!-- straymark:end -->");
     }
 
     #[test]
     fn test_inject_directive_creates_file() {
         let dir = TempDir::new().unwrap();
         let target = dir.path().join("CLAUDE.md");
-        let template = "# DevTrail - Claude Code Configuration\n\n<!-- devtrail:begin -->\n> **Read rules**\n<!-- devtrail:end -->\n";
+        let template = "# StrayMark - Claude Code Configuration\n\n<!-- straymark:begin -->\n> **Read rules**\n<!-- straymark:end -->\n";
 
         inject_directive(&target, template, None).unwrap();
 
         let content = std::fs::read_to_string(&target).unwrap();
-        assert!(content.contains("# DevTrail - Claude Code Configuration"));
-        assert!(content.contains("<!-- devtrail:begin -->"));
+        assert!(content.contains("# StrayMark - Claude Code Configuration"));
+        assert!(content.contains("<!-- straymark:begin -->"));
         assert!(content.contains("> **Read rules**"));
-        assert!(content.contains("<!-- devtrail:end -->"));
+        assert!(content.contains("<!-- straymark:end -->"));
     }
 
     #[test]
     fn test_inject_directive_with_embed_creates_file() {
         let dir = TempDir::new().unwrap();
         let target = dir.path().join(".cursorrules");
-        let template = "# DevTrail - Cursor Configuration\n\n<!-- devtrail:begin -->\n<!-- devtrail:end -->\n";
+        let template = "# StrayMark - Cursor Configuration\n\n<!-- straymark:begin -->\n<!-- straymark:end -->\n";
 
         inject_directive(&target, template, Some("# My Rules\nRule 1\nRule 2")).unwrap();
 
         let content = std::fs::read_to_string(&target).unwrap();
-        assert!(content.contains("# DevTrail - Cursor Configuration"));
+        assert!(content.contains("# StrayMark - Cursor Configuration"));
         assert!(content.contains("# My Rules"));
         assert!(content.contains("Rule 1"));
     }
@@ -186,13 +186,13 @@ mod tests {
         let target = dir.path().join("CLAUDE.md");
         std::fs::write(&target, "# My Project\n\nCustom config here\n").unwrap();
 
-        let template = "# DevTrail\n\n<!-- devtrail:begin -->\n> **Read rules**\n<!-- devtrail:end -->\n";
+        let template = "# StrayMark\n\n<!-- straymark:begin -->\n> **Read rules**\n<!-- straymark:end -->\n";
         inject_directive(&target, template, None).unwrap();
 
         let content = std::fs::read_to_string(&target).unwrap();
         assert!(content.contains("# My Project"));
         assert!(content.contains("Custom config here"));
-        assert!(content.contains("<!-- devtrail:begin -->"));
+        assert!(content.contains("<!-- straymark:begin -->"));
         assert!(content.contains("> **Read rules**"));
     }
 
@@ -200,9 +200,9 @@ mod tests {
     fn test_inject_directive_replaces_existing_markers() {
         let dir = TempDir::new().unwrap();
         let target = dir.path().join("CLAUDE.md");
-        std::fs::write(&target, "# My Project\n\n<!-- devtrail:begin -->\nold content\n<!-- devtrail:end -->\n\nfooter\n").unwrap();
+        std::fs::write(&target, "# My Project\n\n<!-- straymark:begin -->\nold content\n<!-- straymark:end -->\n\nfooter\n").unwrap();
 
-        let template = "# DevTrail\n\n<!-- devtrail:begin -->\nnew content\n<!-- devtrail:end -->\n";
+        let template = "# StrayMark\n\n<!-- straymark:begin -->\nnew content\n<!-- straymark:end -->\n";
         inject_directive(&target, template, None).unwrap();
 
         let content = std::fs::read_to_string(&target).unwrap();
@@ -216,7 +216,7 @@ mod tests {
     fn test_inject_directive_creates_parent_dirs() {
         let dir = TempDir::new().unwrap();
         let target = dir.path().join(".github/copilot-instructions.md");
-        let template = "# Config\n\n<!-- devtrail:begin -->\nref\n<!-- devtrail:end -->\n";
+        let template = "# Config\n\n<!-- straymark:begin -->\nref\n<!-- straymark:end -->\n";
 
         inject_directive(&target, template, None).unwrap();
         assert!(target.exists());
@@ -224,10 +224,10 @@ mod tests {
 
     #[test]
     fn test_replace_between_markers() {
-        let content = "before\n<!-- devtrail:begin -->\nold\n<!-- devtrail:end -->\nafter";
+        let content = "before\n<!-- straymark:begin -->\nold\n<!-- straymark:end -->\nafter";
         let result = replace_between_markers(
             content,
-            "<!-- devtrail:begin -->\nnew\n<!-- devtrail:end -->",
+            "<!-- straymark:begin -->\nnew\n<!-- straymark:end -->",
         );
         assert!(result.contains("new"));
         assert!(!result.contains("old"));
@@ -237,7 +237,7 @@ mod tests {
 
     #[test]
     fn test_remove_between_markers() {
-        let content = "header\n\n<!-- devtrail:begin -->\nstuff\n<!-- devtrail:end -->\n\nfooter";
+        let content = "header\n\n<!-- straymark:begin -->\nstuff\n<!-- straymark:end -->\n\nfooter";
         let result = remove_between_markers(content);
         assert!(result.contains("header"));
         assert!(result.contains("footer"));

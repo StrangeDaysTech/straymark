@@ -2,20 +2,20 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
-/// Helper to create a minimal DevTrail installation
-fn setup_devtrail(dir: &std::path::Path) {
-    let devtrail = dir.join(".devtrail");
-    std::fs::create_dir_all(devtrail.join("00-governance")).unwrap();
-    std::fs::create_dir_all(devtrail.join("07-ai-audit/agent-logs")).unwrap();
-    std::fs::create_dir_all(devtrail.join("07-ai-audit/decisions")).unwrap();
-    std::fs::create_dir_all(devtrail.join("07-ai-audit/ethical-reviews")).unwrap();
-    std::fs::create_dir_all(devtrail.join("08-security")).unwrap();
-    std::fs::create_dir_all(devtrail.join("09-ai-models")).unwrap();
-    std::fs::create_dir_all(devtrail.join("05-operations/incidents")).unwrap();
-    std::fs::create_dir_all(devtrail.join("templates")).unwrap();
-    std::fs::write(devtrail.join("config.yml"), "language: en\n").unwrap();
+/// Helper to create a minimal StrayMark installation
+fn setup_straymark(dir: &std::path::Path) {
+    let straymark = dir.join(".straymark");
+    std::fs::create_dir_all(straymark.join("00-governance")).unwrap();
+    std::fs::create_dir_all(straymark.join("07-ai-audit/agent-logs")).unwrap();
+    std::fs::create_dir_all(straymark.join("07-ai-audit/decisions")).unwrap();
+    std::fs::create_dir_all(straymark.join("07-ai-audit/ethical-reviews")).unwrap();
+    std::fs::create_dir_all(straymark.join("08-security")).unwrap();
+    std::fs::create_dir_all(straymark.join("09-ai-models")).unwrap();
+    std::fs::create_dir_all(straymark.join("05-operations/incidents")).unwrap();
+    std::fs::create_dir_all(straymark.join("templates")).unwrap();
+    std::fs::write(straymark.join("config.yml"), "language: en\n").unwrap();
     std::fs::write(
-        devtrail.join("dist-manifest.yml"),
+        straymark.join("dist-manifest.yml"),
         "version: \"3.0.0\"\ndescription: test\n",
     )
     .unwrap();
@@ -23,7 +23,7 @@ fn setup_devtrail(dir: &std::path::Path) {
 
 /// Helper to create a document file with frontmatter
 fn create_doc(dir: &std::path::Path, subpath: &str, filename: &str, frontmatter: &str) {
-    let path = dir.join(".devtrail").join(subpath);
+    let path = dir.join(".straymark").join(subpath);
     std::fs::create_dir_all(&path).unwrap();
     std::fs::write(
         path.join(filename),
@@ -36,7 +36,7 @@ fn create_doc(dir: &std::path::Path, subpath: &str, filename: &str, frontmatter:
 fn test_metrics_not_installed() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("metrics")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -47,15 +47,15 @@ fn test_metrics_not_installed() {
 #[test]
 fn test_metrics_no_documents() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("metrics")
         .arg(dir.path().to_str().unwrap())
         .assert()
         .success()
         .stdout(
-            predicate::str::contains("DevTrail Metrics")
+            predicate::str::contains("StrayMark Metrics")
                 .and(predicate::str::contains("Total documents")),
         );
 }
@@ -63,7 +63,7 @@ fn test_metrics_no_documents() {
 #[test]
 fn test_metrics_with_documents() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     // Use today's date to ensure docs fall in "last-30-days"
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();
@@ -89,7 +89,7 @@ fn test_metrics_with_documents() {
         ),
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("metrics")
         .arg("--period")
         .arg("last-30-days")
@@ -107,7 +107,7 @@ fn test_metrics_with_documents() {
 #[test]
 fn test_metrics_period_all() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     create_doc(
         dir.path(),
@@ -116,7 +116,7 @@ fn test_metrics_period_all() {
         "id: AILOG-2020-01-01-001\ntitle: Old\nstatus: accepted\ncreated: 2020-01-01\nagent: test-agent\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("metrics")
         .arg("--period")
         .arg("all")
@@ -132,9 +132,9 @@ fn test_metrics_period_all() {
 #[test]
 fn test_metrics_output_json() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     let output = cmd
         .arg("metrics")
         .arg("--output")
@@ -152,22 +152,22 @@ fn test_metrics_output_json() {
 #[test]
 fn test_metrics_output_markdown() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("metrics")
         .arg("--output")
         .arg("markdown")
         .arg(dir.path().to_str().unwrap())
         .assert()
         .success()
-        .stdout(predicate::str::contains("# DevTrail Metrics Report"));
+        .stdout(predicate::str::contains("# StrayMark Metrics Report"));
 }
 
 #[test]
 fn test_metrics_agent_activity() {
     let dir = TempDir::new().unwrap();
-    setup_devtrail(dir.path());
+    setup_straymark(dir.path());
 
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();
 
@@ -191,7 +191,7 @@ fn test_metrics_agent_activity() {
         ),
     );
 
-    let mut cmd = Command::cargo_bin("devtrail").unwrap();
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
     cmd.arg("metrics")
         .arg(dir.path().to_str().unwrap())
         .assert()

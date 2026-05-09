@@ -1,8 +1,8 @@
-//! Charter — DevTrail's bounded, auditable unit of work.
+//! Charter — StrayMark's bounded, auditable unit of work.
 //!
 //! A Charter is the artifact that pairs declarative ex-ante scope with ex-post
 //! drift detection and external audit. The schema lives in
-//! `dist/.devtrail/schemas/charter.schema.v0.json` (experimental v0). This
+//! `dist/.straymark/schemas/charter.schema.v0.json` (experimental v0). This
 //! module provides typed access to a Charter document on disk.
 //!
 //! Conceptually distinct from `DocType` (governance documents): Charters live
@@ -60,7 +60,7 @@ impl EffortEstimate {
 }
 
 /// Typed view of a Charter's YAML frontmatter. The JSON Schema in
-/// `dist/.devtrail/schemas/charter.schema.v0.json` is the source of truth for
+/// `dist/.straymark/schemas/charter.schema.v0.json` is the source of truth for
 /// shape; this struct is the typed Rust mirror used by CLI logic. Additional
 /// fields the schema permits (e.g., `note`, `closed_at`) are not enumerated
 /// here — for full schema-aware validation, parse the frontmatter as
