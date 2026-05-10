@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/straymark-banner.png" alt="StrayMark — by Strange Days Tech" width="600" />
+<img src="assets/straymark-banner.png" alt="StrayMark — by Strange Days Tech" width="100%" />
 
 # StrayMark
 
