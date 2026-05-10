@@ -87,7 +87,7 @@ StrayMark 的产品决策基于十二条明确的原则。它们按层级排序�
 11. **社区维护工具，而非反过来。** 贡献和反馈被认真对待，但不会变成民主决策。
 12. **产品的速度等于学习的速度。** 不过早结晶化；schema 标记为 `v0`，直到在第二个领域得到验证。
 
-完整文档（包含来自验证周期的实证注解）见 [`Propuesta/straymark-design-principles.md`](https://github.com/StrangeDaysTech/straymark/blob/main/Propuesta/straymark-design-principles.md)。
+完整文档（包含来自验证周期的实证注解）见 [`docs/i18n/zh-CN/contributors/DESIGN-PRINCIPLES.md`](https://github.com/StrangeDaysTech/straymark/blob/main/docs/i18n/zh-CN/contributors/DESIGN-PRINCIPLES.md)。
 
 ---
 

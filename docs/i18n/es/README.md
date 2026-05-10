@@ -87,7 +87,7 @@ Las decisiones de producto de StrayMark se anclan en doce principios explícitos
 11. **La comunidad cuida la herramienta, no al revés.** Las contribuciones y el feedback se toman en serio sin volverse democracia.
 12. **La velocidad del producto es la velocidad del aprendizaje.** Sin cristalización prematura; los schemas marcados `v0` hasta validarse contra un segundo dominio.
 
-El documento completo, con anotaciones empíricas de los ciclos de validación, vive en [`Propuesta/straymark-design-principles.md`](https://github.com/StrangeDaysTech/straymark/blob/main/Propuesta/straymark-design-principles.md).
+El documento completo, con anotaciones empíricas de los ciclos de validación, vive en [`docs/i18n/es/contributors/DESIGN-PRINCIPLES.md`](https://github.com/StrangeDaysTech/straymark/blob/main/docs/i18n/es/contributors/DESIGN-PRINCIPLES.md).
 
 ---
 
