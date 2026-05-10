@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="../../../assets/straymark-banner.png" alt="StrayMark — por Strange Days Tech" width="600" />
+
 # StrayMark
 
 **La disciplina cognitiva que tus proyectos asistidos por IA necesitan**

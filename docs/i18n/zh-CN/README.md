@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="../../../assets/straymark-banner.png" alt="StrayMark — Strange Days Tech 出品" width="600" />
+
 # StrayMark
 
 **你的 AI 辅助项目所需的认知纪律**
