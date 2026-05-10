@@ -1,12 +1,12 @@
-# DevTrail — Validación empírica de la tesis con datos de Sentinel
+# StrayMark — Validación empírica de la tesis con datos de Sentinel
 
 **Versión:** 0.2 (rename Plan → Charter en referencias going-forward; las citas históricas a Sentinel preservan "Plan")
 **Fecha:** 30 de abril de 2026
 **Autor:** Jose Villaseñor Montfort — StrangeDaysTech
-**Propósito:** Confrontar la tesis del producto, articulada en `devtrail-cloud-proposal.md` §2, contra la evidencia empírica generada por el primer experimento que la pone a prueba: `/plan-audit` ejecutado en el repo Sentinel durante 6 ciclos (PLAN-01..06) entre el 25 y el 28 de abril de 2026.
-**Documentos relacionados:** `devtrail-cloud-proposal.md`, `devtrail-design-principles.md`, `devtrail-charter-telemetry.md`, `devtrail-cli-roadmap.md`, `que-es-un-charter.md` (rename Plan → Charter).
+**Propósito:** Confrontar la tesis del producto, articulada en `straymark-cloud-proposal.md` §2, contra la evidencia empírica generada por el primer experimento que la pone a prueba: `/plan-audit` ejecutado en el repo Sentinel durante 6 ciclos (PLAN-01..06) entre el 25 y el 28 de abril de 2026.
+**Documentos relacionados:** `straymark-cloud-proposal.md`, `straymark-design-principles.md`, `straymark-charter-telemetry.md`, `straymark-cli-roadmap.md`, `que-es-un-charter.md` (rename Plan → Charter).
 
-**Nota de vocabulario.** Este documento cita extensamente evidencia de Sentinel, donde el artefacto se llamó "Plan" (PLAN-01..06). Esas referencias históricas se preservan en su forma original. Las afirmaciones prospectivas sobre el producto DevTrail going-forward (§6 schemas, §8 decisiones) usan el nombre actual "Charter". Justificación del rename en `que-es-un-charter.md` §2.
+**Nota de vocabulario.** Este documento cita extensamente evidencia de Sentinel, donde el artefacto se llamó "Plan" (PLAN-01..06). Esas referencias históricas se preservan en su forma original. Las afirmaciones prospectivas sobre el producto StrayMark going-forward (§6 schemas, §8 decisiones) usan el nombre actual "Charter". Justificación del rename en `que-es-un-charter.md` §2.
 
 ---
 
@@ -14,8 +14,8 @@
 
 Los otros tres documentos de `Propuesta/` se escribieron antes de tener datos. Son hipótesis: cómo querríamos que fuera la herramienta, qué principios queremos defender, qué patrón de mercado creemos servir. La tesis central es la pieza más cargada y más arriesgada de ese conjunto:
 
-> "DevTrail es la disciplina cognitiva externalizada que un ingeniero senior necesita cuando orquesta agentes de IA en proyectos medianos a grandes. Estructura la memoria del proyecto, restringe el espacio de decisión del agente con reglas vivas, y produce como subproducto una evidencia auditable que sirve también para cumplimiento regulatorio cuando hace falta. El producto principal es la herramienta que mejora el oficio; el cumplimiento es valor adicional aprovechable, no el motor."
-> — `devtrail-cloud-proposal.md` §2
+> "StrayMark es la disciplina cognitiva externalizada que un ingeniero senior necesita cuando orquesta agentes de IA en proyectos medianos a grandes. Estructura la memoria del proyecto, restringe el espacio de decisión del agente con reglas vivas, y produce como subproducto una evidencia auditable que sirve también para cumplimiento regulatorio cuando hace falta. El producto principal es la herramienta que mejora el oficio; el cumplimiento es valor adicional aprovechable, no el motor."
+> — `straymark-cloud-proposal.md` §2
 
 Este documento confronta esa tesis con datos. No la defiende; intenta romperla. El objetivo es que un lector que no compró la tesis pueda, leyendo solo este texto, decidir si la evidencia disponible la sostiene, la matiza o la refuta. Si la evidencia no alcanza para algún supuesto, lo nombramos explícitamente y proponemos qué proyecto cerraría el gap.
 
@@ -23,7 +23,7 @@ El sesgo de auto-confirmación es el riesgo principal: el experimento lo diseña
 
 ## 2. La tesis y sus seis supuestos verificables
 
-`devtrail-cloud-proposal.md` §2 descompone la tesis en seis supuestos que se derivan del uso real del CLI en proyectos como Sentinel. Los reproducimos aquí para anclar la confrontación:
+`straymark-cloud-proposal.md` §2 descompone la tesis en seis supuestos que se derivan del uso real del CLI en proyectos como Sentinel. Los reproducimos aquí para anclar la confrontación:
 
 1. **Vibe coding no escala.** El "vibe coding" no escala a proyectos medianos a grandes; el agente, sin estructura externa, acumula deuda técnica oculta, alucinaciones recurrentes y deriva arquitectónica que el ingeniero descubre tarde y caro.
 2. **Notas estructuradas reducen modos de falla.** Una capa de notas estructuradas, vivas y reglamentadas sobre el flujo de trabajo del agente reduce significativamente esos modos de falla. AILOGs, ADRs y AIDECs no son burocracia: son memoria extendida y guardarraíles de razonamiento.
@@ -34,7 +34,7 @@ El sesgo de auto-confirmación es el riesgo principal: el experimento lo diseña
 
 ## 3. El experimento: Sentinel `/plan-audit`
 
-Sentinel es el repo de un sistema Go (~15.9 kLOC al cierre del MVP, 96 archivos de producción) que adopta DevTrail como framework de governanza desde sus primeras Etapas. El experimento `/plan-audit` corre en paralelo al desarrollo post-MVP: cada Plan ejecutado se documenta con telemetría YAML, se audita con dos modelos externos (Copilot v1.0.37 y Gemini CLI v1) en paralelo, y se consolida con un análisis crítico de Claude.
+Sentinel es el repo de un sistema Go (~15.9 kLOC al cierre del MVP, 96 archivos de producción) que adopta StrayMark como framework de governanza desde sus primeras Etapas. El experimento `/plan-audit` corre en paralelo al desarrollo post-MVP: cada Plan ejecutado se documenta con telemetría YAML, se audita con dos modelos externos (Copilot v1.0.37 y Gemini CLI v1) en paralelo, y se consolida con un análisis crítico de Claude.
 
 **Seis ciclos completos (25–28 abril 2026):**
 
@@ -55,9 +55,9 @@ Sentinel es el repo de un sistema Go (~15.9 kLOC al cierre del MVP, 96 archivos 
 
 **Fuentes de evidencia (rutas absolutas en el filesystem del autor):**
 
-- Telemetría YAML: `/E/Proyectos/StrangeDaysTech/sentinel/.devtrail/plans/PLAN-{01,02,03,05,06}.telemetry.yaml`
+- Telemetría YAML: `/E/Proyectos/StrangeDaysTech/sentinel/.straymark/plans/PLAN-{01,02,03,05,06}.telemetry.yaml`
 - Auditorías externas duales: `/E/Proyectos/StrangeDaysTech/sentinel/audit/plans/{05,06}/{copilot-v1.0.37-audit,gemini-cli-v1-audit,claude-analisis}.md`
-- Narrativa decision-by-decision: `/E/Proyectos/StrangeDaysTech/sentinel/.devtrail/07-ai-audit/agent-logs/AILOG-2026-04-28-{020,021,022,023,024}-*.md`
+- Narrativa decision-by-decision: `/E/Proyectos/StrangeDaysTech/sentinel/.straymark/07-ai-audit/agent-logs/AILOG-2026-04-28-{020,021,022,023,024}-*.md`
 - Tooling ejecutable validado: `/E/Proyectos/StrangeDaysTech/sentinel/scripts/check-plan-drift.sh`
 - Plan-docs canónicos bajo TEMPLATE: `/E/Proyectos/StrangeDaysTech/sentinel/docs/plans/{05,06}-*.md`
 
@@ -67,7 +67,7 @@ Sentinel es el repo de un sistema Go (~15.9 kLOC al cierre del MVP, 96 archivos 
 
 **Verdict: Validado parcialmente.**
 
-El experimento no comparó head-to-head "agente con DevTrail" vs "agente sin DevTrail" — Sentinel adoptó DevTrail desde el inicio. Pero sí mostró que, *incluso con* disciplina y AILOGs estructurados, el agente acumula gaps no documentados que solo afloran con auditoría externa. Esto es un proxy: si con disciplina el agente todavía olvida cosas, sin disciplina las olvidaría todas.
+El experimento no comparó head-to-head "agente con StrayMark" vs "agente sin StrayMark" — Sentinel adoptó StrayMark desde el inicio. Pero sí mostró que, *incluso con* disciplina y AILOGs estructurados, el agente acumula gaps no documentados que solo afloran con auditoría externa. Esto es un proxy: si con disciplina el agente todavía olvida cosas, sin disciplina las olvidaría todas.
 
 > "F4 (IG): `evaluator_test.go` declarado con 3 tests para `ResolveAnomalyThresholds` pero **sin cambios en el rango**. Cobertura unitaria del resolver ausente. **Hallazgo no documentado en AILOG-021** — gap real de cobertura."
 > — `audit/plans/05/claude-analisis.md` §3 (línea ~106), captura combinada de Copilot + Gemini.
@@ -80,7 +80,7 @@ El experimento no comparó head-to-head "agente con DevTrail" vs "agente sin Dev
 
 **Lo validado:** el agente, incluso con disciplina, comete dos clases de fallo que solo afloran post-hoc: (a) implementación olvidada del Plan (F4: 3 tests prometidos no escritos), (b) hallucination arquitectónica del Plan-doc mismo (F5: el Plan asumió un punto de inyección que no existe). Ninguna de las dos fue capturada por checkpoints internos del agente — solo por auditoría externa multi-modelo.
 
-**Lo no demostrado:** que sin DevTrail el problema sería *peor*. La hipótesis es plausible (los gaps capturados son justamente del tipo que se esfuma cuando no hay un Plan-doc declarado contra el que comparar), pero el experimento no construyó un brazo de control. Para una validación más fuerte, un proyecto futuro con dos brazos (con disciplina vs sin) o un proyecto que adopte DevTrail tarde y mida el delta de gaps capturados antes/después cerraría el supuesto.
+**Lo no demostrado:** que sin StrayMark el problema sería *peor*. La hipótesis es plausible (los gaps capturados son justamente del tipo que se esfuma cuando no hay un Plan-doc declarado contra el que comparar), pero el experimento no construyó un brazo de control. Para una validación más fuerte, un proyecto futuro con dos brazos (con disciplina vs sin) o un proyecto que adopte StrayMark tarde y mida el delta de gaps capturados antes/después cerraría el supuesto.
 
 ### 4.2 Supuesto 2 — Notas estructuradas reducen modos de falla
 
@@ -175,11 +175,11 @@ La parte *evidencia in-situ* está fuertemente validada: `check-plan-drift.sh` e
 > "Validación de hipótesis v3: `check-plan-drift.sh` reportó 0 drift pre-commit; los 3 findings reales son del tipo que el script no puede detectar por diseño (mitigaciones no implementadas, scope text vs payload, tests promised vs realized). Confirma: script + auditorías son complementarios."
 > — `AILOG-024` §Post-audit fixes (línea 154–158).
 
-**Lo no probado todavía:** la parte de *firma criptográfica*. Sentinel no firmó bundles con Sigstore/cosign ni implementó hash-chaining. La afirmación de que firmar in-situ es estructuralmente más confiable que reconstrucción posterior es plausible (es la propiedad técnica de cualquier append-only log) pero el experimento no la ejercitó. Cerrar este gap requiere implementar `devtrail stage close` con firma cosign en un próximo ciclo y un escenario de tampering simulado para verificar detección.
+**Lo no probado todavía:** la parte de *firma criptográfica*. Sentinel no firmó bundles con Sigstore/cosign ni implementó hash-chaining. La afirmación de que firmar in-situ es estructuralmente más confiable que reconstrucción posterior es plausible (es la propiedad técnica de cualquier append-only log) pero el experimento no la ejercitó. Cerrar este gap requiere implementar `straymark stage close` con firma cosign en un próximo ciclo y un escenario de tampering simulado para verificar detección.
 
 ## 5. Fricciones detectadas y marco virtud-vs-ceremonia
 
-Sentinel reveló cuatro puntos de fricción cuantificables. El principio #6 de `devtrail-design-principles.md` ya establece que "fricción justificada es aceptable y a veces deseable". El refinamiento empírico del experimento es distinguir *fricción virtuosa* (la que externaliza signal a auditores externos y captura gaps que el agente solo no captura) de *ceremonia atacable* (la que solo genera triage manual o prescribe sin reflexividad).
+Sentinel reveló cuatro puntos de fricción cuantificables. El principio #6 de `straymark-design-principles.md` ya establece que "fricción justificada es aceptable y a veces deseable". El refinamiento empírico del experimento es distinguir *fricción virtuosa* (la que externaliza signal a auditores externos y captura gaps que el agente solo no captura) de *ceremonia atacable* (la que solo genera triage manual o prescribe sin reflexividad).
 
 ### 5.1 Overhead de documentación — virtud parcial
 
@@ -211,11 +211,11 @@ El Plan declaró una verificación que la realidad de testcontainers + audit pip
 
 ### 5.5 Síntesis del marco
 
-La fricción de DevTrail es virtud cuando externaliza signal pública (R<N+1>, drift detection, auditoría dual) y captura gaps que el agente solo no captura. La fricción es ceremonia atacable cuando solo genera triage o prescribe sin reflexividad. La primera se mantiene; la segunda es bug del formato, no virtud del principio. El refinamiento de `devtrail-design-principles.md` v0.2 incorpora explícitamente esta distinción.
+La fricción de StrayMark es virtud cuando externaliza signal pública (R<N+1>, drift detection, auditoría dual) y captura gaps que el agente solo no captura. La fricción es ceremonia atacable cuando solo genera triage o prescribe sin reflexividad. La primera se mantiene; la segunda es bug del formato, no virtud del principio. El refinamiento de `straymark-design-principles.md` v0.2 incorpora explícitamente esta distinción.
 
 ## 6. El argumento N≈2-3: por qué Sentinel cuenta más que un proyecto
 
-El principio #12 de `devtrail-design-principles.md` v0.1 establece: "no debe avanzar más rápido de lo que aprendemos sobre cómo se usa realmente. Cristalizar features prematuramente, antes de tener datos de uso real en al menos tres proyectos distintos, genera costos altos de mantenimiento sobre features que pueden ser equivocadas".
+El principio #12 de `straymark-design-principles.md` v0.1 establece: "no debe avanzar más rápido de lo que aprendemos sobre cómo se usa realmente. Cristalizar features prematuramente, antes de tener datos de uso real en al menos tres proyectos distintos, genera costos altos de mantenimiento sobre features que pueden ser equivocadas".
 
 Sentinel es *un solo proyecto* en el sentido literal (un repo, un dominio Go backend, un autor). Pero la evidencia que produjo tiene tres ejes de diversidad estructural que el principio busca capturar:
 
@@ -238,12 +238,12 @@ Tres patrones emergieron del experimento que ninguno de los tres documentos de p
 
 **7.1 El formato es auto-evolutivo.** Ninguno de los tres docs anticipó que la aplicación del formato a sí mismo (telemetría → análisis crítico → propuesta de mejora → nuevo formato) sería un ciclo natural. Esto es un meta-patrón estructural que merece nombre propio en futuras versiones de los principios. Candidato: principio #13 ("la herramienta evoluciona consigo misma; cada uso es input para la próxima versión") o ampliación del principio #12.
 
-**7.2 Drift script y auditoría externa son complementarios, no sustitutos.** AILOG-022 hipotetizó complementariedad; PLAN-06 la confirmó empíricamente. Esto cambia el marco mental de cómo diseñar tooling DevTrail: cada layer debe atacar un tipo de drift distinto (declaración vs implementación vs comportamiento), no replicar capacidades existentes.
+**7.2 Drift script y auditoría externa son complementarios, no sustitutos.** AILOG-022 hipotetizó complementariedad; PLAN-06 la confirmó empíricamente. Esto cambia el marco mental de cómo diseñar tooling StrayMark: cada layer debe atacar un tipo de drift distinto (declaración vs implementación vs comportamiento), no replicar capacidades existentes.
 
    > "Hipótesis v3 confirmada: script + auditorías + AILOG son herramientas complementarias. Ninguna sustituye a las otras."
    > — `audit/plans/06/claude-analisis.md` §7 (línea 145).
 
-**7.3 Auditoría dual como calibrador de modelos.** PLAN-05 fue el caso límite: Gemini calibró F5 correctamente como `hallucination` mientras Copilot lo categorizó como `implementation_gap`. La auditoría dual no es solo "dos pares de ojos" — es un mecanismo de calibración cross-modelo. El claude-analisis funciona como tercer modelo que reconcilia veredictos divergentes según el schema definicional. Esto sugiere una arquitectura de tres niveles para `devtrail charter audit` (fase 3 del roadmap): dos auditores en paralelo + un calibrador-reconciliador, no solo "ejecuta un audit con N modelos".
+**7.3 Auditoría dual como calibrador de modelos.** PLAN-05 fue el caso límite: Gemini calibró F5 correctamente como `hallucination` mientras Copilot lo categorizó como `implementation_gap`. La auditoría dual no es solo "dos pares de ojos" — es un mecanismo de calibración cross-modelo. El claude-analisis funciona como tercer modelo que reconcilia veredictos divergentes según el schema definicional. Esto sugiere una arquitectura de tres niveles para `straymark charter audit` (fase 3 del roadmap): dos auditores en paralelo + un calibrador-reconciliador, no solo "ejecuta un audit con N modelos".
 
 ## 8. Verdict global y siguientes pasos
 
@@ -262,13 +262,13 @@ Tres patrones emergieron del experimento que ninguno de los tres documentos de p
 
 1. **Adoptante en otro dominio** (frontend, ML pipeline, infra) para diversificar el eje "dominio" del principio #12. Cierra parte del supuesto #1 si se mide delta de gaps capturados antes/después.
 2. **Proyecto con flujo multi-actor** (al menos 2 personas decisoras, aprobación asíncrona, condiciones diferidas reales). Cierra el supuesto #4.
-3. **Implementación de `devtrail stage close` con firma cosign + escenario de tampering** en uno de los repos existentes. Cierra la parte criptográfica del supuesto #6.
+3. **Implementación de `straymark stage close` con firma cosign + escenario de tampering** en uno de los repos existentes. Cierra la parte criptográfica del supuesto #6.
 4. **Revisión por un auditor ISO 42001 humano real** de los outputs de Sentinel. Cierra el supuesto #3 frente a un consumidor real, no solo frente a la estructura compatible.
 
 **Decisiones que la tesis valida y se pueden tomar ahora:**
 
 - Cristalizar Charters como entidad de primera clase del CLI con schema `v0.json` marcado experimental.
-- Portar `TEMPLATE.md v3` y `check-plan-drift.sh` como artefactos canónicos del framework (renombrados en destino a `charter-template.md` y `devtrail charter drift` — ver `devtrail-cli-roadmap.md` §6).
+- Portar `TEMPLATE.md v3` y `check-plan-drift.sh` como artefactos canónicos del framework (renombrados en destino a `charter-template.md` y `straymark charter drift` — ver `straymark-cli-roadmap.md` §6).
 - Mantener la jerarquía de personas (ingeniero senior primario) sin sesgo hacia compliance officer.
 - Posicionar el producto sobre "disciplina cognitiva" en marketing y docs, no sobre "compliance tool".
 
@@ -278,8 +278,8 @@ Tres patrones emergieron del experimento que ninguno de los tres documentos de p
 - Comprometer un schema `v1.0` estable de Charters sin evidencia de un segundo dominio.
 - Marketing de "AI BOM agregado" sin haber probado la firma criptográfica en producción.
 
-Las acciones del primer grupo se reflejan en `devtrail-cli-roadmap.md` v0.1 como Fase 1. Las del segundo grupo quedan explícitamente bloqueadas hasta evidencia adicional, manteniendo el principio #12 (velocidad = velocidad del aprendizaje).
+Las acciones del primer grupo se reflejan en `straymark-cli-roadmap.md` v0.1 como Fase 1. Las del segundo grupo quedan explícitamente bloqueadas hasta evidencia adicional, manteniendo el principio #12 (velocidad = velocidad del aprendizaje).
 
 ---
 
-*Este documento es la entrada principal para profundización empírica sobre la tesis de DevTrail. Las decisiones de producto que se tomen en `devtrail-cloud-proposal.md` v0.3 y `devtrail-cli-roadmap.md` v0.1 referencian sus secciones específicas como ancla de evidencia.*
+*Este documento es la entrada principal para profundización empírica sobre la tesis de StrayMark. Las decisiones de producto que se tomen en `straymark-cloud-proposal.md` v0.3 y `straymark-cli-roadmap.md` v0.1 referencian sus secciones específicas como ancla de evidencia.*
