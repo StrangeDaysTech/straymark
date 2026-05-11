@@ -15,11 +15,14 @@ tags: []
 related: []
 priority: null
 assigned_to: null
+promoted_from_followup: null    # FU-NNN，如果从 .straymark/follow-ups-backlog.md 提升而来
 ---
 
 # TDE: [技术债务标题]
 
 > **由代理识别**：优先级排序和任务分配需要人工决策。
+>
+> **激活触发条件**（任意一条满足即可——若均不满足，请改在 AILOG 中以 `R<N> (new, not in Charter)` 记录）：先前 Charter 的遗留、横跨多个模块/Charter、需要当前 scope 包络之外的专用 Charter、或需要代理无法独自决定的人工优先级或分配。完整判定请参见 `.straymark/00-governance/AGENT-RULES.md` §3。
 
 ## 摘要
 

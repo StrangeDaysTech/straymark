@@ -48,7 +48,7 @@ StrayMark uses **independent version tags** for each component:
 
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
-| Framework | `fw-` | `fw-4.12.0` | Templates (12 types), governance docs, directives, Charter template + schema |
+| Framework | `fw-` | `fw-4.13.0` | Templates (12 types), governance docs, directives, Charter template + schema |
 | CLI | `cli-` | `cli-3.12.0` | The `straymark` binary |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
@@ -88,7 +88,7 @@ Initialize StrayMark in a project directory.
 
 ```bash
 $ straymark init .
-✔ Downloaded StrayMark fw-4.12.0
+✔ Downloaded StrayMark fw-4.13.0
 ✔ Created .straymark/ directory structure
 ✔ Created STRAYMARK.md
 ✔ Configured AI agent directives
@@ -110,7 +110,7 @@ If `.straymark/` does not exist in the current directory, the framework update i
 ```bash
 $ straymark update
 Updating framework...
-✔ Framework updated to fw-4.12.0
+✔ Framework updated to fw-4.13.0
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -127,7 +127,7 @@ Update only the framework files. Looks for the latest `fw-*` release on GitHub.
 
 ```bash
 $ straymark update-framework
-✔ Framework updated to fw-4.12.0
+✔ Framework updated to fw-4.13.0
 ```
 
 ---
@@ -211,7 +211,7 @@ $ straymark status
   Project
   ┌───────────┬──────────────────────────┐
   │ Path      │ /home/user/my-project    │
-  │ Framework │ fw-4.12.0                 │
+  │ Framework │ fw-4.13.0                 │
   │ CLI       │ cli-3.5.2                │
   │ Language  │ en                       │
   └───────────┴──────────────────────────┘
@@ -268,7 +268,7 @@ Repairing StrayMark in /home/user/my-project
 → Restoring 1 missing directory...
 ✓ Restored .straymark/templates/
 → Downloading framework to restore missing files...
-  Using version: fw-4.12.0
+  Using version: fw-4.13.0
 ✓ Restored 16 file(s) from framework
 → Updating checksums...
 
@@ -1053,7 +1053,7 @@ Show version, authorship, and license information.
 $ straymark about
 StrayMark CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.12.0
+  Framework version: fw-4.13.0
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/straymark
@@ -1076,7 +1076,7 @@ StrayMark ships a set of skills (slash commands) for use inside an AI assistant 
 | `/straymark-new` | Create any document type interactively. Suggests best fit from context. | `.straymark/<type-dir>/<TYPE>-YYYY-MM-DD-NNN-*.md` |
 | `/straymark-ailog` | Quick AILOG creation shortcut. | `.straymark/07-ai-audit/agent-logs/AILOG-*.md` |
 | `/straymark-aidec` | Quick AIDEC creation shortcut. | `.straymark/07-ai-audit/decisions/AIDEC-*.md` |
-| `/straymark-adr` | Quick ADR creation shortcut. | `.straymark/04-architecture/decisions/ADR-*.md` |
+| `/straymark-adr` | Quick ADR creation shortcut. | `.straymark/02-design/decisions/ADR-*.md` |
 | `/straymark-mcard` | Interactive Model Card creation flow. | `.straymark/09-ai-models/MCARD-*.md` |
 | `/straymark-sec` | Interactive SEC (security assessment) flow. | `.straymark/08-security/SEC-*.md` |
 | `/straymark-audit-prompt CHARTER-ID` *(fw-4.9.0+, refactored in fw-4.9.0)* | Generate the unified audit prompt for a Charter at the canonical path. Wraps `straymark charter audit --prepare`. The operator then opens N auditor CLIs in the same repo and invokes `/straymark-audit-execute` in each — no copy/paste. | `.straymark/audits/<CHARTER-ID>/audit-prompt.md` |

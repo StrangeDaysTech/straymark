@@ -48,7 +48,7 @@ StrayMark 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.12.0` | 模板（12 种类型）、治理文档、指令 |
+| Framework | `fw-` | `fw-4.13.0` | 模板（12 种类型）、治理文档、指令 |
 | CLI | `cli-` | `cli-3.12.0` | `straymark` 二进制文件 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
@@ -88,7 +88,7 @@ straymark status   # 显示完整的安装状态，包括版本
 
 ```bash
 $ straymark init .
-✔ Downloaded StrayMark fw-4.12.0
+✔ Downloaded StrayMark fw-4.13.0
 ✔ Created .straymark/ directory structure
 ✔ Created STRAYMARK.md
 ✔ Configured AI agent directives
@@ -110,7 +110,7 @@ Next: git add .straymark/ STRAYMARK.md && git commit -m "chore: adopt StrayMark"
 ```bash
 $ straymark update
 Updating framework...
-✔ Framework updated to fw-4.12.0
+✔ Framework updated to fw-4.13.0
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -127,7 +127,7 @@ Updating CLI...
 
 ```bash
 $ straymark update-framework
-✔ Framework updated to fw-4.12.0
+✔ Framework updated to fw-4.13.0
 ```
 
 ---
@@ -211,7 +211,7 @@ $ straymark status
   Project
   ┌───────────┬──────────────────────────┐
   │ Path      │ /home/user/my-project    │
-  │ Framework │ fw-4.12.0                 │
+  │ Framework │ fw-4.13.0                 │
   │ CLI       │ cli-3.5.2                │
   │ Language  │ en                       │
   └───────────┴──────────────────────────┘
@@ -268,7 +268,7 @@ Repairing StrayMark in /home/user/my-project
 → Restoring 1 missing directory...
 ✓ Restored .straymark/templates/
 → Downloading framework to restore missing files...
-  Using version: fw-4.12.0
+  Using version: fw-4.13.0
 ✓ Restored 16 file(s) from framework
 → Updating checksums...
 
@@ -993,7 +993,7 @@ $ straymark explore --lang es             # 会话内切换到西班牙语
 $ straymark about
 StrayMark CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.12.0
+  Framework version: fw-4.13.0
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/straymark
@@ -1016,7 +1016,7 @@ StrayMark 提供一组 skills（slash 命令）供 AI 助手内使用（Claude C
 | `/straymark-new` | 交互式创建任意类型的文档。从上下文建议最佳匹配。 | `.straymark/<type-dir>/<TYPE>-YYYY-MM-DD-NNN-*.md` |
 | `/straymark-ailog` | 快速 AILOG 创建快捷方式。 | `.straymark/07-ai-audit/agent-logs/AILOG-*.md` |
 | `/straymark-aidec` | 快速 AIDEC 创建快捷方式。 | `.straymark/07-ai-audit/decisions/AIDEC-*.md` |
-| `/straymark-adr` | 快速 ADR 创建快捷方式。 | `.straymark/04-architecture/decisions/ADR-*.md` |
+| `/straymark-adr` | 快速 ADR 创建快捷方式。 | `.straymark/02-design/decisions/ADR-*.md` |
 | `/straymark-mcard` | 交互式 Model Card 创建流程。 | `.straymark/09-ai-models/MCARD-*.md` |
 | `/straymark-sec` | 交互式 SEC（安全评估）流程。 | `.straymark/08-security/SEC-*.md` |
 | `/straymark-audit-prompt CHARTER-ID` *(fw-4.9.0+，在 fw-4.9.0 中重构)* | 在规范路径处生成章程的统一审计 prompt。封装 `straymark charter audit --prepare`。操作员随后在同一仓库中打开 N 个审计员 CLI，在每个中调用 `/straymark-audit-execute` — 无需复制/粘贴。 | `.straymark/audits/<CHARTER-ID>/audit-prompt.md` |

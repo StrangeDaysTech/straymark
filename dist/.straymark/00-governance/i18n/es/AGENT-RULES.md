@@ -39,6 +39,7 @@ confidence: high | medium | low
 | Adición/eliminación/actualización de dependencias críticas de seguridad | AILOG | Revisión humana requerida |
 | Cambios que afectan el ciclo de vida del sistema de IA (despliegue, retirada) | AILOG + ADR | Revisión humana requerida |
 | Cambios en instrumentación OTel (spans, atributos, pipeline) | AILOG | Tag `observabilidad`, ver §9 |
+| Deuda técnica transversal detectada durante la implementación | TDE | Ver §3 "TDE vs `R<N>` (new, not in Charter)" para el criterio de desambiguación |
 
 ### PROHIBIDO - No documentar
 
@@ -98,6 +99,25 @@ confidence: high | medium | low
 |------|-------------|
 | TDE | Deuda técnica |
 | INC | Conclusiones de incidentes |
+
+### TDE vs `R<N> (new, not in Charter)`
+
+Existen dos superficies para la deuda emergente. No son intercambiables — elige la que coincida con el ciclo de vida del trabajo, no la que tengas más a mano.
+
+**Registra un `R<N> (new, not in Charter)` en la sección `§Risk` del AILOG** cuando la deuda:
+
+- Está *acotada al Charter en ejecución* o al siguiente Charter en la secuencia.
+- Se resuelve como un diferimiento documentado, un fix atómico pequeño, o un puntero a un Charter que ya existe.
+- Tiene impacto bajo-a-medio y el agente puede describir la remediación en una sola viñeta.
+
+**Crea un documento TDE** cuando la deuda:
+
+- Es *herencia de un Charter previo* (la brecha precede al trabajo actualmente en ejecución).
+- *Aplica a múltiples módulos o múltiples Charters* — fragmentarla en entradas `R<N>` por Charter pierde la forma arquitectónica.
+- *Requiere un Charter dedicado fuera del envelope de scope actual* para remediarse (no el Charter actual, no el siguiente).
+- *Requiere priorización o asignación humana* que el agente no puede decidir solo (matriz impact × effort, ownership, sprint placement).
+
+Los cuatro triggers anteriores son los criterios de activación para TDE bajo §2. Cuando el AILOG que vas a escribir cargaría un `R<N>` que coincida con cualquiera de ellos, escribe el TDE en su lugar y referencialo desde la fila `§Risk` del AILOG.
 
 ---
 
@@ -357,4 +377,4 @@ Cuando un proyecto acumula un volumen alto de AILOGs a lo largo de múltiples Ch
 
 ---
 
-*StrayMark v4.12.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.13.0 | [Strange Days Tech](https://strangedays.tech)*

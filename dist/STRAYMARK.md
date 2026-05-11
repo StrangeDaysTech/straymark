@@ -146,6 +146,7 @@ gh pr create --title "fix: description" --body "..."
 | Security-critical dependency changes | Create AILOG + human review |
 | OTel instrumentation changes | Create AILOG + tag `observabilidad` |
 | Multi-session implementation block (>1 day, >5 tasks across phases) | Declare a **Charter** — `straymark charter new`. See section 15. |
+| Transversal technical debt — heritage from prior Charter, applies to multiple modules, or requires dedicated Charter to remediate | Create **TDE** — distinct from per-Charter `R<N>`. See `.straymark/00-governance/AGENT-RULES.md` §3 for TDE vs `R<N>` disambiguation. |
 
 ### DO NOT DOCUMENT
 

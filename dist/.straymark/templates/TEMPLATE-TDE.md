@@ -15,11 +15,14 @@ tags: []
 related: []
 priority: null
 assigned_to: null
+promoted_from_followup: null    # FU-NNN if promoted from .straymark/follow-ups-backlog.md
 ---
 
 # TDE: [Technical Debt Title]
 
 > **IDENTIFIED BY AGENT**: Prioritization and assignment require human decision.
+>
+> **Activation triggers** (any one suffices — file as `R<N> (new, not in Charter)` in an AILOG instead if none apply): heritage from a prior Charter, applies to multiple modules/Charters, requires a dedicated Charter outside the current scope envelope, or requires human prioritization/assignment the agent cannot decide alone. See `.straymark/00-governance/AGENT-RULES.md` §3 for the full disambiguation.
 
 ## Summary
 

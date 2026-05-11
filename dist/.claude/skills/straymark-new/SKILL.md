@@ -54,7 +54,8 @@ Based on the analysis, suggest a document type:
 | Files with `auth`, `user`, `privacy`, `gdpr` | ETH (draft) |
 | Test files (`*.test.*`, `*.spec.*`) | TES |
 | Bug fixes, hotfixes | INC |
-| `TODO`, `FIXME`, `HACK` comments added | TDE |
+| `TODO`, `FIXME`, `HACK` comments added | TDE (code-smell trigger) |
+| Transversal debt — heritage from prior Charter, applies to multiple modules, requires dedicated Charter, or needs human prioritization | TDE (architectural trigger — distinct from per-Charter `R<N>`; see AGENT-RULES.md §3) |
 | Requirements or spec files | REQ |
 | Multi-session implementation block (>1 day, >5 tasks, multi-phase) | **Charter** — redirect to `/straymark-charter-new` (Charters use the `straymark charter new` CLI, not `straymark new`) |
 

@@ -26,12 +26,12 @@ Check these directories for each document type:
 |------|--------|-----------|
 | AILOG | `AILOG-` | `.straymark/07-ai-audit/agent-logs/` |
 | AIDEC | `AIDEC-` | `.straymark/07-ai-audit/decisions/` |
-| ADR | `ADR-` | `.straymark/04-architecture/decisions/` |
+| ADR | `ADR-` | `.straymark/02-design/decisions/` |
 | ETH | `ETH-` | `.straymark/07-ai-audit/ethical-reviews/` |
-| REQ | `REQ-` | `.straymark/03-requirements/` |
-| TES | `TES-` | `.straymark/05-testing/` |
-| INC | `INC-` | `.straymark/06-operations/incidents/` |
-| TDE | `TDE-` | `.straymark/06-operations/tech-debt/` |
+| REQ | `REQ-` | `.straymark/01-requirements/` |
+| TES | `TES-` | `.straymark/04-testing/` |
+| INC | `INC-` | `.straymark/05-operations/incidents/` |
+| TDE | `TDE-` | `.straymark/06-evolution/technical-debt/` |
 | SEC | `SEC-` | `.straymark/08-security/` |
 | MCARD | `MCARD-` | `.straymark/09-ai-models/` |
 | SBOM | `SBOM-` | `.straymark/07-ai-audit/` |

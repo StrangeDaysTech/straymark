@@ -39,6 +39,7 @@ confidence: high | medium | low
 | Addition/removal/upgrade of security-critical dependencies | AILOG | Human review required |
 | Changes affecting AI system lifecycle (deployment, retirement) | AILOG + ADR | Human review required |
 | Changes to OTel instrumentation (spans, attributes, pipeline) | AILOG | Tag `observabilidad`, see §9 |
+| Transversal technical debt discovered during implementation | TDE | See §3 "TDE vs `R<N>` (new, not in Charter)" for the disambiguation criterion |
 
 ### PROHIBITED - Do not document
 
@@ -98,6 +99,25 @@ confidence: high | medium | low
 |------|-------------|
 | TDE | Technical debt |
 | INC | Incident conclusions |
+
+### TDE vs `R<N> (new, not in Charter)`
+
+Two surfaces exist for emergent debt. They are not interchangeable — pick the one whose lifecycle matches the work, not whichever is closer to hand.
+
+**File an `R<N> (new, not in Charter)` entry in the AILOG `§Risk` section** when the debt:
+
+- Is *scoped to the Charter currently in execution* or the next Charter in sequence.
+- Resolves as a documented deferral, a small atomic fix, or a forward-pointer to a Charter that already exists.
+- Carries low-to-medium impact and the agent can describe the remediation in one bullet.
+
+**Create a TDE document** when the debt:
+
+- Is *heritage from a prior Charter* (the gap predates the work currently in flight).
+- *Applies to multiple modules or multiple Charters* — fragmenting it into per-Charter `R<N>` entries loses the architectural shape.
+- *Requires a dedicated Charter outside the current scope envelope* to remediate (not the current Charter, not the next one).
+- *Requires human prioritization or assignment* the agent cannot decide alone (impact × effort matrix, ownership, sprint placement).
+
+The four triggers above are the activation criteria for TDE under §2. When the AILOG you are about to write would carry an `R<N>` matching any of them, write the TDE instead and reference it from the AILOG `§Risk` row.
 
 ---
 
@@ -357,4 +377,4 @@ When a project accumulates a high volume of AILOGs across multiple Charters and 
 
 ---
 
-*StrayMark v4.12.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.13.0 | [Strange Days Tech](https://strangedays.tech)*
