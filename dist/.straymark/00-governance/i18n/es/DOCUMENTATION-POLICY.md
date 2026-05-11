@@ -149,18 +149,24 @@ related:
 ## 3. Estados de Documentos
 
 ```
-draft ──────► accepted ──────► deprecated
-                │                   │
-                │                   ▼
-                └──────► superseded
+identified ──┐
+             ├──► draft ──────► accepted ──────► deprecated
+             │                       │                   │
+             │                       │                   ▼
+             │                       └──────► superseded
+             │
+             └──► (estado de entrada TDE-only, ver §6)
 ```
 
 | Estado | Descripción |
 |--------|-------------|
+| `identified` | Estado de entrada para los tipos de descubrimiento dirigidos por agente (TDE hoy). Funcionalmente equivalente a `draft` para el lifecycle gating — se espera que un revisor humano lo priorice y lo promueva. Semánticamente distinto para que las analíticas del adopter puedan distinguir "el agente encontró esta deuda" de "un humano está redactando un documento deliberado". |
 | `draft` | En borrador, pendiente de revisión |
 | `accepted` | Aprobado y vigente |
 | `deprecated` | Obsoleto, pero se mantiene como referencia |
 | `superseded` | Reemplazado por otro documento |
+
+El mapeo de status por defecto por tipo vive en §6 — la mayoría de tipos entran en `draft` o `accepted`, pero TDE entra en `identified` por la frontera de autonomía del agente (el agente identifica, el humano prioriza).
 
 ---
 

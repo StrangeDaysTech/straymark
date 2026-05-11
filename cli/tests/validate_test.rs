@@ -349,6 +349,29 @@ fn test_validate_dpia_document_valid() {
         .stdout(predicate::str::contains("passed validation"));
 }
 
+/// Regression test for issue #130: TDE documents ship with `status: identified`
+/// per TEMPLATE-TDE.md and DOCUMENTATION-POLICY.md §6 — the validator must accept
+/// it as a valid lifecycle entry state.
+#[test]
+fn test_validate_tde_document_valid() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+
+    create_doc(
+        dir.path(),
+        "06-evolution/technical-debt",
+        "TDE-2026-05-11-001-architectural-refactor.md",
+        "id: TDE-2026-05-11-001\ntitle: Architectural Refactor Debt\nstatus: identified\ncreated: 2026-05-11\nagent: claude-code-v1.0\nconfidence: high\nreview_required: false\nrisk_level: medium\ntype: architecture\nimpact: high\neffort: medium\ntags:\n  - architecture\nrelated: []\npriority: null\nassigned_to: null",
+    );
+
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    cmd.arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("passed validation"));
+}
+
 /// F2.QA.02.01 — Also verify that MCARD and DPIA fail without review_required: true
 #[test]
 fn test_validate_mcard_requires_review() {

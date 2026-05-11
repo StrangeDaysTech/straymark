@@ -41,8 +41,18 @@ impl ValidationResult {
     }
 }
 
-/// Valid status values per DOCUMENTATION-POLICY.md
-const VALID_STATUSES: &[&str] = &["draft", "review", "accepted", "superseded", "deprecated"];
+/// Valid status values per DOCUMENTATION-POLICY.md §3 lifecycle + §6 per-type defaults.
+/// `identified` is the canonical TDE entry state (agent-driven discovery, awaits
+/// human prioritization); functionally equivalent to `draft` for lifecycle gating
+/// but semantically distinct in adopter analytics.
+const VALID_STATUSES: &[&str] = &[
+    "draft",
+    "identified",
+    "review",
+    "accepted",
+    "superseded",
+    "deprecated",
+];
 
 /// Valid risk levels
 const VALID_RISK_LEVELS: &[&str] = &["low", "medium", "high", "critical"];

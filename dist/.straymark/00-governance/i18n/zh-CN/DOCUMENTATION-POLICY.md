@@ -149,18 +149,24 @@ related:
 ## 3. 文档状态
 
 ```
-draft ──────► accepted ──────► deprecated
-                │                   │
-                │                   ▼
-                └──────► superseded
+identified ──┐
+             ├──► draft ──────► accepted ──────► deprecated
+             │                       │                   │
+             │                       │                   ▼
+             │                       └──────► superseded
+             │
+             └──► (TDE 专用入口状态，见 §6)
 ```
 
 | 状态 | 说明 |
 |------|------|
+| `identified` | 由代理驱动发现的类型的入口状态（今日仅 TDE）。在生命周期校验上等同于 `draft`——期望人工审阅者来排定优先级并推进。语义上有所区分，以便 adopter 的分析能够区分"代理发现了此债务"与"人工正在起草一份有意识的文档"。 |
 | `draft` | 草稿中，待审核 |
 | `accepted` | 已批准且为当前有效版本 |
 | `deprecated` | 已废弃，但保留作为参考 |
 | `superseded` | 已被其他文档替代 |
+
+按类型的默认 status 映射位于 §6——大多数类型以 `draft` 或 `accepted` 进入，但 TDE 因代理自主权边界（代理识别、人工排序）以 `identified` 进入。
 
 ---
 
