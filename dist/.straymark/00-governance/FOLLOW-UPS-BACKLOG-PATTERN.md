@@ -77,11 +77,12 @@ Each entry inside a bucket follows this shape:
 ```markdown
 ### FU-NNN — <short description>
 - **Origin**: AILOG-NNNN-NN-NN-NNN <pointer to source section>
-- **Status**: open | in-progress | closed | superseded
+- **Status**: open | in-progress | closed | superseded | promoted
 - **Trigger**: ready | <calendar date> | when <X> | <other>
-- **Destination**: <Charter id, "operations", or future phase>
+- **Destination**: <Charter id, "operations", future phase, or TDE-YYYY-MM-DD-NNN>
 - **Cost**: <effort estimate>
 - **Notes**: <free-form context>
+- **Promoted to**: <TDE id, when Status: promoted — see "Promotion to TDE" below>
 ```
 
 `FU-NNN` is monotonically increasing across the registry's lifetime; do not renumber when entries close.
@@ -92,8 +93,36 @@ Each entry inside a bucket follows this shape:
 - `in-progress` — a Charter has been declared or is executing that addresses this entry.
 - `closed` — entry resolved (Charter merged, operational task done, time elapsed and reviewed).
 - `superseded` — addressed by other work that did not reference this entry directly.
+- `promoted` — the entry was elevated to a TDE document because it met the transversal-debt criteria (see "Promotion to TDE" below). The `Promoted to:` field carries the TDE id.
 
-Closed and superseded entries stay in the file (auditable history). Operators may move them to a `## Bucket: closed` section at the bottom for visual decluttering, but they are never deleted.
+Closed, superseded, and promoted entries stay in the file (auditable history). Operators may move them to a `## Bucket: closed` section at the bottom for visual decluttering, but they are never deleted.
+
+---
+
+## Promotion to TDE
+
+Some FU entries are not just deferred tasks — they describe **transversal technical debt** that warrants its own governance document (TDE). The criteria for promotion mirror the TDE-vs-`R<N>` disambiguation in `AGENT-RULES.md §3`:
+
+- The entry is *heritage from a prior Charter* (already lived through ≥1 Charter close without remediation).
+- The entry *applies to multiple modules or multiple Charters* — the central registry has fragmented it into bullets that share a root cause.
+- The entry *requires a dedicated Charter outside the current scope envelope* to remediate.
+- The entry *requires human prioritization or assignment* that the periodic operator review cannot decide from the bullet alone (impact × effort matrix, ownership).
+
+When any of these holds, promote the FU entry to a TDE document under `.straymark/06-evolution/technical-debt/`:
+
+1. Create the TDE via `/straymark-new tde` (or `straymark new --type tde`). Fill `impact`, `effort`, `type`, and the body sections from the FU entry's context.
+2. Add `promoted_from_followup: FU-NNN` to the TDE frontmatter for traceability.
+3. In the FU entry, set `Status: promoted`, set `Destination: TDE-YYYY-MM-DD-NNN`, and add `Promoted to: TDE-YYYY-MM-DD-NNN`. Move the entry to the `## Bucket: closed` section if you maintain one; otherwise leave it in place with the new status.
+
+The FU entry is **not deleted** after promotion — its presence in the registry is the audit trail showing where the TDE came from.
+
+### When to promote
+
+- **Periodic review** — when the operator does the manual reclassification pass, promote any entry that has lived through ≥2 Charter closes without resolution and meets the criteria above.
+- **Charter close** — when reviewing entries the just-closed Charter resolved, if you find entries that were *not* resolved and meet the criteria above, promote them rather than leaving them as `open`.
+- **Pre-Charter declaration** — if you're about to declare a Charter and notice the registry contains entries that this Charter would *partially* address, the un-addressed portion may belong as a TDE rather than as another deferred FU.
+
+The drift script (`scripts/check-followups-drift.sh`) is **not extended** for promotion candidates in v0 — promotion is operator-driven. A future v1 enhancement could flag entries meeting the "lived through ≥2 Charters" heuristic, but that crystallizes after a second adopter validates the pattern (same gate as the rest of v0 → v1).
 
 ---
 
@@ -135,10 +164,10 @@ The agent (Claude / Gemini / etc.) becomes the primary maintainer of the registr
 
 - **Session start**: glance at `.straymark/follow-ups-backlog.md` to know what is pending across the project.
 - **Pre-commit checklist**: created or modified any AILOG with `## Follow-ups` or `R<N> (new, not in Charter)` entries? → run `scripts/check-followups-drift.sh --apply` to extend the backlog in the same commit.
-- **Post-Charter close**: review entries the Charter resolved; mark them `closed` (with the closing Charter id in `Notes`) or `superseded`.
+- **Post-Charter close**: review entries the Charter resolved; mark them `closed` (with the closing Charter id in `Notes`) or `superseded`. For un-resolved entries that meet the TDE criteria (heritage from prior Charter, transversal, requires dedicated Charter, needs human prioritization), promote them to a TDE document (see "Promotion to TDE" in this pattern + `AGENT-RULES.md §3`).
 ```
 
-This makes the agent the maintainer, the script the verification layer, and the operator the periodic reviewer (re-bucketing, marking closed, pruning superseded).
+This makes the agent the maintainer, the script the verification layer, and the operator the periodic reviewer (re-bucketing, marking closed, pruning superseded, promoting to TDE when criteria apply).
 
 ---
 
@@ -186,4 +215,4 @@ Contributed via [issue #111](https://github.com/StrangeDaysTech/straymark/issues
 
 ---
 
-*StrayMark v4.12.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.13.0 | [Strange Days Tech](https://strangedays.tech)*

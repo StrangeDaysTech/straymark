@@ -15,11 +15,14 @@ tags: []
 related: []
 priority: null
 assigned_to: null
+promoted_from_followup: null    # FU-NNN si fue promovido desde .straymark/follow-ups-backlog.md
 ---
 
 # TDE: [Título de la Deuda Técnica]
 
 > **IDENTIFICADO POR AGENTE**: La priorización y asignación requieren decisión humana.
+>
+> **Triggers de activación** (basta con cualquiera — si ninguno aplica, registra como `R<N> (new, not in Charter)` en un AILOG en su lugar): herencia de un Charter previo, aplica a múltiples módulos/Charters, requiere un Charter dedicado fuera del envelope de scope actual, o requiere priorización/asignación humana que el agente no puede decidir solo. Ver `.straymark/00-governance/AGENT-RULES.md` §3 para la desambiguación completa.
 
 ## Resumen
 

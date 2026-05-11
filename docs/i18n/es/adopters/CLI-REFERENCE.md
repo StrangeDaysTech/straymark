@@ -48,7 +48,7 @@ StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.12.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| Framework | `fw-` | `fw-4.13.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
 | CLI | `cli-` | `cli-3.12.0` | El binario `straymark` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
@@ -88,7 +88,7 @@ Inicializa StrayMark en un directorio de proyecto.
 
 ```bash
 $ straymark init .
-✔ Downloaded StrayMark fw-4.12.0
+✔ Downloaded StrayMark fw-4.13.0
 ✔ Created .straymark/ directory structure
 ✔ Created STRAYMARK.md
 ✔ Configured AI agent directives
@@ -109,7 +109,7 @@ Si `.straymark/` no existe en el directorio actual, la actualización del framew
 ```bash
 $ straymark update
 Updating framework...
-✔ Framework updated to fw-4.12.0
+✔ Framework updated to fw-4.13.0
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -126,7 +126,7 @@ Actualiza solo los archivos del framework. Busca el último release `fw-*` en Gi
 
 ```bash
 $ straymark update-framework
-✔ Framework updated to fw-4.12.0
+✔ Framework updated to fw-4.13.0
 ```
 
 ---
@@ -205,7 +205,7 @@ $ straymark status
 StrayMark Status
 ───────────────
 Path:              /home/user/my-project
-Framework version: fw-4.12.0
+Framework version: fw-4.13.0
 CLI version:       cli-3.5.2
 Language:          en
 Structure:         ✔ Complete
@@ -859,7 +859,7 @@ Muestra información de versión, autoría y licencia.
 $ straymark about
 StrayMark CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.12.0
+  Framework version: fw-4.13.0
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/straymark
@@ -882,7 +882,7 @@ StrayMark incluye un conjunto de skills (slash commands) para usar dentro de un 
 | `/straymark-new` | Crear cualquier tipo de documento interactivamente. Sugiere el más adecuado al contexto. | `.straymark/<dir-tipo>/<TIPO>-YYYY-MM-DD-NNN-*.md` |
 | `/straymark-ailog` | Atajo de creación rápida de AILOG. | `.straymark/07-ai-audit/agent-logs/AILOG-*.md` |
 | `/straymark-aidec` | Atajo de creación rápida de AIDEC. | `.straymark/07-ai-audit/decisions/AIDEC-*.md` |
-| `/straymark-adr` | Atajo de creación rápida de ADR. | `.straymark/04-architecture/decisions/ADR-*.md` |
+| `/straymark-adr` | Atajo de creación rápida de ADR. | `.straymark/02-design/decisions/ADR-*.md` |
 | `/straymark-mcard` | Flujo interactivo de creación de Model Card. | `.straymark/09-ai-models/MCARD-*.md` |
 | `/straymark-sec` | Flujo interactivo SEC (security assessment). | `.straymark/08-security/SEC-*.md` |
 | `/straymark-audit-prompt CHARTER-ID` *(fw-4.9.0+, refactorizada en fw-4.9.0)* | Genera la plantilla unificada del audit prompt para un Charter en el path canónico. Envuelve `straymark charter audit --prepare`. El operador entonces abre N CLIs auditoras en el mismo repo e invoca `/straymark-audit-execute` en cada una — sin copy/paste. | `.straymark/audits/<CHARTER-ID>/audit-prompt.md` |

@@ -39,6 +39,7 @@ confidence: high | medium | low
 | 添加/移除/升级安全关键依赖 | AILOG | 需要人工审查 |
 | 影响 AI 系统生命周期的变更（部署、退役） | AILOG + ADR | 需要人工审查 |
 | OTel 仪表化变更（spans、attributes、pipeline） | AILOG | 标签 `observabilidad`，参见 §9 |
+| 实施过程中发现的横向技术债务 | TDE | 参见 §3 "TDE vs `R<N>`（new, not in Charter）" 的判定标准 |
 
 ### 禁止事项 - 不得记录
 
@@ -98,6 +99,25 @@ confidence: high | medium | low
 |------|------|
 | TDE | 技术债务 |
 | INC | 事故总结 |
+
+### TDE vs `R<N>（new, not in Charter）`
+
+对于涌现的债务存在两个记录面。它们不可互换——根据工作的生命周期来选择，而不是就手的那一个。
+
+**在 AILOG 的 `§Risk` 节中登记一条 `R<N>（new, not in Charter）`**，当该债务：
+
+- *局限于正在执行的 Charter* 或序列中的下一个 Charter。
+- 可作为已记录的延期、一个小的原子修复，或指向一个已存在的 Charter 的前向引用来解决。
+- 影响为低到中等，且代理可用一条要点描述修复方式。
+
+**创建 TDE 文档**，当该债务：
+
+- 是 *先前 Charter 的遗留*（该缺陷早于当前正在执行的工作）。
+- *横跨多个模块或多个 Charter* —— 将其拆分为各 Charter 的 `R<N>` 条目会丢失其架构形态。
+- *需要在当前 scope 包络之外的专用 Charter* 来修复（不是当前 Charter，也不是下一个）。
+- *需要人工决定优先级或分配*，代理无法独自决定（impact × effort 矩阵、所有权、Sprint 安排）。
+
+上述四项触发条件即 §2 中 TDE 的激活标准。当你即将编写的 AILOG 中的 `R<N>` 命中上述任一条件时，转而编写 TDE，并在该 AILOG 的 `§Risk` 行中引用它。
 
 ---
 
@@ -352,4 +372,4 @@ confidence: high | medium | low
 
 ---
 
-*StrayMark v4.12.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.13.0 | [Strange Days Tech](https://strangedays.tech)*

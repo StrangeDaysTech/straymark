@@ -81,6 +81,7 @@ Charter **不是**文档类型——它包裹一个跨多个会话的实施块�
 | 安全关键依赖变更 | AILOG + 人工审核 |
 | OTel 埋点变更 | AILOG + 标签 `observabilidad` |
 | 跨多个会话的实施块（>1 天，跨多个阶段 >5 个任务） | 声明一个 **Charter**（`straymark charter new`） |
+| 横向技术债务（先前 Charter 的遗留、横跨多个模块、需要专用 Charter、需要人工优先级） | **TDE** —— 与单 Charter 的 `R<N>` 不同；参见 AGENT-RULES.md §3 |
 
 **不要记录**：凭据、令牌、PII、机密信息。
 
@@ -215,4 +216,4 @@ risk_level: low | medium | high | critical
 
 ---
 
-*StrayMark v4.12.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.13.0 | [Strange Days Tech](https://strangedays.tech)*

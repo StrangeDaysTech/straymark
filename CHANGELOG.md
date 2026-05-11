@@ -7,6 +7,35 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.13.0 — TDE activation trigger
+
+Closes [#128](https://github.com/StrangeDaysTech/straymark/issues/128). The TDE (Technical Debt) document type had structural shape — template, destination folder, autonomy boundary — but no operational activation trigger in the agent-facing governance. Empirical signal from the Sentinel adopter (primary, fw-4.12.0): zero TDEs created across 13 closed Charters despite ≥7 instances of transversal debt being routed through parallel mechanisms (`R<N> (new, not in Charter)` in AILOG `§Risk`, or follow-ups in `follow-ups-backlog.md`). This release adds the trigger and the `R<N>` vs TDE disambiguation, plus a promotion path from the follow-ups backlog. Governance-docs-only — no CLI changes; the `straymark debt list/status/close` subcommand trio is deferred to v1 (same gate as the follow-ups CLI per `FOLLOW-UPS-BACKLOG-PATTERN.md`).
+
+### Added (Framework)
+
+- **TDE activation trigger** in `AGENT-RULES.md §2 "When to Document"` (EN + ES + zh-CN). New row routes transversal technical debt to TDE creation.
+- **TDE vs `R<N> (new, not in Charter)` disambiguation** in `AGENT-RULES.md §3` (EN + ES + zh-CN). Four canonical triggers for TDE: *heritage from prior Charter*, *applies to multiple modules/Charters*, *requires dedicated Charter outside current scope envelope*, *requires human prioritization/assignment*. If none apply, the debt is an `R<N>` row in the current Charter's AILOG; if any apply, file a TDE.
+- **TDE row in "When to Document"** quick tables: `QUICK-REFERENCE.md` (EN + ES + zh-CN) and `STRAYMARK.md §6`. Surfaces the trigger at the every-session entry points.
+- **Promotion path FU → TDE** in `FOLLOW-UPS-BACKLOG-PATTERN.md` (EN + ES + zh-CN). New status `promoted`, new `Destination: TDE-YYYY-MM-DD-NNN` value, new `Promoted to:` entry field, plus a "Promotion to TDE" section with criteria (mirroring the `AGENT-RULES.md §3` heuristics) and the operator-driven workflow. Post-Charter close checklist now includes "promote un-resolved transversal entries to TDE."
+- **`promoted_from_followup: FU-NNN` frontmatter field** in `TEMPLATE-TDE.md` (EN + ES + zh-CN). Optional, populated when the TDE originates from a backlog entry, preserves traceability.
+- **Activation-trigger note** in the TDE template body (EN + ES + zh-CN) so the agent reading the template at creation time sees the four canonical triggers + pointer to `AGENT-RULES.md §3`.
+
+### Changed (Framework)
+
+- **`/straymark-new` skill** (3 surfaces — `.claude/skills/`, `.gemini/skills/`, `.agent/workflows/`): the TDE suggestion row split into two — `TODO`/`FIXME`/`HACK` comments remain as a code-smell trigger, and a new row covers the architectural trigger (heritage, transversal, dedicated Charter, human prioritization) pointing to `AGENT-RULES.md §3`.
+
+### Fixed (Framework)
+
+- **`/straymark-status` skill paths** (3 surfaces — `.claude/skills/`, `.gemini/skills/`, `.agent/workflows/`). Five doc types had stale directory paths that diverged from the canonical layout in `AGENT-RULES.md §5` and `STRAYMARK.md §10`: ADR (`04-architecture/decisions/` → `02-design/decisions/`), REQ (`03-requirements/` → `01-requirements/`), TES (`05-testing/` → `04-testing/`), INC (`06-operations/incidents/` → `05-operations/incidents/`), TDE (`06-operations/tech-debt/` → `06-evolution/technical-debt/`). The TDE bug was surfaced while verifying #128: `/straymark-new` would have written a TDE to the correct path, but `/straymark-status` would never have found it. The other four are pre-existing drift fixed in the same pass.
+- **`/straymark-adr` shortcut path in CLI-REFERENCE.md** (EN + ES + zh-CN). Same `04-architecture/decisions/` → `02-design/decisions/` correction.
+
+### Adopter guidance
+
+- Sentinel will create the 3 TDEs surfaced during CHARTER-13 close ceremony retrospective (R7 RequireScope architectural gap, HTTP layer test coverage gap, legacy AILOGs with `review_required: false`) as empirical validation of the trigger heuristic in a follow-up PR.
+- Existing projects on `fw-4.12.0` get the new framework files via `straymark update-framework`. The trigger guidance is documentation-only — no migration is required.
+
+---
+
 ## Framework 4.12.0 / CLI 3.12.0 — Charter discoverability + path alignment
 
 Closes the two Charter-related gaps surfaced by real adopters in the issue tracker: **Charter were structurally invisible to the CLI** ([#119](https://github.com/StrangeDaysTech/straymark/issues/119) — `straymark charter list/audit/close` hardcoded `docs/charters/` while the framework already validated `.straymark/charters/`) and **Charter were conceptually invisible to onboarding agents** ([#113](https://github.com/StrangeDaysTech/straymark/issues/113) — agents following the canonical entry points could not discover Charter as a workflow concept).

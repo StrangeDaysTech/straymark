@@ -77,11 +77,12 @@ bucket 内的每个条目遵循以下形式:
 ```markdown
 ### FU-NNN — <简短描述>
 - **Origin**: AILOG-NNNN-NN-NN-NNN <指向源部分的指针>
-- **Status**: open | in-progress | closed | superseded
+- **Status**: open | in-progress | closed | superseded | promoted
 - **Trigger**: ready | <日历日期> | when <X> | <其他>
-- **Destination**: <Charter id、"operations" 或未来阶段>
+- **Destination**: <Charter id、"operations"、未来阶段,或 TDE-YYYY-MM-DD-NNN>
 - **Cost**: <工作量估计>
 - **Notes**: <自由格式上下文>
+- **Promoted to**: <TDE id,当 Status: promoted 时 — 见下方"提升为 TDE">
 ```
 
 `FU-NNN` 在注册表整个生命周期内单调递增;条目关闭时不重新编号。
@@ -92,8 +93,36 @@ bucket 内的每个条目遵循以下形式:
 - `in-progress` — 已声明或正在执行的 Charter 处理此条目。
 - `closed` — 条目已解决(Charter 已合并、操作任务已完成、时间已过且已审查)。
 - `superseded` — 由其他工作处理,该工作未直接引用此条目。
+- `promoted` — 条目因满足横向债务标准而被提升为 TDE 文档(见下方"提升为 TDE")。`Promoted to:` 字段携带 TDE id。
 
-closed 和 superseded 条目保留在文件中(可审计的历史)。操作员可以将它们移到底部的 `## Bucket: closed` 部分以进行视觉整理,但绝不删除。
+closed、superseded 和 promoted 条目保留在文件中(可审计的历史)。操作员可以将它们移到底部的 `## Bucket: closed` 部分以进行视觉整理,但绝不删除。
+
+---
+
+## 提升为 TDE
+
+某些 FU 条目不仅仅是延期任务 —— 它们描述的是值得拥有自己治理文档的**横向技术债务**(TDE)。提升标准与 `AGENT-RULES.md §3` 中的 TDE-vs-`R<N>` 判定一致:
+
+- 该条目是*先前 Charter 的遗留*(已经历 ≥1 次 Charter 关闭仍未修复)。
+- 该条目*横跨多个模块或多个 Charter* —— 中央注册表已将其碎片化为共享同一根本原因的多个 bullet。
+- 该条目*需要在当前 scope 包络之外的专用 Charter* 来修复。
+- 该条目*需要人工决定优先级或分配*,操作员的周期性审查无法仅从 bullet 决定(impact × effort 矩阵、所有权)。
+
+当上述任一条件成立时,将该 FU 条目提升为 `.straymark/06-evolution/technical-debt/` 下的 TDE 文档:
+
+1. 通过 `/straymark-new tde`(或 `straymark new --type tde`)创建 TDE。从 FU 条目的上下文填入 `impact`、`effort`、`type` 与正文各节。
+2. 在 TDE 的 frontmatter 中添加 `promoted_from_followup: FU-NNN` 以便溯源。
+3. 在 FU 条目中,设置 `Status: promoted`、`Destination: TDE-YYYY-MM-DD-NNN`,并添加 `Promoted to: TDE-YYYY-MM-DD-NNN`。如果你维护 `## Bucket: closed` 节,则将条目移过去;否则保持原位并更新状态。
+
+FU 条目在提升后**不会被删除** —— 它在注册表中的存在就是显示 TDE 来源的审计轨迹。
+
+### 何时提升
+
+- **周期性审查** —— 当操作员做人工重新分类时,提升任何已经历 ≥2 次 Charter 关闭仍未解决且符合上述标准的条目。
+- **Charter 关闭** —— 在审查刚关闭的 Charter 所解决的条目时,如果发现*未*被解决且符合上述标准的条目,则提升它们,而不是保留为 `open`。
+- **Charter 声明前** —— 如果你即将声明一个 Charter,并注意到注册表中包含此 Charter 仅会*部分*处理的条目,那么未处理的部分可能应作为 TDE,而不是作为另一个被延期的 FU。
+
+Drift 脚本(`scripts/check-followups-drift.sh`)在 v0 **不扩展**支持提升候选 —— 提升由操作员驱动。未来 v1 增强可标记符合"经历 ≥2 个 Charter"启发式的条目,但这等到第二个 adopter 验证模式后才会固化(与 v0 → v1 其余部分相同的门槛)。
 
 ---
 
@@ -135,10 +164,10 @@ AILOG_DIR=".straymark/07-ai-audit/agent-logs"
 
 - **会话开始**: 浏览 `.straymark/follow-ups-backlog.md` 以了解项目中所有待处理事项。
 - **Pre-commit 检查**: 创建或修改了任何带有 `## Follow-ups` 或 `R<N> (new, not in Charter)` 条目的 AILOG 吗? → 在同一个 commit 中运行 `scripts/check-followups-drift.sh --apply` 以扩展 backlog。
-- **Charter 关闭后**: 审查 Charter 解决的条目;将其标记为 `closed`(在 `Notes` 中带有关闭 Charter id)或 `superseded`。
+- **Charter 关闭后**: 审查 Charter 解决的条目;将其标记为 `closed`(在 `Notes` 中带有关闭 Charter id)或 `superseded`。对于未解决但符合 TDE 标准的条目(先前 Charter 的遗留、横向、需要专用 Charter、需要人工优先级),将其提升为 TDE 文档(见本模式的"提升为 TDE"以及 `AGENT-RULES.md §3`)。
 ```
 
-这使代理成为维护者,脚本成为验证层,操作员成为周期性审查者(重新分类、标记 closed、修剪 superseded)。
+这使代理成为维护者,脚本成为验证层,操作员成为周期性审查者(重新分类、标记 closed、修剪 superseded、在符合标准时提升为 TDE)。
 
 ---
 
@@ -186,4 +215,4 @@ AILOG_DIR=".straymark/07-ai-audit/agent-logs"
 
 ---
 
-*StrayMark v4.12.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.13.0 | [Strange Days Tech](https://strangedays.tech)*

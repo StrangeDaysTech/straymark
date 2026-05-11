@@ -230,7 +230,7 @@ El CLI automáticamente:
 
 1. **Descargar el último release**
 
-   Ve a [GitHub Releases](https://github.com/StrangeDaysTech/straymark/releases) y descarga el último release `fw-*` (ej. `fw-4.12.0`).
+   Ve a [GitHub Releases](https://github.com/StrangeDaysTech/straymark/releases) y descarga el último release `fw-*` (ej. `fw-4.13.0`).
 
 2. **Extraer en tu proyecto**
    ```bash

@@ -90,6 +90,7 @@ Charters are **not** doc types — they wrap a multi-session implementation bloc
 | Security-critical dependency changes | AILOG + human review |
 | OTel instrumentation changes | AILOG + tag `observabilidad` |
 | Multi-session implementation block (>1 day, >5 tasks across phases) | Declare a **Charter** (`straymark charter new`) |
+| Transversal technical debt (heritage from prior Charter, applies to multiple modules, requires dedicated Charter, needs human prioritization) | **TDE** — distinct from per-Charter `R<N>`; see AGENT-RULES.md §3 |
 
 **DO NOT document**: credentials, tokens, PII, secrets.
 
@@ -240,4 +241,4 @@ Mark `review_required: true` when:
 
 ---
 
-*StrayMark v4.12.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.13.0 | [Strange Days Tech](https://strangedays.tech)*

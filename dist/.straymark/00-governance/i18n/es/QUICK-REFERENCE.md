@@ -81,6 +81,7 @@ Los Charters **no** son tipos de documento — envuelven un bloque de implementa
 | Cambios en dependencias críticas de seguridad | AILOG + revisión humana |
 | Cambios en instrumentación OTel | AILOG + tag `observabilidad` |
 | Bloque de implementación multi-sesión (>1 día, >5 tareas en varias fases) | Declarar un **Charter** (`straymark charter new`) |
+| Deuda técnica transversal (herencia de Charter previo, aplica a múltiples módulos, requiere Charter dedicado, necesita priorización humana) | **TDE** — distinto del `R<N>` por Charter; ver AGENT-RULES.md §3 |
 
 **NO documentar**: credenciales, tokens, PII, secretos.
 
@@ -215,4 +216,4 @@ Marcar `review_required: true` cuando:
 
 ---
 
-*StrayMark v4.12.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.13.0 | [Strange Days Tech](https://strangedays.tech)*
