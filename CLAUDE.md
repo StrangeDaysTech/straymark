@@ -178,6 +178,47 @@ gh release view fw-X.Y.Z --json assets --jq '.assets[].name'
 
 Users can now run `straymark update-framework` to get the new version.
 
+## Git Workflow
+
+### Rules
+
+- **Never commit directly to `main`.** All changes go through feature/fix/chore branches and pull requests (mirrors the rule shipped to adopters in `dist/STRAYMARK.md §5`).
+- **Branch prefixes**: `feat/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/`.
+- **Conventional commit subjects**: `feat:`, `fix:`, `docs:`, `refactor:`, `chore:` (release bumps use `chore: bump fw-X.Y.Z` or `chore: bump cli-X.Y.Z`).
+- **Squash merge is the project default.** Visible in `git log`: each merged PR yields one squash commit on `main` (e.g. `2ae3802 feat(framework): fw-4.13.0 — TDE activation trigger (closes #128) (#129)`).
+
+### Stacked PRs — avoid, or use merge commits
+
+**Lesson from the #129 / #131 / #133 incident (2026-05-11)**: when you stack PR B on top of PR A's branch (base of B is A's head, not `main`), and A is **squash-merged** to `main`, B's content gets stranded:
+
+- The squash merge of A creates a new commit on `main` with content equivalent to A but a **different SHA** than A's original commits.
+- B's branch still points at A's *original* commits, which now have no descendant on `main`.
+- When B is merged, GitHub merges it into A's branch (its declared base), not `main`. The "merge to main" never happens — even though GitHub UI shows B as `MERGED`.
+- A direct PR from A's branch → `main` afterwards will surface as **CONFLICTING** because git sees the same lines touched in different ways (A's original commits vs A's squash on main).
+
+**Prevention** (pick one):
+
+1. **Sequential, not stacked.** Wait for PR A to merge to `main`, then rebase B onto `main` and open B as a standalone PR with `base = main`. Slower but bulletproof.
+2. **If you must stack, use merge commits (not squash) for the parent.** A merge commit preserves shared history, so subsequent merges of stacked PRs into `main` resolve cleanly. Pay the cost of a noisier `git log` for the stacked-PR safety.
+
+**Recovery if you find yourself in this state** (B stranded on A's branch, B's content not in `main`):
+
+1. `git checkout -b chore/sync-<B-content>-to-main main`
+2. `git cherry-pick <B's merge commit SHA>` — should be clean because B touches files outside A's conflict zone (which is why it could be stacked in the first place).
+3. Push, open PR with `base = main, head = chore/sync-...`. Cherry-pick produces a fresh commit on top of `main`, so no conflicts.
+4. The branch protection may require `--admin` merge if the content was already reviewed in B (the original PR) — sync PRs are purely procedural.
+
+### Authority to merge
+
+- The user owns the repo. `gh pr merge --admin` is acceptable for **procedural sync PRs** where the content was already reviewed in a separate PR (e.g. recovering from a stacked-PR mishap as above).
+- For substantive PRs, do not bypass review — wait for the user to merge via UI or explicit instruction.
+
+### Tagging discipline
+
+- Tags are created on `main` HEAD after the relevant PR is merged.
+- Before pushing a tag, verify the in-file version matches: `grep '^version' dist/dist-manifest.yml` for `fw-*` tags; `grep '^version' cli/Cargo.toml` for `cli-*` tags. CI's `release-cli.yml` and `release-framework.yml` both refuse mismatches.
+- Both tags can be pushed in a single command when releasing framework + CLI together: `git push origin fw-X.Y.Z cli-X.Y.Z`.
+
 ## CLI Commands Reference
 
 | Command | Description |
