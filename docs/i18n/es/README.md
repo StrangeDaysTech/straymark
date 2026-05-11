@@ -238,7 +238,7 @@ StrayMark usa tags de versión independientes para cada componente:
 | Componente | Prefijo de tag | Ejemplo | Incluye |
 |------------|---------------|---------|---------|
 | Framework | `fw-` | `fw-4.13.0` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
-| CLI | `cli-` | `cli-3.12.0` | El binario `straymark` |
+| CLI | `cli-` | `cli-3.12.1` | El binario `straymark` |
 
 Verifica las versiones instaladas con `straymark status` o `straymark about`.
 

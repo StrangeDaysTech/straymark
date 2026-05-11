@@ -7,6 +7,26 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.12.1 — Validator accepts TDE `identified` status
+
+Closes [#130](https://github.com/StrangeDaysTech/straymark/issues/130). Latent in `cli-3.12.0` and earlier; fully exposed by the `fw-4.13.0` TDE activation trigger (which makes TDE creation likely). Surfaced empirically while verifying #128: a freshly-created TDE via `straymark new --doc-type tde` shipped with the canonical `status: identified` per `TEMPLATE-TDE.md` + `DOCUMENTATION-POLICY.md §6`, but `straymark validate` immediately rejected it with `META-003 Invalid status 'identified'`. Validator's hardcoded enumeration was missing the only non-`draft`/non-`accepted` default in the type matrix.
+
+### Fixed (CLI)
+
+- **`validation.rs:45`** — `VALID_STATUSES` now includes `identified` alongside `draft`, `review`, `accepted`, `superseded`, `deprecated`. No per-doc-type dispatch yet — flat list still applies to all 12+ document types, but every documented default now lives in the list. A per-type validation set is deferred to v1 against a second-adopter validation gate (same gate as the follow-ups CLI per `FOLLOW-UPS-BACKLOG-PATTERN.md`).
+- **`cli/tests/validate_test.rs`** — new regression test `test_validate_tde_document_valid()` exercises the canonical `status: identified` flow. The test fails against unpatched validators (proven during TDD) and would have caught the bug at `fw-4.13.0` ship time.
+
+### Changed (Framework)
+
+- **`DOCUMENTATION-POLICY.md §3 "Document Statuses"`** (EN + ES + zh-CN) — lifecycle diagram and table extended to document `identified` as the TDE-only entry state. Functionally equivalent to `draft` for lifecycle gating, semantically distinct so adopter analytics can distinguish "agent-discovered debt" from "human-drafted document". Reconciles §3 prose with the §6 per-type default table that already declared TDE → `identified`. Ships as part of `fw-4.13.0` — no separate framework bump.
+
+### Adopter guidance
+
+- Adopters on `cli-3.12.0` or earlier with one or more TDE documents in `06-evolution/technical-debt/` will see `straymark validate` start passing once they upgrade via `straymark update-cli`. No document edits required; the canonical `status: identified` is now accepted.
+- Operators who manually changed TDE documents to `status: draft` to work around the bug may revert to `status: identified` for semantic clarity, but the workaround keeps working too.
+
+---
+
 ## Framework 4.13.0 — TDE activation trigger
 
 Closes [#128](https://github.com/StrangeDaysTech/straymark/issues/128). The TDE (Technical Debt) document type had structural shape — template, destination folder, autonomy boundary — but no operational activation trigger in the agent-facing governance. Empirical signal from the Sentinel adopter (primary, fw-4.12.0): zero TDEs created across 13 closed Charters despite ≥7 instances of transversal debt being routed through parallel mechanisms (`R<N> (new, not in Charter)` in AILOG `§Risk`, or follow-ups in `follow-ups-backlog.md`). This release adds the trigger and the `R<N>` vs TDE disambiguation, plus a promotion path from the follow-ups backlog. Governance-docs-only — no CLI changes; the `straymark debt list/status/close` subcommand trio is deferred to v1 (same gate as the follow-ups CLI per `FOLLOW-UPS-BACKLOG-PATTERN.md`).
