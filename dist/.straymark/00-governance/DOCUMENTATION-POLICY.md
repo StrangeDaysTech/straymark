@@ -149,18 +149,24 @@ related:
 ## 3. Document Statuses
 
 ```
-draft ──────► accepted ──────► deprecated
-                │                   │
-                │                   ▼
-                └──────► superseded
+identified ──┐
+             ├──► draft ──────► accepted ──────► deprecated
+             │                       │                   │
+             │                       │                   ▼
+             │                       └──────► superseded
+             │
+             └──► (TDE-only entry state, see §6)
 ```
 
 | Status | Description |
 |--------|-------------|
+| `identified` | Entry state for agent-driven discovery types (TDE today). Functionally equivalent to `draft` for lifecycle gating — a human reviewer is expected to prioritize and promote it. Semantically distinct so adopter analytics can distinguish "agent found this debt" from "human is drafting a deliberate doc". |
 | `draft` | In draft, pending review |
 | `accepted` | Approved and current |
 | `deprecated` | Obsolete, but kept as reference |
 | `superseded` | Replaced by another document |
+
+The per-type default status mapping lives in §6 — most types enter at `draft` or `accepted`, but TDE enters at `identified` per the agent-autonomy boundary (agent identifies, human prioritizes).
 
 ---
 
