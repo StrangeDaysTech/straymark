@@ -48,7 +48,7 @@ StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.13.1` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| Framework | `fw-` | `fw-4.13.2` | Plantillas (12 tipos), docs de gobernanza, directivas |
 | CLI | `cli-` | `cli-3.12.1` | El binario `straymark` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
@@ -88,7 +88,7 @@ Inicializa StrayMark en un directorio de proyecto.
 
 ```bash
 $ straymark init .
-✔ Downloaded StrayMark fw-4.13.1
+✔ Downloaded StrayMark fw-4.13.2
 ✔ Created .straymark/ directory structure
 ✔ Created STRAYMARK.md
 ✔ Configured AI agent directives
@@ -109,7 +109,7 @@ Si `.straymark/` no existe en el directorio actual, la actualización del framew
 ```bash
 $ straymark update
 Updating framework...
-✔ Framework updated to fw-4.13.1
+✔ Framework updated to fw-4.13.2
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -126,7 +126,7 @@ Actualiza solo los archivos del framework. Busca el último release `fw-*` en Gi
 
 ```bash
 $ straymark update-framework
-✔ Framework updated to fw-4.13.1
+✔ Framework updated to fw-4.13.2
 ```
 
 ---
@@ -205,7 +205,7 @@ $ straymark status
 StrayMark Status
 ───────────────
 Path:              /home/user/my-project
-Framework version: fw-4.13.1
+Framework version: fw-4.13.2
 CLI version:       cli-3.5.2
 Language:          en
 Structure:         ✔ Complete
@@ -269,7 +269,7 @@ Valida documentos StrayMark verificando cumplimiento y corrección.
 | `path` | `.` (directorio actual) | Directorio del proyecto |
 | `--fix` | — | Corregir automáticamente problemas simples |
 | `--staged` | — | Validar solo archivos staged en Git (ideal para hooks pre-commit) |
-| `--include-charters` | — | Validar también los Charters en `docs/charters/` contra el JSON Schema y la integridad referencial (los IDs en `originating_ailogs` resuelven; el path en `originating_spec` existe). Opt-in, default `false` para no afectar a proyectos que no usan el patrón. Por ahora solo se honra fuera de `--staged`; la validación de Charters en modo staged llega en cli-3.10.0. |
+| `--include-charters` | — | Validar también los Charters en `.straymark/charters/` contra el JSON Schema y la integridad referencial (los IDs en `originating_ailogs` resuelven; el path en `originating_spec` existe). Opt-in, default `false` para no afectar a proyectos que no usan el patrón. Por ahora solo se honra fuera de `--staged`; la validación de Charters en modo staged llega en cli-3.10.0. |
 | `--check-pending-reviews` *(cli-3.7.0+)* | off | Lista documentos con `review_required: true` y sin `review_outcome` cuya antigüedad supere `--max-pending-days`. **Solo warn** — nunca falla el exit code de validate; útil para dashboards de CI sobre el backlog de aprobaciones. |
 | `--max-pending-days` *(cli-3.7.0+)* | `14` | Umbral en días para `--check-pending-reviews`. |
 
@@ -382,7 +382,7 @@ $ straymark validate --check-pending-reviews --max-pending-days 14
 
 ### `straymark charter <subcomando>`
 
-Gestiona **Charters**: unidades acotadas y auditables de trabajo, declaradas ex-ante y validadas ex-post. Un Charter empareja scope declarativo (archivos a tocar, riesgos, comandos de verificación ejecutables) con el ancla de auditoría ex-post (drift detection, auditoría multi-modelo). Los Charters viven en `docs/charters/NN-slug.md` (a nivel del project root, **no** bajo `.straymark/`).
+Gestiona **Charters**: unidades acotadas y auditables de trabajo, declaradas ex-ante y validadas ex-post. Un Charter empareja scope declarativo (archivos a tocar, riesgos, comandos de verificación ejecutables) con el ancla de auditoría ex-post (drift detection, auditoría multi-modelo). Los Charters viven en `.straymark/charters/NN-slug.md` (a nivel del project root, **no** bajo `.straymark/`).
 
 > **Nota histórica.** En el experimento Sentinel `/plan-audit` que cristalizó este patrón (abril 2026, 6 ciclos), los Charters se llamaban *Plans*. El CLI StrayMark usa **Charter** going-forward para evitar la colisión nominal con el `plan.md` de GitHub SpecKit. Los archivos históricos de Sentinel preservan "Plan" deliberadamente. El alcance conceptual completo y la justificación del rename viven en `Propuesta/que-es-un-charter.md`.
 
@@ -397,7 +397,7 @@ Gestiona **Charters**: unidades acotadas y auditables de trabajo, declaradas ex-
 
 #### `straymark charter new [-t XS|S|M|L] [--from-ailog <id> | --from-spec <path>] [--title <titulo>] [path]`
 
-Crea un Charter desde el template del framework en `docs/charters/NN-slug.md`. Si no se pasa `--title`, se solicita interactivamente. Los dos flags de origen son mutuamente excluyentes a nivel de clap.
+Crea un Charter desde el template del framework en `.straymark/charters/NN-slug.md`. Si no se pasa `--title`, se solicita interactivamente. Los dos flags de origen son mutuamente excluyentes a nivel de clap.
 
 | Argumento/Flag | Default | Descripción |
 |----------------|---------|-------------|
@@ -500,7 +500,7 @@ Detecta drift archivo-vs-commit al cierre del Charter. Envuelve el script del fr
 ```bash
 $ straymark charter drift CHARTER-01 --range origin/main..HEAD
 === Charter drift check ===
-  Charter: docs/charters/01-test.md
+  Charter: .straymark/charters/01-test.md
   Range:   origin/main..HEAD
   Declared: 5 files
   Modified: 3 files
@@ -529,7 +529,7 @@ Ambas formas se manejan en ambas direcciones: un wildcard declarado suprime tant
 
 #### Por diseño: rutas de gobernanza siempre están en scope
 
-Los paths bajo `docs/charters/*` y `.straymark/07-ai-audit/*` **nunca** se reportan como "modificado pero no declarado". Es opinionated por diseño — esos paths son siempre legítimos cuando el Charter mismo o el AILOG de ejecución son tocados. Validado empíricamente en Sentinel CHARTER-04: un `git add -A` accidental stageó archivos no-tracked del usuario (`.claude/skills/`, `cmd/sentinel/sentinel`); la regla suprimió correctamente el ruido de gobernanza sin esconder la expansión genuina de archivos del proyecto ([issue #81 W2](https://github.com/StrangeDaysTech/straymark/issues/81#issuecomment-update)).
+Los paths bajo `.straymark/charters/*` y `.straymark/07-ai-audit/*` **nunca** se reportan como "modificado pero no declarado". Es opinionated por diseño — esos paths son siempre legítimos cuando el Charter mismo o el AILOG de ejecución son tocados. Validado empíricamente en Sentinel CHARTER-04: un `git add -A` accidental stageó archivos no-tracked del usuario (`.claude/skills/`, `cmd/sentinel/sentinel`); la regla suprimió correctamente el ruido de gobernanza sin esconder la expansión genuina de archivos del proyecto ([issue #81 W2](https://github.com/StrangeDaysTech/straymark/issues/81#issuecomment-update)).
 
 Si corres un Charter cuyo scope explícito es churn de gobernanza (p.ej. un Charter de aprobación bulk que toca solo `.straymark/07-ai-audit/`), el chequeo reportará 0 archivos modificados y necesitarás verificar el scope leyendo el AILOG. Un flag `--strict-scope` que deshabilite la regla "siempre en scope" está sobre la mesa para una minor futura si un adopter real reporta la asimetría como fricción.
 
@@ -859,7 +859,7 @@ Muestra información de versión, autoría y licencia.
 $ straymark about
 StrayMark CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.13.1
+  Framework version: fw-4.13.2
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/straymark

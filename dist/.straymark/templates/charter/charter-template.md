@@ -149,7 +149,7 @@ When closing this Charter:
    - This catches the rare case where drift is introduced post-merge (squash
      mangling, admin amendments, etc.) and the atomic step in #1 could not apply.
 
-3. **Move the row** in `docs/charters/README.md` to `## Closed` and reference the PR.
+3. **Move the row** in `.straymark/charters/README.md` to `## Closed` and reference the PR.
 
 4. **Status frontmatter** moves from `in-progress` to `closed` (and optionally
    `closed_at: YYYY-MM-DD` is added — the schema allows arbitrary additional fields).

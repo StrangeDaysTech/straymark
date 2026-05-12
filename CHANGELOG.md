@@ -7,6 +7,36 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.13.2 — Complete the Charter path migration to `.straymark/charters/`
+
+Completes the path migration that `fw-4.12.0` started ([#119](https://github.com/StrangeDaysTech/straymark/issues/119)). That release aligned all `straymark charter` CLI subcommands to `.straymark/charters/` (single source of truth via `charter::charters_dir(project_root)`) but missed three classes of artifact still pointing at the legacy `docs/charters/` path. Surfaced empirically by the Sentinel adopter during external-audit prep when reviewing the framework's pre-PR hook behavior.
+
+### Fixed (Framework)
+
+- **`dist/.straymark/hooks/pre-pr.sh`** — load-bearing fix. The hook gated on `[ ! -d docs/charters ]` and the in-progress Charter glob was `docs/charters/*.md`. For any adopter on the canonical `.straymark/charters/` layout (i.e., everyone post-`fw-4.12.0`), the hook **silently exited 0 without running drift check** — `straymark init --hooks` installed a no-op. Now correctly scans `.straymark/charters/*.md` (3 hits in the script: comment + directory test + glob).
+- **`dist/.straymark/schemas/charter-telemetry.schema.v0.json`** — `charter_id.description` field referenced `docs/charters/` as the canonical Charter file location. Now matches `.straymark/charters/`.
+- **`dist/.straymark/templates/charter/charter-template.md`** (EN + ES) — step 3 of "Closing the charter" instructed *"Move the row in `docs/charters/README.md`"*; adopters following the template literally pointed at a non-existent path. Now `.straymark/charters/README.md`.
+
+### Changed (Framework — user-facing docs)
+
+- **`README.md` + ES + zh-CN** — `straymark validate --include-charters` description aligned to `.straymark/charters/`.
+- **`CLI-REFERENCE.md` + ES + zh-CN** — multiple references (flag descriptions, command prose, example outputs) aligned to `.straymark/charters/`. Includes the example outputs that the CLI itself emits — those showed the legacy path which would have confused operators comparing their actual CLI output against the docs.
+
+### Empirical context
+
+Surfaced while [Sentinel](https://github.com/StrangeDaysTech/sentinel) prepared an external audit cycle and noticed that the upstream `fw-4.13.1` install retained `docs/charters/` in schemas + templates + hook + docs even though the CLI binary itself was already on `.straymark/charters/`. The pre-PR hook bug was the most operationally consequential: any adopter running `straymark init --hooks` since `fw-4.12.0` had a silently-broken hook.
+
+### Not adding a migration helper
+
+This release does not introduce a CLI command to detect adopter projects still on the legacy `docs/charters/` layout — that migration was already declared a [pre-1.0 breaking change in `fw-4.12.0`](https://github.com/StrangeDaysTech/straymark/blob/main/CHANGELOG.md#framework-4120--cli-3120--charter-discoverability--path-alignment) with the documented one-command fix (`git mv docs/charters .straymark/charters`). The improved CLI error message added there continues to apply.
+
+### Adopter guidance
+
+- Existing `fw-4.13.1` adopters: `straymark update-framework` brings the corrected hook, schema, template, and docs. No charter file moves required (those already happened at `fw-4.12.0`). Operators using `--hooks` will see drift check actually run for the first time since the canonical-path adoption.
+- Operators who were on `docs/charters/` and never migrated: see the `fw-4.12.0` entry for the one-command migration.
+
+---
+
 ## Framework 4.13.1 — TDE trigger refinements + FU→TDE promotion path schema v0.1
 
 Lands Sentinel's empirical-validation feedback from [#128 comment](https://github.com/StrangeDaysTech/straymark/issues/128#issuecomment-4426059594) (3 TDEs filed in [StrangeDaysTech/sentinel#61](https://github.com/StrangeDaysTech/sentinel/pull/61), all 4 trigger criteria validated; two textual ambiguities + one schema gap surfaced). See [#135](https://github.com/StrangeDaysTech/straymark/issues/135) for the broader 4-tier roadmap; this release is **Tier 1** (governance-only, no CLI changes).
