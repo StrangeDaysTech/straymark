@@ -48,7 +48,7 @@ StrayMark 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.13.1` | 模板（12 种类型）、治理文档、指令 |
+| Framework | `fw-` | `fw-4.13.2` | 模板（12 种类型）、治理文档、指令 |
 | CLI | `cli-` | `cli-3.12.1` | `straymark` 二进制文件 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
@@ -88,7 +88,7 @@ straymark status   # 显示完整的安装状态，包括版本
 
 ```bash
 $ straymark init .
-✔ Downloaded StrayMark fw-4.13.1
+✔ Downloaded StrayMark fw-4.13.2
 ✔ Created .straymark/ directory structure
 ✔ Created STRAYMARK.md
 ✔ Configured AI agent directives
@@ -110,7 +110,7 @@ Next: git add .straymark/ STRAYMARK.md && git commit -m "chore: adopt StrayMark"
 ```bash
 $ straymark update
 Updating framework...
-✔ Framework updated to fw-4.13.1
+✔ Framework updated to fw-4.13.2
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -127,7 +127,7 @@ Updating CLI...
 
 ```bash
 $ straymark update-framework
-✔ Framework updated to fw-4.13.1
+✔ Framework updated to fw-4.13.2
 ```
 
 ---
@@ -211,7 +211,7 @@ $ straymark status
   Project
   ┌───────────┬──────────────────────────┐
   │ Path      │ /home/user/my-project    │
-  │ Framework │ fw-4.13.1                 │
+  │ Framework │ fw-4.13.2                 │
   │ CLI       │ cli-3.5.2                │
   │ Language  │ en                       │
   └───────────┴──────────────────────────┘
@@ -268,7 +268,7 @@ Repairing StrayMark in /home/user/my-project
 → Restoring 1 missing directory...
 ✓ Restored .straymark/templates/
 → Downloading framework to restore missing files...
-  Using version: fw-4.13.1
+  Using version: fw-4.13.2
 ✓ Restored 16 file(s) from framework
 → Updating checksums...
 
@@ -288,7 +288,7 @@ Repairing StrayMark in /home/user/my-project
 | `path` | `.`（当前目录） | 目标项目目录 |
 | `--fix` | — | 自动修复简单问题（例如为高风险文档添加缺失的 `review_required: true`） |
 | `--staged` | — | 仅验证已暂存（git add）的文件。适合 pre-commit 钩子。 |
-| `--include-charters` | — | 同时根据章程 JSON Schema 和引用完整性（`originating_ailogs` 中的 ID 解析；`originating_spec` 路径存在）验证 `docs/charters/` 中的章程。Opt-in，默认 `false`，确保未使用章程模式的项目不受影响。目前仅在非 `--staged` 模式下生效；staged 模式的章程验证将在 cli-3.10.0 中加入。 |
+| `--include-charters` | — | 同时根据章程 JSON Schema 和引用完整性（`originating_ailogs` 中的 ID 解析；`originating_spec` 路径存在）验证 `.straymark/charters/` 中的章程。Opt-in，默认 `false`，确保未使用章程模式的项目不受影响。目前仅在非 `--staged` 模式下生效；staged 模式的章程验证将在 cli-3.10.0 中加入。 |
 | `--check-pending-reviews` *(cli-3.7.0+)* | off | 列出所有 `review_required: true` 且没有 `review_outcome`、年龄超过 `--max-pending-days` 的文档。**仅警告** — 永不影响 validate 的退出码；适合用于 CI 仪表板上的审批积压视图。 |
 | `--max-pending-days` *(cli-3.7.0+)* | `14` | `--check-pending-reviews` 的天数阈值。 |
 
@@ -412,7 +412,7 @@ $ straymark validate --check-pending-reviews --max-pending-days 14
 
 ### `straymark charter <子命令>`
 
-管理**章程（Charter）**：事前声明、事后审计的有界工作单元。一个章程将声明性范围（要修改的文件、风险、可执行的验证命令）与事后审计锚点（漂移检测、多模型审计）配对。章程位于 `docs/charters/NN-slug.md`（项目根目录级别，**不在** `.straymark/` 之下）。
+管理**章程（Charter）**：事前声明、事后审计的有界工作单元。一个章程将声明性范围（要修改的文件、风险、可执行的验证命令）与事后审计锚点（漂移检测、多模型审计）配对。章程位于 `.straymark/charters/NN-slug.md`（项目根目录级别，**不在** `.straymark/` 之下）。
 
 > **命名历史。**在使该模式定型的 Sentinel `/plan-audit` 实验中（2026 年 4 月，6 个周期），章程被称为 *Plans*。StrayMark CLI 从此版本开始使用 **Charter** 以避免与 GitHub SpecKit 的 `plan.md` 命名冲突。Sentinel 的历史文件刻意保留 "Plan" 命名。完整的概念范围与重命名理由见 `Propuesta/que-es-un-charter.md`。
 
@@ -427,7 +427,7 @@ $ straymark validate --check-pending-reviews --max-pending-days 14
 
 #### `straymark charter new [-t XS|S|M|L] [--from-ailog <id> | --from-spec <path>] [--title <title>] [path]`
 
-从框架模板将章程创建到 `docs/charters/NN-slug.md`。如果未传入 `--title`，会以交互方式提示。两个来源标志在 clap 级别互斥。
+从框架模板将章程创建到 `.straymark/charters/NN-slug.md`。如果未传入 `--title`，会以交互方式提示。两个来源标志在 clap 级别互斥。
 
 | 参数/标志 | 默认值 | 描述 |
 |-----------|--------|------|
@@ -517,7 +517,7 @@ $ straymark charter close CHARTER-01
 ```bash
 $ straymark charter drift CHARTER-01 --range origin/main..HEAD
 === Charter drift check ===
-  Charter: docs/charters/01-test.md
+  Charter: .straymark/charters/01-test.md
   Range:   origin/main..HEAD
   Declared: 5 files
   Modified: 3 files
@@ -546,7 +546,7 @@ OK all declared-omitted paths are documented in AILOGs — drift accepted.
 
 #### 设计：治理路径始终在 scope 内
 
-`docs/charters/*` 和 `.straymark/07-ai-audit/*` 下的路径**永远不会**被报告为"已修改但未声明"。这是有意的设计 — 当章程本身或执行的 AILOG 被触动时，这些路径总是合法的。在 Sentinel CHARTER-04 中实证验证：一次意外的 `git add -A` 暂存了无关的用户未跟踪文件（`.claude/skills/`、`cmd/sentinel/sentinel`）；该规则正确抑制了治理噪声而没有掩盖真正的项目文件扩展（[issue #81 W2](https://github.com/StrangeDaysTech/straymark/issues/81#issuecomment-update)）。
+`.straymark/charters/*` 和 `.straymark/07-ai-audit/*` 下的路径**永远不会**被报告为"已修改但未声明"。这是有意的设计 — 当章程本身或执行的 AILOG 被触动时，这些路径总是合法的。在 Sentinel CHARTER-04 中实证验证：一次意外的 `git add -A` 暂存了无关的用户未跟踪文件（`.claude/skills/`、`cmd/sentinel/sentinel`）；该规则正确抑制了治理噪声而没有掩盖真正的项目文件扩展（[issue #81 W2](https://github.com/StrangeDaysTech/straymark/issues/81#issuecomment-update)）。
 
 如果你运行的章程显式 scope 是治理 churn（例如仅触动 `.straymark/07-ai-audit/` 的批量批准章程），漂移检查将报告 0 个修改文件，你需要通过阅读 AILOG 来验证 scope。一个 `--strict-scope` 标志（禁用"始终在 scope"规则）在桌面上，用于未来 minor 版本，前提是真实的 adopter 报告这种不对称为摩擦。
 
@@ -993,7 +993,7 @@ $ straymark explore --lang es             # 会话内切换到西班牙语
 $ straymark about
 StrayMark CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.13.1
+  Framework version: fw-4.13.2
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/straymark

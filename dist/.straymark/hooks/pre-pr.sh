@@ -5,7 +5,7 @@
 # (e.g., from a Makefile target) when the operator prefers explicit invocation.
 #
 # Behavior:
-#   - For each Charter in docs/charters/*.md whose frontmatter has
+#   - For each Charter in .straymark/charters/*.md whose frontmatter has
 #     `status: in-progress`, run `straymark charter drift <id> --range
 #     <upstream>..HEAD`. AILOG-suppression in the CLI silences alerts on
 #     paths already documented as risks in the Charter's originating AILOGs.
@@ -32,11 +32,11 @@ fi
 
 UPSTREAM="${STRAYMARK_UPSTREAM:-origin/main}"
 
-if [ ! -d docs/charters ]; then
+if [ ! -d .straymark/charters ]; then
   exit 0  # repo doesn't use Charters
 fi
 
-charters=$(grep -l '^status: in-progress' docs/charters/*.md 2>/dev/null || true)
+charters=$(grep -l '^status: in-progress' .straymark/charters/*.md 2>/dev/null || true)
 if [ -z "$charters" ]; then
   exit 0  # nothing in-progress; nothing to check
 fi

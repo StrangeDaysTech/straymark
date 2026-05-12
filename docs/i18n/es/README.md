@@ -142,7 +142,7 @@ Comandos integrados que convierten la disciplina en feedback accionable:
 
 - **`straymark charter <new|list|status|close|drift|audit>`** — Unidades acotadas declaradas ex-ante, auditadas ex-post. `close` registra telemetría; `drift` detecta drift archivos-vs-commits con supresión AILOG-aware; `audit` orquesta revisión externa multi-modelo (flujo de 3 pasos prepare/calibrate/finalize, orchestration-only — sin invocación de APIs de LLM). Para flujos IDE-driven, las skills inline `/straymark-audit-prompt` y `/straymark-audit-review` envuelven al CLI para mostrar prompts en la conversación y mergear findings en la telemetría.
 - **`straymark approve <doc-id>`** — Registra una aprobación humana formal (escribe `reviewed_by` / `reviewed_at` / `review_outcome` y la sección body `## Approval` en una sola edición; cierra el gap canonizado en DOCUMENTATION-POLICY §3.5)
-- **`straymark validate`** — 25+ reglas de validación para corrección documental (12 específicas de China son scope-aware); `--include-charters` extiende a `docs/charters/`; `--check-pending-reviews` lista el backlog de aprobaciones (warn-only)
+- **`straymark validate`** — 25+ reglas de validación para corrección documental (12 específicas de China son scope-aware); `--include-charters` extiende a `.straymark/charters/`; `--check-pending-reviews` lista el backlog de aprobaciones (warn-only)
 - **`straymark metrics`** — KPIs de gobernanza, tasas de revisión, distribución de riesgo, tendencias
 - **`straymark analyze`** — Análisis de complejidad de código (cognitiva + ciclomática) impulsado por [arborist-metrics](https://github.com/StrangeDaysTech/arborist), nuestra librería open-source en Rust para métricas de código multi-lenguaje
 - **`straymark audit`** — Reportes de auditoría con línea temporal, mapas de trazabilidad y exportación HTML
@@ -237,7 +237,7 @@ StrayMark usa tags de versión independientes para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Incluye |
 |------------|---------------|---------|---------|
-| Framework | `fw-` | `fw-4.13.1` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
+| Framework | `fw-` | `fw-4.13.2` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
 | CLI | `cli-` | `cli-3.12.1` | El binario `straymark` |
 
 Verifica las versiones instaladas con `straymark status` o `straymark about`.
@@ -270,7 +270,7 @@ Ver [Referencia CLI](adopters/CLI-REFERENCE.md) para uso detallado.
 ```bash
 # Descargar el último release ZIP del framework desde GitHub
 # Ve a https://github.com/StrangeDaysTech/straymark/releases
-# y descarga el último release fw-* (ej. fw-4.13.1)
+# y descarga el último release fw-* (ej. fw-4.13.2)
 
 # Extraer y copiar a tu proyecto
 unzip straymark-fw-*.zip -d tu-proyecto/

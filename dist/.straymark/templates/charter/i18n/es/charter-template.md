@@ -151,7 +151,7 @@ Al cerrar este Charter:
    - Esto atrapa el caso raro donde drift se introduce post-merge (squash mangling,
      amendments admin, etc.) y el step atomic en #1 no pudo aplicar.
 
-3. **Mover la fila** en `docs/charters/README.md` a `## Cerrados` y referenciar el PR.
+3. **Mover la fila** en `.straymark/charters/README.md` a `## Cerrados` y referenciar el PR.
 
 4. **Status del frontmatter** pasa de `in-progress` a `closed` (y opcionalmente
    se añade `closed_at: YYYY-MM-DD` — el schema permite campos adicionales arbitrarios).

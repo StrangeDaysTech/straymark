@@ -16,7 +16,7 @@
         "charter_id": {
           "type": "string",
           "pattern": "^CHARTER-[0-9]{2,}(-[a-z0-9-]+)?$",
-          "description": "Charter identifier this telemetry corresponds to. Must match the charter_id of an existing Charter file in docs/charters/."
+          "description": "Charter identifier this telemetry corresponds to. Must match the charter_id of an existing Charter file in .straymark/charters/."
         },
         "charter_title": {
           "type": "string",
