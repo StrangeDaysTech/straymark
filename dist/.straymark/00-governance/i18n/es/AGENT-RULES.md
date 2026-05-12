@@ -112,8 +112,10 @@ Existen dos superficies para la deuda emergente. No son intercambiables — elig
 
 **Crea un documento TDE** cuando la deuda:
 
-- Es *herencia de un Charter previo* (la brecha precede al trabajo actualmente en ejecución).
-- *Aplica a múltiples módulos o múltiples Charters* — fragmentarla en entradas `R<N>` por Charter pierde la forma arquitectónica.
+- Es *herencia de un Charter previo*. Dos formas distintas califican (ambas son TDE-worthy):
+  - **Herencia estricta** — un Charter previo introdujo la deuda; los Charters subsecuentes solo la propagan sin re-introducir la decisión subyacente (p. ej., una elección legacy de schema de BD; un atajo temprano de auth; una decisión de config diferida). El Charter actual hereda la deuda por contacto transitivo.
+  - **Propagación de patrón** — un Charter previo estableció un patrón que los Charters subsecuentes *re-introducen* siguiéndolo. El Charter actual no solo propaga; recrea la misma deuda replicando el patrón (p. ej., forma de handler que omite `RequireScope`; scaffolding de tests que bypasea middleware HTTP). El fix está al nivel del patrón, no de ningún Charter individual.
+- *Aplica a múltiples módulos **o a fronteras de ejecución de Charter*** — fragmentarla en entradas `R<N>` por Charter pierde la forma arquitectónica. "Fronteras de ejecución de Charter" captura deuda de rastro de gobernanza que atraviesa sesiones sin atravesar módulos de código: p. ej., una clasificación diferida en CHARTER-04 que pasa en silencio por CHARTER-08 → CHARTER-13 y solo aflora bajo una gate de CI nueva.
 - *Requiere un Charter dedicado fuera del envelope de scope actual* para remediarse (no el Charter actual, no el siguiente).
 - *Requiere priorización o asignación humana* que el agente no puede decidir solo (matriz impact × effort, ownership, sprint placement).
 
@@ -377,4 +379,4 @@ Cuando un proyecto acumula un volumen alto de AILOGs a lo largo de múltiples Ch
 
 ---
 
-*StrayMark v4.13.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.13.1 | [Strange Days Tech](https://strangedays.tech)*

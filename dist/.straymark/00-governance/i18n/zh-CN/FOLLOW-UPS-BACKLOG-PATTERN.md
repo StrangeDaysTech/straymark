@@ -44,7 +44,12 @@ StrayMark 的 per-AILOG `§Follow-ups` 约定在写入时有效 — 创建 AILOG
 ```yaml
 ---
 last_scan: 2026-05-06
+last_scan_range: AILOG-NNNN-NN-NN-NNN..AILOG-NNNN-NN-NN-NNN  # 可选 —— 涵盖的首个..末尾 AILOG
 schema_version: v0
+total_open: 0           # 当前为 `open` 状态的条目计数
+total_promoted: 0       # 当前为 `promoted` 状态的条目计数(schema v0.1 新增 —— 见"提升为 TDE")
+total_closed_in_session: 0   # 上次会话以来 `closed` 条目计数(可选,operator-maintained)
+total_phase_blocked: 0  # `phase-blocked` 条目计数(可选)
 buckets:
   - ready
   - time-triggered
@@ -57,6 +62,8 @@ fully_extracted_ailogs:
   # ... 每个 follow-ups 已被处理的 AILOG 一个条目
 ---
 ```
+
+`total_*` 计数器是**operator-maintained 的元数据**。drift 脚本不会自动更新它们 —— 它们位于 header 之中,使会话开始时的扫视就能看到注册表的脉搏,无需在 bucket 中翻页。`total_promoted` 在 schema v0.1 中固化(Sentinel adopter 的经验信号,fw-4.13.1),与现有的 `total_open` / `total_closed_in_session` / `total_phase_blocked` 模式保持一致。
 
 `fully_extracted_ailogs` 列表是 drift 检测的**承重元数据**。所有 `§Follow-ups` 和 `R<N>` 条目已被转移到注册表(或被显式分类为 superseded)的 AILOG 都属于此列表。Drift 检测将此列表与 repo 中具有 follow-up 内容的 AILOG 进行比对。
 
@@ -115,6 +122,17 @@ closed、superseded 和 promoted 条目保留在文件中(可审计的历史)。
 3. 在 FU 条目中,设置 `Status: promoted`、`Destination: TDE-YYYY-MM-DD-NNN`,并添加 `Promoted to: TDE-YYYY-MM-DD-NNN`。如果你维护 `## Bucket: closed` 节,则将条目移过去;否则保持原位并更新状态。
 
 FU 条目在提升后**不会被删除** —— 它在注册表中的存在就是显示 TDE 来源的审计轨迹。
+
+### 两种提升形态 —— 提升已存在的 vs 创建时即追溯提升
+
+上述工作流涵盖**标准情况**:`open` 状态的 FU 条目已存在于注册表中,并在周期性审查期间被提升为 TDE。还有一种同样有效的情况,源自 Sentinel CHARTER-13 回顾的经验:
+
+- **提升已存在条目** —— FU 数周或数个 Charter 之前已被(通常通过 `--apply`)登记为 `open`,经历过 ≥1 次 Charter 关闭仍未解决,并满足上述四项标准。标准流程。
+- **创建时即追溯提升** —— 在回顾(Charter 关闭仪式、审计周期、RFC 撰写)*期间* 该债务被识别为值得作为 TDE,且从未作为 `open` FU 存在。先创建 TDE;在注册表中以 *`Status: promoted`* 状态新增一个 FU 条目,提供从 TDE 回溯到原始上下文(AILOG 中的某个 `R<N>`、calibrator 的 finding、被延期的分类)的审计轨迹。
+
+两种形态在注册表中产生相同的终态:一个 `Status: promoted` 且具有 `Promoted to: TDE-YYYY-MM-DD-NNN` 指针的条目。区别在于条目是预先以 `open` 存在,还是天生即为 `promoted`。drift 脚本一视同仁(不按出生状态区分);统计 `total_promoted` 的 adopter 分析在两种情况下得到相同数字。
+
+存疑时,优先创建 FU 条目 —— 即便是追溯创建 —— 因为它会把 TDE 交叉引用回触发该识别的 AILOG / R-号 / 源上下文。一个 `promoted_from_followup: FU-NNN` 指向 backlog 中实际存在的条目的 TDE,比指向一个虚构的 FU 更易导航。
 
 ### 何时提升
 
@@ -215,4 +233,4 @@ AILOG_DIR=".straymark/07-ai-audit/agent-logs"
 
 ---
 
-*StrayMark v4.13.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.13.1 | [Strange Days Tech](https://strangedays.tech)*

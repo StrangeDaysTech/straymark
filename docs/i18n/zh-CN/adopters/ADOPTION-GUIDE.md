@@ -239,7 +239,7 @@ CLI 自动完成：
 
 1. **下载最新版本**
 
-   前往 [GitHub Releases](https://github.com/StrangeDaysTech/straymark/releases)，下载最新的 `fw-*` 版本 ZIP（例如 `fw-4.13.0`）。
+   前往 [GitHub Releases](https://github.com/StrangeDaysTech/straymark/releases)，下载最新的 `fw-*` 版本 ZIP（例如 `fw-4.13.1`）。
 
 2. **解压到你的项目**
    ```bash
