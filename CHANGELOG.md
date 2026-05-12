@@ -133,6 +133,35 @@ Single known adopter (`StrangeDaysTech/sentinel`, operator-owned) migrates manua
 
 The README does not yet include an etymological paragraph explaining the meaning of "StrayMark" — that is a deliberate follow-up, deferred from the rebranding execution per operator instruction.
 
+### Errata — migration step missing from original release notes *(documented 2026-05-12, after Sentinel adopter encountered it)*
+
+The "migrates manually via `mv .devtrail .straymark` + `git mv DEVTRAIL.md STRAYMARK.md` + updating refs in `CLAUDE.md`/`AGENT.md`" step above is **incomplete**. It does not mention the cleanup of the per-platform skill directories. Adopters that ran `straymark update-framework` (or applied the rebrand manually) ended up with **30 orphaned legacy items** sitting alongside the new ones:
+
+| Surface | Orphan pattern | Count |
+|---|---|---:|
+| `.gemini/skills/` | `devtrail-{adr,aidec,ailog,audit-{execute,prompt,review},mcard,new,sec,status}/` | 10 dirs |
+| `.claude/skills/` | same pattern | 10 dirs |
+| `.agent/workflows/` | `devtrail-*.md` | 10 files |
+
+The `name:` field **inside** each orphaned `SKILL.md` was rewritten to `straymark-*` during the rebrand (probably via mass sed), so each pair has identical `name` but two different directory paths. Gemini CLI surfaces this as 10 `⚠ Skill conflict detected: "straymark-X" from devtrail-X/SKILL.md is overriding the same skill from straymark-X/SKILL.md` warnings at startup. Claude Code and the `.agent/workflows/` consumer do not warn out loud but exhibit equivalent override behavior.
+
+**Complete migration steps** (amending the line above for any adopter migrating from a `fw-≤4.10.x` install):
+
+```bash
+# Renames already documented above
+mv .devtrail .straymark
+git mv DEVTRAIL.md STRAYMARK.md
+
+# Skill directory cleanup — missing from original release notes
+rm -rf .gemini/skills/devtrail-*
+rm -rf .claude/skills/devtrail-*
+rm .agent/workflows/devtrail-*.md
+
+# Update references in agent directive files (CLAUDE.md, GEMINI.md, etc.) as already documented
+```
+
+Sentinel applied this cleanup in `StrangeDaysTech/sentinel#62` (2026-05-12). No known third-party adopters, so the impact is bounded to the single project that already fixed it. This errata is preserved here as historical record for any future major rename or repository-level prefix change.
+
 ---
 
 ## Framework 4.10.0 — Follow-ups backlog pattern (governance docs)
