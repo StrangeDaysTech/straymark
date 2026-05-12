@@ -1,21 +1,21 @@
 #!/bin/sh
-# DevTrail CLI installer — https://github.com/StrangeDaysTech/devtrail
+# StrayMark CLI installer — https://github.com/StrangeDaysTech/straymark
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/StrangeDaysTech/devtrail/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/StrangeDaysTech/straymark/main/install.sh | sh
 #   curl -fsSL ... | sh -s -- --tag cli-1.0.0 --to ~/.local/bin
 #
 # Compatible with bash, zsh, dash, and POSIX sh.
 
 set -eu
 
-REPO="StrangeDaysTech/devtrail"
-BINARY="devtrail"
+REPO="StrangeDaysTech/straymark"
+BINARY="straymark"
 
 # ── Helpers ──────────────────────────────────────────────────────────────
 
 say() {
-    printf 'devtrail-install: %s\n' "$*"
+    printf 'straymark-install: %s\n' "$*"
 }
 
 err() {
@@ -57,7 +57,7 @@ download() {
 
 usage() {
     cat <<EOF
-DevTrail CLI installer
+StrayMark CLI installer
 
 USAGE:
     install.sh [OPTIONS]
@@ -71,7 +71,7 @@ ENVIRONMENT:
     GITHUB_TOKEN   GitHub API token to avoid rate limits
 
 EXAMPLES:
-    curl -fsSL https://raw.githubusercontent.com/StrangeDaysTech/devtrail/main/install.sh | sh
+    curl -fsSL https://raw.githubusercontent.com/StrangeDaysTech/straymark/main/install.sh | sh
     curl -fsSL ... | sh -s -- --tag cli-1.0.0
     curl -fsSL ... | sh -s -- --to /usr/local/bin
 EOF
@@ -200,7 +200,7 @@ main() {
     VERSION_NUM="${TAG#cli-}"
 
     # Build asset name and URL
-    ASSET="devtrail-cli-v${VERSION_NUM}-${TARGET}.tar.gz"
+    ASSET="straymark-cli-v${VERSION_NUM}-${TARGET}.tar.gz"
     URL="https://github.com/${REPO}/releases/download/${TAG}/${ASSET}"
 
     say "downloading ${ASSET}..."
