@@ -112,8 +112,10 @@ Two surfaces exist for emergent debt. They are not interchangeable — pick the 
 
 **Create a TDE document** when the debt:
 
-- Is *heritage from a prior Charter* (the gap predates the work currently in flight).
-- *Applies to multiple modules or multiple Charters* — fragmenting it into per-Charter `R<N>` entries loses the architectural shape.
+- Is *heritage from a prior Charter*. Two distinct shapes both qualify (both are TDE-worthy):
+  - **Strict heritage** — a prior Charter introduced the debt; subsequent Charters merely propagate it without re-introducing the underlying decision (e.g., a legacy DB schema choice; an early auth shortcut; a deferred config decision). The current Charter inherits the debt by transitive contact.
+  - **Pattern propagation** — a prior Charter set a pattern that subsequent Charters *re-introduce* by following it. The current Charter doesn't merely propagate; it re-creates the same debt by replicating the pattern (e.g., handler shape that omits `RequireScope`, test scaffolding that bypasses HTTP middleware). The fix is at the pattern level, not at any single Charter.
+- *Applies to multiple modules **or Charter execution boundaries*** — fragmenting it into per-Charter `R<N>` entries loses the architectural shape. "Charter execution boundaries" captures governance-trail debt that spans sessions without spanning code modules: e.g., a deferred classification in CHARTER-04 that passes silently through CHARTER-08 → CHARTER-13 and only surfaces under a fresh CI gate.
 - *Requires a dedicated Charter outside the current scope envelope* to remediate (not the current Charter, not the next one).
 - *Requires human prioritization or assignment* the agent cannot decide alone (impact × effort matrix, ownership, sprint placement).
 
@@ -377,4 +379,4 @@ When a project accumulates a high volume of AILOGs across multiple Charters and 
 
 ---
 
-*StrayMark v4.13.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.13.1 | [Strange Days Tech](https://strangedays.tech)*

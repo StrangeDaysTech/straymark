@@ -112,8 +112,10 @@ confidence: high | medium | low
 
 **创建 TDE 文档**，当该债务：
 
-- 是 *先前 Charter 的遗留*（该缺陷早于当前正在执行的工作）。
-- *横跨多个模块或多个 Charter* —— 将其拆分为各 Charter 的 `R<N>` 条目会丢失其架构形态。
+- 是 *先前 Charter 的遗留*。两种不同形态均符合（均为 TDE-worthy）：
+  - **严格遗留** —— 先前 Charter 引入了该债务；后续 Charter 仅传播之而不再引入其底层决策（例如：遗留 DB schema 选择；早期 auth 走捷径；延期的 config 决策）。当前 Charter 通过传递接触继承该债务。
+  - **模式传播** —— 先前 Charter 设立了某模式，后续 Charter 通过遵循该模式 *再次引入* 之。当前 Charter 不只是传播，而是通过复制模式重新制造同一债务（例如：遗漏 `RequireScope` 的 handler 形态；绕过 HTTP middleware 的测试脚手架）。修复需在模式层面，而非任一个单独 Charter。
+- *横跨多个模块**或 Charter 执行边界*** —— 将其拆分为各 Charter 的 `R<N>` 条目会丢失其架构形态。"Charter 执行边界"涵盖跨会话却未跨代码模块的治理轨迹债务：例如，CHARTER-04 中延期的某项分类，经 CHARTER-08 → CHARTER-13 悄然通过，直至新的 CI gate 才浮现。
 - *需要在当前 scope 包络之外的专用 Charter* 来修复（不是当前 Charter，也不是下一个）。
 - *需要人工决定优先级或分配*，代理无法独自决定（impact × effort 矩阵、所有权、Sprint 安排）。
 
@@ -372,4 +374,4 @@ confidence: high | medium | low
 
 ---
 
-*StrayMark v4.13.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.13.1 | [Strange Days Tech](https://strangedays.tech)*

@@ -7,6 +7,54 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.13.1 — TDE trigger refinements + FU→TDE promotion path schema v0.1
+
+Lands Sentinel's empirical-validation feedback from [#128 comment](https://github.com/StrangeDaysTech/straymark/issues/128#issuecomment-4426059594) (3 TDEs filed in [StrangeDaysTech/sentinel#61](https://github.com/StrangeDaysTech/sentinel/pull/61), all 4 trigger criteria validated; two textual ambiguities + one schema gap surfaced). See [#135](https://github.com/StrangeDaysTech/straymark/issues/135) for the broader 4-tier roadmap; this release is **Tier 1** (governance-only, no CLI changes).
+
+### Changed (Framework)
+
+- **`AGENT-RULES.md §3` "TDE vs `R<N> (new, not in Charter)`" — heritage trigger** (EN + ES + zh-CN). Disambiguates two TDE-worthy shapes that the prior wording conflated:
+  - **Strict heritage** — prior Charter introduced the debt; subsequent Charters propagate without re-introducing (legacy DB schema decision, deferred config). Inherited by transitive contact.
+  - **Pattern propagation** — prior Charter set a pattern; subsequent Charters re-introduce the same debt by following the pattern (handler shape that omits `RequireScope`, test scaffolding that bypasses HTTP middleware). Fix is at the pattern level, not at any single Charter.
+
+  Sentinel's TDE-002 case (CommsHub HTTP layer test coverage gap) was pattern-propagation, not strict heritage; the heuristic captured it correctly but the wording read as strict-only.
+
+- **`AGENT-RULES.md §3` multi-module trigger** (EN + ES + zh-CN). Reformulated from "applies to multiple modules or multiple Charters" to "applies to multiple modules **or Charter execution boundaries**". Captures governance-trail debt that spans sessions without spanning code modules — e.g., a deferred classification in CHARTER-04 that passes silently through CHARTER-08 → CHARTER-13 and only surfaces under a fresh CI gate. Sentinel's TDE-003 case (2 legacy MVP AILOGs pending human review).
+
+- **`FOLLOW-UPS-BACKLOG-PATTERN.md` "Promotion to TDE"** (EN + ES + zh-CN). Documents two equally-valid promotion shapes:
+  - **Promotion of existing entry** — open FU registered weeks/Charters ago, lived through ≥1 close, meets the criteria. Standard flow.
+  - **Retroactive promotion at creation** — debt recognized as TDE-worthy *during* a retrospective; TDE created first, FU added to the registry with `Status: promoted` from birth. Cross-references TDE back to the originating `R<N>` / calibrator finding / deferred classification.
+
+  Both produce the same end state (`Status: promoted`, `Promoted to: TDE-...`); drift script treats them identically.
+
+### Added (Framework)
+
+- **`FOLLOW-UPS-BACKLOG-PATTERN.md` frontmatter schema v0.1** (EN + ES + zh-CN). Canonicalizes operator-maintained counters in the registry header: `total_open`, `total_promoted`, `total_closed_in_session`, `total_phase_blocked`. `total_promoted` is the new entry, mirroring Sentinel's adopted convention. Operator-driven; the drift script does not update them automatically.
+
+### Empirical context
+
+Sentinel ran all 4 trigger criteria against 3 retrospective TDEs:
+
+| TDE | Triggers (of 4) | Notes |
+|-----|----------------:|-------|
+| TDE-001 (RequireScope architectural gap) | 4/4 unambiguous | Textbook trigger application |
+| TDE-002 (HTTP layer test coverage gap) | 3/4 clean + 1 marginal | "Heritage" marginal → wording refined in this release |
+| TDE-003 (legacy MVP AILOGs review) | 3/4 clean + 1 marginal | "Multi-module" marginal → wording refined in this release |
+
+Heuristic captured all 3 cases correctly **with the pre-4.13.1 wording**; refinements remove residual ambiguity for adopter N=2+.
+
+### Not in this release (per [#135](https://github.com/StrangeDaysTech/straymark/issues/135))
+
+- **Tier 2** (ship `check-followups-drift.sh` in `dist/.straymark/scripts/`) — deferred, no adoption friction signal yet
+- **Tier 3** (soft integration with `straymark charter close`) — deferred, no friction signal
+- **Tier 4** (`straymark followups list/status/promote/drift` CLI subcommand trio) — deferred indefinitely against second-adopter validation gate per design principle #12
+
+### Adopter guidance
+
+- Existing fw-4.13.0 adopters: `straymark update-framework` brings the refinements in. No document edits required — the changes are clarifications, not breaking schema changes. `total_promoted` is opt-in (omit the field if you don't use it; the registry still parses fine).
+
+---
+
 ## CLI 3.12.1 — Validator accepts TDE `identified` status
 
 Closes [#130](https://github.com/StrangeDaysTech/straymark/issues/130). Latent in `cli-3.12.0` and earlier; fully exposed by the `fw-4.13.0` TDE activation trigger (which makes TDE creation likely). Surfaced empirically while verifying #128: a freshly-created TDE via `straymark new --doc-type tde` shipped with the canonical `status: identified` per `TEMPLATE-TDE.md` + `DOCUMENTATION-POLICY.md §6`, but `straymark validate` immediately rejected it with `META-003 Invalid status 'identified'`. Validator's hardcoded enumeration was missing the only non-`draft`/non-`accepted` default in the type matrix.

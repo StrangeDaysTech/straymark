@@ -44,7 +44,12 @@ Single markdown file at the canonical path:
 ```yaml
 ---
 last_scan: 2026-05-06
+last_scan_range: AILOG-NNNN-NN-NN-NNN..AILOG-NNNN-NN-NN-NNN  # optional — first..last AILOG covered
 schema_version: v0
+total_open: 0           # count of entries currently `open`
+total_promoted: 0       # count of entries currently `promoted` (added in schema v0.1 — see "Promotion to TDE")
+total_closed_in_session: 0   # count of `closed` entries since last session (optional, operator-maintained)
+total_phase_blocked: 0  # count of `phase-blocked` entries (optional)
 buckets:
   - ready
   - time-triggered
@@ -57,6 +62,8 @@ fully_extracted_ailogs:
   # ... one entry per AILOG whose follow-ups have been processed
 ---
 ```
+
+The `total_*` counters are **operator-maintained metadata**. The drift script doesn't update them automatically — they live in the header so a session-start glance shows the registry's pulse without scrolling through buckets. `total_promoted` was canonicalized in schema v0.1 (Sentinel adopter empirical signal, fw-4.13.1) to mirror the existing `total_open` / `total_closed_in_session` / `total_phase_blocked` pattern.
 
 The `fully_extracted_ailogs` list is the **load-bearing metadata** for drift detection. Every AILOG whose `§Follow-ups` and `R<N>` entries have been transferred into the registry (or explicitly classified as superseded) belongs in this list. Drift detection compares this list against AILOGs that have follow-up content in the repo.
 
@@ -115,6 +122,17 @@ When any of these holds, promote the FU entry to a TDE document under `.straymar
 3. In the FU entry, set `Status: promoted`, set `Destination: TDE-YYYY-MM-DD-NNN`, and add `Promoted to: TDE-YYYY-MM-DD-NNN`. Move the entry to the `## Bucket: closed` section if you maintain one; otherwise leave it in place with the new status.
 
 The FU entry is **not deleted** after promotion — its presence in the registry is the audit trail showing where the TDE came from.
+
+### Two promotion shapes — promotion-of-existing vs retroactive-at-creation
+
+The workflow above covers the **standard case**: an `open` FU entry already exists in the registry and gets elevated to a TDE during periodic review. There is a second case that is equally valid and that emerged empirically from the Sentinel CHARTER-13 retrospective:
+
+- **Promotion of existing entry** — an FU was registered (typically via `--apply`) as `open` weeks or Charters ago, lived through ≥1 Charter close without resolution, and meets the four criteria above. Standard flow.
+- **Retroactive promotion at creation** — the debt is recognized as TDE-worthy *during* a retrospective (Charter close ceremony, audit cycle, RFC writeup) and never existed as an `open` FU. The TDE is created first; an FU entry is added to the registry *with `Status: promoted`* from birth, providing the audit trail back from the TDE to the originating context (an `R<N>` in an AILOG, a calibrator finding, a deferred classification).
+
+Both shapes produce the same end state in the registry: an entry with `Status: promoted` and a `Promoted to: TDE-YYYY-MM-DD-NNN` pointer. The difference is whether the entry pre-existed as `open` or was born `promoted`. The drift script treats them identically (it doesn't differentiate by birth status), and adopter analytics counting `total_promoted` get the same number either way.
+
+When in doubt, prefer creating the FU entry — even retroactively — because it cross-references the TDE back to the AILOG / R-number / source context that triggered the recognition. A TDE with `promoted_from_followup: FU-NNN` pointing to an entry that exists in the backlog is more navigable than one pointing to a fictional FU.
 
 ### When to promote
 
@@ -215,4 +233,4 @@ Contributed via [issue #111](https://github.com/StrangeDaysTech/straymark/issues
 
 ---
 
-*StrayMark v4.13.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.13.1 | [Strange Days Tech](https://strangedays.tech)*

@@ -234,4 +234,4 @@ Usar un diagrama de Nivel 1 (Contexto) para ilustrar:
 
 ---
 
-*StrayMark v4.13.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.13.1 | [Strange Days Tech](https://strangedays.tech)*

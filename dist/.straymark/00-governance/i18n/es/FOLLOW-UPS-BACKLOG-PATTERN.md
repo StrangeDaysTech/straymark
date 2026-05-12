@@ -44,7 +44,12 @@ Por debajo de ese volumen, la convención per-AILOG por sí sola es suficiente �
 ```yaml
 ---
 last_scan: 2026-05-06
+last_scan_range: AILOG-NNNN-NN-NN-NNN..AILOG-NNNN-NN-NN-NNN  # opcional — primer..último AILOG cubierto
 schema_version: v0
+total_open: 0           # cuenta de entradas actualmente `open`
+total_promoted: 0       # cuenta de entradas actualmente `promoted` (agregado en schema v0.1 — ver "Promoción a TDE")
+total_closed_in_session: 0   # cuenta de entradas `closed` desde la última sesión (opcional, operator-maintained)
+total_phase_blocked: 0  # cuenta de entradas `phase-blocked` (opcional)
 buckets:
   - ready
   - time-triggered
@@ -57,6 +62,8 @@ fully_extracted_ailogs:
   # ... una entrada por cada AILOG cuyos follow-ups han sido procesados
 ---
 ```
+
+Los contadores `total_*` son **metadatos operator-maintained**. El script de drift no los actualiza automáticamente — viven en el header para que un vistazo a inicio de sesión muestre el pulso del registro sin scrollear por buckets. `total_promoted` se canonicalizó en schema v0.1 (señal empírica del adopter Sentinel, fw-4.13.1) para reflejar el patrón existente de `total_open` / `total_closed_in_session` / `total_phase_blocked`.
 
 La lista `fully_extracted_ailogs` es el **metadato cargante** para la detección de drift. Todo AILOG cuyas entradas de `§Follow-ups` y `R<N>` han sido transferidas al registro (o explícitamente clasificadas como superseded) pertenece a esta lista. La detección de drift compara esta lista contra los AILOGs que tienen contenido de follow-ups en el repo.
 
@@ -115,6 +122,17 @@ Cuando cualquiera de estos se cumple, promueve la entrada FU a un documento TDE 
 3. En la entrada FU, establece `Status: promoted`, `Destination: TDE-YYYY-MM-DD-NNN`, y agrega `Promoted to: TDE-YYYY-MM-DD-NNN`. Mueve la entrada a la sección `## Bucket: closed` si mantienes una; si no, déjala en lugar con el nuevo status.
 
 La entrada FU **no se elimina** tras la promoción — su presencia en el registro es el rastro auditable que muestra de dónde vino el TDE.
+
+### Dos formas de promoción — promoción-de-existente vs retroactiva-en-la-creación
+
+El workflow anterior cubre el **caso estándar**: una entrada FU `open` ya existe en el registro y se eleva a un TDE durante revisión periódica. Existe un segundo caso igualmente válido que emergió empíricamente del retrospectivo de Sentinel CHARTER-13:
+
+- **Promoción de entrada existente** — un FU fue registrado (típicamente vía `--apply`) como `open` semanas o Charters atrás, vivió ≥1 cierre de Charter sin resolución, y cumple los cuatro criterios. Flujo estándar.
+- **Promoción retroactiva en la creación** — la deuda se reconoce como TDE-worthy *durante* un retrospectivo (ceremonia de cierre de Charter, ciclo de auditoría, redacción de RFC) y nunca existió como FU `open`. Se crea primero el TDE; se agrega una entrada FU al registro *con `Status: promoted`* desde el nacimiento, proporcionando el rastro auditable desde el TDE hacia el contexto originador (un `R<N>` en un AILOG, un finding del calibrador, una clasificación diferida).
+
+Ambas formas producen el mismo estado final en el registro: una entrada con `Status: promoted` y un puntero `Promoted to: TDE-YYYY-MM-DD-NNN`. La diferencia es si la entrada pre-existía como `open` o nació `promoted`. El script de drift las trata idénticamente (no diferencia por status de nacimiento), y las analíticas del adopter que cuentan `total_promoted` obtienen el mismo número en ambos casos.
+
+Ante la duda, prefiere crear la entrada FU — aunque sea retroactivamente — porque cross-referencia el TDE de vuelta al AILOG / número-R / contexto fuente que disparó el reconocimiento. Un TDE con `promoted_from_followup: FU-NNN` apuntando a una entrada que existe en el backlog es más navegable que uno apuntando a un FU ficticio.
 
 ### Cuándo promover
 
@@ -215,4 +233,4 @@ Contribuido vía [issue #111](https://github.com/StrangeDaysTech/straymark/issue
 
 ---
 
-*StrayMark v4.13.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.13.1 | [Strange Days Tech](https://strangedays.tech)*
