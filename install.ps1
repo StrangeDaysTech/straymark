@@ -1,10 +1,10 @@
-# DevTrail CLI installer for Windows — https://github.com/StrangeDaysTech/devtrail
+# StrayMark CLI installer for Windows — https://github.com/StrangeDaysTech/straymark
 #
 # Usage:
-#   irm https://raw.githubusercontent.com/StrangeDaysTech/devtrail/main/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/StrangeDaysTech/straymark/main/install.ps1 | iex
 #
 #   # Or with parameters:
-#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/StrangeDaysTech/devtrail/main/install.ps1))) -Tag cli-1.0.0
+#   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/StrangeDaysTech/straymark/main/install.ps1))) -Tag cli-1.0.0
 #
 # Compatible with PowerShell 5.1+ and PowerShell Core (pwsh).
 
@@ -15,22 +15,22 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$Repo = "StrangeDaysTech/devtrail"
-$Binary = "devtrail.exe"
+$Repo = "StrangeDaysTech/straymark"
+$Binary = "straymark.exe"
 $Target = "x86_64-pc-windows-msvc"
 
 function Write-Status($Message) {
-    Write-Host "devtrail-install: $Message"
+    Write-Host "straymark-install: $Message"
 }
 
 function Write-Err($Message) {
-    Write-Host "devtrail-install: ERROR: $Message" -ForegroundColor Red
+    Write-Host "straymark-install: ERROR: $Message" -ForegroundColor Red
 }
 
 # ── Verify platform ─────────────────────────────────────────────────────
 
 if ([System.Environment]::Is64BitOperatingSystem -eq $false) {
-    Write-Err "DevTrail requires a 64-bit Windows installation."
+    Write-Err "StrayMark requires a 64-bit Windows installation."
     exit 1
 }
 
@@ -43,7 +43,7 @@ if ($env:PROCESSOR_ARCHITECTURE -ne "AMD64" -and $env:PROCESSOR_ARCHITECTURE -ne
 # ── Defaults ─────────────────────────────────────────────────────────────
 
 if (-not $InstallDir) {
-    $InstallDir = Join-Path $env:LOCALAPPDATA "DevTrail\bin"
+    $InstallDir = Join-Path $env:LOCALAPPDATA "StrayMark\bin"
 }
 
 # ── GitHub API headers ───────────────────────────────────────────────────
@@ -103,11 +103,11 @@ try {
 
     # Build asset name and URL
     $versionNum = $Tag -replace "^cli-", ""
-    $asset = "devtrail-cli-v${versionNum}-${Target}.zip"
+    $asset = "straymark-cli-v${versionNum}-${Target}.zip"
     $url = "https://github.com/$Repo/releases/download/$Tag/$asset"
 
     # Create temp directory
-    $tempDir = Join-Path $env:TEMP "devtrail-install-$(Get-Random)"
+    $tempDir = Join-Path $env:TEMP "straymark-install-$(Get-Random)"
     New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 
     $archivePath = Join-Path $tempDir $asset

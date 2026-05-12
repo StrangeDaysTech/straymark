@@ -1,21 +1,21 @@
 SPDXVersion: SPDX-2.3
 DataLicense: CC0-1.0
 SPDXID: SPDXRef-DOCUMENT
-DocumentName: devtrail
-DocumentNamespace: https://github.com/StrangeDaysTech/devtrail
+DocumentName: straymark
+DocumentNamespace: https://github.com/StrangeDaysTech/straymark
 Creator: Organization: Strange Days Tech, S.A.S.
 Created: 2025-01-27T00:00:00Z
 
-PackageName: devtrail
+PackageName: straymark
 SPDXID: SPDXRef-Package
-PackageVersion: 1.0.0
-PackageDownloadLocation: https://github.com/StrangeDaysTech/devtrail
-PackageHomePage: https://github.com/StrangeDaysTech/devtrail
+PackageVersion: 3.12.1
+PackageDownloadLocation: https://github.com/StrangeDaysTech/straymark
+PackageHomePage: https://github.com/StrangeDaysTech/straymark
 PackageLicenseConcluded: MIT
 PackageLicenseDeclared: MIT
-PackageCopyrightText: Copyright (c) 2025 Strange Days Tech, S.A.S. and DevTrail Contributors
+PackageCopyrightText: Copyright (c) 2025 Strange Days Tech, S.A.S. and StrayMark Contributors
 PackageSummary: Documentation governance framework for AI-assisted software development.
-PackageDescription: DevTrail provides a documentation governance system that ensures traceability for all significant changes in software projects, whether made by humans or AI agents. Includes templates, validation scripts, and multi-agent support.
+PackageDescription: StrayMark provides a documentation governance system that ensures traceability for all significant changes in software projects, whether made by humans or AI agents. Includes templates, validation scripts, and multi-agent support.
 
 LicenseID: LicenseRef-MIT
 ExtractedText: <text>

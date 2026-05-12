@@ -240,6 +240,16 @@ rm .agent/workflows/devtrail-*.md
 
 Sentinel applied this cleanup in `StrangeDaysTech/sentinel#62` (2026-05-12). No known third-party adopters, so the impact is bounded to the single project that already fixed it. This errata is preserved here as historical record for any future major rename or repository-level prefix change.
 
+### Errata — root-level installer / SBOM / LICENSE residuals *(documented 2026-05-12)*
+
+Four files in the repository root were missed by the rebrand sweep. The installer pair was the operationally consequential one — broken from the merge of `fw-4.11.0` until this errata:
+
+- **`install.sh` / `install.ps1`** — internals still referenced `REPO=StrangeDaysTech/devtrail`, `BINARY=devtrail` (or `devtrail.exe`), and the legacy asset name `devtrail-cli-v${VERSION}-${TARGET}.{tar.gz,zip}`. Meanwhile `release-cli.yml` had already been producing `straymark-cli-*` assets with the `straymark` binary, so any user piping the installer per the (already-rebranded) README/CLI-REFERENCE instructions hit a GitHub 404. Now aligned: `StrangeDaysTech/straymark`, `straymark`/`straymark.exe`, asset prefix `straymark-cli-`. Windows `LOCALAPPDATA` install path also moved from `DevTrail\bin` → `StrayMark\bin` (no shim — same policy applied to `.devtrail` → `.straymark` and to the skill-dir cleanup above).
+- **`devtrail.spdx` → `straymark.spdx`** — `git mv` plus content update of `DocumentName`, `DocumentNamespace`, `PackageName`, `PackageDownloadLocation`, `PackageHomePage`, `PackageCopyrightText` ("DevTrail Contributors" → "StrayMark Contributors"), and `PackageDescription`. `PackageVersion` advanced from the stale `1.0.0` to `3.12.1` to match the CLI binary the SBOM describes.
+- **`LICENSE`** — copyright line updated to "StrayMark Contributors" in the live state. The MIT text itself is unchanged.
+
+Historical entries elsewhere in this CHANGELOG and the `devtrail-cli@3.10.0` crate are preserved as historical record per the policy stated at the top of this file.
+
 ---
 
 ## Framework 4.10.0 — Follow-ups backlog pattern (governance docs)
