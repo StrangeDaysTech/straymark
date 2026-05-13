@@ -189,6 +189,14 @@ pub fn t<'a>(en: &'a str, lang: &str) -> &'a str {
         (" (Enter: search)", "zh-CN") => "（Enter: 搜索）",
         (" (Enter: follow)", "es") => " (Enter: seguir)",
         (" (Enter: follow)", "zh-CN") => "（Enter: 跳转）",
+        ("Charter ID:", "es") => "Charter ID:",
+        ("Charter ID:", "zh-CN") => "Charter ID:",
+        ("Effort:", "es") => "Esfuerzo:",
+        ("Effort:", "zh-CN") => "工作量:",
+        ("Trigger:", "es") => "Disparador:",
+        ("Trigger:", "zh-CN") => "触发条件:",
+        ("Origin:", "es") => "Origen:",
+        ("Origin:", "zh-CN") => "来源:",
 
         // ── Document panel ────────────────────────────────────────────
         ("Document", "es") => "Documento",
