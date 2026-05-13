@@ -154,7 +154,7 @@ pub fn discover_charters(project_root: &Path) -> Vec<PathBuf> {
 
 /// True if the file matches the Charter filename pattern `NN-*.md` where NN is
 /// one or more digits.
-fn is_charter_filename(p: &Path) -> bool {
+pub fn is_charter_filename(p: &Path) -> bool {
     if p.extension().and_then(|e| e.to_str()) != Some("md") {
         return false;
     }

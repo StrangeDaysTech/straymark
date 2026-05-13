@@ -419,23 +419,20 @@ impl App {
             Some(MetaSelection::Tag(idx)) => {
                 // Search by this tag
                 if let Some(ref doc) = self.current_doc {
-                    if let Some(ref fm) = doc.frontmatter {
-                        if let Some(tag) = fm.tags.get(idx) {
-                            self.search_query = Some(tag.clone());
-                            self.meta_selection = None;
-                            self.active_panel = ActivePanel::Navigation;
-                        }
+                    if let Some(tag) = doc.tags().get(idx) {
+                        self.search_query = Some(tag.clone());
+                        self.meta_selection = None;
+                        self.active_panel = ActivePanel::Navigation;
                     }
                 }
             }
             Some(MetaSelection::Related(idx)) => {
                 if let Some(ref doc) = self.current_doc {
-                    if let Some(ref fm) = doc.frontmatter {
-                        if let Some(related_id) = fm.related.get(idx) {
-                            let id = related_id.clone();
-                            self.meta_selection = None;
-                            self.navigate_to_id(&id);
-                        }
+                    let related = doc.related();
+                    if let Some(related_id) = related.get(idx) {
+                        let id = related_id.clone();
+                        self.meta_selection = None;
+                        self.navigate_to_id(&id);
                     }
                 }
             }
@@ -447,8 +444,7 @@ impl App {
     fn tag_count(&self) -> usize {
         self.current_doc
             .as_ref()
-            .and_then(|doc| doc.frontmatter.as_ref())
-            .map(|fm| fm.tags.len())
+            .map(|doc| doc.tags().len())
             .unwrap_or(0)
     }
 
@@ -456,8 +452,7 @@ impl App {
     fn related_count(&self) -> usize {
         self.current_doc
             .as_ref()
-            .and_then(|doc| doc.frontmatter.as_ref())
-            .map(|fm| fm.related.len())
+            .map(|doc| doc.related().len())
             .unwrap_or(0)
     }
 

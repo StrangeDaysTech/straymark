@@ -91,31 +91,56 @@ fn metadata_panel_height(app: &App) -> u16 {
 
     let mut lines: u16 = 0;
 
-    // Each field on its own line
-    if fm.status.is_some() {
-        lines += 1;
-    }
-    if fm.created.is_some() {
-        lines += 1;
-    }
-    if fm.agent.is_some() {
-        lines += 1;
-    }
-    if fm.confidence.is_some() {
-        lines += 1;
-    }
-    if fm.risk_level.is_some() {
-        lines += 1;
-    }
-    if fm.review_required == Some(true) {
-        lines += 1;
-    }
-    if !fm.tags.is_empty() {
-        lines += 1 + fm.tags.len() as u16; // header + one per tag
-    }
-    // Related: separator + header + one per link
-    if !fm.related.is_empty() {
-        lines += 2 + fm.related.len() as u16;
+    match fm {
+        crate::tui::document::DocumentMetadata::Doc(fm) => {
+            // Each field on its own line
+            if fm.status.is_some() {
+                lines += 1;
+            }
+            if fm.created.is_some() {
+                lines += 1;
+            }
+            if fm.agent.is_some() {
+                lines += 1;
+            }
+            if fm.confidence.is_some() {
+                lines += 1;
+            }
+            if fm.risk_level.is_some() {
+                lines += 1;
+            }
+            if fm.review_required == Some(true) {
+                lines += 1;
+            }
+            if !fm.tags.is_empty() {
+                lines += 1 + fm.tags.len() as u16; // header + one per tag
+            }
+            // Related: separator + header + one per link
+            if !fm.related.is_empty() {
+                lines += 2 + fm.related.len() as u16;
+            }
+        }
+        crate::tui::document::DocumentMetadata::Charter(fm) => {
+            // Charter ID + Status + Effort + Origin are always rendered.
+            // Trigger only when non-empty (always non-empty per schema, but
+            // guard anyway).
+            if !fm.charter_id.is_empty() {
+                lines += 1;
+            }
+            lines += 1; // Status
+            lines += 1; // Effort
+            if !fm.trigger.is_empty() {
+                lines += 1; // Trigger
+            }
+            lines += 1; // Origin (single-line summary)
+
+            // Materialized related = ailogs + spec.
+            let related_count = fm.originating_ailogs.as_ref().map(|v| v.len()).unwrap_or(0)
+                + fm.originating_spec.as_ref().map(|_| 1).unwrap_or(0);
+            if related_count > 0 {
+                lines += 2 + related_count as u16; // separator + header + entries
+            }
+        }
     }
 
     (base + lines).max(base + 1)

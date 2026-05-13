@@ -7,6 +7,32 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.12.2 — `straymark explore` shows Charter frontmatter correctly
+
+Fixes a long-standing bug where the **Metadata** panel of `straymark explore` rendered every Charter as `Status: ? UNKNOWN` regardless of the actual `status:` value in the Charter frontmatter. Surfaced by [Sentinel](https://github.com/StrangeDaysTech/sentinel) while reviewing a closed Charter (`CHARTER-13`) in the TUI — the screen showed UNKNOWN even though the Charter's frontmatter clearly read `status: closed`.
+
+### Fixed (CLI)
+
+- **`cli/src/tui/document.rs`** — `Document::load` parsed every `.md` against `DocFrontMatter`, whose `status` enum only knows `draft|accepted|deprecated|superseded`. Charter frontmatter (`status: declared|in-progress|closed`) fell through to the `#[serde(other)] Unknown` variant, and the disjoint fields (`charter_id`, `effort_estimate`, `trigger`, `originating_ailogs`, `originating_spec`) were silently dropped. The loader now dispatches to `crate::charter::parse_charter` for paths under `.straymark/charters/NN-slug.md` and returns a typed `DocumentMetadata::Charter(_)` variant.
+- **`cli/src/tui/widgets/metadata_panel.rs`** — renders a Charter-specific layout when the variant is `Charter`: `Charter ID`, `Status` (with the correct vocabulary and color: yellow ○ declared / cyan ◐ in-progress / green ■ closed), `Effort` (XS/S/M/L color-graded), `Trigger` (truncated single-line), `Origin`, and `Related` links (materialized from `originating_ailogs` + `originating_spec`, navigable via `Enter` like any other related link).
+- **`cli/src/tui/ui.rs`** — `metadata_panel_height` now computes a sensible vertical reserve for both governance docs and Charters; previously it under-reserved for Charters and the panel could clip its lower fields.
+- **`cli/src/tui/app.rs`** — `tag_count`, `related_count`, and `metadata_enter` now go through the new `Document::tags()` / `Document::related()` helpers so the existing tag-search and follow-related-link interactions work for both variants without any further branching at the call site.
+
+### Changed (CLI)
+
+- **`cli/src/charter.rs`** — `is_charter_filename` is now `pub` so the TUI loader can use it for dispatch. No behavioral change.
+- **`cli/src/tui/i18n_strings.rs`** — adds `Charter ID:`, `Effort:`, `Trigger:`, `Origin:` translations (ES + zh-CN).
+
+### Empirical context
+
+The `Status: ? UNKNOWN` rendering was misleading because the frontmatter *did* parse — just against the wrong schema. `serde_yaml::from_str::<DocFrontMatter>` succeeded with every charter field defaulted and `status = Some(Unknown)` via `#[serde(other)]`, which is why the panel showed an explicit UNKNOWN instead of falling back to `No frontmatter`. The fix avoids re-parsing at render time by routing the schema choice at load time, keyed on the canonical `.straymark/charters/NN-slug.md` path — the same heuristic `discover_charters` uses to skip the adopter-maintained `README.md` status board.
+
+### Adopter guidance
+
+`straymark update-cli` brings the corrected binary. No project state changes required. The fix is purely TUI-side; `straymark charter` subcommands (`new`, `list`, `status`, `close`, `audit`, `drift`) were already on the correct schema and are not touched.
+
+---
+
 ## Framework 4.13.2 — Complete the Charter path migration to `.straymark/charters/`
 
 Completes the path migration that `fw-4.12.0` started ([#119](https://github.com/StrangeDaysTech/straymark/issues/119)). That release aligned all `straymark charter` CLI subcommands to `.straymark/charters/` (single source of truth via `charter::charters_dir(project_root)`) but missed three classes of artifact still pointing at the legacy `docs/charters/` path. Surfaced empirically by the Sentinel adopter during external-audit prep when reviewing the framework's pre-PR hook behavior.
