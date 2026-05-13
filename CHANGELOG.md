@@ -7,6 +7,26 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.13.4 — Close translation gaps (ISO-25010 reference + Charter template zh-CN)
+
+Framework-only patch that closes two translation coverage gaps surfaced by an audit of the project's i18n consistency. The audit confirmed that skills, workflows, schemas, and CLI-internal i18n are correctly aligned with the project principle (LLM-processed assets stay EN-only; human-primary artifacts get translated). Two specific files were the exception.
+
+### Added (Framework)
+
+- **`dist/.straymark/00-governance/i18n/es/ISO-25010-2023-REFERENCE.md`** (new) — Spanish translation of the ISO/IEC 25010:2023 software quality reference doc. Preserves the table structure (9 quality characteristics, sub-characteristics, 2023-vs-2011 changes column) and the canonical Spanish equivalents of the standard's terminology (`Adecuación funcional`, `Capacidad de interacción`, `Confiabilidad`, etc.).
+- **`dist/.straymark/00-governance/i18n/zh-CN/ISO-25010-2023-REFERENCE.md`** (new) — Simplified Chinese translation, same structure, uses the Chinese-localized terminology (`功能适合性`, `交互能力`, `可靠性`, `安全（Safety）`, etc.).
+- **`dist/.straymark/templates/charter/i18n/zh-CN/charter-template.md`** (new) — Simplified Chinese translation of the Charter scaffold template. Brings zh-CN to parity with EN canonical and the existing ES overlay (both already shipped). All 6 format-conventions footer notes translated; structure and placeholders intact.
+
+### Empirical context
+
+Surfaced while auditing the framework's translation matrix end-to-end: of the 7 categories where translation parity matters (templates, governance docs, adopter docs, README, TUI i18n strings, charter template, audit prompt), all were complete or alignment-consistent except for these three files. The remaining `docs/contributors/TRANSLATION-GUIDE.md` gap was left intentional — its target audience already reads English to read the guide.
+
+### Adopter guidance
+
+`straymark update-framework` brings the three new files. Spanish and Chinese governance review now references `ISO-25010-2023-REFERENCE.md` in the operator's preferred language; `straymark new charter` from a zh-CN project (`.straymark/config.yml` with `language: zh-CN`) now scaffolds the Charter template in Chinese instead of falling back to the English canonical.
+
+---
+
 ## Framework 4.13.3 / CLI 3.12.3 — Audit prompt becomes EN-canonical + CLI wires i18n resolution
 
 Aligns the external-audit cycle with the framework's localization convention. Before this release, `dist/.straymark/audit-prompts/audit-prompt.md` was the **only** framework artifact whose canonical content lived in Spanish — every other template, skill, workflow, and governance doc had EN canonical at the root and `i18n/es/` (plus optionally `i18n/zh-CN/`) as overlays, resolved by `resolve_localized_path` (`cli/src/utils.rs:146`). The audit prompt was a Sentinel-derived artifact (parameterized but never translated to EN) and the CLI's `straymark charter audit` command hardcoded the canonical path without going through the i18n resolver — so even if an overlay file existed, the CLI would not have picked it up.

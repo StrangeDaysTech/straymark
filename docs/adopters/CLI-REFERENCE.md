@@ -48,7 +48,7 @@ StrayMark uses **independent version tags** for each component:
 
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
-| Framework | `fw-` | `fw-4.13.3` | Templates (12 types), governance docs, directives, Charter template + schema |
+| Framework | `fw-` | `fw-4.13.4` | Templates (12 types), governance docs, directives, Charter template + schema |
 | CLI | `cli-` | `cli-3.12.3` | The `straymark` binary |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
@@ -88,7 +88,7 @@ Initialize StrayMark in a project directory.
 
 ```bash
 $ straymark init .
-✔ Downloaded StrayMark fw-4.13.3
+✔ Downloaded StrayMark fw-4.13.4
 ✔ Created .straymark/ directory structure
 ✔ Created STRAYMARK.md
 ✔ Configured AI agent directives
@@ -110,7 +110,7 @@ If `.straymark/` does not exist in the current directory, the framework update i
 ```bash
 $ straymark update
 Updating framework...
-✔ Framework updated to fw-4.13.3
+✔ Framework updated to fw-4.13.4
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -127,7 +127,7 @@ Update only the framework files. Looks for the latest `fw-*` release on GitHub.
 
 ```bash
 $ straymark update-framework
-✔ Framework updated to fw-4.13.3
+✔ Framework updated to fw-4.13.4
 ```
 
 ---
@@ -211,7 +211,7 @@ $ straymark status
   Project
   ┌───────────┬──────────────────────────┐
   │ Path      │ /home/user/my-project    │
-  │ Framework │ fw-4.13.3                 │
+  │ Framework │ fw-4.13.4                 │
   │ CLI       │ cli-3.5.2                │
   │ Language  │ en                       │
   └───────────┴──────────────────────────┘
@@ -268,7 +268,7 @@ Repairing StrayMark in /home/user/my-project
 → Restoring 1 missing directory...
 ✓ Restored .straymark/templates/
 → Downloading framework to restore missing files...
-  Using version: fw-4.13.3
+  Using version: fw-4.13.4
 ✓ Restored 16 file(s) from framework
 → Updating checksums...
 
@@ -1053,7 +1053,7 @@ Show version, authorship, and license information.
 $ straymark about
 StrayMark CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.13.3
+  Framework version: fw-4.13.4
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/straymark
