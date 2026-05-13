@@ -306,4 +306,4 @@ Ver también [ADR-2025-01-20-001] para contexto arquitectónico.
 
 ---
 
-*StrayMark v4.13.4 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.14.0 | [Strange Days Tech](https://strangedays.tech)*

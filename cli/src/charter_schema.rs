@@ -226,7 +226,7 @@ mod tests {
                 "type": "array",
                 "items": {
                     "type": "string",
-                    "pattern": "^AILOG-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3}(-[a-z0-9-]+)?$"
+                    "pattern": "^AILOG-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3}[a-z]?(-[a-z0-9-]+)?$"
                 },
                 "minItems": 1
             },
@@ -273,6 +273,64 @@ originating_ailogs:
         );
         let issues = s.validate(&fm, Path::new("test.md"));
         assert!(issues.is_empty(), "unexpected issues: {:?}", issues);
+    }
+
+    #[test]
+    fn accepts_ailog_id_with_letter_suffix() {
+        // Optional single-letter suffix on the sequence number resolves
+        // same-day same-sequence filename collisions without renumbering
+        // downstream entries. Additive: existing IDs without suffix still pass.
+        let s = schema();
+        let fm = yaml(
+            r#"
+charter_id: CHARTER-02-collision
+status: declared
+effort_estimate: S
+trigger: "x"
+originating_ailogs:
+  - AILOG-2026-05-02-028b
+"#,
+        );
+        let issues = s.validate(&fm, Path::new("test.md"));
+        assert!(issues.is_empty(), "unexpected issues: {:?}", issues);
+    }
+
+    #[test]
+    fn rejects_ailog_id_with_multiletter_suffix() {
+        // Single letter only — discourages ad-hoc multi-letter labels that
+        // would erode the convention.
+        let s = schema();
+        let fm = yaml(
+            r#"
+charter_id: CHARTER-02-multiletter
+status: declared
+effort_estimate: S
+trigger: "x"
+originating_ailogs:
+  - AILOG-2026-05-02-028bc
+"#,
+        );
+        let issues = s.validate(&fm, Path::new("test.md"));
+        assert!(!issues.is_empty(), "expected pattern rejection for -028bc");
+    }
+
+    #[test]
+    fn rejects_ailog_id_with_uppercase_suffix() {
+        // Lowercase only — matches the existing [a-z0-9-]+ style elsewhere
+        // in the filename grammar.
+        let s = schema();
+        let fm = yaml(
+            r#"
+charter_id: CHARTER-02-upper
+status: declared
+effort_estimate: S
+trigger: "x"
+originating_ailogs:
+  - AILOG-2026-05-02-028B
+"#,
+        );
+        let issues = s.validate(&fm, Path::new("test.md"));
+        assert!(!issues.is_empty(), "expected pattern rejection for -028B");
     }
 
     #[test]

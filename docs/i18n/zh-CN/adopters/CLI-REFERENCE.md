@@ -48,8 +48,8 @@ StrayMark 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.13.4` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.12.3` | `straymark` 二进制文件 |
+| Framework | `fw-` | `fw-4.14.0` | 模板（12 种类型）、治理文档、指令 |
+| CLI | `cli-` | `cli-3.13.0` | `straymark` 二进制文件 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
 
@@ -88,7 +88,7 @@ straymark status   # 显示完整的安装状态，包括版本
 
 ```bash
 $ straymark init .
-✔ Downloaded StrayMark fw-4.13.4
+✔ Downloaded StrayMark fw-4.14.0
 ✔ Created .straymark/ directory structure
 ✔ Created STRAYMARK.md
 ✔ Configured AI agent directives
@@ -110,7 +110,7 @@ Next: git add .straymark/ STRAYMARK.md && git commit -m "chore: adopt StrayMark"
 ```bash
 $ straymark update
 Updating framework...
-✔ Framework updated to fw-4.13.4
+✔ Framework updated to fw-4.14.0
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -127,7 +127,7 @@ Updating CLI...
 
 ```bash
 $ straymark update-framework
-✔ Framework updated to fw-4.13.4
+✔ Framework updated to fw-4.14.0
 ```
 
 ---
@@ -211,7 +211,7 @@ $ straymark status
   Project
   ┌───────────┬──────────────────────────┐
   │ Path      │ /home/user/my-project    │
-  │ Framework │ fw-4.13.4                 │
+  │ Framework │ fw-4.14.0                 │
   │ CLI       │ cli-3.5.2                │
   │ Language  │ en                       │
   └───────────┴──────────────────────────┘
@@ -268,7 +268,7 @@ Repairing StrayMark in /home/user/my-project
 → Restoring 1 missing directory...
 ✓ Restored .straymark/templates/
 → Downloading framework to restore missing files...
-  Using version: fw-4.13.4
+  Using version: fw-4.14.0
 ✓ Restored 16 file(s) from framework
 → Updating checksums...
 
@@ -422,7 +422,8 @@ $ straymark validate --check-pending-reviews --max-pending-days 14
 - `straymark charter list` — 用可选过滤器枚举章程
 - `straymark charter status` — 显示章程详情，或最近的 5 个章程
 - `straymark charter close` *(cli-3.7.0+)* — 记录执行后遥测并将章程移至 `closed`
-- `straymark charter drift` *(cli-3.7.0+)* — 检查文件 vs 提交的漂移，带 AILOG 感知抑制
+- `straymark charter drift` *(cli-3.7.0+)* — 检查文件 vs 提交的漂移，带 AILOG 感知抑制和 Batch Ledger 门控 *(门控在 cli-3.13.0 添加)*
+- `straymark charter batch-complete` *(cli-3.13.0+, fw-4.14.0+)* — 在 AILOG 的 `## Batch Ledger` 中将章程批次标记为已完成
 - `straymark charter audit` *(cli-3.8.0+)* — 编排多模型外部审计（仅编排，详见下文）
 
 #### `straymark charter new [-t XS|S|M|L] [--from-ailog <id> | --from-spec <path>] [--title <title>] [path]`
@@ -499,18 +500,21 @@ $ straymark charter close CHARTER-01
     Status updated: in-progress/declared → closed
 ```
 
-#### `straymark charter drift <CHARTER-ID> [--range <REV..REV>] [--no-ailog-suppress] [--path <dir>]`
+#### `straymark charter drift <CHARTER-ID> [--range <REV..REV>] [--no-ailog-suppress] [--no-batch-ledger-check] [--path <dir>]`
 
 在章程关闭时检测文件 vs 提交漂移。封装框架的 `.straymark/scripts/check-charter-drift.sh`（在 Sentinel PLAN-05 回顾性 + PLAN-06 前瞻性中实证验证零误报）。CLI 在原始脚本之上的附加价值是 **AILOG 感知**：报告为"已声明但未修改"的路径，如果出现在被章程 `originating_ailogs` 引用的任何 AILOG 的 `## Risk` / `## Riesgos` / `## 风险` 节中，则被静默。使用 `--no-ailog-suppress` 来禁用。
+
+**Batch Ledger 门控** *(cli-3.13.0+)*。当章程状态为 `in-progress` 或 `closed` 时，该命令还检查每个 originating AILOG 中仍为 `(pending)` 的 `## Batch Ledger` 条目，并以清晰的诊断列出缺失的批次。没有 ledger 的 AILOG 不参与 — 该章节是 opt-in 的。使用 `--no-batch-ledger-check` 来绕过（用于在 close 后合并 ledger 的 adopter）。
 
 | 参数/标志 | 默认值 | 描述 |
 |---|---|---|
 | `CHARTER-ID` | — | 与 `charter status` 相同的解析规则。 |
 | `--range` | `HEAD~1..HEAD` | 要检查的 git 修订范围。 |
 | `--no-ailog-suppress` *(cli-3.10.0+ 始终输出确认 INFO 行)* | false | 禁用 AILOG 感知抑制（显示每条已声明但被遗漏的路径）。传入此标志时，CLI 始终打印 `INFO: AILOG-aware suppression bypassed (would have suppressed: N path(s)…)` 行 — 即使 N=0 — 以便诊断模式即使在干净运行时也在输出中可见。 |
+| `--no-batch-ledger-check` *(cli-3.13.0+)* | false | 禁用 Batch Ledger 门控。当章程的 AILOG 在 close 时显式选择不使用 ledger 模式时使用。 |
 | `--path` | `.` | 目标项目目录。 |
 
-**退出码：** `0` 没有漂移（或仅 AILOG 抑制）；`1` 存在未计入的漂移；`2` 用法错误（章程未找到、bash 缺失等）。
+**退出码：** `0` 没有漂移（或仅 AILOG 抑制）且无 pending 批次；`1` 存在未计入的漂移或任何 `### Batch N` 仍为 `(pending)`；`2` 用法错误（章程未找到、bash 缺失等）。
 
 **示例：**
 
@@ -549,6 +553,51 @@ OK all declared-omitted paths are documented in AILOGs — drift accepted.
 `.straymark/charters/*` 和 `.straymark/07-ai-audit/*` 下的路径**永远不会**被报告为"已修改但未声明"。这是有意的设计 — 当章程本身或执行的 AILOG 被触动时，这些路径总是合法的。在 Sentinel CHARTER-04 中实证验证：一次意外的 `git add -A` 暂存了无关的用户未跟踪文件（`.claude/skills/`、`cmd/sentinel/sentinel`）；该规则正确抑制了治理噪声而没有掩盖真正的项目文件扩展（[issue #81 W2](https://github.com/StrangeDaysTech/straymark/issues/81#issuecomment-update)）。
 
 如果你运行的章程显式 scope 是治理 churn（例如仅触动 `.straymark/07-ai-audit/` 的批量批准章程），漂移检查将报告 0 个修改文件，你需要通过阅读 AILOG 来验证 scope。一个 `--strict-scope` 标志（禁用"始终在 scope"规则）在桌面上，用于未来 minor 版本，前提是真实的 adopter 报告这种不对称为摩擦。
+
+#### `straymark charter batch-complete <CHARTER-ID> <N> [--note <body>] [--non-interactive] [--path <dir>]`
+
+*自 **cli-3.13.0** + **fw-4.14.0** 起可用。*
+
+在 originating AILOG 的 `## Batch Ledger` 中将一个章程批次标记为已完成。该命令将 `### Batch <N>` 下的 `(pending)` 占位符替换为以交互方式（默认）或通过 `--note`（一次性 / 脚本化）捕获的批次说明。关闭时的 drift 门控（`straymark charter drift`）拒绝任何仍为 `(pending)` 的 `### Batch N`，使按批次的更新变为强制性而非纪律提醒。
+
+**何时使用。** 仅用于跨越 3+ 批次或 >1 天执行的多批次章程。单批次 AILOG 在 `## 执行的操作` 中记录一切，完全跳过 ledger。Charter 模板的 §Tasks 提醒作者在适用时维护 ledger。
+
+| 参数/标志 | 默认值 | 描述 |
+|---|---|---|
+| `CHARTER-ID` | — | 与 `charter status` 相同的解析规则。 |
+| `N` | — | 批次号（从 1 开始）— 与 AILOG `## Batch Ledger` 中的 `### Batch <N>` 标题匹配。 |
+| `--note <body>` | — | 预填充的批次说明正文。使用此标志，该命令非交互式地写入说明并跳过 prompt。为 agent 和脚本设计。 |
+| `--non-interactive` | false | 禁用 prompt。需要 `--note`（缺少 `--note` 会中止而非挂起）。 |
+| `--path` | `.` | 目标项目目录。 |
+
+该命令读取章程 frontmatter 的 `originating_ailogs[0]` 来定位目标 AILOG。当出现以下情况时，以清晰错误拒绝执行：
+
+- 章程没有 `originating_ailogs` 条目（无法解析目标文件）；
+- AILOG 文件在 `.straymark/07-ai-audit/agent-logs/` 中缺失；
+- AILOG 没有 `## Batch Ledger` 章节（先添加该章节，或如果是单批次 Charter 则跳过命令）；
+- `## Batch Ledger` 下没有 `### Batch <N>` 标题；
+- 目标批次已完成（拒绝覆盖 — 如需更正请手动编辑 AILOG）。
+
+**交互流程。** 三个 prompt：touched 文件（单行）、添加的 tests 或状态（单行）、多行设计说明（用单行 `.` 或 Ctrl-D 结束）。空字段在输出中被跳过。结果正文写入 `### Batch <N>` 标题下；`(pending)` 占位符被替换。
+
+**示例：**
+
+```bash
+# 交互式 — 人类粘贴批次说明
+$ straymark charter batch-complete CHARTER-17 5
+✔ AILOG: .straymark/07-ai-audit/agent-logs/AILOG-2026-05-13-048-charter-17.md
+✔ ### Batch 5 — Migration 022 + handlers
+
+OK `### Batch 5` written.
+Reminder: `git add .straymark/07-ai-audit/agent-logs/AILOG-2026-05-13-048-charter-17.md` before pushing.
+
+# 一次性 — agent / 脚本
+$ straymark charter batch-complete CHARTER-17 5 \
+    --note "Migration 022 + handlers. 文件: migrations/022.sql, services/handler_x.go. Tests passing. R8 (CHECK constraint missing ARCHIVED), 原子修复."
+OK `### Batch 5` written.
+```
+
+**Workflow 集成。** 根据 Charter §Tasks 模板的指引，在批次的 commit 落地**之后**但推送**之前**运行 `batch-complete`。AILOG 的更新和它所记录的工作随后乘同一次 push。关闭时的 drift 门控（`straymark charter drift CHARTER-NN`）拒绝任何 pending 批次并打印列表 — 将"忘记更新 ledger"从审计轨迹的静默侵蚀变为硬失败。
 
 #### `straymark charter audit <CHARTER-ID> [--range <REV..REV>] [--prepare | --merge-reports] [--merge-into <PATH>] [--path <dir>]`
 
@@ -993,7 +1042,7 @@ $ straymark explore --lang es             # 会话内切换到西班牙语
 $ straymark about
 StrayMark CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.13.4
+  Framework version: fw-4.14.0
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/straymark

@@ -3,6 +3,7 @@ use colored::Colorize;
 
 #[cfg(feature = "analyze")]
 mod analysis_engine;
+mod ailog;
 mod audit_engine;
 mod audit_schema;
 mod charter;
@@ -309,6 +310,29 @@ enum CharterCommands {
         #[arg(long = "path", default_value = ".")]
         path: String,
     },
+    /// Mark a Charter batch as complete in the AILOG `## Batch Ledger`.
+    /// For multi-batch Charters (3+ batches or >1 day): substitutes the
+    /// `(pending)` placeholder under `### Batch <N>` with batch notes
+    /// captured interactively (default) or via --note (one-shot / scripted).
+    /// The `straymark charter drift` close-time gate rejects any batch left
+    /// as `(pending)`.
+    BatchComplete {
+        /// Charter identifier (CHARTER-NN, CHARTER-NN-slug, or just NN)
+        charter_id: String,
+        /// Batch number (1-based) — matches the `### Batch <N>` heading in the
+        /// AILOG `## Batch Ledger` section.
+        batch_number: u32,
+        /// Pre-filled batch note body. With this flag, the command writes the
+        /// note non-interactively and skips prompts. Use for scripts / agents.
+        #[arg(long)]
+        note: Option<String>,
+        /// Skip prompts. Requires --note (no batch content can be inferred).
+        #[arg(long, requires = "note")]
+        non_interactive: bool,
+        /// Project directory (default: current directory)
+        #[arg(long = "path", default_value = ".")]
+        path: String,
+    },
     /// Orchestrate a multi-model external audit cycle (3-step: prepare,
     /// calibrate, finalize). Phase 3 v0 is orchestration-only — the CLI
     /// resolves prompts, validates auditor outputs, and prints findings
@@ -366,6 +390,12 @@ enum CharterCommands {
         /// even if documented in an AILOG).
         #[arg(long)]
         no_ailog_suppress: bool,
+        /// Disable the Batch Ledger gate (do not fail on `### Batch N (pending)`
+        /// entries in AILOGs referenced by this Charter). Use only when the
+        /// adopter has explicitly opted out of the ledger pattern for this
+        /// Charter (e.g., consolidating post-close).
+        #[arg(long)]
+        no_batch_ledger_check: bool,
         /// Project directory (default: current directory)
         #[arg(long = "path", default_value = ".")]
         path: String,
@@ -488,12 +518,27 @@ fn main() {
                 charter_id,
                 range,
                 no_ailog_suppress,
+                no_batch_ledger_check,
                 path,
             } => commands::charter::drift::run(
                 &path,
                 &charter_id,
                 range.as_deref(),
                 no_ailog_suppress,
+                no_batch_ledger_check,
+            ),
+            CharterCommands::BatchComplete {
+                charter_id,
+                batch_number,
+                note,
+                non_interactive,
+                path,
+            } => commands::charter::batch_complete::run(
+                &path,
+                &charter_id,
+                batch_number,
+                note.as_deref(),
+                non_interactive,
             ),
             CharterCommands::Audit {
                 charter_id,

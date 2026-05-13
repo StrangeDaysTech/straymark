@@ -117,14 +117,20 @@ curl -X PUT "https://${SERVICE_HOST}/api/v1/.../..." \
 3. [实现任务 2].
 4. [...]
 5. AILOG (`risk_level: [low|medium|high]`, `review_required: [true|false]`).
-6. 本地验证通过且干净.
-7. **自动检查清单漂移**（当 CLI 路线图的第 2 阶段发布时）：
+6. **对于多批次执行（3+ 批次或 >1 天）**：在 AILOG 中维护
+   `## Batch Ledger`（批次台账）。每个批次的 commit 之后，运行
+   `straymark charter batch-complete <CHARTER-ID> <N>` 在推送前更新
+   台账。关闭时的 drift gate 将拒绝任何仍为 `(pending)` 的
+   `### Batch N`。对于单批次 Charter，请跳过此步骤——AILOG 中的
+   `## 执行的操作` 已足够。
+7. 本地验证通过且干净.
+8. **自动检查清单漂移**（当 CLI 路线图的第 2 阶段发布时）：
    `straymark charter drift CHARTER-NN <range>` 在提交**之前**检测声明的文件
    与修改的文件之间的漂移。如果它报告遗漏，请完成工作或在 AILOG 的
    `## Risk` 下记录为 `R<N+1> (new, not in Charter)`。如果它报告范围扩展，
    请在 AILOG 中记录原因（mock 更新、生成的文件、漂移修复预先存在等）。
    在第 2 阶段发布之前，手动运行 Sentinel 的 `check-plan-drift.sh` 以获得相同效果。
-8. 提交 + 推送 + 打开 PR.
+9. 提交 + 推送 + 打开 PR.
 
 ## Charter 关闭
 

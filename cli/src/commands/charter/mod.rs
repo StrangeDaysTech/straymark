@@ -7,6 +7,7 @@
 //! Phase 3 will add `audit` (multi-model external audit).
 
 pub mod audit;
+pub mod batch_complete;
 pub mod close;
 pub mod drift;
 pub mod list;

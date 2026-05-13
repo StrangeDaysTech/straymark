@@ -26,7 +26,8 @@ use colored::Colorize;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use crate::charter::{self, Charter};
+use crate::ailog;
+use crate::charter::{self, Charter, CharterStatus};
 use crate::utils;
 
 const DEFAULT_RANGE: &str = "HEAD~1..HEAD";
@@ -36,6 +37,7 @@ pub fn run(
     charter_id: &str,
     range: Option<&str>,
     no_ailog_suppress: bool,
+    no_batch_ledger_check: bool,
 ) -> Result<()> {
     let resolved = utils::resolve_project_root(path)
         .ok_or_else(|| anyhow!("StrayMark not installed. Run 'straymark init' first."))?;
@@ -172,10 +174,10 @@ pub fn run(
         }
     }
 
-    // Final exit code: if AILOG-suppression cleared all omitted paths, the
-    // script-reported exit is overridden to 0 (the user did the right thing
-    // by documenting the risk in an AILOG).
-    let final_exit = if raw_exit == 1 && omitted_after.is_empty() && !suppressions.is_empty() {
+    // Final exit code from file-vs-commit drift: if AILOG-suppression cleared
+    // all omitted paths, the script-reported exit is overridden to 0 (the user
+    // did the right thing by documenting the risk in an AILOG).
+    let drift_exit = if raw_exit == 1 && omitted_after.is_empty() && !suppressions.is_empty() {
         println!();
         println!(
             "{} all declared-omitted paths are documented in AILOGs — drift accepted.",
@@ -186,10 +188,80 @@ pub fn run(
         raw_exit
     };
 
+    // Batch Ledger gate (cli-3.13.0, GH #146): if the Charter is past `declared`
+    // and any AILOG `### Batch N` is still `(pending)`, reject. Skipped when:
+    //   - `--no-batch-ledger-check` flag is set
+    //   - Charter status is `declared` (nothing has been executed yet)
+    //   - the AILOG does not have a `## Batch Ledger` section (opt-in pattern)
+    let mut ledger_failures: Vec<(String, Vec<u32>)> = Vec::new();
+    if !no_batch_ledger_check
+        && !matches!(charter.frontmatter.status, CharterStatus::Declared)
+    {
+        if let Some(ids) = &charter.frontmatter.originating_ailogs {
+            ledger_failures = collect_pending_batch_failures(project_root, ids);
+        }
+    }
+
+    if !ledger_failures.is_empty() {
+        println!();
+        println!(
+            "{} {} AILOG(s) have `### Batch N` entries still marked `(pending)`:",
+            "WARNING:".red().bold(),
+            ledger_failures.len()
+        );
+        for (ailog_id, batches) in &ledger_failures {
+            let list = batches
+                .iter()
+                .map(|n| format!("Batch {}", n))
+                .collect::<Vec<_>>()
+                .join(", ");
+            println!("  - {}: {}", ailog_id, list);
+        }
+        println!();
+        println!(
+            "  Action: run `straymark charter batch-complete {} <N>` for each pending batch,\n          or pass `--no-batch-ledger-check` if the ledger is intentionally consolidated post-close.",
+            charter.frontmatter.charter_id
+        );
+    }
+
+    let final_exit = if !ledger_failures.is_empty() {
+        1
+    } else {
+        drift_exit
+    };
+
     if final_exit != 0 {
         std::process::exit(final_exit);
     }
     Ok(())
+}
+
+/// For each AILOG referenced by the Charter, parse its `## Batch Ledger` and
+/// collect (ailog_id, [pending batch numbers]) when at least one batch is
+/// pending. AILOGs without a ledger contribute nothing — the section is
+/// opt-in.
+fn collect_pending_batch_failures(
+    project_root: &Path,
+    ailog_ids: &[String],
+) -> Vec<(String, Vec<u32>)> {
+    let agent_logs_dir = ailog::agent_logs_dir(project_root);
+    if !agent_logs_dir.exists() {
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    for ailog_id in ailog_ids {
+        let Some(path) = ailog::find_ailog_file(&agent_logs_dir, ailog_id) else {
+            continue;
+        };
+        let Ok(content) = std::fs::read_to_string(&path) else {
+            continue;
+        };
+        let pending = ailog::pending_batches(&content);
+        if !pending.is_empty() {
+            out.push((ailog_id.clone(), pending));
+        }
+    }
+    out
 }
 
 /// Locate `bash` in PATH. Returns `None` if not found. We resolve it
@@ -263,10 +335,7 @@ fn compute_ailog_suppressions(
         _ => return Ok(hits),
     };
 
-    let agent_logs_dir = project_root
-        .join(".straymark")
-        .join("07-ai-audit")
-        .join("agent-logs");
+    let agent_logs_dir = ailog::agent_logs_dir(project_root);
     if !agent_logs_dir.exists() {
         return Ok(hits);
     }
@@ -274,7 +343,7 @@ fn compute_ailog_suppressions(
     // Collect Risk sections from all referenced AILOGs once.
     let mut risk_blobs: Vec<(String, String)> = Vec::new();
     for ailog_id in &ailog_ids {
-        if let Some(path) = find_ailog_file(&agent_logs_dir, ailog_id) {
+        if let Some(path) = ailog::find_ailog_file(&agent_logs_dir, ailog_id) {
             if let Ok(content) = std::fs::read_to_string(&path) {
                 if let Some(risk) = extract_risk_section(&content) {
                     risk_blobs.push((ailog_id.clone(), risk));
@@ -292,39 +361,6 @@ fn compute_ailog_suppressions(
         }
     }
     Ok(hits)
-}
-
-/// Find the AILOG file matching the given AILOG ID. Searches the agent-logs
-/// directory recursively and matches by filename prefix (since AILOG files are
-/// named `AILOG-YYYY-MM-DD-NNN-slug.md`).
-fn find_ailog_file(agent_logs_dir: &Path, ailog_id: &str) -> Option<PathBuf> {
-    // The id may be either bare (AILOG-2026-05-02-001) or include a slug
-    // (AILOG-2026-05-02-001-foo). We match the bare prefix.
-    let prefix: String = ailog_id
-        .split('-')
-        .take(5) // "AILOG", "YYYY", "MM", "DD", "NNN"
-        .collect::<Vec<_>>()
-        .join("-");
-    walk_for_prefix(agent_logs_dir, &prefix)
-}
-
-fn walk_for_prefix(dir: &Path, prefix: &str) -> Option<PathBuf> {
-    let entries = std::fs::read_dir(dir).ok()?;
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if path.is_dir() {
-            if let Some(found) = walk_for_prefix(&path, prefix) {
-                return Some(found);
-            }
-            continue;
-        }
-        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-            if name.starts_with(prefix) && name.ends_with(".md") {
-                return Some(path);
-            }
-        }
-    }
-    None
 }
 
 /// Extract the `## Risk` / `## Riesgos` / `## 风险` section body from an AILOG.
@@ -432,31 +468,79 @@ bla.
         assert!(extract_risk_section(ailog).is_none());
     }
 
+    // Note: `find_ailog_file` tests now live in `crate::ailog` since the
+    // function was promoted to the shared module for use by `batch_complete`.
+
     #[test]
-    fn find_ailog_file_matches_prefix_with_slug() {
+    fn collect_pending_batch_failures_finds_pending_entries() {
         let tmp = tempfile::TempDir::new().unwrap();
-        let agent_logs = tmp.path().join("agent-logs");
+        let agent_logs = tmp.path().join(".straymark/07-ai-audit/agent-logs");
         std::fs::create_dir_all(&agent_logs).unwrap();
-        let path = agent_logs.join("AILOG-2026-04-28-024-implement-baseline.md");
-        std::fs::write(&path, "stub\n").unwrap();
+        let ailog = agent_logs.join("AILOG-2026-05-13-001-test.md");
+        std::fs::write(
+            &ailog,
+            r#"# AILOG
+## Batch Ledger
 
-        let found = find_ailog_file(&agent_logs, "AILOG-2026-04-28-024").unwrap();
-        assert_eq!(found, path);
+### Batch 1 — Setup
 
-        // Also match when the full id with slug is given.
-        let found2 = find_ailog_file(&agent_logs, "AILOG-2026-04-28-024-implement-baseline").unwrap();
-        assert_eq!(found2, path);
+Done.
+
+### Batch 2 — Impl
+
+(pending)
+
+### Batch 3 — Tests
+
+(pending)
+"#,
+        )
+        .unwrap();
+
+        let report =
+            collect_pending_batch_failures(tmp.path(), &["AILOG-2026-05-13-001".to_string()]);
+        assert_eq!(report.len(), 1);
+        assert_eq!(report[0].0, "AILOG-2026-05-13-001");
+        assert_eq!(report[0].1, vec![2, 3]);
     }
 
     #[test]
-    fn find_ailog_file_recurses_into_subdirs() {
+    fn collect_pending_batch_failures_skips_when_ledger_absent() {
         let tmp = tempfile::TempDir::new().unwrap();
-        let nested = tmp.path().join("agent-logs").join("daemon");
-        std::fs::create_dir_all(&nested).unwrap();
-        let path = nested.join("AILOG-2026-05-01-002-foo.md");
-        std::fs::write(&path, "stub\n").unwrap();
+        let agent_logs = tmp.path().join(".straymark/07-ai-audit/agent-logs");
+        std::fs::create_dir_all(&agent_logs).unwrap();
+        let ailog = agent_logs.join("AILOG-2026-05-13-002-test.md");
+        std::fs::write(&ailog, "# AILOG\n\n## Actions Performed\n\n1. Stuff.\n").unwrap();
 
-        let found = find_ailog_file(&tmp.path().join("agent-logs"), "AILOG-2026-05-01-002").unwrap();
-        assert_eq!(found, path);
+        let report =
+            collect_pending_batch_failures(tmp.path(), &["AILOG-2026-05-13-002".to_string()]);
+        assert!(report.is_empty(), "no ledger → no gate");
+    }
+
+    #[test]
+    fn collect_pending_batch_failures_passes_when_all_filled() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let agent_logs = tmp.path().join(".straymark/07-ai-audit/agent-logs");
+        std::fs::create_dir_all(&agent_logs).unwrap();
+        let ailog = agent_logs.join("AILOG-2026-05-13-003-test.md");
+        std::fs::write(
+            &ailog,
+            r#"# AILOG
+## Batch Ledger
+
+### Batch 1 — Setup
+
+Done.
+
+### Batch 2 — Impl
+
+Done too.
+"#,
+        )
+        .unwrap();
+
+        let report =
+            collect_pending_batch_failures(tmp.path(), &["AILOG-2026-05-13-003".to_string()]);
+        assert!(report.is_empty(), "all batches filled → no failures");
     }
 }
