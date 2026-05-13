@@ -233,4 +233,4 @@ Contributed via [issue #111](https://github.com/StrangeDaysTech/straymark/issues
 
 ---
 
-*StrayMark v4.13.2 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.13.3 | [Strange Days Tech](https://strangedays.tech)*

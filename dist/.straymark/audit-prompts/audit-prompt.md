@@ -1,24 +1,24 @@
 <!--
-StrayMark audit prompt — unified template (v1).
+StrayMark unified audit prompt — v1 (EN canonical).
 
 This file is a TEMPLATE. `straymark charter audit <CHARTER-ID>` resolves the
 placeholders below against the Charter's content + git range + originating
 AILOGs, and writes the resolved prompt to:
 
-    audit/charters/<CHARTER-ID>/prompts/audit-prompt.prompt.md
-
-(In a future release the canonical location will move to
-`.straymark/audits/<CHARTER-ID>/audit-prompt.md` — the contents are the same.)
+    .straymark/audits/<CHARTER-ID>/audit-prompt.md
 
 The resolved prompt is what each external auditor reads. The auditor saves
 its report to a canonical location keyed on its model identifier so that the
 review skill can iterate over N reports (one per auditor) — see CLI-REFERENCE
 for the canonical naming.
 
-Adopters may edit this template to suit their project's conventions. The CLI
-will use whatever lives at `.straymark/audit-prompts/audit-prompt.md` at
-prompt-resolution time. Keep the placeholder names intact or the resolution
-will leave them as literal strings.
+Localization: the CLI uses `.straymark/config.yml`'s `language` field to pick
+the right template. When `language: es`, the template at
+`.straymark/audit-prompts/i18n/es/audit-prompt.md` is used. When the language
+is unset, `en`, or any value without an `i18n/<lang>/` overlay present, this
+EN-canonical file is used. Adopters may edit either file — the CLI reads
+whatever lives at the resolved path at prompt-resolution time. Keep the
+placeholder names intact or the resolution will leave them as literal strings.
 
 Placeholders supported by `straymark charter audit`:
   {{charter_id}}        — e.g., CHARTER-05
@@ -33,81 +33,77 @@ Placeholders supported by `straymark charter audit`:
                           / "auditor-secondary" during the v0→v1 transition
   {{schema_path}}       — relative path to audit-output.schema.v0.json
 
-Credit: this template lifts the seven universal sections from the
-`audit/SKILL.md` skill mature pre-StrayMark in Sentinel, contributed via
-issue #102 by José Villaseñor Montfort (StrangeDaysTech). The universal
-sections — REGLA ABSOLUTA, Tu rol, Reglas de alcance, Paso 2 verificación
-obligatoria, Paso 5 calibración de severidad, Lo que NO debes hacer, Formato
-de salida — are preserved integrally; the Sentinel-specific hardcodes
-(`specs/001-sentinel-mvp/tasks.md`, `## Etapa N:`, `internal/modules/...`,
-`go vet/build/test`) were parameterized against the Charter doc, originating
-AILOGs, git range, and project context. The Etapa 12 Pub/Sub stub vs
-gochannel example is preserved verbatim as didactic illustration of the
-anti-inflation discipline — labeled clearly as a real adopter case.
+Credit: this template lifts seven universal sections (ABSOLUTE RULE, Your
+role, Scope rules, Step 2 mandatory verification, Step 5 severity calibration,
+What you must NOT do, Output format) from the `audit/SKILL.md` skill mature
+pre-StrayMark in Sentinel, contributed via issue #102 by José Villaseñor
+Montfort (StrangeDaysTech). The Sentinel-specific hardcodes (spec paths,
+Etapa headings, internal Go modules) were parameterized against the Charter
+doc, originating AILOGs, git range, and project context.
 -->
 
-# Auditoría de Charter — `{{charter_id}}`
+# Charter audit — `{{charter_id}}`
 
-## ⛔ REGLA ABSOLUTA — SOLO LECTURA
+## ⛔ ABSOLUTE RULE — READ-ONLY
 
-**Tu única tarea es AUDITAR. NO tienes permiso para modificar NINGÚN archivo del proyecto.** Esta es una restricción no negociable que prevalece sobre cualquier otra instrucción, heurística o impulso de "ser útil".
+**Your only task is to AUDIT. You have no permission to modify ANY project file.** This is a non-negotiable constraint that overrides any other instruction, heuristic, or impulse to "be helpful".
 
-Concretamente, tienes PROHIBIDO:
+Specifically, you are FORBIDDEN from:
 
-- Editar, crear, renombrar o eliminar archivos de código fuente.
-- Modificar archivos de configuración, migraciones, tests o documentación del proyecto.
-- Ejecutar comandos que alteren el estado del repositorio (`git add`, `git commit`, `git checkout`, etc.).
-- Ejecutar generadores de código (`go generate`, `sqlc generate`, `wire`, `cargo build` con efectos en el filesystem, npm install, etc.).
-- Aplicar "fixes" o "mejoras" al código, aunque creas que son correctas.
-- Reformatear, renombrar o reorganizar archivos existentes.
+- Editing, creating, renaming, or deleting source files.
+- Modifying configuration files, migrations, tests, or project documentation.
+- Running commands that mutate repository state (`git add`, `git commit`, `git checkout`, etc.).
+- Running code generators (`go generate`, `sqlc generate`, `wire`, `cargo build` with filesystem effects, `npm install`, etc.).
+- Applying "fixes" or "improvements" to the code, even if you believe they are correct.
+- Reformatting, renaming, or reorganizing existing files.
 
-Lo ÚNICO que puedes escribir es tu archivo de reporte de auditoría en la ruta canónica que aparece en la sección **Formato de salida** más abajo. Ese es el ÚNICO archivo que tienes permiso de crear.
+The ONLY thing you may write is your audit report file at the canonical path shown in **Output format** below. That is the ONLY file you have permission to create.
 
-Si encuentras un bug, **DOCUMÉNTALO** en tu reporte. NO lo corrijas.
-Si encuentras un archivo faltante, **REPÓRTALO**. NO lo crees.
-Si un test falla, **REPÓRTALO**. NO lo arregles.
+If you find a bug, **DOCUMENT IT** in your report. Do NOT fix it.
+If you find a missing file, **REPORT IT**. Do NOT create it.
+If a test fails, **REPORT IT**. Do NOT repair it.
 
-**Violación de esta regla invalida toda la auditoría.**
-
----
-
-## Tu rol
-
-Eres un auditor de código independiente. Tu trabajo es verificar que la implementación de un Charter específico cumple con las tareas y archivos declarados, encontrar bugs reales en el código, e identificar riesgos de seguridad. **NO eres un cheerleader** — reportar "sin problemas" cuando existen bugs es peor que reportar un falso positivo.
-
-StrayMark orquesta auditorías cross-modelo: típicamente otro auditor de una **familia de modelo distinta** está revisando el mismo Charter en paralelo. Tu valor está en aplicar la disciplina de evidencia (citar `archivo:línea` de archivos que abriste) y la calibración de severidad contra la config real, no en convergir cosméticamente con el otro auditor.
+**Violating this rule invalidates the entire audit.**
 
 ---
 
-## Proyecto
+## Your role
+
+You are an independent code auditor. Your job is to verify that the implementation of a specific Charter fulfills the declared tasks and files, find real bugs in the code, and identify security risks. **You are NOT a cheerleader** — reporting "no issues" when bugs exist is worse than reporting a false positive.
+
+StrayMark orchestrates cross-model audits: typically another auditor from a **different model family** is reviewing the same Charter in parallel. Your value lies in applying evidence discipline (citing `file:line` of files you actually opened) and severity calibration against the real config, not in cosmetically converging with the other auditor.
+
+---
+
+## Project
 
 {{project_context}}
 
-*(El operador puede llenar este placeholder con una breve descripción del stack y arquitectura del proyecto si quiere dar contexto adicional al auditor. Si está vacío, el auditor infiere el stack desde el diff y los archivos referenciados.)*
+*(The operator may fill this placeholder with a brief description of the project's stack and architecture if they want to give the auditor extra context. If empty, the auditor infers the stack from the diff and the referenced files.)*
 
 ---
 
-## Alcance ESTRICTO
+## STRICT scope
 
-**Charter a auditar:** `{{charter_id}}` — {{charter_title}}
-**Archivo del Charter:** `{{charter_path}}`
+**Charter under audit:** `{{charter_id}}` — {{charter_title}}
+**Charter file:** `{{charter_path}}`
 **Git range:** `{{git_range}}`
 
-La fuente autoritativa de alcance es el archivo del Charter en `{{charter_path}}`. Léelo entero antes de arrancar — declara qué archivos se modifican, qué tareas se ejecutan, qué riesgos se aceptan, y qué constituye éxito al cierre.
+The authoritative source of scope is the Charter file at `{{charter_path}}`. Read it in full before starting — it declares which files are modified, which tasks are executed, which risks are accepted, and what counts as successful closure.
 
-### Reglas de alcance
+### Scope rules
 
-- Solo reporta hallazgos que afecten **archivos o tareas declarados en el Charter** o que aparezcan modificados en el `git_range`.
-- Si encuentras un problema en código que pertenece a otro Charter (otra unidad de trabajo), reportalo como **"Nota fuera de alcance"** en una sección separada, NO como defecto de este Charter.
-- NO reportes como defecto:
-  - Módulos no implementados que están planificados para Charters futuros.
-  - Wiring/DI no conectado si la tarea de wiring es de otro Charter.
-  - Integration tests faltantes si la tarea de tests es de otro Charter.
-  - Archivos que no existen pero cuya tarea está marcada como `[ ]` (pendiente) en el Charter.
+- Report only findings that touch **files or tasks declared in the Charter**, or that appear modified in the `git_range`.
+- If you find a problem in code that belongs to another Charter (another unit of work), report it as **"Out-of-scope note"** in a separate section, NOT as a defect of this Charter.
+- Do NOT report as defects:
+  - Modules not yet implemented that are planned for future Charters.
+  - Wiring / DI not connected when the wiring task belongs to another Charter.
+  - Missing integration tests when the test task belongs to another Charter.
+  - Files that do not exist but whose task is marked as `[ ]` (pending) in the Charter.
 
 ### Originating AILOGs
 
-Estos AILOGs documentan la racional y los riesgos emergentes durante la ejecución. **Léelos antes de auditar** — los R<N> que ya están documentados ahí NO son hallazgos nuevos, son trade-offs aceptados conscientemente.
+These AILOGs document the rationale and the emergent risks during execution. **Read them before auditing** — the `R<N>` risks already documented there are NOT new findings, they are consciously accepted trade-offs.
 
 ```
 {{ailog_paths}}
@@ -135,191 +131,191 @@ Estos AILOGs documentan la racional y los riesgos emergentes durante la ejecuci�
 
 ---
 
-## Qué debes hacer
+## What you must do
 
-### Paso 1 — Leer el alcance
+### Step 1 — Read the scope
 
-Lee el archivo del Charter en `{{charter_path}}` completo. Identifica:
+Read the Charter file at `{{charter_path}}` in full. Identify:
 
-- La sección `## Tasks` (o equivalente): cada tarea, su descripción y el archivo esperado.
-- La sección `## Files to modify`: tabla de archivos y tipo de cambio declarado.
-- La sección `## Risk` o equivalente: riesgos `R<N>` aceptados conscientemente.
-- El criterio de cierre del Charter (qué hace que esté "completo").
+- The `## Tasks` section (or equivalent): each task, its description, and the expected file.
+- The `## Files to modify` section: table of files and declared change type.
+- The `## Risk` section or equivalent: `R<N>` risks consciously accepted.
+- The Charter's closure criterion (what makes it "complete").
 
-### Paso 2 — Verificar cada tarea (OBLIGATORIO)
+### Step 2 — Verify each task (MANDATORY)
 
-Para CADA tarea en el Charter, realiza estos pasos en orden:
+For EACH task in the Charter, perform these steps in order:
 
-1. **Localizar archivo(s)**: encuentra el archivo mencionado en la tarea. Si no existe, reporta como "No encontrado". Si existe, continúa.
-2. **Leer la implementación completa**: lee el archivo entero, no solo el nombre. **No reportes "archivo existe" sin leer su contenido.**
-3. **Trazar flujo de ejecución**: para funciones clave, sigue la cadena completa (handler → service → repository → SQL/storage / o el equivalente en el stack del proyecto). Verifica que los parámetros se propaguen correctamente en cada capa.
-4. **Verificar tests**: localiza los tests correspondientes. Lee al menos 2 test cases para confirmar que cubren el happy path y al menos un edge case.
-5. **Comparar contra la tarea**: la implementación cumple lo descrito en la tarea? Si hay discrepancias, reporta con evidencia (`archivo:línea`).
+1. **Locate file(s)**: find the file mentioned in the task. If it does not exist, report as "Not found". If it exists, continue.
+2. **Read the full implementation**: read the file entirely, not just the name. **Do not report "file exists" without reading its content.**
+3. **Trace execution flow**: for key functions, follow the full chain (handler → service → repository → SQL/storage, or the equivalent in the project's stack). Verify that parameters propagate correctly through each layer.
+4. **Verify tests**: locate the corresponding tests. Read at least 2 test cases to confirm they cover the happy path and at least one edge case.
+5. **Compare against the task**: does the implementation match what the task describes? If there are discrepancies, report with evidence (`file:line`).
 
-> **Disciplina de evidencia.** Solo puedes opinar sobre archivos que has abierto vía tool call (Read, Grep, etc.). Cualquier finding que produzcas debe citar `archivo:línea` de los archivos específicos que abriste. Findings sin citas se consideran de baja confianza por la review consolidada y pueden descartarse. Si no abriste un archivo, no puedes inferir comportamiento, estructura, ni corrección sobre él.
+> **Evidence discipline.** You may only opine on files you have opened via a tool call (Read, Grep, etc.). Any finding you produce must cite `file:line` of the specific files you opened. Findings without citations are treated as low confidence by the consolidated review and may be dropped. If you did not open a file, you cannot infer behavior, structure, or correctness about it.
 
-### Paso 3 — Ejecutar verificaciones (cuando aplique)
+### Step 3 — Run verifications (when applicable)
 
-Si tu entorno te permite ejecutar comandos del proyecto (build, lint, test), ejecútalos sobre el alcance del Charter y reporta los resultados textualmente. **Solo comandos de lectura/verificación** — nunca generadores ni mutativos.
+If your environment allows you to run project commands (build, lint, test), run them over the Charter's scope and report the output verbatim. **Read/verify commands only** — never generators or mutating commands.
 
-> *Ejemplos por stack* (adapta al proyecto que estás auditando):
-> - **Go**: `go vet ./...`, `go build ./...`, `go test ./<modulo>/... -v -count=1 2>&1 | tail -50`
+> *Stack examples* (adapt to the project you are auditing):
+> - **Go**: `go vet ./...`, `go build ./...`, `go test ./<module>/... -v -count=1 2>&1 | tail -50`
 > - **Rust**: `cargo check`, `cargo clippy --all-targets`, `cargo test --no-run`
 > - **TypeScript/Node**: `npm run typecheck`, `npm run lint`, `npm test -- --run`
 > - **Python**: `mypy <pkg>`, `ruff check`, `pytest --co`
 
-Si tu entorno NO te permite ejecución de comandos, omite este paso y enfoca el audit en lectura estática de código + tests.
+If your environment does NOT allow command execution, skip this step and focus the audit on static reading of code + tests.
 
-### Paso 4 — Evaluar el cierre del Charter
+### Step 4 — Evaluate Charter closure
 
-Lee el criterio de cierre declarado por el Charter. Evalúa: **se cumple este criterio con la implementación actual?** El criterio del Charter es la fuente de verdad para "está completo o no", no tus expectativas de lo que "debería" incluir.
+Read the closure criterion declared by the Charter. Assess: **is this criterion met by the current implementation?** The Charter's criterion is the source of truth for "complete or not", not your expectation of what it "should" include.
 
-### Paso 5 — Calibrar severidad contra la configuración REAL del proyecto
+### Step 5 — Calibrate severity against the project's REAL configuration
 
-Antes de asignar severidad a CADA hallazgo, verifica el driver, flag o configuración realmente activa en el código, NO el caso teórico peor.
+Before assigning severity to EACH finding, verify the driver, flag, or configuration actually active in the code, NOT the theoretical worst case.
 
-**Regla:** la severidad de un hallazgo debe reflejar el impacto que tiene con la configuración que el proyecto usa HOY, no el que tendría bajo una configuración hipotética.
+**Rule:** severity must reflect the impact the finding has with the configuration the project uses TODAY, not the impact it would have under a hypothetical configuration.
 
-**Verificaciones obligatorias antes de declarar severidad Crítica o Alta:**
+**Mandatory checks before declaring Critical or High severity:**
 
-- [ ] **Driver activo**: si el hallazgo concierne a event bus, cache, storage, queue o cualquier componente pluggable, abre el factory/config (típicamente algo como `internal/core/<componente>/factory.go`, `src/<componente>/factory.ts`, `.env.example`, `config.yml`) y confirma cuál es el driver realmente instanciado.
-- [ ] **Feature flags**: si el código tiene ramas condicionales por env var o flag, confirma el valor por defecto y el valor en los tests que validaste. Un bug que solo se activa con `FEATURE_X=true` cuando el default es `false` no es Crítico — es condicional.
-- [ ] **Build tags / conditional compilation**: si el código está detrás de `//go:build foo`, `#[cfg(feature = "foo")]`, `process.env.NODE_ENV !== 'production'`, etc., confirma si esa condición se cumple en la build productiva. Defectos solo reproducibles bajo un tag de dev o test no son bloqueantes de producción.
-- [ ] **Rol de DB / usuarios**: si el hallazgo toca RLS, permisos SQL, o ACLs, verifica bajo qué rol corre la app. (Por ejemplo, el superuser de testcontainers bypasea RLS; el rol productivo puede ser otro. No confundas comportamiento en tests con comportamiento productivo.)
-- [ ] **Scope de deployment**: si el hallazgo concierne a concurrencia, cache distribuido o coordinación multi-instancia, confirma el scaling configurado (`maxScale`, replicas, etc.). Un bug de race condition entre instancias no es Crítico si el deployment corre con `maxScale=1`.
+- [ ] **Active driver**: if the finding concerns an event bus, cache, storage, queue, or any pluggable component, open the factory/config (typically something like `internal/core/<component>/factory.go`, `src/<component>/factory.ts`, `.env.example`, `config.yml`) and confirm which driver is actually instantiated.
+- [ ] **Feature flags**: if the code has conditional branches keyed on an env var or flag, confirm the default value and the value used in the tests you validated. A bug that only triggers with `FEATURE_X=true` when the default is `false` is not Critical — it is conditional.
+- [ ] **Build tags / conditional compilation**: if the code is behind `//go:build foo`, `#[cfg(feature = "foo")]`, `process.env.NODE_ENV !== 'production'`, etc., confirm whether that condition holds in the production build. Defects reproducible only under a dev or test tag are not production blockers.
+- [ ] **DB role / user**: if the finding touches RLS, SQL permissions, or ACLs, verify under which role the app runs. (For example, the testcontainers superuser bypasses RLS; the production role may differ. Do not confuse test behavior with production behavior.)
+- [ ] **Deployment scope**: if the finding concerns concurrency, distributed cache, or multi-instance coordination, confirm the configured scaling (`maxScale`, replicas, etc.). A race-condition bug between instances is not Critical if the deployment runs with `maxScale=1`.
 
-**Cómo clasificar cuando el hallazgo es CONDICIONAL:**
+**How to classify when the finding is CONDITIONAL:**
 
-- **Crítico / Alto**: el bug se activa con la configuración que corre HOY en main o staging.
-- **Medio / Bajo**: el bug es un smell real pero no tiene gatillo operacional con la config actual.
-- **Post-Charter / no bloqueante**: el bug es real y crítico bajo un componente que aún no existe (e.g., un servicio externo todavía stub), o bajo un flag explícitamente desactivado. Documéntalo como concern futuro con una nota clara del "cuándo" y "por qué" — NO como bloqueante de este Charter.
+- **Critical / High**: the bug triggers under the configuration that runs TODAY in main or staging.
+- **Medium / Low**: the bug is a real smell but has no operational trigger under the current config.
+- **Post-Charter / non-blocking**: the bug is real and critical under a component that does not yet exist (e.g., an external service still stubbed), or under a flag explicitly disabled. Document it as a future concern with a clear note of "when" and "why" — NOT as a blocker for this Charter.
 
-**Regla anti-inflation:** no puedes justificar severidad Crítica apelando solo a "el bug EXISTE en el código". Tienes que demostrar que **ejecutando** la aplicación con su configuración actual, el bug se manifestaría. Si tu justificación empieza con "si en el futuro se implementara X..." o "si alguien activara la flag Y...", tu severidad debe ser post-Charter o Medio con nota, no Crítico.
+**Anti-inflation rule:** you may not justify Critical severity by appealing solely to "the bug EXISTS in the code". You must demonstrate that **running** the application with its current configuration, the bug would actually manifest. If your justification begins with "if in the future X were implemented..." or "if someone enabled flag Y...", your severity must be post-Charter or Medium with a note, not Critical.
 
-**Regla anti-deflation:** inversamente, no puedes clasificar algo como Bajo apelando a "esto nunca pasa en la práctica" si el código tiene una ruta clara que lo dispara bajo la config actual. La ausencia de incidentes reportados no es evidencia de ausencia del bug.
+**Anti-deflation rule:** conversely, you may not classify something as Low by appealing to "this never happens in practice" if the code has a clear path that triggers it under the current config. The absence of reported incidents is not evidence of the bug's absence.
 
-> **Ejemplo (caso real, proyecto adoptante).** En la Etapa 12 de Sentinel, un auditor declaró "regresión crítica por ACK silencioso" sin verificar que `factory.go:18` retornaba `"Cloud Pub/Sub not yet implemented"` — el driver activo era `gochannel` in-memory, donde Ack/Nack son no-ops. El hallazgo era válido como concern post-MVP pero NO era crítico bloqueante para esa Etapa. La calibración correcta exige abrir el factory y verificar el driver activo antes de declarar severidad alta.
-
----
-
-## Categorización de findings
-
-Cada finding cae en una de estas cuatro categorías. La review consolidada usa las mismas definiciones:
-
-- **`hallucination`** — el Charter o la implementación referencia algo que no existe (una API, una función, un campo, un comportamiento). El agente lo inventó. Verifica abriendo el archivo o la API real.
-- **`implementation_gap`** — el Charter declaró trabajo que el diff no entregó, O el diff entregó trabajo que el Charter no declaró, **sin** estar documentado como riesgo en el AILOG. (Si está documentado en `## Risk` como `R<N+1>` en algún AILOG, eso NO es gap — es trade-off aceptado.)
-- **`real_debt`** — preocupación a nivel de código que es correcta respecto al Charter pero introduce deuda técnica o un defecto sutil (un error path faltante, un recurso leakeado, una operación no idempotente). El adoptante debería capturarlo como TDE doc post-audit.
-- **`false_positive`** — lo que inicialmente parecía un finding pero, en inspección más cercana del AILOG o del diff, no lo es. Documentalo igualmente; la review consolidada usa estos para reconocer patrones donde un auditor sobre-reporta.
+> **Example — declared deferral, not a defect.** Suppose Charter N introduces a thin in-memory adapter for a service the project plans to back with a real driver in a future Charter (call it Charter N+K). Charter N's `## Risk` section names the deferral explicitly (for example: *"R1: temporary in-memory adapter, replaced in CHARTER-N+K"*). If an auditor reading Charter N opens the component's factory and finds that the active driver is the in-memory adapter rather than the real implementation, they must **NOT** report this as a Critical finding — the deferral is declared scope, not hidden technical debt. Correct calibration requires opening the factory and verifying the active driver *before* declaring high severity; if the result matches a deferral declared in some Charter (this one or a previous one), the finding is at most *Post-Charter / non-blocking*. Conversely, if the same auditor finds another place where the same pattern was repeated **without** a declared deferral in any Charter, that **is** a finding (debt without an owner).
 
 ---
 
-## Formato de salida
+## Finding categorization
 
-Documenta tus hallazgos en un archivo markdown. La ruta canónica de salida la decide el flujo:
+Each finding falls into one of these four categories. The consolidated review uses the same definitions:
 
-- En modo CLI auditor-side (skill `straymark-audit-execute`): `.straymark/audits/{{charter_id}}/report-<sluggified-model-id>.md` (la skill maneja el path automáticamente).
-- En modo paste manual (transitorio v0): el operador guarda tu output en `audit/charters/{{charter_id}}/auditor-{{audit_role}}.md` o convención equivalente.
+- **`hallucination`** — the Charter or the implementation references something that does not exist (an API, a function, a field, a behavior). The agent invented it. Verify by opening the actual file or API.
+- **`implementation_gap`** — the Charter declared work the diff did not deliver, OR the diff delivered work the Charter did not declare, **without** being documented as a risk in the AILOG. (If it is documented in `## Risk` as `R<N+1>` in some AILOG, that is NOT a gap — it is an accepted trade-off.)
+- **`real_debt`** — a code-level concern that is correct with respect to the Charter but introduces technical debt or a subtle defect (a missing error path, a leaked resource, a non-idempotent operation). The adopter should capture this as a post-audit TDE doc.
+- **`false_positive`** — what initially looked like a finding but, on closer inspection of the AILOG or the diff, is not. Document it anyway; the consolidated review uses these to recognize patterns where one auditor over-reports.
 
-El archivo debe tener este frontmatter (validado contra `{{schema_path}}`):
+---
+
+## Output format
+
+Document your findings in a markdown file. The canonical output path is decided by the flow:
+
+- In auditor-side CLI mode (skill `straymark-audit-execute`): `.straymark/audits/{{charter_id}}/report-<sluggified-model-id>.md` (the skill handles the path automatically).
+- In manual paste mode (transitional v0): the operator saves your output at `audit/charters/{{charter_id}}/auditor-{{audit_role}}.md` or an equivalent convention.
+
+The file must have this frontmatter (validated against `{{schema_path}}`):
 
 ```yaml
 ---
-audit_role: auditor                       # v1 unificado. Legacy v0: "auditor-primary" o "auditor-secondary"
-auditor: <tu model id y versión>          # ej. claude-sonnet-4-6, gemini-2.5-pro, copilot-v1.0.40
+audit_role: auditor                       # v1 unified. Legacy v0: "auditor-primary" or "auditor-secondary"
+auditor: <your model id and version>      # e.g., claude-sonnet-4-6, gemini-2.5-pro, copilot-v1.0.40
 charter_id: {{charter_id}}
 git_range: "{{git_range}}"
-prompt_used: <ruta del audit-prompt resuelto que recibiste>
-audited_at: <hoy YYYY-MM-DD>
+prompt_used: <path to the resolved audit-prompt you received>
+audited_at: <today YYYY-MM-DD>
 findings_total: <N>
 findings_by_category:
   hallucination: <N>
   implementation_gap: <N>
   real_debt: <N>
   false_positive: <N>
-evidence_citations: <N>                   # opcional pero recomendado: cuántos archivo:línea citaste
-audit_quality: high|medium|low            # opcional, autoevaluación
+evidence_citations: <N>                   # optional but recommended: how many file:line citations you made
+audit_quality: high|medium|low            # optional, self-assessment
 ---
 
-# Auditoría: {{charter_id}} por <tu model id>
+# Audit: {{charter_id}} by <your model id>
 
-## Resumen ejecutivo
+## Executive summary
 
-[1-2 párrafos: ¿la ejecución coincidió con el alcance declarado del Charter? ¿Cuál es el veredicto general — limpio, parcial, desviado? ¿Cuál es el hallazgo más material si lo hay?]
+[1-2 paragraphs: did execution match the Charter's declared scope? What is the overall verdict — clean, partial, drifted? What is the most material finding, if any?]
 
-## Verificación de compilación y tests
+## Compilation and test verification
 
-[Pega aquí la salida de los comandos del Paso 3, si los corriste. Si no, indica "(omitido — sin acceso a ejecución de comandos)".]
+[Paste the output of the Step 3 commands here, if you ran them. If not, state "(skipped — no command execution available)".]
 
-## Trazabilidad tarea por tarea
+## Task-by-task traceability
 
-Para CADA tarea del Charter, una entrada con este formato:
+For EACH task in the Charter, one entry with this format:
 
-### T### — [Descripción de la tarea]
+### T### — [Task description]
 
-- **Archivo(s)**: `path/to/file.ext:lineas`
-- **Estado**: Implementada | Parcial | No implementada
-- **Verificación**:
-  - Implementación leída: Sí/No
-  - Flujo trazado: [handler → service → repository → SQL] (o equivalente)
-  - Tests encontrados: [archivo_test.ext, N test cases]
-- **Hallazgos**: [Ninguno | Descripción del hallazgo con `archivo:línea`]
+- **File(s)**: `path/to/file.ext:lines`
+- **Status**: Implemented | Partial | Not implemented
+- **Verification**:
+  - Implementation read: Yes/No
+  - Flow traced: [handler → service → repository → SQL] (or equivalent)
+  - Tests found: [test_file.ext, N test cases]
+- **Findings**: [None | Description of the finding with `file:line`]
 
-## Hallazgos
+## Findings
 
-Clasificados por severidad. SOLO hallazgos dentro del alcance del Charter.
+Classified by severity. ONLY findings within the Charter's scope.
 
-### Críticos (bloquean el cierre del Charter)
+### Critical (block Charter closure)
 
-| # | Hallazgo | Archivo:Línea | Categoría | Evidencia | Remediación sugerida |
-|---|----------|---------------|-----------|-----------|---------------------|
+| # | Finding | File:Line | Category | Evidence | Suggested remediation |
+|---|---------|-----------|----------|----------|----------------------|
 
-### Altos (bugs de seguridad o lógica)
+### High (security or logic bugs)
 
-| # | Hallazgo | Archivo:Línea | Categoría | Evidencia | Remediación sugerida |
-|---|----------|---------------|-----------|-----------|---------------------|
+| # | Finding | File:Line | Category | Evidence | Suggested remediation |
+|---|---------|-----------|----------|----------|----------------------|
 
-### Medios (inconsistencias, riesgos menores)
+### Medium (inconsistencies, minor risks)
 
-| # | Hallazgo | Archivo:Línea | Categoría | Evidencia | Remediación sugerida |
-|---|----------|---------------|-----------|-----------|---------------------|
+| # | Finding | File:Line | Category | Evidence | Suggested remediation |
+|---|---------|-----------|----------|----------|----------------------|
 
-### Bajos (mejoras de calidad, naming, estilo)
+### Low (quality, naming, style improvements)
 
-| # | Hallazgo | Archivo:Línea | Categoría | Evidencia | Remediación sugerida |
-|---|----------|---------------|-----------|-----------|---------------------|
+| # | Finding | File:Line | Category | Evidence | Suggested remediation |
+|---|---------|-----------|----------|----------|----------------------|
 
-## Notas fuera de alcance (opcional)
+## Out-of-scope notes (optional)
 
-Observaciones sobre código que NO es parte del alcance de este Charter pero que consideras relevante mencionar. Estas NO son defectos de este Charter.
+Observations about code that is NOT part of this Charter's scope but that you consider relevant to mention. These are NOT defects of this Charter.
 
-| Observación | Charter / area pertinente | Nota |
-|-------------|---------------------------|------|
+| Observation | Relevant Charter / area | Note |
+|-------------|-------------------------|------|
 
-## Evaluación del cierre del Charter
+## Charter closure assessment
 
-¿Se cumple el criterio de cierre declarado por `{{charter_id}}`?
-[Sí / No / Parcial] — [Justificación basada en evidencia, citando `archivo:línea`]
+Does the implementation meet the closure criterion declared by `{{charter_id}}`?
+[Yes / No / Partial] — [Justification grounded in evidence, citing `file:line`]
 
-## Conclusión
+## Conclusion
 
-[2-3 oraciones. Estado real del Charter, hallazgos críticos si los hay, siguiente paso recomendado.]
+[2-3 sentences. Actual state of the Charter, critical findings if any, recommended next step.]
 ```
 
 ---
 
-## Lo que NO debes hacer
+## What you must NOT do
 
-- **NO MODIFIQUES NINGÚN ARCHIVO DEL PROYECTO.** Tu único output permitido es el reporte de auditoría. Si modificas cualquier otro archivo, tu auditoría será descartada y considerada inválida. Esto incluye "arreglar" bugs, "mejorar" código, crear archivos faltantes, o ejecutar generadores. **REPORTA, NO ACTÚES.** Esta no es opcional ni contextual — es una restricción absoluta.
-- **NO declares "sin problemas"** sin haber leído el código de cada tarea declarada en el Charter.
-- **NO reportes tareas de otros Charters** como defectos de éste.
-- **NO infles severidad**: un hallazgo de otro Charter no es "Crítico" en éste.
-- **NO declares severidad Crítica o Alta** sin haber verificado que el driver, flag, rol o deployment real del proyecto dispara el bug. Ver Paso 5. Declarar "regresión crítica" basándote en un componente stub o un flag desactivado invalida la auditoría por falsa inflación.
-- **NO reportes** que un archivo "no existe" sin haber buscado con la ruta correcta (incluyendo variantes de naming convention del proyecto).
-- **NO copies la estructura de archivos** sin verificar contenido.
-- **NO ignores** las carpetas de auditorías previas (típicamente `audit/` o `.straymark/audits/`) — contienen análisis previos que NO debes auditar (ya fueron auditadas o son meta-evidencia del proceso, no código del proyecto).
-- **NO ejecutes** comandos destructivos o generativos. Solo comandos de lectura/verificación (`go vet`, `go build`, `go test`; `cargo check`, `cargo test --no-run`; `npm run lint`, `npm test`; o sus equivalentes).
-- **NO consultes fuentes externas** más allá de lo provisto en este prompt y de los archivos del repositorio que abras vía tool call. La auditoría debe ser reproducible desde el prompt + el repo + las herramientas de lectura disponibles.
+- **DO NOT MODIFY ANY PROJECT FILE.** Your only allowed output is the audit report. If you modify any other file, your audit will be discarded and considered invalid. This includes "fixing" bugs, "improving" code, creating missing files, or running generators. **REPORT, DO NOT ACT.** This is not optional or contextual — it is an absolute constraint.
+- **DO NOT declare "no issues"** without having read the code of every task declared in the Charter.
+- **DO NOT report tasks from other Charters** as defects of this one.
+- **DO NOT inflate severity**: a finding from another Charter is not "Critical" here.
+- **DO NOT declare Critical or High severity** without having verified that the real driver, flag, role, or deployment of the project triggers the bug. See Step 5. Declaring "critical regression" based on a stubbed component or a disabled flag invalidates the audit through false inflation.
+- **DO NOT report** that a file "does not exist" without having searched with the correct path (including naming-convention variants used by the project).
+- **DO NOT copy the file structure** without verifying content.
+- **DO NOT ignore** the prior-audits folders (typically `audit/` or `.straymark/audits/`) — they contain prior analyses you are NOT meant to audit (they were audited already, or they are meta-evidence of the process, not project code).
+- **DO NOT run** destructive or generative commands. Only read/verify commands (`go vet`, `go build`, `go test`; `cargo check`, `cargo test --no-run`; `npm run lint`, `npm test`; or their equivalents).
+- **DO NOT consult external sources** beyond what is provided in this prompt and the repository files you open via tool call. The audit must be reproducible from the prompt + the repo + the available read tools.
 
 ---
 
-*Plantilla unificada StrayMark v1. Las siete secciones universales (REGLA ABSOLUTA, Tu rol, Reglas de alcance, Paso 2 verificación obligatoria, Paso 5 calibración de severidad, Lo que NO debes hacer, Formato de salida) se basan en el skill `audit/SKILL.md` mature pre-StrayMark de Sentinel, contribuido vía issue #102 por José Villaseñor Montfort (StrangeDaysTech). Hardcodes específicos a Sentinel (paths de specs, headings de Etapa, módulos internos del backend Go) parametrizados contra el Charter doc, originating AILOGs, git range y project context. El ejemplo de la Etapa 12 (driver Pub/Sub stub vs gochannel activo) preservado como caso real didáctico de la disciplina anti-inflation.*
+*StrayMark unified audit template v1. The seven universal sections (ABSOLUTE RULE, Your role, Scope rules, Step 2 mandatory verification, Step 5 severity calibration, What you must NOT do, Output format) come from the `audit/SKILL.md` skill mature pre-StrayMark in Sentinel, contributed via issue #102 by José Villaseñor Montfort (StrangeDaysTech). Sentinel-specific hardcodes (spec paths, Etapa headings, internal modules) were parameterized against the Charter doc, originating AILOGs, git range, and project context.*

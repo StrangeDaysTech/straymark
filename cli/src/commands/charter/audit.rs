@@ -187,9 +187,12 @@ fn run_prepare(
 
     let context = build_audit_context(project_root, charter, range)?;
 
-    let template_path = straymark_dir
-        .join("audit-prompts")
-        .join("audit-prompt.md");
+    let lang = crate::config::StrayMarkConfig::resolve_language(project_root);
+    let template_path = crate::utils::resolve_localized_path(
+        &straymark_dir.join("audit-prompts"),
+        "audit-prompt.md",
+        &lang,
+    );
     let template = std::fs::read_to_string(&template_path).with_context(|| {
         format!(
             "Audit prompt template not found at {}. Run `straymark repair` to restore framework files.",
