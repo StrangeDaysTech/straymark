@@ -51,21 +51,23 @@ fn unified_template_has_seven_universal_sections() {
     // Per Propuesta/straymark-audit-cli-flow.md §2 D12, the lift from
     // Sentinel preserves these seven sections integrally. Each is
     // identifiable by a stable heading or distinctive opener that survives
-    // markdown rendering in any viewer the operator uses.
+    // markdown rendering in any viewer the operator uses. fw-4.13.3 moved
+    // the canonical content from ES to EN; the ES version still ships at
+    // `i18n/es/audit-prompt.md`. These assertions pin the EN canonical.
     let sections = [
-        ("REGLA ABSOLUTA", "## ⛔ REGLA ABSOLUTA — SOLO LECTURA"),
-        ("Tu rol", "## Tu rol"),
-        ("Reglas de alcance", "### Reglas de alcance"),
+        ("ABSOLUTE RULE", "## ⛔ ABSOLUTE RULE — READ-ONLY"),
+        ("Your role", "## Your role"),
+        ("Scope rules", "### Scope rules"),
         (
-            "Paso 2 verificación obligatoria",
-            "### Paso 2 — Verificar cada tarea (OBLIGATORIO)",
+            "Step 2 mandatory verification",
+            "### Step 2 — Verify each task (MANDATORY)",
         ),
         (
-            "Paso 5 calibración de severidad",
-            "### Paso 5 — Calibrar severidad contra la configuración REAL del proyecto",
+            "Step 5 severity calibration",
+            "### Step 5 — Calibrate severity against the project's REAL configuration",
         ),
-        ("Formato de salida", "## Formato de salida"),
-        ("Lo que NO debes hacer", "## Lo que NO debes hacer"),
+        ("Output format", "## Output format"),
+        ("What you must NOT do", "## What you must NOT do"),
     ];
     for (label, anchor) in sections {
         assert!(
@@ -109,24 +111,26 @@ fn unified_template_declares_expected_placeholders() {
 }
 
 #[test]
-fn unified_template_preserves_etapa_12_didactic_example() {
-    // The Etapa 12 example (Pub/Sub stub vs gochannel active) is kept
-    // verbatim from Sentinel's audit/SKILL.md as illustration of the
-    // anti-inflation discipline. It must be labeled as a real adopter case.
+fn unified_template_carries_anti_inflation_didactic_example() {
+    // Step 5 must illustrate the anti-inflation discipline with a concrete
+    // example. fw-4.13.3 generalized the previous Sentinel-specific case
+    // ("Etapa 12 Pub/Sub stub vs gochannel") to a vendor-neutral one
+    // ("declared deferral, not a defect") so the prompt does not tie new
+    // adopters to Sentinel's stack. The shape is preserved: the example
+    // must (a) show a deferral declared as a `R<N>` in some Charter and
+    // (b) instruct the auditor to check the active driver before
+    // declaring high severity.
     assert!(
-        UNIFIED_TEMPLATE.contains("Etapa 12"),
-        "didactic Etapa 12 example must be preserved"
+        UNIFIED_TEMPLATE.contains("declared deferral, not a defect"),
+        "anti-inflation example heading missing"
     );
     assert!(
-        UNIFIED_TEMPLATE.contains("gochannel"),
-        "concrete driver name preserved as part of the example"
+        UNIFIED_TEMPLATE.contains("active driver"),
+        "example must instruct the auditor to verify the active driver"
     );
     assert!(
-        UNIFIED_TEMPLATE.contains("(caso real, proyecto adoptante)")
-            || UNIFIED_TEMPLATE.contains("Ejemplo (caso real")
-            || UNIFIED_TEMPLATE.contains("ejemplo de un caso real"),
-        "the example must be explicitly labeled as a real adopter case so \
-         readers don't mistake it for prescription"
+        UNIFIED_TEMPLATE.contains("R1:") || UNIFIED_TEMPLATE.contains("`R1"),
+        "example must reference a declared risk (R<N>) in a Charter"
     );
 }
 
@@ -148,12 +152,12 @@ fn unified_template_credits_sentinel_contribution() {
 #[test]
 fn unified_template_enforces_evidence_discipline() {
     // R11(B): paste-based audits without tool use produce structurally
-    // limited findings. The unified template's "Disciplina de evidencia"
-    // sub-block (inside Paso 2) enforces the path:line citation rule.
+    // limited findings. The unified template's "Evidence discipline"
+    // sub-block (inside Step 2) enforces the file:line citation rule.
     assert!(
-        UNIFIED_TEMPLATE.contains("archivo:línea")
+        UNIFIED_TEMPLATE.contains("file:line")
             && UNIFIED_TEMPLATE.contains("tool call"),
-        "evidence discipline ('archivo:línea' + 'tool call') must be \
+        "evidence discipline ('file:line' + 'tool call') must be \
          enunciated explicitly in the template"
     );
 }

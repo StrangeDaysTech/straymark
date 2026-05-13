@@ -7,6 +7,38 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.13.3 / CLI 3.12.3 — Audit prompt becomes EN-canonical + CLI wires i18n resolution
+
+Aligns the external-audit cycle with the framework's localization convention. Before this release, `dist/.straymark/audit-prompts/audit-prompt.md` was the **only** framework artifact whose canonical content lived in Spanish — every other template, skill, workflow, and governance doc had EN canonical at the root and `i18n/es/` (plus optionally `i18n/zh-CN/`) as overlays, resolved by `resolve_localized_path` (`cli/src/utils.rs:146`). The audit prompt was a Sentinel-derived artifact (parameterized but never translated to EN) and the CLI's `straymark charter audit` command hardcoded the canonical path without going through the i18n resolver — so even if an overlay file existed, the CLI would not have picked it up.
+
+Surfaced empirically when [Sentinel](https://github.com/StrangeDaysTech/sentinel) audited the `straymark explore` rendering and the user noted that audit-cycle templates were ES while all other templates and skills were EN.
+
+### Changed (Framework)
+
+- **`dist/.straymark/audit-prompts/audit-prompt.md`** — rewritten as EN canonical. The seven universal sections (ABSOLUTE RULE, Your role, Scope rules, Step 2 mandatory verification, Step 5 severity calibration, What you must NOT do, Output format) preserved verbatim from the Sentinel-derived original, translated to English. Placeholders (`{{charter_id}}`, `{{charter_title}}`, `{{charter_path}}`, `{{charter_content}}`, `{{git_range}}`, `{{git_diff}}`, `{{ailog_paths}}`, `{{ailog_contents}}`, `{{audit_role}}`, `{{schema_path}}`, `{{project_context}}`) intact and unchanged. HTML documentation header updated to describe the new EN-canonical / `i18n/es/` overlay layout instead of the v0 "future canonical path" note.
+- **`dist/.straymark/audit-prompts/i18n/es/audit-prompt.md`** (new) — the Spanish translation now lives here. Resolved automatically when `.straymark/config.yml` declares `language: es`. Spanish-speaking adopters (Sentinel) continue to receive a Spanish audit prompt.
+- **Etapa 12 Pub/Sub example generalized.** The Step 5 severity-calibration example previously cited Sentinel's "Etapa 12 Pub/Sub stub vs gochannel" case verbatim. Replaced with a generic equivalent ("declared deferral, not a defect" — a charter that introduces a thin adapter slated for replacement in a future Charter) that illustrates the same anti-inflation discipline without tying the prompt to Sentinel's stack. Applied identically to EN and ES.
+- **`dist/dist-manifest.yml`** — version bumped to `4.13.3`. `audit-prompts/i18n/` ships under `.straymark/` (already covered by the `.straymark/` entry in the manifest's `files:` list, no manifest change beyond the version field).
+- **Governance footers** updated to `v4.13.3` across `QUICK-REFERENCE.md`, `AGENT-RULES.md`, `DOCUMENTATION-POLICY.md`, `C4-DIAGRAM-GUIDE.md`, `FOLLOW-UPS-BACKLOG-PATTERN.md` (EN + ES + zh-CN, plus the top-level `dist/.straymark/QUICK-REFERENCE.md`).
+
+### Changed (CLI)
+
+- **`cli/src/commands/charter/audit.rs`** — `prepare_unified_prompt` now reads the project's `language` from `.straymark/config.yml` via `StrayMarkConfig::resolve_language` (`cli/src/config.rs:93-101`) and resolves the template path through `resolve_localized_path` (`cli/src/utils.rs:146-154`), the same pattern used by `straymark new`, `straymark charter new`, and `straymark explore` for their localized assets. No new abstractions introduced — just wired the existing resolver to the existing config reader.
+- **Integration tests** (`cli/tests/charter_audit_test.rs`) — three new tests pin the wiring: `language: es` resolves the ES overlay; `language: zh-CN` with no overlay falls back to EN canonical; explicit `language: en` always picks the canonical EN file.
+
+### Empirical context
+
+The inconsistency was structural (single-artifact ES in an otherwise EN-canonical framework) rather than a bug — `straymark charter audit` worked, the prompt was a competent Spanish prompt, modern auditor LLMs handle it. The cost was twofold: (1) cross-model audit calibration suffers when reports come back in Spanish from Gemini/Claude/Copilot — the delta between auditors competes with normal Spanish phrasing variance instead of being a pure semantic signal; (2) any non-Spanish adopter received a Spanish prompt the first time they ran the audit cycle, which broke the framework's documented convention.
+
+### Adopter guidance
+
+- **Spanish-speaking adopters (Sentinel)**: after `straymark update-framework && straymark update-cli`, keep `language: es` in `.straymark/config.yml` — the ES prompt now resolves automatically via the i18n overlay. The only content difference from the previous version is the generalized example (the "Etapa 12 Pub/Sub" anecdote was replaced with a generic equivalent in the same Spanish voice).
+- **English (default) adopters**: receive the EN prompt out of the box. The prior Spanish artifact is no longer the canonical content at the root.
+- **zh-CN adopters**: fallback to EN canonical until someone contributes `dist/.straymark/audit-prompts/i18n/zh-CN/audit-prompt.md`. No CLI work required to enable that — `resolve_localized_path` already supports it.
+- **Adopters who locally edited their audit-prompt.md**: `straymark update-framework` will overwrite the canonical file with the new EN content. If you customized the prompt, either reapply your edits on top of the EN canonical (recommended — converges with the framework) or move your customization into your project's `i18n/<lang>/audit-prompt.md` overlay (which `straymark update-framework` does not touch).
+
+---
+
 ## CLI 3.12.2 — `straymark explore` shows Charter frontmatter correctly
 
 Fixes a long-standing bug where the **Metadata** panel of `straymark explore` rendered every Charter as `Status: ? UNKNOWN` regardless of the actual `status:` value in the Charter frontmatter. Surfaced by [Sentinel](https://github.com/StrangeDaysTech/sentinel) while reviewing a closed Charter (`CHARTER-13`) in the TUI — the screen showed UNKNOWN even though the Charter's frontmatter clearly read `status: closed`.

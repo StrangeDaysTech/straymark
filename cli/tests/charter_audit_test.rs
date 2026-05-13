@@ -9,6 +9,9 @@ use tempfile::TempDir;
 const AUDIT_PROMPT_UNIFIED: &str = include_str!(
     "../../dist/.straymark/audit-prompts/audit-prompt.md"
 );
+const AUDIT_PROMPT_ES: &str = include_str!(
+    "../../dist/.straymark/audit-prompts/i18n/es/audit-prompt.md"
+);
 const AUDIT_OUTPUT_SCHEMA: &str = include_str!(
     "../../dist/.straymark/schemas/audit-output.schema.v0.json"
 );
@@ -832,3 +835,137 @@ fn audit_explicit_range_overrides_default_resolution() {
         // No fallback warning when --range was passed explicitly.
         .stderr(predicate::str::contains("no upstream branch reachable").not());
 }
+
+// ── i18n: localized audit-prompt resolution ─────────────────────────────
+//
+// fw-4.13.3 / cli-3.12.3 moved the ES prompt to the i18n overlay convention
+// (EN canonical at `.straymark/audit-prompts/audit-prompt.md`, ES at
+// `i18n/es/audit-prompt.md`). The CLI now reads `.straymark/config.yml`'s
+// `language` field to decide which file to load, via
+// `resolve_localized_path` (cli/src/utils.rs).
+//
+// These three tests pin the wiring: ES adopters get the ES prompt; unknown
+// locales fall back to EN; explicit `language: en` always resolves to root.
+
+/// Set up a project with both EN and ES audit-prompt files present. The
+/// `language` field in config.yml decides which one the CLI uses.
+fn setup_straymark_with_es_overlay(dir: &Path, language: &str) {
+    let straymark = dir.join(".straymark");
+    std::fs::create_dir_all(straymark.join("audit-prompts/i18n/es")).unwrap();
+    std::fs::create_dir_all(straymark.join("schemas")).unwrap();
+    std::fs::create_dir_all(straymark.join("07-ai-audit/agent-logs")).unwrap();
+    std::fs::create_dir_all(straymark.join("templates")).unwrap();
+    std::fs::write(
+        straymark.join("config.yml"),
+        format!("language: {}\n", language),
+    )
+    .unwrap();
+    std::fs::write(
+        straymark.join("audit-prompts/audit-prompt.md"),
+        AUDIT_PROMPT_UNIFIED,
+    )
+    .unwrap();
+    std::fs::write(
+        straymark.join("audit-prompts/i18n/es/audit-prompt.md"),
+        AUDIT_PROMPT_ES,
+    )
+    .unwrap();
+    std::fs::write(
+        straymark.join("schemas/audit-output.schema.v0.json"),
+        AUDIT_OUTPUT_SCHEMA,
+    )
+    .unwrap();
+}
+
+#[test]
+fn audit_prepare_uses_es_overlay_when_language_es() {
+    if !bash_available() {
+        eprintln!("skipping: git not available");
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_straymark_with_es_overlay(dir.path(), "es");
+    write_charter(dir.path());
+    init_repo_with_diff(dir.path());
+
+    Command::cargo_bin("straymark")
+        .unwrap()
+        .args(["charter", "audit", "CHARTER-01", "--path"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    let resolved_path = audit_dir(dir.path(), "CHARTER-01").join("audit-prompt.md");
+    let resolved = std::fs::read_to_string(&resolved_path).unwrap();
+
+    // The ES prompt starts with "# Auditoría de Charter" (the EN one starts
+    // with "# Charter audit"). Body sections like "## Tu rol" and "## Lo que
+    // NO debes hacer" pin the language unambiguously.
+    assert!(
+        resolved.contains("# Auditoría de Charter"),
+        "language: es should resolve the ES overlay, not the EN canonical"
+    );
+    assert!(resolved.contains("## Tu rol"));
+    assert!(resolved.contains("## Lo que NO debes hacer"));
+}
+
+#[test]
+fn audit_prepare_falls_back_to_en_when_locale_overlay_missing() {
+    // `language: zh-CN` is configured but no i18n/zh-CN/ overlay exists in
+    // this temp project. `resolve_localized_path` must fall back to the EN
+    // canonical file at the root of audit-prompts/.
+    if !bash_available() {
+        eprintln!("skipping: git not available");
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_straymark_with_es_overlay(dir.path(), "zh-CN");
+    write_charter(dir.path());
+    init_repo_with_diff(dir.path());
+
+    Command::cargo_bin("straymark")
+        .unwrap()
+        .args(["charter", "audit", "CHARTER-01", "--path"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    let resolved_path = audit_dir(dir.path(), "CHARTER-01").join("audit-prompt.md");
+    let resolved = std::fs::read_to_string(&resolved_path).unwrap();
+
+    assert!(
+        resolved.contains("# Charter audit"),
+        "language: zh-CN with no overlay should fall back to EN canonical"
+    );
+    assert!(resolved.contains("## Your role"));
+    // Negative check: must NOT have leaked ES headings.
+    assert!(!resolved.contains("## Tu rol"));
+}
+
+#[test]
+fn audit_prepare_uses_en_canonical_when_language_en() {
+    if !bash_available() {
+        eprintln!("skipping: git not available");
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_straymark_with_es_overlay(dir.path(), "en");
+    write_charter(dir.path());
+    init_repo_with_diff(dir.path());
+
+    Command::cargo_bin("straymark")
+        .unwrap()
+        .args(["charter", "audit", "CHARTER-01", "--path"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    let resolved_path = audit_dir(dir.path(), "CHARTER-01").join("audit-prompt.md");
+    let resolved = std::fs::read_to_string(&resolved_path).unwrap();
+
+    // Explicit `language: en` must always pick the canonical EN file even if
+    // an ES overlay exists.
+    assert!(resolved.contains("# Charter audit"));
+    assert!(!resolved.contains("## Tu rol"));
+}
+
