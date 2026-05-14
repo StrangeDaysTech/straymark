@@ -93,6 +93,8 @@ spec.md  →  plan.md  →  tasks.md  →  ┐
 
 Each StrayMark Charter takes a subset of tasks (typically a user story or a phase) and adds the three layers SpecKit doesn't provide: executable verification, file declaration to measure drift against, and AILOG/audit hookup.
 
+> **What happens when a single spec drives many Charters over weeks?** The SpecKit artifacts (`plan.md`, `data-model.md`, `contracts/`, `tasks.md`) drift relative to the code shipped by intermediate Charters. Naively re-running `/speckit-plan` is *worse* — it regenerates assertions about already-shipped user stories that the actual code does not implement. See `dist/.straymark/00-governance/SPECKIT-CHARTER-BRIDGE.md` → **"Spec maintenance during multi-Charter execution"** for the canonical discipline: when to refresh, scope-limited prompt, three mechanical gates (validation against code reality, hunk-by-hunk review, two-PR split), and the explicit warning against re-running `/speckit-tasks` mid-execution.
+
 ### Mode B — Maintenance / post-MVP (Sentinel's actual case)
 
 No SpecKit running. Sentinel's Plans 01–06 are born from AILOGs and post-MVP backlog, not from specs. The Charter's `Origen:` field points to an AILOG, not to a `specs/###-feature/`. Here the StrayMark Charter is freestanding.
