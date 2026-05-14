@@ -33,6 +33,24 @@ related: []
 2. [操作 2]
 3. [操作 3]
 
+## 批次台账 (Batch Ledger)
+
+> 对跨越 3+ 批次或 >1 天执行的 Charter 使用此章节。
+> 每个批次的 commit 落地**立即**更新对应条目，使用
+> `straymark charter batch-complete <CHARTER-ID> <N>`。Charter 关闭时
+> 仍为 `(pending)` 的条目会导致 `straymark charter drift` 失败。
+>
+> 对于单批次或单会话的 AILOG，请完全省略此章节——上方的
+> `## 执行的操作` 已足够。
+
+### Batch 1 — [来自 Charter §Tasks 的名称]
+
+(pending)
+
+### Batch 2 — [来自 Charter §Tasks 的名称]
+
+(pending)
+
 ## 修改的文件
 
 | 文件 | 变更行数 (+/-) | 变更描述 |

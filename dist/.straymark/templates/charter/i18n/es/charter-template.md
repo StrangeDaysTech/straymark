@@ -123,15 +123,21 @@ captura el follow-up si el riesgo destapa lecciones para un ciclo posterior.]
 3. [Tarea de implementación 2].
 4. [...]
 5. AILOG (`risk_level: [low|medium|high]`, `review_required: [true|false]`).
-6. Verification local pasa limpio.
-7. **Auto-checklist drift** (cuando entregue Fase 2 del CLI roadmap):
+6. **Para ejecución multi-batch (3+ lotes o >1 día)**: mantener una
+   `## Batch Ledger` en el AILOG. Después de cada commit de lote, correr
+   `straymark charter batch-complete <CHARTER-ID> <N>` para actualizar
+   la bitácora antes de pushear. El drift gate al cierre rechazará
+   cualquier `### Batch N` que quede como `(pending)`. Saltar este paso
+   en Charters de un solo lote — `## Acciones Realizadas` en el AILOG basta.
+7. Verification local pasa limpio.
+8. **Auto-checklist drift** (cuando entregue Fase 2 del CLI roadmap):
    `straymark charter drift CHARTER-NN <range>` para detectar drifts entre lo declarado
    y lo modificado **antes** del commit. Si reporta omisiones, completar el trabajo
    o documentar en AILOG bajo `## Risk` como `R<N+1> (nuevo, no en Charter)`. Si
    reporta scope expansion, documentar en AILOG el motivo (mock updates, generated
    files, drift fix pre-existente, etc.). Hasta que Fase 2 entregue, correr el
    `check-plan-drift.sh` de Sentinel manualmente para el mismo efecto.
-8. Commit + push + abrir PR.
+9. Commit + push + abrir PR.
 
 ## Cierre del Charter
 

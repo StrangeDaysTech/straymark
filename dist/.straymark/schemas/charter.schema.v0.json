@@ -32,7 +32,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^AILOG-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3}(-[a-z0-9-]+)?$"
+        "pattern": "^AILOG-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3}[a-z]?(-[a-z0-9-]+)?$"
       },
       "minItems": 1,
       "description": "AILOG IDs that motivated this Charter. Used in maintenance / post-MVP mode (the Sentinel case). Mutually exclusive with originating_spec; both may be absent if the Charter was scaffolded without an explicit origin."

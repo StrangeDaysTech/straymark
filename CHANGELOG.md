@@ -7,6 +7,43 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.14.0 / CLI 3.13.0 — Sentinel feedback cycle: shellcheck cleanup, regex extension, multi-batch AILOG ledger
+
+Closes three upstream issues filed by Sentinel during its CHARTER-17 cycle, all field-validated downstream and ready for upstream canonization. The unifying theme is **pre-announcement hardening**: each issue was discovered in real adopter usage, the fix is additive (zero ruptura para existing artifacts), and Sentinel can revert its local workaround once this release lands.
+
+### Added (Framework)
+
+- **`## Batch Ledger` section in `TEMPLATE-AILOG.md`** (EN + i18n/es + i18n/zh-CN) — opt-in canonical structure for AILOGs of Charters that span 3+ batches or >1 day of execution. Each batch entry starts as `(pending)`; `straymark charter batch-complete` substitutes the placeholder; `straymark charter drift` fails on any leftover at Charter close. Single-batch AILOGs continue to use `## Actions Performed` and skip the ledger entirely — the section is purely additive.
+- **Charter template §Tasks guidance** (EN + i18n/es + i18n/zh-CN) — new task #6 explicitly tells the Charter author to maintain a `## Batch Ledger` and run `batch-complete` per batch when execution is multi-batch. Single-batch Charters skip the step.
+
+### Changed (Framework)
+
+- **`dist/.github/workflows/docs-validation.yml`** — naming regex extended from `[0-9]{3}` to `[0-9]{3}[a-z]?` (closes [#145](https://github.com/StrangeDaysTech/straymark/issues/145)). The optional single-letter suffix resolves same-day same-sequence filename collisions without renumbering downstream entries (e.g. `AILOG-2026-05-02-028b` when `-028-` is taken). Lowercase only, single letter only — discourages multi-letter ad-hoc labels that would erode the convention.
+- **`dist/.github/workflows/docs-validation.yml`** — shellcheck cleanup (closes [#143](https://github.com/StrangeDaysTech/straymark/issues/143)). Removed unused `ERRORS=0` in the high-risk ETH compliance step; grouped repeated `echo ... >> "$GITHUB_STEP_SUMMARY"` blocks (SC2129) into `{ ... } >> "$..."` redirects for atomicity and readability; replaced `grep -v X | wc -l` with `grep -vc X` (SC2126); fixed `while read file` → `while IFS= read -r file` (SC2162). Adopters who add actionlint to their CI (e.g., Sentinel via `StrangeDaysTech/sentinel#72`) can now run `actionlint -color` cleanly without needing `-shellcheck=` or per-adopter `-ignore` patterns.
+- **`dist/.straymark/schemas/charter.schema.v0.json`** + **`dist/.straymark/schemas/charter-telemetry.schema.v0.json`** — `originating_ailogs` pattern extended to accept the optional letter suffix, in lockstep with the workflow regex.
+
+### Added (CLI)
+
+- **`straymark charter batch-complete <CHARTER-ID> <N>`** — new subcommand. Marks a Charter batch as complete in the originating AILOG's `## Batch Ledger`, substituting the `(pending)` placeholder. Three modes: interactive prompts by default (TTY-only, three short questions: files touched, tests, design note); one-shot via `--note "..."` (designed for agents and scripts); `--non-interactive` requires `--note` and aborts cleanly if missing. Refuses to overwrite an already-completed batch. Closes Proposal C of [#146](https://github.com/StrangeDaysTech/straymark/issues/146).
+- **`cli/src/ailog.rs`** (new module) — shared helpers for AILOG file discovery (`find_ailog_file`, `agent_logs_dir`) and `## Batch Ledger` parsing/editing (`parse_batch_ledger`, `pending_batches`, `write_batch_section`, `ensure_pending`). The file-discovery helpers were previously private to `commands/charter/drift.rs`; promoted to share with `batch_complete`.
+
+### Changed (CLI)
+
+- **`straymark charter drift`** — new **Batch Ledger gate**. When the Charter status is `in-progress` or `closed`, the command also checks every originating AILOG's `## Batch Ledger` for entries left as `(pending)` and fails with a clear diagnostic listing the missing batches. AILOGs without a ledger contribute nothing (the section is opt-in). New `--no-batch-ledger-check` flag bypasses the gate for adopters consolidating the ledger post-close. Charters in `declared` state never trip the gate (nothing has been executed yet).
+- **`cli/src/charter_schema.rs`** — `TEST_SCHEMA` literal updated to mirror the framework schema's `[0-9]{3}[a-z]?` pattern; three new tests pin the behavior (`accepts_ailog_id_with_letter_suffix`, `rejects_ailog_id_with_multiletter_suffix`, `rejects_ailog_id_with_uppercase_suffix`).
+
+### Deferred
+
+- **Proposal D of [#146](https://github.com/StrangeDaysTech/straymark/issues/146)** — cross-Charter `lessons-learned.md` index — intentionally **not** in this release. The artifact introduces a new canonical taxonomy (`LL-YYYY-MM-DD-NNN` IDs, frontmatter, promotion CLI, discovery integration with `explore`) and warrants a dedicated Charter post-announcement. Sentinel's local workaround for D stays in place; we'll revisit upstream after the web/announcement cycle lands.
+
+### Adopter guidance
+
+- `straymark update-framework` brings the new template sections and schema changes. Existing AILOGs without `## Batch Ledger` continue to work — the drift gate only activates when the section is present.
+- `straymark update-cli` brings the new `batch-complete` subcommand and the extended `drift` gate. Both are backward-compatible at the CLI surface (no existing flags renamed).
+- **Sentinel reconciliation path**: revert the local `actionlint -shellcheck=` flag, the local regex extension in `docs-validation.yml`, and the `CLAUDE.md` "Multi-batch Charter discipline (TRANSIENT)" subsection — all three are now load-bearing upstream.
+
+---
+
 ## Framework 4.13.4 — Close translation gaps (ISO-25010 reference + Charter template zh-CN)
 
 Framework-only patch that closes two translation coverage gaps surfaced by an audit of the project's i18n consistency. The audit confirmed that skills, workflows, schemas, and CLI-internal i18n are correctly aligned with the project principle (LLM-processed assets stay EN-only; human-primary artifacts get translated). Two specific files were the exception.

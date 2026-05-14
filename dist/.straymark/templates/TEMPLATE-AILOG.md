@@ -36,6 +36,24 @@ related: []
 2. [Action 2]
 3. [Action 3]
 
+## Batch Ledger
+
+> Use this section for Charters that span 3+ batches or >1 day of execution.
+> Update each batch entry **immediately after** its commit lands, using
+> `straymark charter batch-complete <CHARTER-ID> <N>`. Entries left as
+> `(pending)` at Charter close cause `straymark charter drift` to fail.
+>
+> Omit this section entirely for single-batch or single-session AILOGs —
+> `## Actions Performed` above is sufficient there.
+
+### Batch 1 — [name from Charter §Tasks]
+
+(pending)
+
+### Batch 2 — [name from Charter §Tasks]
+
+(pending)
+
 ## Modified Files
 
 | File | Lines Changed (+/-) | Change Description |

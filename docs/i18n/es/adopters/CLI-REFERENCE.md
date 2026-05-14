@@ -48,8 +48,8 @@ StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.13.4` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.12.3` | El binario `straymark` |
+| Framework | `fw-` | `fw-4.14.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| CLI | `cli-` | `cli-3.13.0` | El binario `straymark` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
 
@@ -88,7 +88,7 @@ Inicializa StrayMark en un directorio de proyecto.
 
 ```bash
 $ straymark init .
-✔ Downloaded StrayMark fw-4.13.4
+✔ Downloaded StrayMark fw-4.14.0
 ✔ Created .straymark/ directory structure
 ✔ Created STRAYMARK.md
 ✔ Configured AI agent directives
@@ -109,7 +109,7 @@ Si `.straymark/` no existe en el directorio actual, la actualización del framew
 ```bash
 $ straymark update
 Updating framework...
-✔ Framework updated to fw-4.13.4
+✔ Framework updated to fw-4.14.0
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -126,7 +126,7 @@ Actualiza solo los archivos del framework. Busca el último release `fw-*` en Gi
 
 ```bash
 $ straymark update-framework
-✔ Framework updated to fw-4.13.4
+✔ Framework updated to fw-4.14.0
 ```
 
 ---
@@ -205,7 +205,7 @@ $ straymark status
 StrayMark Status
 ───────────────
 Path:              /home/user/my-project
-Framework version: fw-4.13.4
+Framework version: fw-4.14.0
 CLI version:       cli-3.5.2
 Language:          en
 Structure:         ✔ Complete
@@ -392,7 +392,8 @@ Gestiona **Charters**: unidades acotadas y auditables de trabajo, declaradas ex-
 - `straymark charter list` — enumera Charters con filtros opcionales
 - `straymark charter status` — muestra detalle de un Charter, o los 5 más recientes
 - `straymark charter close` *(cli-3.7.0+)* — registra la telemetría post-ejecución y mueve el Charter a `closed`
-- `straymark charter drift` *(cli-3.7.0+)* — chequea drift archivo-vs-commit con supresión AILOG-aware
+- `straymark charter drift` *(cli-3.7.0+)* — chequea drift archivo-vs-commit con supresión AILOG-aware y gate de Batch Ledger *(gate añadido en cli-3.13.0)*
+- `straymark charter batch-complete` *(cli-3.13.0+, fw-4.14.0+)* — marca un batch del Charter como completado en la `## Batch Ledger` del AILOG
 - `straymark charter audit` *(cli-3.8.0+)* — orquesta una revisión externa multi-modelo (orchestration-only, ver más abajo)
 
 #### `straymark charter new [-t XS|S|M|L] [--from-ailog <id> | --from-spec <path>] [--title <titulo>] [path]`
@@ -482,18 +483,21 @@ $ straymark charter close CHARTER-01
     Status updated: in-progress/declared → closed
 ```
 
-#### `straymark charter drift <CHARTER-ID> [--range <REV..REV>] [--no-ailog-suppress] [--path <dir>]`
+#### `straymark charter drift <CHARTER-ID> [--range <REV..REV>] [--no-ailog-suppress] [--no-batch-ledger-check] [--path <dir>]`
 
 Detecta drift archivo-vs-commit al cierre del Charter. Envuelve el script del framework `.straymark/scripts/check-charter-drift.sh` (cero falsos positivos validados empíricamente en PLAN-05 retrospectivo + PLAN-06 prospectivo en Sentinel). El valor agregado del CLI sobre el script crudo es la **AILOG-awareness**: los paths reportados como "declarados pero no modificados" se silencian cuando aparecen en la sección `## Risk` / `## Riesgos` / `## 风险` de algún AILOG referenciado por `originating_ailogs` del Charter. Usa `--no-ailog-suppress` para deshabilitarlo.
+
+**Gate de Batch Ledger** *(cli-3.13.0+)*. Cuando el Charter está en estado `in-progress` o `closed`, el comando también revisa cada AILOG originante por entradas `## Batch Ledger` que sigan en `(pending)` y falla con un diagnóstico claro listando los batches faltantes. Los AILOGs sin ledger no contribuyen — la sección es opt-in. Usa `--no-batch-ledger-check` para bypass (pensado para adopters que consolidan la ledger post-close).
 
 | Argumento/Flag | Default | Descripción |
 |---|---|---|
 | `CHARTER-ID` | — | Mismas reglas de resolución que `charter status`. |
 | `--range` | `HEAD~1..HEAD` | Rango de revisiones git a chequear. |
 | `--no-ailog-suppress` *(cli-3.10.0+ siempre emite una línea INFO de confirmación)* | false | Deshabilita la supresión AILOG-aware (muestra todo path declarado-omitido). Cuando se pasa el flag, el CLI siempre imprime una línea `INFO: AILOG-aware suppression bypassed (would have suppressed: N path(s)…)` — incluso cuando N=0 — para que el modo diagnóstico sea visible en la salida aun en una corrida limpia. |
+| `--no-batch-ledger-check` *(cli-3.13.0+)* | false | Deshabilita el gate de Batch Ledger. Usar cuando el AILOG del Charter optó por no usar el patrón al momento del close. |
 | `--path` | `.` | Directorio del proyecto. |
 
-**Códigos de salida:** `0` si no hay drift (o solo AILOG-suprimido); `1` si hay drift no contabilizado; `2` para errores de uso (Charter no encontrado, bash ausente, etc.).
+**Códigos de salida:** `0` si no hay drift (o solo AILOG-suprimido) y ningún batch pendiente; `1` si hay drift no contabilizado o algún `### Batch N` sigue `(pending)`; `2` para errores de uso (Charter no encontrado, bash ausente, etc.).
 
 **Ejemplo:**
 
@@ -532,6 +536,51 @@ Ambas formas se manejan en ambas direcciones: un wildcard declarado suprime tant
 Los paths bajo `.straymark/charters/*` y `.straymark/07-ai-audit/*` **nunca** se reportan como "modificado pero no declarado". Es opinionated por diseño — esos paths son siempre legítimos cuando el Charter mismo o el AILOG de ejecución son tocados. Validado empíricamente en Sentinel CHARTER-04: un `git add -A` accidental stageó archivos no-tracked del usuario (`.claude/skills/`, `cmd/sentinel/sentinel`); la regla suprimió correctamente el ruido de gobernanza sin esconder la expansión genuina de archivos del proyecto ([issue #81 W2](https://github.com/StrangeDaysTech/straymark/issues/81#issuecomment-update)).
 
 Si corres un Charter cuyo scope explícito es churn de gobernanza (p.ej. un Charter de aprobación bulk que toca solo `.straymark/07-ai-audit/`), el chequeo reportará 0 archivos modificados y necesitarás verificar el scope leyendo el AILOG. Un flag `--strict-scope` que deshabilite la regla "siempre en scope" está sobre la mesa para una minor futura si un adopter real reporta la asimetría como fricción.
+
+#### `straymark charter batch-complete <CHARTER-ID> <N> [--note <body>] [--non-interactive] [--path <dir>]`
+
+*Disponible desde **cli-3.13.0** + **fw-4.14.0**.*
+
+Marca un batch del Charter como completado en la `## Batch Ledger` del AILOG originante. El comando sustituye el placeholder `(pending)` bajo `### Batch <N>` con notas del batch capturadas interactivamente (por defecto) o vía `--note` (one-shot / scripted). El gate de drift al cierre (`straymark charter drift`) rechaza cualquier `### Batch N` que quede como `(pending)`, haciendo la actualización por-batch load-bearing en vez de un recordatorio de disciplina.
+
+**Cuándo usarlo.** Solo para Charters multi-batch que abarquen 3+ lotes o >1 día de ejecución. AILOGs de un solo batch documentan todo en `## Acciones Realizadas` y saltan la ledger por completo. El template Charter en §Tasks recuerda al autor mantener la ledger cuando aplica.
+
+| Argumento/Flag | Default | Descripción |
+|---|---|---|
+| `CHARTER-ID` | — | Mismas reglas de resolución que `charter status`. |
+| `N` | — | Número de batch (1-based) — coincide con el heading `### Batch <N>` en `## Batch Ledger` del AILOG. |
+| `--note <body>` | — | Cuerpo de la nota pre-llenado. Con este flag, el comando escribe la nota no-interactivamente y salta los prompts. Diseñado para agentes y scripts. |
+| `--non-interactive` | false | Deshabilita prompts. Requiere `--note` (la ausencia de `--note` aborta en lugar de colgarse). |
+| `--path` | `.` | Directorio del proyecto. |
+
+El comando lee `originating_ailogs[0]` del frontmatter del Charter para localizar el AILOG destino. Rechaza con error claro cuando:
+
+- el Charter no tiene entrada `originating_ailogs` (no puede resolver archivo destino);
+- el archivo AILOG no existe en `.straymark/07-ai-audit/agent-logs/`;
+- el AILOG no tiene sección `## Batch Ledger` (añadir la sección primero, o saltar el comando si el Charter es de un solo batch);
+- no existe heading `### Batch <N>` bajo `## Batch Ledger`;
+- el batch destino ya está completado (rehúsa sobrescribir — editar el AILOG manualmente para correcciones).
+
+**Flujo interactivo.** Tres prompts: archivos tocados (one-liner), tests añadidos o estado (one-liner), y nota de diseño multilínea (terminar con `.` solo en una línea o Ctrl-D). Los campos vacíos se omiten en la salida. El cuerpo resultante se escribe bajo el heading `### Batch <N>`; el placeholder `(pending)` se reemplaza.
+
+**Ejemplos:**
+
+```bash
+# Interactivo — humanos pegando notas
+$ straymark charter batch-complete CHARTER-17 5
+✔ AILOG: .straymark/07-ai-audit/agent-logs/AILOG-2026-05-13-048-charter-17.md
+✔ ### Batch 5 — Migración 022 + handlers
+
+OK `### Batch 5` written.
+Reminder: `git add .straymark/07-ai-audit/agent-logs/AILOG-2026-05-13-048-charter-17.md` before pushing.
+
+# One-shot — agentes / scripts
+$ straymark charter batch-complete CHARTER-17 5 \
+    --note "Migración 022 + handlers. Archivos: migrations/022.sql, services/handler_x.go. Tests pasando. R8 surgió (CHECK constraint sin ARCHIVED), fix atómico."
+OK `### Batch 5` written.
+```
+
+**Integración con workflow.** Según la guía del template Charter en §Tasks, correr `batch-complete` *inmediatamente después* de que aterriza el commit del batch pero *antes* de pushear. La actualización del AILOG y el trabajo que documenta viajan en el mismo push. El gate de drift al cierre (`straymark charter drift CHARTER-NN`) rechaza cualquier batch pendiente e imprime la lista — convirtiendo "olvidé actualizar la ledger" en una falla dura en lugar de erosión silenciosa del audit trail.
 
 #### `straymark charter audit <CHARTER-ID> [--range <REV..REV>] [--prepare | --merge-reports] [--merge-into <PATH>] [--path <dir>]`
 
@@ -859,7 +908,7 @@ Muestra información de versión, autoría y licencia.
 $ straymark about
 StrayMark CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.13.4
+  Framework version: fw-4.14.0
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/straymark
