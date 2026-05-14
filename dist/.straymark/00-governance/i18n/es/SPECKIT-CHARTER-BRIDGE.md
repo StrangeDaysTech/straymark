@@ -131,6 +131,75 @@ originating_charter: CHARTER-02-peek-mvp-foundation
 | Revisión externa opcional | Auditoría multi-modelo | `straymark charter audit CHARTER-NN` + `/straymark-audit-prompt` + `/straymark-audit-execute` + `/straymark-audit-review` |
 | Corte enviado | Cerrar Charter | `straymark charter close CHARTER-NN` (status: `closed`, telemetry yaml emitido) |
 
+## Mantención del spec durante ejecución multi-Charter
+
+> **Anclaje empírico**: surfaceado por [issue #150](https://github.com/StrangeDaysTech/straymark/issues/150) después de que Sentinel corriera un único `specs/002-commshub/plan.md` (committed 2026-04-21) a través de **siete Charters consecutivos** (CHARTER-07 a CHARTER-17, ~1 mes). Doce aprendizajes empíricos que impactan materialmente el scope del siguiente Charter **no** quedaron reflejados en el plan. El patrón siguiente codifica lo que Sentinel descubrió antes de llenar CHARTER-18.
+
+El mapa de ciclo de vida arriba asume **una sola pasada**: los artefactos de SpecKit se generan una vez, luego los Charters se declaran y ejecutan. Esto escala bien para features que producen un solo Charter. Cuando un solo spec conduce varios Charters espaciados por semanas, **los artefactos de planeación driftean respecto al código shippeado** — y re-correr `/speckit-plan` ingenuamente es *peor*, no mejor: la regeneración afirma cosas sobre user stories ya shippeadas que el código real no implementa, y los lectores futuros (auditores, agentes, nuevos operadores) confían en esos artefactos regenerados como ground truth.
+
+Esta sección responde **cómo**, no **si**: qué disciplina mantiene al spec sincronizado con el código durante ejecución multi-Charter **sin** que el paso de regeneración mienta sobre las partes que ya shippearon.
+
+### Cuándo refrescar
+
+Un spec-refresh está justificado cuando *cualquiera* de las siguientes condiciones se cumple:
+
+1. **≥3 Charters cerrados contra el mismo spec** — el volumen de detalle de ejecución no reflejado es lo suficientemente alto para que las decisiones de scope del siguiente Charter arriesguen heredar premisas obsoletas.
+2. **≥4 semanas calendario** desde el último refresh del spec (o desde la generación inicial) y ≥2 Charters cerrados en esa ventana.
+3. **Conteo de AILOG `## Risk: R<N>(new, not in Charter)` sobre el spec excede ~6 a través de los Charters cerrados** — la anticipación de riesgo del spec subdescribe medibly el territorio.
+4. **La user story del siguiente Charter toca infraestructura que los Charters previos refinaron empíricamente** (nuevas tablas/migraciones creadas, helpers extraídos, contratos cristalizados) y el spec describe el estado pre-refinamiento.
+
+Si ninguna se cumple y el siguiente Charter apunta a un sub-sistema fresco que los Charters previos no tocaron, **omite el refresh**. La estabilidad del spec tiene valor; refrescar en cada Charter genera churn sin ganancia proporcional de claridad.
+
+### Cómo refrescar: prompt scope-limited
+
+**No** re-corras `/speckit-plan` con pizarra en blanco. El `plan.md` + `research.md` + `data-model.md` + `contracts/` + `quickstart.md` regenerados afirmarán cosas sobre user stories ya shippeadas que el código real no implementa.
+
+En su lugar, invoca `/speckit-plan` con un **prompt scope-limited** que:
+
+1. **Nombre la fase target explícitamente** (p.ej., "refresca planeación sólo para US5 — failover + tracking").
+2. **Liste secciones bloqueadas que no deben cambiar** (p.ej., "las secciones Foundation, US1, US2, US3, US4 son inmutables — el código shippeado contra ellas es la ground truth, no el plan").
+3. **Cite los AILOGs que documentan refinamientos** (p.ej., "ver AILOG-2026-05-11-043 §R5 para el patrón de reuso de `processed_events`; reflejar esto en el data model refrescado").
+4. **Prohíba regenerar `tasks.md`** — ver subsección siguiente.
+
+El output es un `plan.md` (y posiblemente `research.md` / `data-model.md` / `contracts/`) donde el contenido de la fase target es fresco y las secciones bloqueadas cargan hacia adelante el estado realmente shippeado, no el estado aspiracional original.
+
+### Tres gates mecánicos post-refresh
+
+Antes de mergear el PR del spec-refresh, tres gates corren secuencialmente:
+
+**Gate (a) — Validación contra realidad del código.**
+Para cada entidad no-target-phase en `data-model.md`, diff contra los `db/migrations/*.sql` reales (o fuente equivalente de schema). Para cada endpoint no-target-phase en `contracts/*.md`, diff contra signatures de handlers reales. Cualquier divergencia en una sección *bloqueada* bloquea el merge — eso es la regeneración mintiendo. Los adopters pueden scriptarlo contra su stack; un helper CLI (`straymark spec-drift`) está en el roadmap (ver #150 Ask 3).
+
+**Gate (b) — Revisión granular hunk-por-hunk del diff.**
+Corre `git diff specs/NNN-feature/` y revisa archivo-por-archivo, hunk-por-hunk. Ningún cambio a secciones bloqueadas se acepta sin un comentario de justificación explícito en el PR. El diff es lo suficientemente pequeño cuando es scope-limited para que esto sea factible en una sentada.
+
+**Gate (c) — Split en dos PRs.**
+Aterriza el spec-refresh como su propio PR. Revísalo contra el *código*, no contra el output plan-only. Luego llena el Charter target contra el spec refrescado en un PR *separado*. Mezclar los dos colapsa superficies de review: los reviewers ya no pueden distinguir si un hunk refleja nuevo estado shippeado o nuevo estado planeado.
+
+### Por qué NO re-correr `/speckit-tasks` mid-ejecución
+
+El archivo `tasks.md` acumula estado de trace de implementación durante ejecución: checkboxes `[X]` en tareas completadas, anotaciones `*CHARTER-NN: <commit-sha>*` citando qué Charter shippeó qué tarea, posiblemente marcadores `^skipped` con rationale. **Regenerar `tasks.md` destruye este estado.** El archivo se vuelve una lista fresca de tareas sin registro de lo que ya shippeó.
+
+Disciplina: **nunca** re-corras `/speckit-tasks` mientras un spec está en medio de ejecución multi-Charter. En su lugar, **edita manualmente `tasks.md`** sólo para la fase target — añade tareas nuevas para el scope refrescado, deja las secciones ya-shippeadas (`[X]` + anotaciones `*CHARTER-NN:*`) intactas.
+
+Si descubres que el `tasks.md` original tenía errores en secciones shippeadas (p.ej., una tarea fue incorrectamente marcada `[X]` cuando su trabajo se partió en dos Charters), corrígelo manualmente con un commit Git. Trata `tasks.md` como un registro histórico desde el punto de primera ejecución en adelante; ya no es un artefacto regenerable.
+
+### Cadencia de re-evaluación de Constitution Check
+
+El Constitution Check de SpecKit típicamente se corre una vez en tiempo `/speckit-plan`. En ejecución multi-Charter contra un solo spec, la pregunta de *cuándo* re-evaluar queda implícita. Para hacerla explícita:
+
+- **Por-Charter (recomendado)** — re-evalúa Constitution Check al inicio de cada Charter nuevo declarado contra el spec. El check es barato (leer la constitución; comparar contra el scope declarado del Charter) y atrapa drift temprano, antes de que la ejecución se commitee.
+- **Por-spec-refresh (obligatorio cuando el refresh sucede)** — cuando un refresh de `/speckit-plan` scope-limited aterriza, el PR de refresh debe re-correr Constitution Check contra el plan refrescado. Si la versión del framework se movió (p.ej., `fw-4.10.x → fw-4.14.x`), Constitution Check puede arrojar resultados distintos porque existen gates nuevos.
+- **NO por-framework-bump aislado** — un `straymark update-framework` entre Charters *no* requiere un re-run inmediato de Constitution Check sobre el spec abierto. El check aplica en el siguiente boundary natural (siguiente declaración de Charter o spec-refresh).
+
+Codificar esto como cadencia explícita (en lugar de "lo decide quien quiera") cierra una ambigüedad recurrente reportada por Sentinel post-CHARTER-17.
+
+### Roadmap: `straymark spec-drift`
+
+Un comando CLI análogo a `straymark charter drift`, pero operando a granularidad de spec — parsear `data-model.md` → entidades → diff contra `db/migrations/*.sql`; parsear `contracts/*.md` → endpoints → diff contra signatures de handlers. Mecanizaría el Gate (a) arriba.
+
+Diferido deliberadamente a un Charter post-anuncio (tracked por separado). La superficie de CLI es significativa sólo para adopters cuyo formato de spec sigue las convenciones de SpecKit; la capa de detección de lenguaje (handlers Go vs Rust vs TypeScript vs Python; schemas SQL vs ORM-defined) es no-trivial y amerita su propio ciclo de diseño informado por stacks reales de adopters. La disciplina arriba (Gates a/b/c ejecutados manualmente) es el v0; el CLI es el v1 que mecaniza el gate más costoso.
+
 ## Anti-patrones
 
 **No abras un Charter "por si acaso".** Un Charter sin un corte enviable claro se convierte en una wishlist. El operador termina cerrándolo como `closed: aborted` y la telemetría no significa nada.
@@ -142,6 +211,8 @@ originating_charter: CHARTER-02-peek-mvp-foundation
 **No corras `straymark charter audit` sin las CLIs auditoras disponibles.** La auditoría es orchestration-only — `straymark` no llama a APIs de LLM. Si no tienes N CLIs auditoras listas, salta el paso; cierra el Charter sin auditoría externa.
 
 **No cambies status a `closed` antes del drift check + yaml de telemetría.** `straymark charter close` hace ambos atómicamente; el cierre manual salta invariantes.
+
+**No re-corras `/speckit-tasks` mid-ejecución del spec.** Regenerar `tasks.md` destruye los marcadores `[X]` de completitud y las anotaciones `*CHARTER-NN:* …` que forman el rastro histórico. Ver "Mantención del spec durante ejecución multi-Charter" arriba para la ruta segura (edición manual sólo para la fase target).
 
 ## Cuándo este patrón no aplica
 

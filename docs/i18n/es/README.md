@@ -237,7 +237,7 @@ StrayMark usa tags de versión independientes para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Incluye |
 |------------|---------------|---------|---------|
-| Framework | `fw-` | `fw-4.14.2` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
+| Framework | `fw-` | `fw-4.14.3` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
 | CLI | `cli-` | `cli-3.13.1` | El binario `straymark` |
 
 Verifica las versiones instaladas con `straymark status` o `straymark about`.
@@ -270,7 +270,7 @@ Ver [Referencia CLI](adopters/CLI-REFERENCE.md) para uso detallado.
 ```bash
 # Descargar el último release ZIP del framework desde GitHub
 # Ve a https://github.com/StrangeDaysTech/straymark/releases
-# y descarga el último release fw-* (ej. fw-4.14.2)
+# y descarga el último release fw-* (ej. fw-4.14.3)
 
 # Extraer y copiar a tu proyecto
 unzip straymark-fw-*.zip -d tu-proyecto/

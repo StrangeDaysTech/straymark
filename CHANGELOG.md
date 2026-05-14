@@ -7,6 +7,43 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.14.3 — Spec-refresh discipline for multi-Charter execution (closes #150 Asks 1, 2, 4)
+
+Framework-only patch that closes a governance gap reported by Sentinel after running a single `specs/002-commshub/plan.md` through **seven consecutive Charters** over ~1 month. The bridge doc (`SPECKIT-CHARTER-BRIDGE.md`) covered Charter *declaration* but said nothing about *spec maintenance during multi-Charter execution* — and naively re-running `/speckit-plan` regenerates assertions about already-shipped user stories that the actual code does not implement, propagating stale state into future audits.
+
+Ships **Cubeta A** of the issue's two-bucket plan: pure governance documentation. **Cubeta B** (the `straymark spec-drift` CLI that mechanizes Gate (a), plus a cross-Charter `lessons-learned` index per [#146 Proposal D](https://github.com/StrangeDaysTech/straymark/issues/146)) is deferred to a dedicated post-announcement Charter — tracked separately so the context survives.
+
+### Added (Framework)
+
+- **`dist/.straymark/00-governance/SPECKIT-CHARTER-BRIDGE.md`** (EN + i18n/es + i18n/zh-CN) — new section **"Spec maintenance during multi-Charter execution"** with the empirical anchor (Sentinel CHARTER-07..17 cycle, 12 unreflected learnings). Subsections:
+  - **When to refresh** — four heuristics (≥3 closed Charters, ≥4 weeks + ≥2 Charters, `R<N>(new)` count >6, target US touches refined infra). Explicit guidance to *skip* the refresh when none hold.
+  - **How to refresh: scope-limited prompt** — name the target phase, list locked sections, cite refinement AILOGs, forbid `tasks.md` regeneration.
+  - **Three mechanical gates** — (a) Validation against code reality (diff non-target-phase entities/endpoints vs migrations/handler signatures), (b) Granular hunk-by-hunk review, (c) Two-PR split (refresh PR separate from Charter-fill PR).
+  - **Why NOT re-run `/speckit-tasks`** — regenerating destroys `[X]` completion marks and `*CHARTER-NN:* <sha>*` annotations that form the historical trace. Manual edit for the target phase only.
+  - **Constitution Check re-evaluation cadence** — codifies per-Charter (recommended) + per-spec-refresh (mandatory) + NOT per-framework-bump alone, closing the implicit-cadence ambiguity reported by Sentinel.
+  - **Roadmap: `straymark spec-drift`** — names the deferred CLI explicitly so adopters reading the policy know mechanization of Gate (a) is coming post-announcement.
+- **Anti-pattern entry** — new bullet against re-running `/speckit-tasks` mid-execution, pointing to the new section for the safe path.
+
+### Changed (Repo-level docs, not shipped via `straymark init`)
+
+- **`docs/contributors/WHAT-IS-A-CHARTER.md`** §4 Mode A — cross-link inserted right after the SpecKit-driven flow diagram, surfacing the "what happens when a single spec drives many Charters?" question with a pointer to the new bridge-doc section. Contributors landing on the conceptual doc now find the operational discipline at the natural decision point.
+- **Governance footers** updated to `v4.14.3` across `QUICK-REFERENCE.md`, `AGENT-RULES.md`, `DOCUMENTATION-POLICY.md`, `C4-DIAGRAM-GUIDE.md`, `FOLLOW-UPS-BACKLOG-PATTERN.md`, `SPECKIT-CHARTER-BRIDGE.md` (EN + ES + zh-CN, plus the top-level `dist/.straymark/QUICK-REFERENCE.md`).
+- **Version tables** in `README.md` (root + i18n) and `CLI-REFERENCE.md` (EN + ES + zh-CN) bumped to `fw-4.14.3`. Canonical-output examples (`Framework updated to fw-4.14.3`, etc.) follow.
+
+### Deferred — Cubeta B (post-announcement Charter)
+
+The empirical pattern around #150 reinforces the gap surfaced by [#146 Proposal D](https://github.com/StrangeDaysTech/straymark/issues/146) (cross-Charter `lessons-learned` index). Both #146 D and #150 Ask 3 are mechanics that live *above* the Charter as a unit — the missing "cross-Charter knowledge layer". A dedicated Charter post-announcement will design this layer cohesively: lessons-learned index + `straymark spec-drift` CLI + possible umbrella `straymark spec` command. A tracking issue is filed to preserve the context across the announcement cycle.
+
+### Why a patch release for docs only
+
+`dist/.straymark/00-governance/SPECKIT-CHARTER-BRIDGE.md` is shipped to every adopter via `straymark init`. Without a framework bump, `straymark update-framework` would not bring the new section to existing installations. Sentinel needs the canonical recommendation before filling CHARTER-18 — the ~50% probability of inheriting a critical/high finding from stale-premise inheritance is real and time-sensitive.
+
+### Adopter guidance
+
+`straymark update-framework` brings the updated bridge doc and footers. No behavior changes: the CLI is unchanged (`cli-3.13.1` remains the matching CLI version), no schemas or templates moved. Adopters running multi-Charter specs should read the new section *before* declaring their next Charter against an aging spec.
+
+---
+
 ## Framework 4.14.2 / CLI 3.13.1 — TDE terminal `resolved` (closes #149)
 
 Closes [#149](https://github.com/StrangeDaysTech/straymark/issues/149) — surfaced by Sentinel post-CHARTER-17 housekeeping. TDE adopters who keep documents on disk as audit history after the debt is paid had no canonical status to mark the closure; `accepted` / `superseded` / `deprecated` all carry the wrong semantics. The validator rejected `resolved` with `META-003`.
