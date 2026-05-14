@@ -1,7 +1,7 @@
 ---
 id: TDE-YYYY-MM-DD-NNN
 title: [技术债务标题]
-status: identified
+status: identified                # `identified` → `resolved` 当债务偿清时（仅 TDE 的终态）
 created: YYYY-MM-DD
 agent: [agent-name-v1.0]
 confidence: high | medium | low
@@ -123,5 +123,23 @@ promoted_from_followup: null    # FU-NNN，如果从 .straymark/follow-ups-backl
 | 迭代/里程碑 | [如适用] |
 | 分配给 | [团队/个人] |
 | 备注 | [说明] |
+
+---
+
+## 解决记录 (Resolution)
+
+> 当此处所述的债务被解决时，填写此章节**并**将 frontmatter 的 `status: identified` 翻转为 `resolved`。
+> 保留磁盘上的文档——`resolved` 是 TDE 的规范终态；文件成为审计历史而非被删除。
+> 关于生命周期语义，请见 DOCUMENTATION-POLICY.md §3。
+>
+> 当债务仍为 `identified` / `accepted` / superseded 时，请完全省略此章节——
+> 它仅在终态转换时有意义。
+
+| 字段 | 值 |
+|------|-----|
+| 解决者 | [偿清债务的 Charter ID / PR / commit] |
+| 日期 | [YYYY-MM-DD] |
+| 验证方式 | [如何验证已解决——测试、drift 检查、审计等] |
+| 备注 | [未来读者应当知晓的事项，例如部分解决的范围] |
 
 <!-- Template: StrayMark | https://strangedays.tech -->

@@ -156,6 +156,10 @@ identified ──┐
              │                       └──────► superseded
              │
              └──► (TDE-only entry state, see §6)
+                                      │
+                                      ▼
+                                  resolved
+                                  (TDE-only terminal — debt paid; see §6)
 ```
 
 | Status | Description |
@@ -163,10 +167,11 @@ identified ──┐
 | `identified` | Entry state for agent-driven discovery types (TDE today). Functionally equivalent to `draft` for lifecycle gating — a human reviewer is expected to prioritize and promote it. Semantically distinct so adopter analytics can distinguish "agent found this debt" from "human is drafting a deliberate doc". |
 | `draft` | In draft, pending review |
 | `accepted` | Approved and current |
+| `resolved` | **TDE-only terminal state**: the technical debt described in this document has been addressed; the file is kept on disk as audit history. Distinct from `accepted` ("we accept this debt continues to exist"), `superseded` ("another TDE replaced this one"), and `deprecated` ("the TDE concept itself is no longer relevant"). The canonical closing reference (the Charter, PR, or commit that paid the debt) goes in the `## Resolution` body section. |
 | `deprecated` | Obsolete, but kept as reference |
 | `superseded` | Replaced by another document |
 
-The per-type default status mapping lives in §6 — most types enter at `draft` or `accepted`, but TDE enters at `identified` per the agent-autonomy boundary (agent identifies, human prioritizes).
+The per-type default status mapping lives in §6 — most types enter at `draft` or `accepted`, but TDE enters at `identified` per the agent-autonomy boundary (agent identifies, human prioritizes). TDE is the only type today with a custom terminal state (`resolved`); the validator accepts `resolved` globally as a stop-gap. A future per-doc-type lifecycle vocabulary (issue #149 Option B) will scope `resolved` to TDE strictly; until then, using it on non-TDE documents is allowed by the validator but semantically incorrect.
 
 ---
 
@@ -269,7 +274,7 @@ For documents that require multiple reviewers (e.g., ETH with both legal and eng
 | `REQ` | Requirement | `01-requirements/` | `draft` | Yes |
 | `TES` | Test Plan | `04-testing/` | `draft` | Yes |
 | `INC` | Incident Post-mortem | `05-operations/incidents/` | `draft` | Yes |
-| `TDE` | Technical Debt | `06-evolution/technical-debt/` | `identified` | No |
+| `TDE` | Technical Debt | `06-evolution/technical-debt/` | `identified` (enters here; terminal `resolved` when debt paid — TDE-only) | No |
 | `SEC` | Security Assessment | `08-security/` | `draft` | Yes (always) |
 | `MCARD` | Model/System Card | `09-ai-models/` | `draft` | Yes (always) |
 | `SBOM` | Software Bill of Materials | `07-ai-audit/` | `accepted` | No |
@@ -313,4 +318,4 @@ See also [ADR-2025-01-20-001] for architectural context.
 
 ---
 
-*StrayMark v4.14.1 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.14.2 | [Strange Days Tech](https://strangedays.tech)*

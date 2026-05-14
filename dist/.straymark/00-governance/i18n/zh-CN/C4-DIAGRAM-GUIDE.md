@@ -234,4 +234,4 @@ Rel(api, db, "Reads/Writes", "SQL")
 
 ---
 
-*StrayMark v4.14.1 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.14.2 | [Strange Days Tech](https://strangedays.tech)*

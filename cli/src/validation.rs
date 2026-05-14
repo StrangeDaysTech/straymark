@@ -42,14 +42,33 @@ impl ValidationResult {
 }
 
 /// Valid status values per DOCUMENTATION-POLICY.md §3 lifecycle + §6 per-type defaults.
-/// `identified` is the canonical TDE entry state (agent-driven discovery, awaits
-/// human prioritization); functionally equivalent to `draft` for lifecycle gating
-/// but semantically distinct in adopter analytics.
+///
+/// - `identified` is the canonical TDE entry state (agent-driven discovery, awaits
+///   human prioritization); functionally equivalent to `draft` for lifecycle gating
+///   but semantically distinct in adopter analytics (regression #130).
+/// - `resolved` is the canonical TDE terminal state for "the debt described here
+///   was addressed; document is kept on disk as audit history". Neither `accepted`
+///   ("we accept this debt continues to exist"), `superseded` ("another TDE took
+///   its place"), nor `deprecated` ("the TDE concept itself is no longer relevant")
+///   captures this semantics correctly. Issue #149 surfaced the gap empirically
+///   in Sentinel post-CHARTER-17 housekeeping.
+///
+/// **Per-doc-type lifecycle vocabulary** (Option B in issue #149) is the principled
+/// next evolution: promote this flat enum to a `HashMap<DocType, Vec<&str>>` so each
+/// doc type has its own canonical state machine and the validator inspects
+/// `doc.doc_type` before deciding which set to apply. Deferred deliberately —
+/// shipping Option A (flat enum + `resolved`) keeps the validator's surface stable
+/// and avoids per-type branching until a second doc type needs a non-standard
+/// terminal. Adding `resolved` flat-globally is mildly permissive (an ADR with
+/// `status: resolved` would pass) but the damage is bounded: `DOCUMENTATION-POLICY`
+/// documents `resolved` as TDE-specific, and the per-type expansion in Option B
+/// will tighten the validation without breaking any existing TDE adopters.
 const VALID_STATUSES: &[&str] = &[
     "draft",
     "identified",
     "review",
     "accepted",
+    "resolved",
     "superseded",
     "deprecated",
 ];

@@ -1,7 +1,7 @@
 ---
 id: TDE-YYYY-MM-DD-NNN
 title: [Technical debt title]
-status: identified
+status: identified                # `identified` → `resolved` when the debt is paid (TDE-only terminal)
 created: YYYY-MM-DD
 agent: [agent-name-v1.0]
 confidence: high | medium | low
@@ -123,5 +123,24 @@ Impact   │             │             │
 | Sprint/Milestone | [If applicable] |
 | Assigned to | [Team/Person] |
 | Comments | [Notes] |
+
+---
+
+## Resolution
+
+> Fill this section AND flip `status: identified → resolved` in the frontmatter when
+> the debt described here has been addressed. Keep the document on disk — `resolved`
+> is the canonical TDE terminal state; the file becomes audit history rather than
+> being deleted. See DOCUMENTATION-POLICY.md §3 for the lifecycle semantics.
+>
+> Omit this section entirely while the debt is still `identified` / `accepted` /
+> superseded — it is meaningful only at the terminal transition.
+
+| Field | Value |
+|-------|-------|
+| Resolved by | [Charter ID / PR / commit that paid the debt] |
+| Date | [YYYY-MM-DD] |
+| Verification | [How was the resolution verified — tests, drift check, audit, etc.] |
+| Notes | [Anything future readers should know, e.g. partial-resolution scope] |
 
 <!-- Template: StrayMark | https://strangedays.tech -->

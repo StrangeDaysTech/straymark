@@ -48,8 +48,8 @@ StrayMark 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.14.1` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.13.0` | `straymark` 二进制文件 |
+| Framework | `fw-` | `fw-4.14.2` | 模板（12 种类型）、治理文档、指令 |
+| CLI | `cli-` | `cli-3.13.1` | `straymark` 二进制文件 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
 
@@ -88,7 +88,7 @@ straymark status   # 显示完整的安装状态，包括版本
 
 ```bash
 $ straymark init .
-✔ Downloaded StrayMark fw-4.14.1
+✔ Downloaded StrayMark fw-4.14.2
 ✔ Created .straymark/ directory structure
 ✔ Created STRAYMARK.md
 ✔ Configured AI agent directives
@@ -110,7 +110,7 @@ Next: git add .straymark/ STRAYMARK.md && git commit -m "chore: adopt StrayMark"
 ```bash
 $ straymark update
 Updating framework...
-✔ Framework updated to fw-4.14.1
+✔ Framework updated to fw-4.14.2
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -127,7 +127,7 @@ Updating CLI...
 
 ```bash
 $ straymark update-framework
-✔ Framework updated to fw-4.14.1
+✔ Framework updated to fw-4.14.2
 ```
 
 ---
@@ -211,7 +211,7 @@ $ straymark status
   Project
   ┌───────────┬──────────────────────────┐
   │ Path      │ /home/user/my-project    │
-  │ Framework │ fw-4.14.1                 │
+  │ Framework │ fw-4.14.2                 │
   │ CLI       │ cli-3.5.2                │
   │ Language  │ en                       │
   └───────────┴──────────────────────────┘
@@ -268,7 +268,7 @@ Repairing StrayMark in /home/user/my-project
 → Restoring 1 missing directory...
 ✓ Restored .straymark/templates/
 → Downloading framework to restore missing files...
-  Using version: fw-4.14.1
+  Using version: fw-4.14.2
 ✓ Restored 16 file(s) from framework
 → Updating checksums...
 
@@ -422,7 +422,7 @@ $ straymark validate --check-pending-reviews --max-pending-days 14
 - `straymark charter list` — 用可选过滤器枚举章程
 - `straymark charter status` — 显示章程详情，或最近的 5 个章程
 - `straymark charter close` *(cli-3.7.0+)* — 记录执行后遥测并将章程移至 `closed`
-- `straymark charter drift` *(cli-3.7.0+)* — 检查文件 vs 提交的漂移，带 AILOG 感知抑制和 Batch Ledger 门控 *(门控在 cli-3.13.0 添加)*
+- `straymark charter drift` *(cli-3.7.0+)* — 检查文件 vs 提交的漂移，带 AILOG 感知抑制和 Batch Ledger 门控 *(门控在 cli-3.13.1 添加)*
 - `straymark charter batch-complete` *(cli-3.13.0+, fw-4.14.0+)* — 在 AILOG 的 `## Batch Ledger` 中将章程批次标记为已完成
 - `straymark charter audit` *(cli-3.8.0+)* — 编排多模型外部审计（仅编排，详见下文）
 
@@ -1042,7 +1042,7 @@ $ straymark explore --lang es             # 会话内切换到西班牙语
 $ straymark about
 StrayMark CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.14.1
+  Framework version: fw-4.14.2
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/straymark
