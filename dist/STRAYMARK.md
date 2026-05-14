@@ -399,7 +399,8 @@ Trigger row in section 6 names the heuristic; expanded:
 |-------|--------------|-----|
 | **Declared** | Operator scaffolds Charter, fills scope/files/risks/tasks. Status `declared`. | `straymark charter new` |
 | **In progress** | Operator flips status to `in-progress` when execution starts. Day-to-day work continues to produce AILOGs. | (manual frontmatter edit) |
-| **Drift check** | Before closing, verify declared files vs. actual git diff. AILOG-suppressed paths are noise-filtered. | `straymark charter drift` |
+| **Batch update** *(multi-batch only, fw-4.14.0+)* | For Charters spanning 3+ batches or >1 day, the AILOG carries a `## Batch Ledger` with one `### Batch N` entry per batch starting as `(pending)`. After each batch commit lands, fill the entry **before pushing** so the AILOG update and the work ride the same push. Single-batch Charters skip this step entirely. | `straymark charter batch-complete CHARTER-NN <N>` |
+| **Drift check** | Before closing, verify declared files vs. actual git diff. AILOG-suppressed paths are noise-filtered; pending `### Batch N` entries cause a hard fail (`--no-batch-ledger-check` bypasses). | `straymark charter drift` |
 | **External audit** *(optional)* | Generate prompt → run N auditor CLIs → consolidate → merge into telemetry. | `straymark charter audit` + `/straymark-audit-prompt` + `/straymark-audit-execute` + `/straymark-audit-review` |
 | **Closed** | Telemetry yaml emitted; status flips to `closed`; charter is now an audit artifact. | `straymark charter close` |
 
@@ -412,12 +413,13 @@ Trigger row in section 6 names the heuristic; expanded:
 ### Quick CLI surface
 
 ```bash
-straymark charter new                # scaffold a Charter (interactive)
-straymark charter list               # enumerate Charters with status/effort/origin
-straymark charter status CHARTER-NN  # detailed view of one Charter
-straymark charter drift CHARTER-NN   # file-vs-commit drift, AILOG-aware
-straymark charter audit CHARTER-NN   # multi-model external audit (orchestration only)
-straymark charter close CHARTER-NN   # record telemetry; flip status to `closed`
+straymark charter new                       # scaffold a Charter (interactive)
+straymark charter list                      # enumerate Charters with status/effort/origin
+straymark charter status CHARTER-NN         # detailed view of one Charter
+straymark charter drift CHARTER-NN          # file-vs-commit drift, AILOG-aware + Batch Ledger gate
+straymark charter batch-complete CHARTER-NN <N>  # fill AILOG `## Batch Ledger` Batch <N> (multi-batch only)
+straymark charter audit CHARTER-NN          # multi-model external audit (orchestration only)
+straymark charter close CHARTER-NN          # record telemetry; flip status to `closed`
 ```
 
 > **Schema**: `.straymark/schemas/charter.schema.v0.json` (declarative) and `.straymark/schemas/charter-telemetry.schema.v0.json` (telemetry). Both are experimental v0 — patterns crystallize after validation against a second domain (Principle #12).

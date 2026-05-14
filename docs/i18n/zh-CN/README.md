@@ -140,7 +140,7 @@ StrayMark 的产品决策基于十二条明确的原则。它们按层级排序�
 
 将纪律转化为可执行反馈的内置命令：
 
-- **`straymark charter <new|list|status|close|drift|audit>`** — 事前声明、事后审计的有界工作单元。`close` 记录执行后遥测；`drift` 以 AILOG-aware 抑制方式检测文件-与-commit 的偏差；`audit` 编排多模型外部审查（三步骤 prepare/calibrate/finalize，仅编排——不调用 LLM API）。对于 IDE 驱动的工作流，内联 skills `/straymark-audit-prompt` 和 `/straymark-audit-review` 封装 CLI，在对话中展示 prompts 并将 findings 合并到遥测中。
+- **`straymark charter <new|list|status|close|drift|batch-complete|audit>`** — 事前声明、事后审计的有界工作单元。`close` 记录执行后遥测；`drift` 以 AILOG-aware 抑制方式检测文件-与-commit 的偏差，并（cli-3.13.0+）对 AILOG `## Batch Ledger` 中的 `### Batch N (pending)` 条目进行门控；`batch-complete`（cli-3.13.0+）将批次标记为已在多批次章程（3+ 批次或 >1 天）的台账中完成；`audit` 编排多模型外部审查（三步骤 prepare/calibrate/finalize，仅编排——不调用 LLM API）。对于 IDE 驱动的工作流，内联 skills `/straymark-audit-prompt` 和 `/straymark-audit-review` 封装 CLI，在对话中展示 prompts 并将 findings 合并到遥测中。
 - **`straymark approve <doc-id>`** — 记录一次正式的人工审批（一次性写入 `reviewed_by` / `reviewed_at` / `review_outcome` 与 `## Approval` body 章节；闭合 DOCUMENTATION-POLICY §3.5 中规范化的缺口）
 - **`straymark validate`** — 25+ 条文档正确性验证规则（其中 12 条针对中国法规、按 scope 启用）；`--include-charters` 可同时检查 `.straymark/charters/`；`--check-pending-reviews` 列出审批积压（仅警告）
 - **`straymark metrics`** — 治理 KPI、审查率、风险分布、趋势
@@ -255,7 +255,7 @@ StrayMark 为每个组件使用独立的版本标签：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.14.0` | 模板（12 种类型）、治理文档、指令、Charter 模板 + schema |
+| Framework | `fw-` | `fw-4.14.1` | 模板（12 种类型）、治理文档、指令、Charter 模板 + schema |
 | CLI | `cli-` | `cli-3.13.0` | `straymark` 二进制文件 |
 
 使用 `straymark status` 或 `straymark about` 查看已安装的版本。
@@ -288,7 +288,7 @@ StrayMark 为每个组件使用独立的版本标签：
 ```bash
 # 从 GitHub 下载最新的框架发布 ZIP
 # 前往 https://github.com/StrangeDaysTech/straymark/releases
-# 下载最新的 fw-* 发布（例如 fw-4.14.0）
+# 下载最新的 fw-* 发布（例如 fw-4.14.1）
 
 # 解压并复制到你的项目
 unzip straymark-fw-*.zip -d your-project/
