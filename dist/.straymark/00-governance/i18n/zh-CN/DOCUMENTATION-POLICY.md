@@ -156,6 +156,10 @@ identified ──┐
              │                       └──────► superseded
              │
              └──► (TDE 专用入口状态，见 §6)
+                                      │
+                                      ▼
+                                  resolved
+                                  (TDE 专用终态——债务已偿；见 §6)
 ```
 
 | 状态 | 说明 |
@@ -163,10 +167,11 @@ identified ──┐
 | `identified` | 由代理驱动发现的类型的入口状态（今日仅 TDE）。在生命周期校验上等同于 `draft`——期望人工审阅者来排定优先级并推进。语义上有所区分，以便 adopter 的分析能够区分"代理发现了此债务"与"人工正在起草一份有意识的文档"。 |
 | `draft` | 草稿中，待审核 |
 | `accepted` | 已批准且为当前有效版本 |
+| `resolved` | **TDE 专用终态**：本文档所述的技术债务已被解决；文档作为审计历史保留在磁盘上。区别于 `accepted`（"我们接受这笔债务继续存在"）、`superseded`（"另一份 TDE 取代了它"）和 `deprecated`（"TDE 这一概念本身已不再适用"）。规范的关闭引用（偿清债务的 Charter、PR 或 commit）写入 `## 解决记录` 章节。 |
 | `deprecated` | 已废弃，但保留作为参考 |
 | `superseded` | 已被其他文档替代 |
 
-按类型的默认 status 映射位于 §6——大多数类型以 `draft` 或 `accepted` 进入，但 TDE 因代理自主权边界（代理识别、人工排序）以 `identified` 进入。
+按类型的默认 status 映射位于 §6——大多数类型以 `draft` 或 `accepted` 进入，但 TDE 因代理自主权边界（代理识别、人工排序）以 `identified` 进入。TDE 是今日唯一拥有自定义终态（`resolved`）的类型；验证器全局接受 `resolved` 作为过渡安排。未来的按文档类型生命周期词汇表（issue #149 选项 B）将把 `resolved` 严格限定到 TDE；在此之前，将其用于非 TDE 文档可通过验证，但语义上不正确。
 
 ---
 
@@ -269,7 +274,7 @@ review_outcome: approved                # approved | revisions_requested | rejec
 | `REQ` | 需求 | `01-requirements/` | `draft` | 是 |
 | `TES` | 测试计划 | `04-testing/` | `draft` | 是 |
 | `INC` | 事故事后分析 | `05-operations/incidents/` | `draft` | 是 |
-| `TDE` | 技术债务 | `06-evolution/technical-debt/` | `identified` | 否 |
+| `TDE` | 技术债务 | `06-evolution/technical-debt/` | `identified`（在此进入；债务偿清时 `resolved` 为终态——仅 TDE） | 否 |
 | `SEC` | 安全评估 | `08-security/` | `draft` | 是（始终） |
 | `MCARD` | 模型/系统卡 | `09-ai-models/` | `draft` | 是（始终） |
 | `SBOM` | 软件物料清单 | `07-ai-audit/` | `accepted` | 否 |
@@ -305,4 +310,4 @@ review_outcome: approved                # approved | revisions_requested | rejec
 
 ---
 
-*StrayMark v4.14.1 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.14.2 | [Strange Days Tech](https://strangedays.tech)*

@@ -156,6 +156,10 @@ identified ──┐
              │                       └──────► superseded
              │
              └──► (estado de entrada TDE-only, ver §6)
+                                      │
+                                      ▼
+                                  resolved
+                                  (terminal sólo-TDE — deuda pagada; ver §6)
 ```
 
 | Estado | Descripción |
@@ -163,10 +167,11 @@ identified ──┐
 | `identified` | Estado de entrada para los tipos de descubrimiento dirigidos por agente (TDE hoy). Funcionalmente equivalente a `draft` para el lifecycle gating — se espera que un revisor humano lo priorice y lo promueva. Semánticamente distinto para que las analíticas del adopter puedan distinguir "el agente encontró esta deuda" de "un humano está redactando un documento deliberado". |
 | `draft` | En borrador, pendiente de revisión |
 | `accepted` | Aprobado y vigente |
+| `resolved` | **Estado terminal sólo-TDE**: la deuda técnica descrita en este documento fue atendida; el archivo se mantiene en disco como historia de auditoría. Distinto de `accepted` ("aceptamos que esta deuda persista"), `superseded` ("otro TDE reemplazó a este") y `deprecated` ("el concepto de TDE mismo ya no es relevante"). La referencia canónica de cierre (el Charter, PR o commit que pagó la deuda) va en la sección body `## Resolución`. |
 | `deprecated` | Obsoleto, pero se mantiene como referencia |
 | `superseded` | Reemplazado por otro documento |
 
-El mapeo de status por defecto por tipo vive en §6 — la mayoría de tipos entran en `draft` o `accepted`, pero TDE entra en `identified` por la frontera de autonomía del agente (el agente identifica, el humano prioriza).
+El mapeo de status por defecto por tipo vive en §6 — la mayoría de tipos entran en `draft` o `accepted`, pero TDE entra en `identified` por la frontera de autonomía del agente (el agente identifica, el humano prioriza). TDE es el único tipo hoy con un terminal personalizado (`resolved`); el validador acepta `resolved` globalmente como medida transitoria. Una futura tabla de vocabulario de lifecycle por-tipo (issue #149 Opción B) acotará `resolved` estrictamente a TDE; hasta entonces, usarlo en documentos no-TDE pasa la validación pero es semánticamente incorrecto.
 
 ---
 
@@ -270,7 +275,7 @@ Para documentos que requieren múltiples revisores (p. ej., ETH con sign-off de 
 | `REQ` | Requisito | `01-requirements/` | `draft` | Sí |
 | `TES` | Plan de Pruebas | `04-testing/` | `draft` | Sí |
 | `INC` | Post-mortem de Incidente | `05-operations/incidents/` | `draft` | Sí |
-| `TDE` | Deuda Técnica | `06-evolution/technical-debt/` | `identified` | No |
+| `TDE` | Deuda Técnica | `06-evolution/technical-debt/` | `identified` (entra aquí; terminal `resolved` cuando la deuda se paga — sólo-TDE) | No |
 | `SEC` | Evaluación de Seguridad | `08-security/` | `draft` | Sí (siempre) |
 | `MCARD` | Tarjeta de Modelo/Sistema | `09-ai-models/` | `draft` | Sí (siempre) |
 | `SBOM` | Lista de Materiales de Software | `07-ai-audit/` | `accepted` | No |
@@ -306,4 +311,4 @@ Ver también [ADR-2025-01-20-001] para contexto arquitectónico.
 
 ---
 
-*StrayMark v4.14.1 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.14.2 | [Strange Days Tech](https://strangedays.tech)*

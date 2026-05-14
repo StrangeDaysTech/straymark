@@ -7,6 +7,39 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.14.2 / CLI 3.13.1 — TDE terminal `resolved` (closes #149)
+
+Closes [#149](https://github.com/StrangeDaysTech/straymark/issues/149) — surfaced by Sentinel post-CHARTER-17 housekeeping. TDE adopters who keep documents on disk as audit history after the debt is paid had no canonical status to mark the closure; `accepted` / `superseded` / `deprecated` all carry the wrong semantics. The validator rejected `resolved` with `META-003`.
+
+This release ships **Option A** of the issue's proposal triplet (flat enum + `resolved`) and documents **Option B** (per-doc-type lifecycle vocabulary) as the deliberate next evolution.
+
+### Added (CLI)
+
+- **`resolved`** is now a valid value in `VALID_STATUSES` (`cli/src/validation.rs:48`). Adopter-facing effect: `straymark validate` accepts `status: resolved` on TDE documents without `META-003`. Two new tests pin the behavior:
+  - `test_validate_tde_resolved_terminal_state` — TDE with `status: resolved` passes.
+  - `test_validate_rejects_non_canonical_ailog_terminals` — `final`, `closed`, `completed` (Sentinel's invented AILOG terminals reported in #149) continue to fail with `META-003`. Adopters using these on AILOGs should migrate to `accepted` per `TEMPLATE-AILOG.md` and `DOCUMENTATION-POLICY.md §6`.
+
+### Changed (Framework)
+
+- **`dist/.straymark/00-governance/DOCUMENTATION-POLICY.md` §3 (EN + i18n/es + i18n/zh-CN)** — lifecycle diagram extended with the `resolved` terminal branch (TDE-only); new `resolved` row in the status table with the principled distinction from `accepted` / `superseded` / `deprecated`; §6 table column updated to note that TDE enters at `identified` and has its own terminal `resolved`.
+- **`dist/.straymark/templates/TEMPLATE-TDE.md` (EN + i18n/es + i18n/zh-CN)** — frontmatter `status: identified` annotated with the `→ resolved` transition; new optional `## Resolution` body section (omit while the debt is still open) with fields for Resolved by / Date / Verification / Notes.
+
+### Deliberately deferred (Option B)
+
+The principled fix to the per-doc-type lifecycle vocabulary problem is to promote the flat `VALID_STATUSES` enum to a `HashMap<DocType, Vec<&str>>` so each doc type has its own canonical state machine and the validator inspects `doc.doc_type` before deciding which set to apply. The reasons to defer:
+
+- Option A unblocks adopters today (Sentinel reports 2 TDE files with `status: resolved`); shipping it is ~30 LOC + docs.
+- Option B is ~150 LOC + a per-type test matrix expansion + non-trivial decisions about which terminals each type should have. Doing it pre-announcement risks calcifying choices we'd rather make based on a second adopter's lifecycle needs.
+- The `VALID_STATUSES` constant doc-comment in `validation.rs` and the explanatory paragraph in `DOCUMENTATION-POLICY.md §3` both name the trade-off explicitly: "TDE is the only type today with a custom terminal; the validator accepts `resolved` globally as a stop-gap. Issue #149 Option B will scope `resolved` strictly to TDE; until then, using it on non-TDE documents passes validation but is semantically incorrect."
+
+### Adopter guidance
+
+- `straymark update-framework` brings the new `TEMPLATE-TDE.md` and `DOCUMENTATION-POLICY.md`. Existing TDE files are unaffected — the template change is purely additive.
+- `straymark update-cli` brings the relaxed validator. TDE files marked `status: resolved` start passing immediately.
+- Sentinel-side AILOGs marked `final` / `closed` / `completed` continue to fail validation. The fix is to migrate those to `accepted` (the canonical AILOG terminal per `TEMPLATE-AILOG.md`) and capture the "work completed" semantics in the body or in the originating Charter's telemetry, not in the AILOG status field.
+
+---
+
 ## Framework 4.14.1 — Docs sync for batch-complete + Batch Ledger discoverability
 
 Framework-only patch that closes the documentation gap left by `fw-4.14.0` / `cli-3.13.0`. The release added the `batch-complete` subcommand and the Batch Ledger workflow but didn't surface them in three places adopters and contributors discover the project from: the root `README.md` (and i18n overlays), the project's user-facing comparison/feature lists, and **`dist/STRAYMARK.md`** — the governance file shipped to every adopter via `straymark init`.

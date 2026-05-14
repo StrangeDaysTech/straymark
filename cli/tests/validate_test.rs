@@ -349,6 +349,61 @@ fn test_validate_dpia_document_valid() {
         .stdout(predicate::str::contains("passed validation"));
 }
 
+/// Regression test for issue #149: TDE documents can move to `status: resolved`
+/// when the debt described has been addressed. The document is kept on disk as
+/// audit history. `accepted` / `superseded` / `deprecated` do not capture this
+/// semantics correctly.
+#[test]
+fn test_validate_tde_resolved_terminal_state() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+
+    create_doc(
+        dir.path(),
+        "06-evolution/technical-debt",
+        "TDE-2026-05-11-001-architectural-refactor.md",
+        "id: TDE-2026-05-11-001\ntitle: Architectural Refactor Debt\nstatus: resolved\ncreated: 2026-05-11\nagent: claude-code-v1.0\nconfidence: high\nreview_required: false\nrisk_level: medium\ntype: architecture\nimpact: high\neffort: medium\ntags:\n  - architecture\nrelated: []\npriority: null\nassigned_to: null",
+    );
+
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    cmd.arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("passed validation"));
+}
+
+/// Regression test for issue #149: status values reported by Sentinel as invented
+/// local terminals (`final`, `closed`, `completed`) MUST continue to fail
+/// validation. They are not canonical AILOG terminals — the canonical AILOG
+/// terminal is `accepted` per TEMPLATE-AILOG.md and DOCUMENTATION-POLICY.md §6.
+/// Documented in CHANGELOG fw-4.14.2 / cli-3.13.1 as "adopters using `final` /
+/// `closed` / `completed` should migrate to `accepted`".
+#[test]
+fn test_validate_rejects_non_canonical_ailog_terminals() {
+    for status in ["final", "closed", "completed"] {
+        let dir = TempDir::new().unwrap();
+        setup_straymark(dir.path());
+
+        create_doc(
+            dir.path(),
+            "07-ai-audit/agent-logs",
+            "AILOG-2026-05-13-001-test.md",
+            &format!(
+                "id: AILOG-2026-05-13-001\ntitle: Test\nstatus: {}\ncreated: 2026-05-13\nagent: claude-code-v1.0\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
+                status
+            ),
+        );
+
+        let mut cmd = Command::cargo_bin("straymark").unwrap();
+        cmd.arg("validate")
+            .arg(dir.path().to_str().unwrap())
+            .assert()
+            .failure()
+            .stdout(predicate::str::contains("META-003"));
+    }
+}
+
 /// Regression test for issue #130: TDE documents ship with `status: identified`
 /// per TEMPLATE-TDE.md and DOCUMENTATION-POLICY.md §6 — the validator must accept
 /// it as a valid lifecycle entry state.
