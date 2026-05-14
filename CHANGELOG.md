@@ -7,6 +7,31 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.14.1 — Docs sync for batch-complete + Batch Ledger discoverability
+
+Framework-only patch that closes the documentation gap left by `fw-4.14.0` / `cli-3.13.0`. The release added the `batch-complete` subcommand and the Batch Ledger workflow but didn't surface them in three places adopters and contributors discover the project from: the root `README.md` (and i18n overlays), the project's user-facing comparison/feature lists, and **`dist/STRAYMARK.md`** — the governance file shipped to every adopter via `straymark init`.
+
+### Changed (Framework)
+
+- **`dist/STRAYMARK.md` §15 (Charter lifecycle)** — new "Batch update" stage row inserted between "In progress" and "Drift check", documenting the per-batch ledger update pattern and pointing at `straymark charter batch-complete CHARTER-NN <N>`. The "Drift check" row now mentions that pending `### Batch N` entries cause a hard fail (with `--no-batch-ledger-check` bypass).
+- **`dist/STRAYMARK.md` Quick CLI surface** — added the `batch-complete` line and annotated the `drift` line with "AILOG-aware + Batch Ledger gate".
+- **Governance footers** updated to `v4.14.1` across `QUICK-REFERENCE.md`, `AGENT-RULES.md`, `DOCUMENTATION-POLICY.md`, `C4-DIAGRAM-GUIDE.md`, `FOLLOW-UPS-BACKLOG-PATTERN.md` (EN + ES + zh-CN, plus the top-level `dist/.straymark/QUICK-REFERENCE.md`).
+
+### Changed (Repo-level docs, not shipped via `straymark init`)
+
+- **`README.md`** (root, EN + i18n/es + i18n/zh-CN) — "Features → CLI Tools" bullet expanded to include `batch-complete` and the Batch Ledger gate on `drift`; the table-of-commands row for `straymark charter <subcommand>` updated likewise.
+- **`docs/adopters/CLI-REFERENCE.md`** (EN + ES + zh-CN) — version tables + canonical-output examples bumped to `fw-4.14.1`. The detailed `batch-complete` section and the extended `drift` description added in `fw-4.14.0`/`cli-3.13.0` remain unchanged; their `*(cli-3.13.0+ + fw-4.14.0+)*` minimum-version annotations are intentionally preserved (those mark when the feature was introduced, not the current release).
+
+### Why a patch release for docs only
+
+The `dist/STRAYMARK.md` change is governance content shipped to every adopter — without bumping the framework, `straymark update-framework` would not bring the new content to existing installations. The cost of a patch tag is one CI run; the value is that any new or existing adopter who runs `straymark init` or `straymark update-framework` sees the canonical Charter lifecycle table with the Batch Ledger pattern visible.
+
+### Adopter guidance
+
+`straymark update-framework` brings the updated `STRAYMARK.md` and governance footers. No behavior changes: the CLI is unchanged (`cli-3.13.0` remains the matching CLI version), and no schemas or templates moved.
+
+---
+
 ## Framework 4.14.0 / CLI 3.13.0 — Sentinel feedback cycle: shellcheck cleanup, regex extension, multi-batch AILOG ledger
 
 Closes three upstream issues filed by Sentinel during its CHARTER-17 cycle, all field-validated downstream and ready for upstream canonization. The unifying theme is **pre-announcement hardening**: each issue was discovered in real adopter usage, the fix is additive (zero ruptura para existing artifacts), and Sentinel can revert its local workaround once this release lands.

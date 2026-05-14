@@ -146,7 +146,7 @@ Built-in safeguards ensure humans stay in control:
 
 Built-in commands that turn the discipline into actionable feedback:
 
-- **`straymark charter <new|list|status|close|drift|audit>`** — Bounded units of work declared ex-ante, audited ex-post. `close` records post-execution telemetry; `drift` detects file-vs-commit drift with AILOG-aware suppression; `audit` orchestrates a multi-model external review (3-step prepare/calibrate/finalize, orchestration-only — no LLM API calls). For IDE-driven workflows, the inline skills `/straymark-audit-prompt` and `/straymark-audit-review` wrap the CLI to surface prompts in the conversation and merge findings into telemetry.
+- **`straymark charter <new|list|status|close|drift|batch-complete|audit>`** — Bounded units of work declared ex-ante, audited ex-post. `close` records post-execution telemetry; `drift` detects file-vs-commit drift with AILOG-aware suppression and (cli-3.13.0+) gates on `### Batch N (pending)` entries in the AILOG `## Batch Ledger`; `batch-complete` (cli-3.13.0+) marks a batch as complete in the ledger for multi-batch Charters (3+ batches or >1 day); `audit` orchestrates a multi-model external review (3-step prepare/calibrate/finalize, orchestration-only — no LLM API calls). For IDE-driven workflows, the inline skills `/straymark-audit-prompt` and `/straymark-audit-review` wrap the CLI to surface prompts in the conversation and merge findings into telemetry.
 - **`straymark approve <doc-id>`** — Record a formal human approval (writes `reviewed_by` / `reviewed_at` / `review_outcome` and the `## Approval` body section in one edit; closes the gap canonized in DOCUMENTATION-POLICY §3.5)
 - **`straymark validate`** — 25+ validation rules for document correctness (12 China-specific are scope-aware); `--include-charters` extends to `.straymark/charters/`; `--check-pending-reviews` lists approval backlog (warn-only)
 - **`straymark metrics`** — Governance KPIs, review rates, risk distribution, trends
@@ -274,7 +274,7 @@ StrayMark uses independent version tags for each component:
 
 | Component | Tag prefix | Example | Includes |
 |-----------|-----------|---------|----------|
-| Framework | `fw-` | `fw-4.14.0` | Templates (12 types), governance, directives, Charter template + schema |
+| Framework | `fw-` | `fw-4.14.1` | Templates (12 types), governance, directives, Charter template + schema |
 | CLI | `cli-` | `cli-3.13.0` | The `straymark` binary |
 
 Check installed versions with `straymark status` or `straymark about`.
@@ -291,7 +291,7 @@ Check installed versions with `straymark status` or `straymark about`.
 | `straymark status [path]` | Show installation health and doc stats |
 | `straymark repair [path]` | Restore missing directories and framework files |
 | `straymark validate [path]` | Validate documents for compliance and correctness (use `--include-charters` for Charters, `--check-pending-reviews` for approval backlog) |
-| `straymark charter <subcommand>` | Manage Charters: `new`, `list`, `status`, `close` (record telemetry), `drift` (file-vs-commit drift with AILOG-awareness), `audit` (multi-model external review, orchestration-only) |
+| `straymark charter <subcommand>` | Manage Charters: `new`, `list`, `status`, `close` (record telemetry), `drift` (file-vs-commit drift with AILOG-awareness + Batch Ledger gate), `batch-complete` (mark a batch as complete in the AILOG `## Batch Ledger` for multi-batch Charters), `audit` (multi-model external review, orchestration-only) |
 | `straymark approve <doc-id>` | Record a formal human approval on a `review_required: true` document (frontmatter + canonical body section) |
 | `straymark compliance [path]` | Check regulatory compliance (EU AI Act, ISO 42001, NIST) |
 | `straymark metrics [path]` | Show governance metrics and documentation statistics |
@@ -307,7 +307,7 @@ See [CLI Reference](https://github.com/StrangeDaysTech/straymark/blob/main/docs/
 ```bash
 # Download the latest framework release ZIP from GitHub
 # Go to https://github.com/StrangeDaysTech/straymark/releases
-# and download the latest fw-* release (e.g., fw-4.14.0)
+# and download the latest fw-* release (e.g., fw-4.14.1)
 
 # Extract and copy to your project
 unzip straymark-fw-*.zip -d your-project/
