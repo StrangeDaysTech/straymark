@@ -49,7 +49,7 @@ StrayMark usa **tags de versión independientes** para cada componente:
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
 | Framework | `fw-` | `fw-4.15.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.13.1` | El binario `straymark` |
+| CLI | `cli-` | `cli-3.13.2` | El binario `straymark` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
 
@@ -392,7 +392,7 @@ Gestiona **Charters**: unidades acotadas y auditables de trabajo, declaradas ex-
 - `straymark charter list` — enumera Charters con filtros opcionales
 - `straymark charter status` — muestra detalle de un Charter, o los 5 más recientes
 - `straymark charter close` *(cli-3.7.0+)* — registra la telemetría post-ejecución y mueve el Charter a `closed`
-- `straymark charter drift` *(cli-3.7.0+)* — chequea drift archivo-vs-commit con supresión AILOG-aware y gate de Batch Ledger *(gate añadido en cli-3.13.1)*
+- `straymark charter drift` *(cli-3.7.0+)* — chequea drift archivo-vs-commit con supresión AILOG-aware y gate de Batch Ledger *(gate añadido en cli-3.13.2)*
 - `straymark charter batch-complete` *(cli-3.13.0+, fw-4.14.0+)* — marca un batch del Charter como completado en la `## Batch Ledger` del AILOG
 - `straymark charter audit` *(cli-3.8.0+)* — orquesta una revisión externa multi-modelo (orchestration-only, ver más abajo)
 

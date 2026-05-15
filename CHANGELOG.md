@@ -7,7 +7,7 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
-## Framework 4.15.0 — AGENTS.md universal injection
+## Framework 4.15.0 / CLI 3.13.2 — AGENTS.md universal injection
 
 Adds `AGENTS.md` as a first-class injection target. `AGENTS.md` is the open standard for AI coding agents, donated to the Agentic AI Foundation (Linux Foundation, 2025) and read by Claude Code, OpenAI Codex CLI, Cursor, Aider, Devin, Sourcegraph Amp, Google Jules, Zed AI, Continue, Roo Code, Factory Droids, GitHub Copilot, Gemini CLI, Windsurf, Amazon Q and others. Before this release, StrayMark injected directives only into platform-specific files (`CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursorrules`, `.cursor/rules/straymark.md`); adopters using any of the 15+ CLIs that read `AGENTS.md` instead had to copy directives by hand. From `fw-4.15.0`, `straymark init` and `straymark update-framework` keep `AGENTS.md` in sync with `STRAYMARK.md` automatically.
 
@@ -16,11 +16,14 @@ Adds `AGENTS.md` as a first-class injection target. `AGENTS.md` is the open stan
 - **`dist/dist-templates/directives/AGENTS.md`** — new template (reference shape, parallel to `CLAUDE.md` / `GEMINI.md`). Marker block points to `STRAYMARK.md`; below the markers, a "minimum viable" body declares identity, review requirements, pre-commit checklist, regulatory frontmatter snippet, NIST AI 600-1 risk categories, observability rules, and the naming convention — sufficient for any reader that cannot follow the relative link.
 - **`dist/dist-manifest.yml` `injections:`** — new entry `target: AGENTS.md` (reference shape, no embed). Placed first in the list to mark it as the universal entry point.
 - **`STRAYMARK.md` § Directive Injection Markers** — explicit mention of `AGENTS.md` with the standard's context (Agentic AI Foundation donation, reader list) and the coexistence rule (CLI-specific files coexist with `AGENTS.md` for platform-specific identity strings).
-- **`cli/src/commands/remove.rs` `LEGACY_DIRECTIVE_TARGETS`** — `AGENTS.md` added to the fallback list. The data-driven path (manifest-aware) already covers the common case; the legacy fallback guards installations that lose `.straymark/dist-manifest.yml` before running `remove`.
 - **`cli/tests/inject_test.rs`** — three new integration tests:
   - `test_agents_md_template_has_markers` — verifies the shipped template has the right marker shape and pointer.
   - `test_manifest_declares_agents_md_injection` — verifies the manifest declares the injection so init/update/remove all pick it up.
   - `test_agents_md_coexists_with_preexisting_file` — pins the append-when-no-markers behavior against the very common case of an adopter who already has an `AGENTS.md`.
+
+### Added (CLI)
+
+- **`AGENTS.md` in `LEGACY_DIRECTIVE_TARGETS`** (`cli/src/commands/remove.rs:13`) — the data-driven `clean_directives` path (which reads `.straymark/dist-manifest.yml`) already cleans `AGENTS.md` correctly for `fw-4.15.0` installations. This change extends the legacy fallback that fires when the local manifest is missing or fails to parse, so `straymark remove` cleans `AGENTS.md` defensively in that edge case rather than leaving it orphaned. Follows the existing convention of keeping `LEGACY_DIRECTIVE_TARGETS` in sync with the manifest's `injections:` list.
 
 ### Changed (Framework)
 
@@ -31,7 +34,7 @@ Adds `AGENTS.md` as a first-class injection target. `AGENTS.md` is the open stan
 
 ### Adopter guidance
 
-`straymark update-framework` brings the new template and injects `AGENTS.md` at the project root. The injection follows the same rules as every other directive target: it creates the file if absent, replaces the marker block on subsequent runs, and appends safely when the file pre-exists without StrayMark markers (very common in 2026 — many adopters already hand-maintain an `AGENTS.md`). No CLI changes (`cli-3.13.1` remains the matching CLI version); no schemas or templates removed.
+`straymark update-framework` brings the new template and injects `AGENTS.md` at the project root. The injection follows the same rules as every other directive target: it creates the file if absent, replaces the marker block on subsequent runs, and appends safely when the file pre-exists without StrayMark markers (very common in 2026 — many adopters already hand-maintain an `AGENTS.md`). `straymark update-cli` brings the matching `cli-3.13.2` binary so the `remove` legacy fallback also covers `AGENTS.md`; updating only the framework is safe because the common cleanup path is manifest-driven and already includes the new target.
 
 If your `.gitignore` excludes `AGENTS.md`, adjust it before `update-framework` so the injection lands in version control.
 

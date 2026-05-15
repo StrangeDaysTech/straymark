@@ -49,7 +49,7 @@ StrayMark 为每个组件使用**独立的版本标签**：
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
 | Framework | `fw-` | `fw-4.15.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.13.1` | `straymark` 二进制文件 |
+| CLI | `cli-` | `cli-3.13.2` | `straymark` 二进制文件 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
 
@@ -422,7 +422,7 @@ $ straymark validate --check-pending-reviews --max-pending-days 14
 - `straymark charter list` — 用可选过滤器枚举章程
 - `straymark charter status` — 显示章程详情，或最近的 5 个章程
 - `straymark charter close` *(cli-3.7.0+)* — 记录执行后遥测并将章程移至 `closed`
-- `straymark charter drift` *(cli-3.7.0+)* — 检查文件 vs 提交的漂移，带 AILOG 感知抑制和 Batch Ledger 门控 *(门控在 cli-3.13.1 添加)*
+- `straymark charter drift` *(cli-3.7.0+)* — 检查文件 vs 提交的漂移，带 AILOG 感知抑制和 Batch Ledger 门控 *(门控在 cli-3.13.2 添加)*
 - `straymark charter batch-complete` *(cli-3.13.0+, fw-4.14.0+)* — 在 AILOG 的 `## Batch Ledger` 中将章程批次标记为已完成
 - `straymark charter audit` *(cli-3.8.0+)* — 编排多模型外部审计（仅编排，详见下文）
 
