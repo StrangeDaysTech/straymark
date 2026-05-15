@@ -9,6 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../../../LICENSE)
 [![Crates.io](https://img.shields.io/crates/v/straymark-cli.svg)](https://crates.io/crates/straymark-cli)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![CLA assistant](https://cla-assistant.io/readme/badge/StrangeDaysTech/straymark)](https://cla-assistant.io/StrangeDaysTech/straymark)
 [![Handbook](https://img.shields.io/badge/docs-Handbook-orange.svg)](../../../dist/.straymark/QUICK-REFERENCE.md)
 [![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
 
