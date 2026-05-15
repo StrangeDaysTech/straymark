@@ -99,7 +99,7 @@ The full document, with empirical annotations from validation cycles, lives in [
 Sixteen document types covering the full development lifecycle (twelve core + four China-specific opt-in):
 
 | Type | Purpose | Example |
-|------|---------|---------|
+| --- | --- | --- |
 | **REQ** | Requirements | System requirements, user stories |
 | **ADR** | Architecture Decisions | Technology choices, design patterns |
 | **TES** | Test Plans | Test strategies, coverage goals |
@@ -123,6 +123,7 @@ Sixteen document types covering the full development lifecycle (twelve core + fo
 
 Pre-configured for popular AI coding assistants:
 
+- **Universal (AGENTS.md standard)** → `AGENTS.md` — read by Claude Code, OpenAI Codex CLI, Cursor, Aider, Devin, Sourcegraph Amp, Google Jules, Zed AI, Continue, Roo Code, Factory Droids, GitHub Copilot, Gemini CLI, Windsurf, Amazon Q and others
 - **Claude Code** (Anthropic) → `CLAUDE.md`
 - **Cursor** → `.cursorrules`
 - **GitHub Copilot CLI** → `.github/copilot-instructions.md`
@@ -180,7 +181,7 @@ The discipline StrayMark externalizes — explicit scope, declared decisions, na
 ### Standards Alignment
 
 | Standard | StrayMark Integration |
-|----------|---------------------|
+| --- | --- |
 | **ISO/IEC 42001:2023** | Vertebral standard — AI Management System governance |
 | **EU AI Act** | Risk classification, incident reporting, transparency |
 | **NIST AI RMF / 600-1** | 12 GenAI risk categories in ETH/AILOG |
@@ -193,7 +194,7 @@ The discipline StrayMark externalizes — explicit scope, declared decisions, na
 ### China Regulatory Coverage — opt-in via `regional_scope: china`
 
 | Standard | StrayMark Integration |
-|----------|---------------------|
+| --- | --- |
 | **TC260 AI Safety Governance Framework v2.0** | Five-level risk grading (TC260RA) |
 | **PIPL — Personal Information Protection Law** | Personal Information Protection Impact Assessment (PIPIA), retention ≥ 3 years |
 | **GB 45438-2025** *(mandatory)* | AI-generated content labeling — explicit + implicit (AILABEL) |
@@ -274,8 +275,8 @@ The CLI downloads the latest StrayMark release, sets up the framework, and confi
 StrayMark uses independent version tags for each component:
 
 | Component | Tag prefix | Example | Includes |
-|-----------|-----------|---------|----------|
-| Framework | `fw-` | `fw-4.14.3` | Templates (12 types), governance, directives, Charter template + schema |
+| --- | --- | --- | --- |
+| Framework | `fw-` | `fw-4.15.0` | Templates (12 types), governance, directives, Charter template + schema |
 | CLI | `cli-` | `cli-3.13.1` | The `straymark` binary |
 
 Check installed versions with `straymark status` or `straymark about`.
@@ -283,7 +284,7 @@ Check installed versions with `straymark status` or `straymark about`.
 ### CLI Commands
 
 | Command | Description |
-|---------|-------------|
+| --- | --- |
 | `straymark init [path]` | Initialize StrayMark in a project |
 | `straymark update` | Update both framework and CLI |
 | `straymark update-framework` | Update only the framework |
@@ -308,7 +309,7 @@ See [CLI Reference](https://github.com/StrangeDaysTech/straymark/blob/main/docs/
 ```bash
 # Download the latest framework release ZIP from GitHub
 # Go to https://github.com/StrangeDaysTech/straymark/releases
-# and download the latest fw-* release (e.g., fw-4.14.3)
+# and download the latest fw-* release (e.g., fw-4.15.0)
 
 # Extract and copy to your project
 unzip straymark-fw-*.zip -d your-project/
@@ -328,7 +329,7 @@ git commit -m "chore: adopt StrayMark"
 StrayMark documentation is organized by audience:
 
 | Track | For | Start here |
-|-------|-----|------------|
+| --- | --- | --- |
 | [**Adopters**](https://github.com/StrangeDaysTech/straymark/tree/main/docs/adopters) | Teams adopting StrayMark in their projects | [ADOPTION-GUIDE.md](https://github.com/StrangeDaysTech/straymark/blob/main/docs/adopters/ADOPTION-GUIDE.md) |
 | [**Contributors**](https://github.com/StrangeDaysTech/straymark/tree/main/docs/contributors) | Developers contributing to StrayMark | [TRANSLATION-GUIDE.md](https://github.com/StrangeDaysTech/straymark/blob/main/docs/contributors/TRANSLATION-GUIDE.md) |
 
@@ -339,7 +340,7 @@ StrayMark documentation is organized by audience:
 ### Key References
 
 | Document | Description |
-|----------|-------------|
+| --- | --- |
 | [**Quick Reference**](https://github.com/StrangeDaysTech/straymark/blob/main/dist/.straymark/QUICK-REFERENCE.md) | One-page overview of document types and naming |
 | [STRAYMARK.md](https://github.com/StrangeDaysTech/straymark/blob/main/dist/STRAYMARK.md) | Unified governance rules (source of truth) |
 | [ADOPTION-GUIDE.md](https://github.com/StrangeDaysTech/straymark/blob/main/docs/adopters/ADOPTION-GUIDE.md) | Adoption guide for new/existing projects |
@@ -486,7 +487,7 @@ StrayMark includes skills for AI agents that enable **active documentation creat
 ### Available Skills
 
 | Skill | Purpose | Claude | Gemini |
-|-------|---------|--------|--------|
+| --- | --- | --- | --- |
 | `/straymark-status` | Check documentation compliance | ✅ | ✅ |
 | `/straymark-new` | Create any document type (unified) | ✅ | ✅ |
 | `/straymark-ailog` | Quick AILOG creation | ✅ | ✅ |
@@ -533,7 +534,7 @@ straymark status
 AI agents report documentation status at the end of each task:
 
 | Status | Meaning |
-|--------|---------|
+| --- | --- |
 | `StrayMark: Created AILOG-...` | Documentation was created |
 | `StrayMark: No documentation required` | Change was minor |
 | `StrayMark: Documentation pending` | May need manual review |
@@ -557,7 +558,7 @@ your-project/
 ```
 
 | Directory | Agent | Product | Format |
-|-----------|-------|---------|--------|
+| --- | --- | --- | --- |
 | `.agent/workflows/` | Antigravity, generic | VS Code/Cursor extensions | `skill-name.md` with YAML frontmatter |
 | `.gemini/skills/` | Gemini CLI | Google's terminal CLI | `skill-name/SKILL.md` |
 | `.claude/skills/` | Claude Code | Anthropic's coding agent | `skill-name/SKILL.md` |
@@ -573,7 +574,8 @@ All skill implementations are **functionally identical**—only the format diffe
 ### AI Coding Assistants
 
 | Platform | Config File | Status |
-|----------|-------------|--------|
+| --- | --- | --- |
+| Universal (AGENTS.md standard) | `AGENTS.md` | ✅ Full support |
 | Claude Code | `CLAUDE.md` | ✅ Full support |
 | Cursor | `.cursorrules` | ✅ Full support |
 | GitHub Copilot CLI | `.github/copilot-instructions.md` | ✅ Full support |
@@ -582,7 +584,7 @@ All skill implementations are **functionally identical**—only the format diffe
 ### Operating Systems
 
 | OS | Validation |
-|----|------------|
+| --- | --- |
 | Linux | `straymark validate` |
 | macOS | `straymark validate` |
 | Windows | `straymark validate` |
@@ -590,7 +592,7 @@ All skill implementations are **functionally identical**—only the format diffe
 ### CI/CD Platforms
 
 | Platform | Support |
-|----------|---------|
+| --- | --- |
 | GitHub Actions | ✅ Included workflow |
 | GitLab CI | 🔧 Adaptable from GitHub Actions |
 | Azure DevOps | 🔧 Adaptable from GitHub Actions |
@@ -623,14 +625,14 @@ This project is licensed under the MIT License - see the [LICENSE](https://githu
 
 <div align="center">
 
-**[Strange Days Tech](https://strangedays.tech)** builds tools for responsible AI-assisted software development.
+[**Strange Days Tech**](https://strangedays.tech) builds tools for responsible AI-assisted software development.
 
 Our open-source ecosystem:
 
 | Project | Description |
-|---------|-------------|
-| **[StrayMark](https://github.com/StrangeDaysTech/straymark)** | The cognitive discipline your AI-assisted projects need |
-| **[arborist-metrics](https://github.com/StrangeDaysTech/arborist)** | Multi-language code complexity analysis library for Rust — [crates.io](https://crates.io/crates/arborist-metrics) |
+| --- | --- |
+| [**StrayMark**](https://github.com/StrangeDaysTech/straymark) | The cognitive discipline your AI-assisted projects need |
+| [**arborist-metrics**](https://github.com/StrangeDaysTech/arborist) | Multi-language code complexity analysis library for Rust — [crates.io](https://crates.io/crates/arborist-metrics) |
 
 [Website](https://strangedays.tech) • [GitHub](https://github.com/StrangeDaysTech)
 

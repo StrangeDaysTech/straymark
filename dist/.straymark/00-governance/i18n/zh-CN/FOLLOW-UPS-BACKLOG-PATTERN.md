@@ -233,4 +233,4 @@ AILOG_DIR=".straymark/07-ai-audit/agent-logs"
 
 ---
 
-*StrayMark v4.14.3 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.15.0 | [Strange Days Tech](https://strangedays.tech)*

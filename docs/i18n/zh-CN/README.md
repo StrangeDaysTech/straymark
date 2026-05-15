@@ -117,6 +117,7 @@ StrayMark 的产品决策基于十二条明确的原则。它们按层级排序�
 
 为主流 AI 编码助手预配置：
 
+- **通用（AGENTS.md 标准）** → `AGENTS.md` — 被 Claude Code、OpenAI Codex CLI、Cursor、Aider、Devin、Sourcegraph Amp、Google Jules、Zed AI、Continue、Roo Code、Factory Droids、GitHub Copilot、Gemini CLI、Windsurf、Amazon Q 等读取
 - **Claude Code** (Anthropic) → `CLAUDE.md`
 - **Cursor** → `.cursorrules`
 - **GitHub Copilot CLI** → `.github/copilot-instructions.md`
@@ -256,7 +257,7 @@ StrayMark 为每个组件使用独立的版本标签：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.14.3` | 模板（12 种类型）、治理文档、指令、Charter 模板 + schema |
+| Framework | `fw-` | `fw-4.15.0` | 模板（12 种类型）、治理文档、指令、Charter 模板 + schema |
 | CLI | `cli-` | `cli-3.13.1` | `straymark` 二进制文件 |
 
 使用 `straymark status` 或 `straymark about` 查看已安装的版本。
@@ -289,7 +290,7 @@ StrayMark 为每个组件使用独立的版本标签：
 ```bash
 # 从 GitHub 下载最新的框架发布 ZIP
 # 前往 https://github.com/StrangeDaysTech/straymark/releases
-# 下载最新的 fw-* 发布（例如 fw-4.14.3）
+# 下载最新的 fw-* 发布（例如 fw-4.15.0）
 
 # 解压并复制到你的项目
 unzip straymark-fw-*.zip -d your-project/
@@ -550,6 +551,7 @@ your-project/
 
 | 平台 | 配置文件 | 状态 |
 |------|----------|------|
+| 通用（AGENTS.md 标准） | `AGENTS.md` | ✅ 完整支持 |
 | Claude Code | `CLAUDE.md` | ✅ 完整支持 |
 | Cursor | `.cursorrules` | ✅ 完整支持 |
 | GitHub Copilot CLI | `.github/copilot-instructions.md` | ✅ 完整支持 |

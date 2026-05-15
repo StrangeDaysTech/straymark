@@ -10,6 +10,7 @@ use crate::utils;
 /// Legacy hardcoded targets for backwards compatibility with installations
 /// that don't have a local dist-manifest.yml
 const LEGACY_DIRECTIVE_TARGETS: &[&str] = &[
+    "AGENTS.md",
     "CLAUDE.md",
     "GEMINI.md",
     ".github/copilot-instructions.md",

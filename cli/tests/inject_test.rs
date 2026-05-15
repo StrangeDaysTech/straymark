@@ -57,6 +57,62 @@ fn test_remove_injection() {
 }
 
 #[test]
+fn test_agents_md_template_has_markers() {
+    // Sanity check that the shipped AGENTS.md template has the markers in the right shape.
+    let template_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .join("dist/dist-templates/directives/AGENTS.md");
+    let template = fs::read_to_string(&template_path)
+        .expect("AGENTS.md template must exist at dist/dist-templates/directives/AGENTS.md");
+
+    assert!(template.contains("<!-- straymark:begin -->"));
+    assert!(template.contains("<!-- straymark:end -->"));
+    assert!(template.contains("STRAYMARK.md"));
+    // The Universal Agent Configuration header tells the reader this is the cross-CLI entry point.
+    assert!(template.contains("Universal Agent Configuration"));
+}
+
+#[test]
+fn test_manifest_declares_agents_md_injection() {
+    // The dist-manifest.yml must list AGENTS.md among injection targets so init/update/remove
+    // pick it up via the data-driven path (not just the legacy fallback in remove.rs).
+    let manifest_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .join("dist/dist-manifest.yml");
+    let manifest = fs::read_to_string(&manifest_path).expect("dist-manifest.yml must exist");
+
+    assert!(manifest.contains("target: AGENTS.md"));
+    assert!(manifest.contains("template: dist-templates/directives/AGENTS.md"));
+}
+
+#[test]
+fn test_agents_md_coexists_with_preexisting_file() {
+    // Simulate the case where the adopter already has an AGENTS.md (very common in 2026 repos).
+    // The injection must append the marker block, not overwrite the existing content.
+    let dir = TempDir::new().unwrap();
+    let target = dir.path().join("AGENTS.md");
+
+    let preexisting = "# My Project AGENTS.md\n\n## Build\n\nrun `cargo build`\n";
+    fs::write(&target, preexisting).unwrap();
+
+    let marker_block =
+        "<!-- straymark:begin -->\n> Read STRAYMARK.md\n<!-- straymark:end -->";
+    let original = fs::read_to_string(&target).unwrap();
+    let appended = format!("{}\n\n{}\n", original.trim_end(), marker_block);
+    fs::write(&target, &appended).unwrap();
+
+    let result = fs::read_to_string(&target).unwrap();
+    // Preexisting content survives.
+    assert!(result.contains("# My Project AGENTS.md"));
+    assert!(result.contains("cargo build"));
+    // StrayMark content is appended.
+    assert!(result.contains("<!-- straymark:begin -->"));
+    assert!(result.contains("STRAYMARK.md"));
+}
+
+#[test]
 fn test_template_with_embed_markers() {
     let dir = TempDir::new().unwrap();
     let target = dir.path().join(".cursorrules");
