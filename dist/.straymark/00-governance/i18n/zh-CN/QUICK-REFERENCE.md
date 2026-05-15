@@ -216,4 +216,4 @@ risk_level: low | medium | high | critical
 
 ---
 
-*StrayMark v4.14.3 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.15.0 | [Strange Days Tech](https://strangedays.tech)*

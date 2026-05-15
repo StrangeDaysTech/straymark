@@ -1,4 +1,4 @@
-version: "4.14.3"
+version: "4.15.0"
 description: "StrayMark distribution manifest"
 repository: "https://github.com/StrangeDaysTech/straymark"
 
@@ -21,6 +21,8 @@ files:
 # Files that are injected into existing directive files
 # (not copied, but merged via markers)
 injections:
+  - target: AGENTS.md
+    template: dist-templates/directives/AGENTS.md
   - target: CLAUDE.md
     template: dist-templates/directives/CLAUDE.md
   - target: GEMINI.md

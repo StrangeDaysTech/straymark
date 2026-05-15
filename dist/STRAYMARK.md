@@ -428,7 +428,7 @@ straymark charter close CHARTER-NN          # record telemetry; flip status to `
 
 ## Directive Injection Markers
 
-StrayMark uses HTML comment markers to manage injected content in agent configuration files (CLAUDE.md, GEMINI.md, .cursorrules, etc.):
+StrayMark uses HTML comment markers to manage injected content in agent configuration files (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursorrules`, `.cursor/rules/straymark.md`):
 
 ```html
 <!-- straymark:begin -->
@@ -439,6 +439,7 @@ StrayMark uses HTML comment markers to manage injected content in agent configur
 - Content between these markers is managed by `straymark init`, `update`, and `repair`
 - Do not remove or modify these markers manually — they are required for safe updates
 - If markers are missing from a target file, StrayMark appends the content block at the end
+- `AGENTS.md` is the open standard donated to the Agentic AI Foundation (Linux Foundation, 2025) and is read by Claude Code, OpenAI Codex CLI, Cursor, Aider, Devin, Sourcegraph Amp, Google Jules, Zed AI, Continue, Roo Code, Factory Droids, GitHub Copilot, Gemini CLI, Windsurf, Amazon Q and others. CLI-specific files (`CLAUDE.md`, `GEMINI.md`, etc.) coexist with `AGENTS.md` and provide platform-specific identity strings.
 
 ---
 

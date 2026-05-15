@@ -117,6 +117,7 @@ Doce tipos de documentos que cubren el ciclo de vida completo del desarrollo:
 
 Pre-configurado para asistentes de codificación con IA populares:
 
+- **Universal (estándar AGENTS.md)** → `AGENTS.md` — leído por Claude Code, OpenAI Codex CLI, Cursor, Aider, Devin, Sourcegraph Amp, Google Jules, Zed AI, Continue, Roo Code, Factory Droids, GitHub Copilot, Gemini CLI, Windsurf, Amazon Q y otros
 - **Claude Code** (Anthropic) → `CLAUDE.md`
 - **Cursor** → `.cursorrules`
 - **GitHub Copilot CLI** → `.github/copilot-instructions.md`
@@ -238,8 +239,8 @@ StrayMark usa tags de versión independientes para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Incluye |
 |------------|---------------|---------|---------|
-| Framework | `fw-` | `fw-4.14.3` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
-| CLI | `cli-` | `cli-3.13.1` | El binario `straymark` |
+| Framework | `fw-` | `fw-4.15.0` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
+| CLI | `cli-` | `cli-3.13.2` | El binario `straymark` |
 
 Verifica las versiones instaladas con `straymark status` o `straymark about`.
 
@@ -271,7 +272,7 @@ Ver [Referencia CLI](adopters/CLI-REFERENCE.md) para uso detallado.
 ```bash
 # Descargar el último release ZIP del framework desde GitHub
 # Ve a https://github.com/StrangeDaysTech/straymark/releases
-# y descarga el último release fw-* (ej. fw-4.14.3)
+# y descarga el último release fw-* (ej. fw-4.15.0)
 
 # Extraer y copiar a tu proyecto
 unzip straymark-fw-*.zip -d tu-proyecto/
@@ -531,6 +532,7 @@ Todas las implementaciones de skills son **funcionalmente idénticas**—solo di
 
 | Plataforma | Archivo de Config | Estado |
 |------------|-------------------|--------|
+| Universal (estándar AGENTS.md) | `AGENTS.md` | Soporte completo |
 | Claude Code | `CLAUDE.md` | Soporte completo |
 | Cursor | `.cursorrules` | Soporte completo |
 | GitHub Copilot CLI | `.github/copilot-instructions.md` | Soporte completo |

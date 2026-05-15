@@ -81,6 +81,7 @@ StrayMark provides configuration files for:
 
 | Platform | Configuration File | Status |
 |----------|-------------------|--------|
+| **Universal (AGENTS.md standard)** | `AGENTS.md` | ✅ Supported |
 | **Claude Code** (Anthropic) | `CLAUDE.md` | ✅ Supported |
 | **Cursor** | `.cursorrules` | ✅ Supported |
 | **GitHub Copilot CLI** | `.github/copilot-instructions.md` | ✅ Supported |
@@ -232,7 +233,7 @@ The CLI automatically:
 - Downloads the latest StrayMark release from GitHub
 - Sets up the `.straymark/` directory structure
 - Creates `STRAYMARK.md` with governance rules
-- Configures AI agent directives (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`, etc.)
+- Configures AI agent directives (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`, etc.)
 - Copies CI/CD workflows
 
 ### Option 2: Manual Setup
@@ -487,7 +488,7 @@ straymark validate
 ### Checklist
 
 - [ ] `.straymark/` folder structure exists
-- [ ] At least one agent config file exists (`CLAUDE.md`, `GEMINI.md`, etc.)
+- [ ] At least one agent config file exists (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, etc.)
 - [ ] Governance documents are present in `.straymark/00-governance/`
 - [ ] Templates are present in `.straymark/templates/`
 - [ ] Git branching strategy documented in `.straymark/03-implementation/`

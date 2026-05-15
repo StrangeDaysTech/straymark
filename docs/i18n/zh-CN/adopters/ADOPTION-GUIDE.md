@@ -81,6 +81,7 @@ StrayMark 提供以下平台的配置文件：
 
 | 平台 | 配置文件 | 状态 |
 |------|----------|------|
+| **通用（AGENTS.md 标准）** | `AGENTS.md` | ✅ 已支持 |
 | **Claude Code** (Anthropic) | `CLAUDE.md` | ✅ 已支持 |
 | **Cursor** | `.cursorrules` | ✅ 已支持 |
 | **GitHub Copilot CLI** | `.github/copilot-instructions.md` | ✅ 已支持 |
@@ -232,7 +233,7 @@ CLI 自动完成：
 - 从 GitHub 下载最新的 StrayMark 版本
 - 设置 `.straymark/` 目录结构
 - 创建包含治理规则的 `STRAYMARK.md`
-- 配置 AI Agent 指令（`CLAUDE.md`、`GEMINI.md`、`.cursorrules` 等）
+- 配置 AI Agent 指令（`AGENTS.md`、`CLAUDE.md`、`GEMINI.md`、`.cursorrules` 等）
 - 复制 CI/CD 工作流
 
 ### 选项 2：手动设置
@@ -488,7 +489,7 @@ straymark validate
 ### 检查清单
 
 - [ ] `.straymark/` 文件夹结构存在
-- [ ] 至少有一个 Agent 配置文件（`CLAUDE.md`、`GEMINI.md` 等）
+- [ ] 至少有一个 Agent 配置文件（`AGENTS.md`、`CLAUDE.md`、`GEMINI.md` 等）
 - [ ] 治理文档存在于 `.straymark/00-governance/`
 - [ ] 模板存在于 `.straymark/templates/`
 - [ ] Git 分支策略记录在 `.straymark/03-implementation/`

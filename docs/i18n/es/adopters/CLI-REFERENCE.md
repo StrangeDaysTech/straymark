@@ -48,8 +48,8 @@ StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.14.3` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.13.1` | El binario `straymark` |
+| Framework | `fw-` | `fw-4.15.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| CLI | `cli-` | `cli-3.13.2` | El binario `straymark` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
 
@@ -80,7 +80,7 @@ Inicializa StrayMark en un directorio de proyecto.
 1. Descarga el último release del framework (`fw-*`) desde GitHub
 2. Crea la estructura de directorios `.straymark/`
 3. Crea `STRAYMARK.md` con las reglas de gobernanza
-4. Configura archivos de directivas de agentes IA (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`, etc.)
+4. Configura archivos de directivas de agentes IA (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`, etc.)
 5. Copia workflows de CI/CD
 6. *(`--hooks`)* instala el hook pre-PR
 
@@ -88,7 +88,7 @@ Inicializa StrayMark en un directorio de proyecto.
 
 ```bash
 $ straymark init .
-✔ Downloaded StrayMark fw-4.14.3
+✔ Downloaded StrayMark fw-4.15.0
 ✔ Created .straymark/ directory structure
 ✔ Created STRAYMARK.md
 ✔ Configured AI agent directives
@@ -109,7 +109,7 @@ Si `.straymark/` no existe en el directorio actual, la actualización del framew
 ```bash
 $ straymark update
 Updating framework...
-✔ Framework updated to fw-4.14.3
+✔ Framework updated to fw-4.15.0
 Updating CLI...
 ✔ CLI updated to cli-3.5.2
 ```
@@ -126,7 +126,7 @@ Actualiza solo los archivos del framework. Busca el último release `fw-*` en Gi
 
 ```bash
 $ straymark update-framework
-✔ Framework updated to fw-4.14.3
+✔ Framework updated to fw-4.15.0
 ```
 
 ---
@@ -205,7 +205,7 @@ $ straymark status
 StrayMark Status
 ───────────────
 Path:              /home/user/my-project
-Framework version: fw-4.14.3
+Framework version: fw-4.15.0
 CLI version:       cli-3.5.2
 Language:          en
 Structure:         ✔ Complete
@@ -392,7 +392,7 @@ Gestiona **Charters**: unidades acotadas y auditables de trabajo, declaradas ex-
 - `straymark charter list` — enumera Charters con filtros opcionales
 - `straymark charter status` — muestra detalle de un Charter, o los 5 más recientes
 - `straymark charter close` *(cli-3.7.0+)* — registra la telemetría post-ejecución y mueve el Charter a `closed`
-- `straymark charter drift` *(cli-3.7.0+)* — chequea drift archivo-vs-commit con supresión AILOG-aware y gate de Batch Ledger *(gate añadido en cli-3.13.1)*
+- `straymark charter drift` *(cli-3.7.0+)* — chequea drift archivo-vs-commit con supresión AILOG-aware y gate de Batch Ledger *(gate añadido en cli-3.13.2)*
 - `straymark charter batch-complete` *(cli-3.13.0+, fw-4.14.0+)* — marca un batch del Charter como completado en la `## Batch Ledger` del AILOG
 - `straymark charter audit` *(cli-3.8.0+)* — orquesta una revisión externa multi-modelo (orchestration-only, ver más abajo)
 
@@ -908,7 +908,7 @@ Muestra información de versión, autoría y licencia.
 $ straymark about
 StrayMark CLI
   CLI version:       cli-3.5.2
-  Framework version: fw-4.14.3
+  Framework version: fw-4.15.0
   Author:            Strange Days Tech, S.A.S.
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/straymark
