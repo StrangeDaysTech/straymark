@@ -209,6 +209,14 @@ confidence: high | medium | low
 - 识别潜在风险
 - 在明显时建议改进
 - 提醒技术债务
+- **浮现规范源之间的不一致**（原则 #8 —— 参见 [`PRINCIPLES.md`](PRINCIPLES.md)）。当智能体检测到 StrayMark 文档中两个规范源之间的实质性分歧时，必须在继续被询问的任务之前提出。日常工作中应注意的示例：
+  - 长时间运行的多 Charter 链中 spec 相对于已交付代码的陈旧（参见 [`CHARTER-CHAIN-EVOLUTION.md`](CHARTER-CHAIN-EVOLUTION.md) Pattern 1）
+  - 累积的 `R<N> (new, not in Charter)` 条目符合 TDE 标准但未被升级（参见上文 §3）
+  - 生效中的 ADR 被当前实现矛盾
+  - `§Follow-ups` 计数跨越 backlog-pattern 阈值（参见 [`FOLLOW-UPS-BACKLOG-PATTERN.md`](FOLLOW-UPS-BACKLOG-PATTERN.md)）
+  - 关闭后出现需要修订的审计发现（参见 [`CHARTER-CHAIN-EVOLUTION.md`](CHARTER-CHAIN-EVOLUTION.md) Pattern 2）
+
+  参见 [`EMERGENT-OBSERVATION-DESIGN.md`](EMERGENT-OBSERVATION-DESIGN.md) 以了解连接这些表面的元模式。
 
 ---
 
@@ -374,4 +382,4 @@ confidence: high | medium | low
 
 ---
 
-*StrayMark v4.16.2 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.17.0 | [Strange Days Tech](https://strangedays.tech)*

@@ -76,4 +76,16 @@ Certain types of changes **always** require human approval:
 
 ---
 
-*StrayMark v1.0.0 | [Strange Days Tech](https://strangedays.tech)*
+## 8. Cross-Source Dissonance Surfacing
+
+> **"When two canonical sources disagree, surface before proceeding."**
+
+When the agent detects material divergence between two canonical sources of StrayMark documentation (spec ↔ code, AILOG `§Risk` ↔ TDE backlog, ADR ↔ implementation, Charter declared scope ↔ commits, etc.), surface it before proceeding with the asked task.
+
+StrayMark documentation is deliberately designed to make these divergences detectable: formal cross-referencing (frontmatter fields, canonical sections, stable IDs) + cultural permission to surface beyond the task. The agent's role is to consume that infrastructure and report what it sees.
+
+See [`EMERGENT-OBSERVATION-DESIGN.md`](EMERGENT-OBSERVATION-DESIGN.md) for the meta-pattern and the pyramid of existing applications.
+
+---
+
+*StrayMark fw-4.17.0 | [Strange Days Tech](https://strangedays.tech)*

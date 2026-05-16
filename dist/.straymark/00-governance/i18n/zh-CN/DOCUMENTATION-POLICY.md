@@ -310,4 +310,4 @@ review_outcome: approved                # approved | revisions_requested | rejec
 
 ---
 
-*StrayMark v4.16.2 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.17.0 | [Strange Days Tech](https://strangedays.tech)*

@@ -257,7 +257,7 @@ StrayMark 为每个组件使用独立的版本标签：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.16.2` | 模板（12 种类型）、治理文档、指令、Charter 模板 + schema |
+| Framework | `fw-` | `fw-4.17.0` | 模板（12 种类型）、治理文档、指令、Charter 模板 + schema |
 | CLI | `cli-` | `cli-3.14.1` | `straymark` 二进制文件 |
 
 使用 `straymark status` 或 `straymark about` 查看已安装的版本。
@@ -290,7 +290,7 @@ StrayMark 为每个组件使用独立的版本标签：
 ```bash
 # 从 GitHub 下载最新的框架发布 ZIP
 # 前往 https://github.com/StrangeDaysTech/straymark/releases
-# 下载最新的 fw-* 发布（例如 fw-4.16.2）
+# 下载最新的 fw-* 发布（例如 fw-4.17.0）
 
 # 解压并复制到你的项目
 unzip straymark-fw-*.zip -d your-project/

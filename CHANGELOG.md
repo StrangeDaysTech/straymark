@@ -7,6 +7,28 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.17.0 — Emergent-observation design meta-pattern
+
+Names a design property of the StrayMark framework that was already present but unnamed: *formal cross-referencing (frontmatter linkage, canonical sections, stable IDs) composed with cultural permission to surface beyond the asked task* produces agents that, while reading only the framework documentation, surface dissonance between canonical sources. This composition produced the Sentinel observation that crystallized as `CHARTER-CHAIN-EVOLUTION.md` Pattern 1 in `fw-4.16.0`. The new doc and a new Principle codify the meta so it can be preserved deliberately, and lists four open application axes (MCARD ↔ deployed model, SBOM ↔ lockfiles, ADR ↔ contradicting implementation, Constitution Check ↔ framework bump) as candidates for future N=1-validated extension. No CLI bump.
+
+### Added (Framework)
+
+- **`dist/.straymark/00-governance/EMERGENT-OBSERVATION-DESIGN.md`** (EN, ES, zh-CN) — new canonical doc naming the meta-pattern. Sections: Status (v0, N=1), Why this document exists, The two design properties (formal linkage + cultural permission), Empirical case (Sentinel #150 → #156), Pyramid of instances (Pattern 1, Pattern 2, charter drift, follow-ups backlog drift, TDE-vs-`R<N>` escalation, external audit checkpoint), Anti-patterns, Open application axes, Authority/acceptance flow, Open questions, Related. Structure mirrors `CHARTER-CHAIN-EVOLUTION.md` for cross-doc consistency.
+- **`PRINCIPLES.md` §8 — Cross-Source Dissonance Surfacing** (EN, ES, zh-CN) — new principle condensing the cultural rule into PRINCIPLES.md alongside the existing seven. Points to the meta doc for the pyramid of existing applications.
+
+### Changed (Framework)
+
+- **`AGENT-RULES.md §6 "Be Proactive"** (EN, ES, zh-CN) — expanded with a new sub-bullet *"Surface dissonance between canonical sources"* citing Principle #8 and listing concrete examples (stale spec, accumulated `R<N>` matching TDE criteria, ADR contradicted by code, follow-ups crossing threshold, post-close audit findings). Existing three bullets unchanged.
+- **Cross-links added** in `CHARTER-CHAIN-EVOLUTION.md` (`## Related` — EN/ES/zh-CN), `SPECKIT-CHARTER-BRIDGE.md` (`## See also` / `## Ver también` / `## 另请参阅` — EN/ES/zh-CN), `FOLLOW-UPS-BACKLOG-PATTERN.md` (new `## Related` / `## Relacionado` / `## 相关` section before footer — EN/ES/zh-CN), and `STRAYMARK.md §11` (new row in "When to Load Additional Documents" table — EN only; STRAYMARK.md has no i18n versions).
+- **Governance footers** bumped to `fw-4.17.0` across `PRINCIPLES.md`, `AGENT-RULES.md`, `DOCUMENTATION-POLICY.md`, `C4-DIAGRAM-GUIDE.md`, `QUICK-REFERENCE.md`, `CHARTER-CHAIN-EVOLUTION.md`, `FOLLOW-UPS-BACKLOG-PATTERN.md` (EN + ES + zh-CN) and the root `dist/.straymark/QUICK-REFERENCE.md`. PRINCIPLES.md migrated from the legacy `StrayMark v1.0.0` footer convention to the `fw-X.Y.Z` framework versioning convention used by sibling governance docs.
+- **`STRAYMARK.md §11 "When to Load Additional Documents"** — new row: *"Wondering why agents surface things you didn't ask"* → `EMERGENT-OBSERVATION-DESIGN.md`. Lets adopters discover the meta-pattern from the canonical entry-point doc.
+
+### Adopter guidance
+
+`straymark update-framework` brings the new doc, the new Principle, and the §6 expansion. No CLI install required — `cli-3.14.1` from the `fw-4.16.2` cycle remains current. The four "Open application axes" listed in the new doc are tracked in a follow-up upstream RFC issue filed after this release lands.
+
+---
+
 ## Framework 4.16.2 / CLI 3.14.1 — `straymark repair` per-target restore (Issue #156 follow-up)
 
 Fixes the underlying CLI bug surfaced in the [Issue #156 closure comment](https://github.com/StrangeDaysTech/straymark/issues/156#issuecomment-4465050814): `straymark repair` ignored a single missing injection target (e.g. a deleted `AGENTS.md`) when `STRAYMARK.md` was still present, because both the download trigger and the inject path were gated on `STRAYMARK.md` being absent. From this release, both gates are removed and `repair` mirrors `straymark update-framework`'s per-target behavior for the set of files declared under `dist-manifest.yml::injections:`.
