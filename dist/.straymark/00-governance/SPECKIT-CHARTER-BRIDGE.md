@@ -134,6 +134,8 @@ originating_charter: CHARTER-02-peek-mvp-foundation
 ## Spec maintenance during multi-Charter execution
 
 > **Empirical anchor**: surfaced by [issue #150](https://github.com/StrangeDaysTech/straymark/issues/150) after Sentinel ran a single `specs/002-commshub/plan.md` (committed 2026-04-21) through **seven consecutive Charters** (CHARTER-07 through CHARTER-17, ~1 month). Twelve aprendizajes empíricos that materially impact the next Charter's scope were *not* reflected in the plan. The pattern below codifies what Sentinel discovered before CHARTER-18 fill.
+>
+> **Canonical extension** *(fw-4.16.0+)*: this section's procedural guidance (when + how + gates) is the mechanical floor. The *named pattern* — including the `r_n_plus_one_emergent_count` rolling-mean trigger heuristic, the categorized-learnings table contract, telemetry slot `pre_declare_refresh:`, and the `straymark charter refresh-suggest` helper — lives in [CHARTER-CHAIN-EVOLUTION.md](CHARTER-CHAIN-EVOLUTION.md) **Pattern 1**. Read both: this doc tells you the *how*, that one names the *pattern* and feeds it back into telemetry.
 
 The lifecycle map above assumes **one-pass**: SpecKit artifacts are generated once, then Charters are declared and executed. This scales fine for features that produce a single Charter. When a single spec drives many Charters spaced weeks apart, **planning artifacts drift relative to shipped code** — and naively re-running `/speckit-plan` is *worse*, not better: regeneration asserts things about already-shipped user stories that the actual code does not implement, and future readers (auditors, agents, new operators) trust those regenerated artifacts as ground truth.
 

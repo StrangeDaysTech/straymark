@@ -142,7 +142,7 @@ Salvaguardas incorporadas que aseguran que los humanos mantengan el control:
 
 Comandos integrados que convierten la disciplina en feedback accionable:
 
-- **`straymark charter <new|list|status|close|drift|batch-complete|audit>`** — Unidades acotadas declaradas ex-ante, auditadas ex-post. `close` registra telemetría; `drift` detecta drift archivos-vs-commits con supresión AILOG-aware y (cli-3.13.0+) hace gate sobre entradas `### Batch N (pending)` en `## Batch Ledger` del AILOG; `batch-complete` (cli-3.13.0+) marca un batch como completado en la ledger para Charters multi-batch (3+ lotes o >1 día); `audit` orquesta revisión externa multi-modelo (flujo de 3 pasos prepare/calibrate/finalize, orchestration-only — sin invocación de APIs de LLM). Para flujos IDE-driven, las skills inline `/straymark-audit-prompt` y `/straymark-audit-review` envuelven al CLI para mostrar prompts en la conversación y mergear findings en la telemetría.
+- **`straymark charter <new|list|status|close|drift|batch-complete|audit|refresh-suggest|amend>`** — Unidades acotadas declaradas ex-ante, auditadas ex-post. `close` registra telemetría; `drift` detecta drift archivos-vs-commits con supresión AILOG-aware y (cli-3.13.0+) hace gate sobre entradas `### Batch N (pending)` en `## Batch Ledger` del AILOG; `batch-complete` (cli-3.13.0+) marca un batch como completado en la ledger para Charters multi-batch (3+ lotes o >1 día); `audit` orquesta revisión externa multi-modelo (flujo de 3 pasos prepare/calibrate/finalize, orchestration-only — sin invocación de APIs de LLM); `refresh-suggest` (cli-3.14.0+) imprime una recomendación heurística para un refresh SpecKit pre-declare cuando la media móvil de `r_n_plus_one_emergent_count` de un módulo multi-Charter supera un umbral; `amend` (cli-3.14.0+) hace scaffolding de una enmienda post-close Batch N.4 (remediación dirigida por auditoría) sobre la misma rama de execute sin abrir un Charter nuevo. Para flujos IDE-driven, las skills inline `/straymark-audit-prompt` y `/straymark-audit-review` envuelven al CLI para mostrar prompts en la conversación y mergear findings en la telemetría.
 - **`straymark approve <doc-id>`** — Registra una aprobación humana formal (escribe `reviewed_by` / `reviewed_at` / `review_outcome` y la sección body `## Approval` en una sola edición; cierra el gap canonizado en DOCUMENTATION-POLICY §3.5)
 - **`straymark validate`** — 25+ reglas de validación para corrección documental (12 específicas de China son scope-aware); `--include-charters` extiende a `.straymark/charters/`; `--check-pending-reviews` lista el backlog de aprobaciones (warn-only)
 - **`straymark metrics`** — KPIs de gobernanza, tasas de revisión, distribución de riesgo, tendencias
@@ -239,8 +239,8 @@ StrayMark usa tags de versión independientes para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Incluye |
 |------------|---------------|---------|---------|
-| Framework | `fw-` | `fw-4.15.0` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
-| CLI | `cli-` | `cli-3.13.2` | El binario `straymark` |
+| Framework | `fw-` | `fw-4.16.0` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
+| CLI | `cli-` | `cli-3.14.0` | El binario `straymark` |
 
 Verifica las versiones instaladas con `straymark status` o `straymark about`.
 
@@ -272,7 +272,7 @@ Ver [Referencia CLI](adopters/CLI-REFERENCE.md) para uso detallado.
 ```bash
 # Descargar el último release ZIP del framework desde GitHub
 # Ve a https://github.com/StrangeDaysTech/straymark/releases
-# y descarga el último release fw-* (ej. fw-4.15.0)
+# y descarga el último release fw-* (ej. fw-4.16.0)
 
 # Extraer y copiar a tu proyecto
 unzip straymark-fw-*.zip -d tu-proyecto/

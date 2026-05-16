@@ -377,6 +377,55 @@ enum CharterCommands {
         #[arg(long = "path", default_value = ".")]
         path: String,
     },
+    /// Pre-declare SpecKit refresh recommendation for a multi-Charter module.
+    /// Read-only. Computes the rolling mean of
+    /// `agent_quality.r_n_plus_one_emergent_count` across the last 3 closed
+    /// Charters matching the module and compares against a threshold (default
+    /// 6). See STRAYMARK.md §15.A and
+    /// `.straymark/00-governance/CHARTER-CHAIN-EVOLUTION.md` Pattern 1.
+    /// fw-4.16.0+ (Issue #156).
+    RefreshSuggest {
+        /// Module name to match (case-insensitive substring on charter_id).
+        /// Example: `commshub` matches `CHARTER-18-commshub-us5-...`.
+        module: String,
+        /// Override the rolling-mean threshold (default: 6).
+        #[arg(long)]
+        threshold: Option<u32>,
+        /// Project directory (default: current directory)
+        #[arg(long = "path", default_value = ".")]
+        path: String,
+    },
+    /// Scaffold a post-close Batch N.4 amendment for a closed Charter
+    /// (audit-driven remediation, production incident, or deferred
+    /// implementation). Creates a NEW AILOG stub, edits the most-recent
+    /// originating AILOG with a `## Historical correction` subsection, and
+    /// prints the `post_close_amendment:` YAML block ready for paste (or
+    /// auto-merged into the telemetry with `--merge-into`). Does not touch
+    /// git — operator decides when to commit. See STRAYMARK.md §15.B and
+    /// `.straymark/00-governance/CHARTER-CHAIN-EVOLUTION.md` Pattern 2.
+    /// fw-4.16.0+ (Issue #156).
+    Amend {
+        /// Charter identifier (CHARTER-NN, CHARTER-NN-slug, or just NN).
+        /// Must be already closed.
+        charter_id: String,
+        /// What surfaced the need for the amendment.
+        #[arg(long, value_parser = ["external_audit", "production_incident", "deferred_implementation"])]
+        trigger: String,
+        /// Number of findings closed by the amendment (default: 0).
+        #[arg(long, default_value_t = 0)]
+        findings_closed: u32,
+        /// Short title for the new AILOG (drives filename slug).
+        #[arg(long)]
+        ailog_title: String,
+        /// Optional: merge the rendered `post_close_amendment:` block directly
+        /// into the Charter's telemetry YAML at the given path instead of
+        /// printing it.
+        #[arg(long)]
+        merge_into: Option<String>,
+        /// Project directory (default: current directory)
+        #[arg(long = "path", default_value = ".")]
+        path: String,
+    },
     /// Detect file-vs-commit drift at Charter close (declared-but-not-modified
     /// files; scope expansion). Suppresses alerts on paths already documented
     /// as risks in the Charter's originating AILOGs.
@@ -557,6 +606,26 @@ fn main() {
                 merge_reports,
                 calibrate,
                 finalize,
+                merge_into.as_deref(),
+            ),
+            CharterCommands::RefreshSuggest {
+                module,
+                threshold,
+                path,
+            } => commands::charter::refresh_suggest::run(&path, &module, threshold),
+            CharterCommands::Amend {
+                charter_id,
+                trigger,
+                findings_closed,
+                ailog_title,
+                merge_into,
+                path,
+            } => commands::charter::amend::run(
+                &path,
+                &charter_id,
+                &trigger,
+                findings_closed,
+                &ailog_title,
                 merge_into.as_deref(),
             ),
         },

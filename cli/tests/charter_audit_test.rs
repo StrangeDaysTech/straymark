@@ -665,7 +665,72 @@ fn audit_merge_into_rejects_existing_external_audit() {
         .arg(dir.path().to_str().unwrap())
         .assert()
         .failure()
-        .stderr(predicate::str::contains("already has an `external_audit:`"));
+        .stderr(predicate::str::contains(
+            "already has a populated `external_audit:`",
+        ));
+}
+
+/// Regression for Issue #156: when the telemetry has `external_audit: []`
+/// (the placeholder `charter close` writes in fw-4.16.0+), the merge must
+/// REPLACE the placeholder in place rather than reject with the "already has"
+/// guard. The guard exists only to prevent silent duplication, not to block
+/// the legitimate post-close round-trip.
+#[test]
+fn audit_merge_into_replaces_empty_external_audit_placeholder() {
+    if !bash_available() {
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_finalized_audit(dir.path());
+    let telemetry_path = write_minimal_telemetry(dir.path());
+
+    // Pre-populate with the EMPTY placeholder (what charter close writes).
+    let mut existing = std::fs::read_to_string(&telemetry_path).unwrap();
+    existing.push_str("\n  external_audit: []\n");
+    std::fs::write(&telemetry_path, &existing).unwrap();
+
+    Command::cargo_bin("straymark")
+        .unwrap()
+        .args([
+            "charter",
+            "audit",
+            "CHARTER-01",
+            "--merge-reports",
+            "--merge-into",
+            telemetry_path.to_str().unwrap(),
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Merged external_audit"));
+
+    let merged = std::fs::read_to_string(&telemetry_path).unwrap();
+    // Placeholder line must be gone; populated block must be present.
+    assert!(
+        !merged.contains("external_audit: []"),
+        "empty placeholder must be replaced, not left in:\n{merged}"
+    );
+    assert!(
+        merged.contains("\n  external_audit:\n"),
+        "external_audit block must be at indent 2:\n{merged}"
+    );
+    assert!(
+        merged.contains("- auditor: \"copilot-v1.0.37\""),
+        "first auditor present after placeholder replacement"
+    );
+    // Resulting YAML must still parse cleanly.
+    let parsed: serde_yaml::Value = serde_yaml::from_str(&merged)
+        .expect("merge result must be valid YAML");
+    let arr = parsed
+        .get("charter_telemetry")
+        .and_then(|v| v.get("external_audit"))
+        .and_then(|v| v.as_sequence())
+        .expect("charter_telemetry.external_audit must be an array after merge");
+    assert!(
+        !arr.is_empty(),
+        "external_audit array must be non-empty after merge"
+    );
 }
 
 #[test]

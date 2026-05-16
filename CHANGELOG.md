@@ -7,6 +7,45 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.16.0 / CLI 3.14.0 — Charter-chain evolution patterns (Issue #156)
+
+Codifies two patterns surfaced by the Sentinel adopter after seven consecutive CommsHub Charters (Issue [#156](https://github.com/StrangeDaysTech/straymark/issues/156)): a **pre-declare SpecKit refresh** that absorbs accumulated chain-level learnings before the next Charter is declared, and a **post-close audit-driven Batch N.4 amendment** that handles bounded external-audit findings on the same execute branch without opening a new Charter. Both are operator-driven; the framework ships canonical guidance in `00-governance/CHARTER-CHAIN-EVOLUTION.md` (EN/ES/zh-CN), opt-in telemetry slots in the schema, and two new read-only/scaffolding CLI helpers. Also fixes the `straymark charter audit --merge-into` bug where the v0 re-audit guard rejected the empty-array placeholder `external_audit: []`, breaking the post-close audit-cycle round-trip.
+
+### Added (Framework)
+
+- **`dist/.straymark/00-governance/CHARTER-CHAIN-EVOLUTION.md`** (EN, ES, zh-CN) — new canonical doc covering both patterns (Pattern 1 = pre-declare SpecKit refresh; Pattern 2 = post-close audit-driven amendment), each with when-it-applies + mechanics + telemetry + empirical anchor from Sentinel CHARTER-18. Establishes `06-evolution/<name>-rfc.md` as the canonical adopter-local home for in-flight RFCs and `00-governance/<NAME>.md` as the upstream-accepted home.
+- **`dist/.straymark/schemas/charter-telemetry.schema.v0.json`** — two new optional sub-objects under `charter_telemetry`:
+  - `pre_declare_refresh` (enabled, refresh_pr, refresh_aidec, plus integer counts for reusable_patterns / code_gaps / discipline_patterns / empirical_corrections / operator_decisions).
+  - `post_close_amendment` (applied, trigger ∈ {external_audit, production_incident, deferred_implementation}, ailog_id, findings_closed, files_modified, effort_hours).
+  - Schema stays v0 — the N=1-domain caveat from the existing $comment carries forward; the addendum is documented inline.
+- **`dist/.straymark/templates/charter/charter-telemetry-template.yaml`** — commented stubs for the two new blocks with guidance on when to populate them.
+- **`dist/STRAYMARK.md` §15.A and §15.B** — two new subsections inside the Charter chapter describing each pattern at a glance and citing the helper commands. Quick CLI surface listing extended with `refresh-suggest` and `amend`.
+- **`dist/.straymark/templates/charter/charter-template.md`** — Batch Ledger task note pointing readers to §15.B + `straymark charter amend` when audit findings arrive after `status: closed`.
+- **`dist/.straymark/00-governance/SPECKIT-CHARTER-BRIDGE.md`** — short cross-reference at the top of "Spec maintenance during multi-Charter execution" pointing to CHARTER-CHAIN-EVOLUTION.md Pattern 1 as the canonical extension.
+
+### Added (CLI)
+
+- **`straymark charter refresh-suggest <module> [--threshold N]`** *(new)* — read-only. Reads the last 3 closed Charters whose `charter_id` contains the module (case-insensitive substring), computes the rolling mean of `agent_quality.r_n_plus_one_emergent_count`, and prints a recommendation (refresh-now / not-needed / insufficient-data). Default threshold 6. Always exits 0 — informational, never a CI gate. Located at `cli/src/commands/charter/refresh_suggest.rs`.
+- **`straymark charter amend <CHARTER-ID> --trigger <kind> --ailog-title <title> [--findings-closed N] [--merge-into <PATH>]`** *(new)* — scaffolds the three artifacts of a post-close Batch N.4 amendment: creates a new AILOG stub under `agent-logs/` with `risk_level: high` + `amends:` pointing back to the most-recent prior AILOG; appends a `## Historical correction (YYYY-MM-DD)` subsection to that prior AILOG; renders the `post_close_amendment:` YAML block (printed to stdout or merged via `--merge-into`). Does NOT touch git — the operator decides when to commit. Located at `cli/src/commands/charter/amend.rs`.
+- **`cli/tests/charter_refresh_suggest_test.rs`** and **`cli/tests/charter_amend_test.rs`** — 9 new integration tests covering: trigger / no-trigger / insufficient-data / zero-match / threshold override (refresh-suggest); AILOG creation + historical correction append + merge-into round-trip + closed-status guard + invalid-trigger rejection (amend).
+
+### Fixed (CLI)
+
+- **`straymark charter audit --merge-reports --merge-into <PATH>` placeholder support** (`cli/src/commands/charter/audit.rs:370-432`) — the v0 anti-duplicate guard rejected any presence of `external_audit:`, including the empty placeholder `external_audit: []`. The new implementation parses the YAML semantically and distinguishes three cases: missing → append (original behavior), empty placeholder `[]` → **replace in place** (new — fixes Issue #156 sub-issue), populated array → still rejected with a clearer error message (anti-duplicate guard intact). `straymark charter close` now writes the `external_audit: []` placeholder by default so the post-close audit cycle round-trips cleanly without manual YAML editing. New regression test `audit_merge_into_replaces_empty_external_audit_placeholder` pins the fix.
+
+### Changed (Framework)
+
+- **Governance footers** bumped to `v4.16.0` across `QUICK-REFERENCE.md`, `AGENT-RULES.md`, `DOCUMENTATION-POLICY.md`, `C4-DIAGRAM-GUIDE.md` (EN + ES + zh-CN).
+- **Version tables** in `README.md` (root + ES + zh-CN) and `CLI-REFERENCE.md` (EN + ES + zh-CN) bumped to `fw-4.16.0` / `cli-3.14.0`. CLI command listings extended with the two new subcommands.
+
+### Adopter guidance
+
+- `straymark update-framework` brings the new template fields, the canonical doc in three languages, and the schema additions. Both new schema sub-objects are **optional** — existing telemetry files validate unchanged.
+- `straymark update-cli` brings `cli-3.14.0` with the bug fix for `--merge-into` and the two new subcommands. The `external_audit: []` placeholder now emitted by `charter close` is harmless for v0.1 adopters whose tooling treats the schema as v0 — the schema permits the empty array.
+- After update, run `straymark charter refresh-suggest <module>` on any module with 3+ closed Charters to check whether the heuristic suggests a refresh; the command is read-only and side-effect-free.
+
+---
+
 ## Framework 4.15.0 / CLI 3.13.2 — AGENTS.md universal injection
 
 Adds `AGENTS.md` as a first-class injection target. `AGENTS.md` is the open standard for AI coding agents, donated to the Agentic AI Foundation (Linux Foundation, 2025) and read by Claude Code, OpenAI Codex CLI, Cursor, Aider, Devin, Sourcegraph Amp, Google Jules, Zed AI, Continue, Roo Code, Factory Droids, GitHub Copilot, Gemini CLI, Windsurf, Amazon Q and others. Before this release, StrayMark injected directives only into platform-specific files (`CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursorrules`, `.cursor/rules/straymark.md`); adopters using any of the 15+ CLIs that read `AGENTS.md` instead had to copy directives by hand. From `fw-4.15.0`, `straymark init` and `straymark update-framework` keep `AGENTS.md` in sync with `STRAYMARK.md` automatically.

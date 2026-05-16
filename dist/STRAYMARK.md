@@ -420,9 +420,36 @@ straymark charter drift CHARTER-NN          # file-vs-commit drift, AILOG-aware 
 straymark charter batch-complete CHARTER-NN <N>  # fill AILOG `## Batch Ledger` Batch <N> (multi-batch only)
 straymark charter audit CHARTER-NN          # multi-model external audit (orchestration only)
 straymark charter close CHARTER-NN          # record telemetry; flip status to `closed`
+straymark charter refresh-suggest <module>  # SpecKit refresh recommendation (chain-level, fw-4.16.0+) — see §15.A
+straymark charter amend CHARTER-NN          # scaffold post-close Batch N.4 amendment (fw-4.16.0+) — see §15.B
 ```
 
 > **Schema**: `.straymark/schemas/charter.schema.v0.json` (declarative) and `.straymark/schemas/charter-telemetry.schema.v0.json` (telemetry). Both are experimental v0 — patterns crystallize after validation against a second domain (Principle #12).
+
+### §15.A — Pre-declare SpecKit refresh *(fw-4.16.0+)*
+
+Multi-Charter modules accumulate spec drift over time. After 3+ Charters in a chain, SpecKit artifacts (`plan.md`, `data-model.md`, `contracts/*`, `quickstart.md`, `research.md`) authored at chain start tend to lag behind the implementation. The fix is a dedicated **refresh PR** between Charter-N close and Charter-(N+1) declare that integrates accumulated learnings into `research.md` (categorized buckets: reusable patterns, code gaps, discipline patterns, empirical corrections) and ratifies operator decisions. The next Charter's `## Context` cites each learning by id.
+
+**Trigger heuristic** — adopt when (a) chain length ≥ 3 closed Charters in the module AND (b) rolling mean of `agent_quality.r_n_plus_one_emergent_count` across last 3 > 6 AND (c) no refresh PR landed since the chain's branch point. Run:
+
+```bash
+straymark charter refresh-suggest <module>  # read-only — prints recommendation
+```
+
+**Telemetry** — `charter_telemetry.pre_declare_refresh:` (optional, opt-in). See `.straymark/00-governance/CHARTER-CHAIN-EVOLUTION.md` Pattern 1 for full mechanics.
+
+### §15.B — Post-close audit-driven amendment (Batch N.4) *(fw-4.16.0+)*
+
+External audit cycles run post-close. When Critical or High findings arrive after a Charter has been marked `status: closed`, the bounded remediation pattern is a **Batch N.4 amendment** that rides on the same execute branch: a new AILOG documents the amendment, the original AILOG receives a `## Historical correction` subsection pointing forward, and the telemetry gains a `post_close_amendment:` block. Apply only when (a) findings are Critical/High, (b) the Charter's closure criterion is materially unmet, AND (c) the fix surface fits in one cohesive PR (~< 25 files, no architectural reopen). Larger or architectural fixes warrant a new Charter.
+
+```bash
+straymark charter amend CHARTER-NN \         # scaffolds the new AILOG, edits the original, prints YAML
+  --trigger external_audit \
+  --findings-closed 5 \
+  --ailog-title "post-close remediation — DI wiring + retry"
+```
+
+The command does not touch git — the operator decides when to commit. The `straymark charter audit <id> --merge-reports --merge-into <telemetry-yaml>` path tolerates `external_audit: []` placeholders in v0.2+ schema so the round-trip with `post_close_amendment` is smooth. See `.straymark/00-governance/CHARTER-CHAIN-EVOLUTION.md` Pattern 2 for full mechanics.
 
 ---
 
