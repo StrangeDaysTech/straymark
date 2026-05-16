@@ -48,7 +48,7 @@ StrayMark uses **independent version tags** for each component:
 
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
-| Framework | `fw-` | `fw-4.15.0` | Templates (12 types), governance docs, directives, Charter template + schema |
+| Framework | `fw-` | `fw-4.16.1` | Templates (12 types), governance docs, directives, Charter template + schema |
 | CLI | `cli-` | `cli-3.13.2` | The `straymark` binary |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
@@ -777,7 +777,7 @@ Read-only heuristic recommending a pre-declare SpecKit refresh PR before the nex
 | Argument/Flag | Default | Description |
 |---|---|---|
 | `<module>` | — | Module name to match (e.g. `commshub` matches `CHARTER-18-commshub-us5-...`). Required. |
-| `--threshold N` | `6` | Override the rolling-mean threshold used to trigger the recommendation. |
+| `--threshold N` | `6` | Override the rolling-mean threshold used to trigger the recommendation. **The flag is the only override path in v0.2** — there is no `config.yml` field for this threshold yet (the heuristic is Sentinel-derived; tuning lives at the operator-invocation level until a second adopter validates a project-wide default). |
 | `--path <dir>` | `.` | Project directory |
 
 **Exit code is always 0** — this is informational, never a CI gate. The output is a table of matched Charters (with the 3 in the rolling window highlighted) plus a recommendation: refresh-now, refresh-not-needed, or insufficient-data.

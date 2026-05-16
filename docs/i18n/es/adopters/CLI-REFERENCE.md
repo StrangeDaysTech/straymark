@@ -48,7 +48,7 @@ StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.16.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| Framework | `fw-` | `fw-4.16.1` | Plantillas (12 tipos), docs de gobernanza, directivas |
 | CLI | `cli-` | `cli-3.14.0` | El binario `straymark` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
@@ -395,7 +395,7 @@ Gestiona **Charters**: unidades acotadas y auditables de trabajo, declaradas ex-
 - `straymark charter drift` *(cli-3.7.0+)* — chequea drift archivo-vs-commit con supresión AILOG-aware y gate de Batch Ledger *(gate añadido en cli-3.13.2)*
 - `straymark charter batch-complete` *(cli-3.13.0+, fw-4.14.0+)* — marca un batch del Charter como completado en la `## Batch Ledger` del AILOG
 - `straymark charter audit` *(cli-3.8.0+)* — orquesta una revisión externa multi-modelo (orchestration-only, ver más abajo)
-- `straymark charter refresh-suggest` *(cli-3.14.0+, fw-4.16.0+)* — recomendación heurística para refresh SpecKit pre-declare en módulos multi-Charter (ver [CHARTER-CHAIN-EVOLUTION.md](https://github.com/StrangeDaysTech/straymark/blob/main/dist/.straymark/00-governance/i18n/es/CHARTER-CHAIN-EVOLUTION.md) Patrón 1)
+- `straymark charter refresh-suggest` *(cli-3.14.0+, fw-4.16.0+)* — recomendación heurística para refresh SpecKit pre-declare en módulos multi-Charter (ver [CHARTER-CHAIN-EVOLUTION.md](https://github.com/StrangeDaysTech/straymark/blob/main/dist/.straymark/00-governance/i18n/es/CHARTER-CHAIN-EVOLUTION.md) Patrón 1). Umbral por defecto `r_n_plus_one_emergent_count` > 6; override solo vía `--threshold N` (no hay campo equivalente en `config.yml` en v0.2).
 - `straymark charter amend` *(cli-3.14.0+, fw-4.16.0+)* — scaffolding para enmienda post-close Batch N.4 (remediación dirigida por auditoría sobre la misma rama de execute, sin abrir un Charter nuevo — ver [CHARTER-CHAIN-EVOLUTION.md](https://github.com/StrangeDaysTech/straymark/blob/main/dist/.straymark/00-governance/i18n/es/CHARTER-CHAIN-EVOLUTION.md) Patrón 2)
 
 #### `straymark charter new [-t XS|S|M|L] [--from-ailog <id> | --from-spec <path>] [--title <titulo>] [path]`
