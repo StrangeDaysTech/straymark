@@ -7,6 +7,29 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.16.2 / CLI 3.14.1 — `straymark repair` per-target restore (Issue #156 follow-up)
+
+Fixes the underlying CLI bug surfaced in the [Issue #156 closure comment](https://github.com/StrangeDaysTech/straymark/issues/156#issuecomment-4465050814): `straymark repair` ignored a single missing injection target (e.g. a deleted `AGENTS.md`) when `STRAYMARK.md` was still present, because both the download trigger and the inject path were gated on `STRAYMARK.md` being absent. From this release, both gates are removed and `repair` mirrors `straymark update-framework`'s per-target behavior for the set of files declared under `dist-manifest.yml::injections:`.
+
+### Fixed (CLI)
+
+- **`straymark repair` per-target restore** (`cli/src/commands/repair.rs`) — two gating bugs removed:
+  - `check_needs_download()` now reads the local `dist-manifest.yml` and flags the download as needed if any declared injection target is missing. Before this change a deleted directive file (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursorrules`, `.cursor/rules/straymark.md`) was silently ignored because the function only looked at essential framework files.
+  - `restore_missing_files()` replaces the `if !straymark_md.exists()` gate around the inject loop with a per-target filter (`missing_injections`). Each declared injection target is now checked individually; only the missing ones load their template from the ZIP and run through `inject::inject_directive`. Targets already present are left untouched — `repair` does not overwrite an installed file.
+- **`cli/src/commands/repair.rs::tests`** — five new unit tests cover the helper-level behavior: `check_needs_download` returns true for a missing injection target / false when all are present / still true for missing essential files (regression for the prior behavior); `missing_injections` filter identifies per-target gaps and is empty when all targets are present. End-to-end coverage of the download + extract path remains out of scope for the unit suite (it requires a real release ZIP and network); the release workflow exercises that path on every tag.
+
+### Changed (Framework)
+
+- **`dist/STRAYMARK.md §Directive Injection Markers`** — the missing-target behavior bullet added in `fw-4.16.1` is rewritten to describe the post-`cli-3.14.1` behavior: `init`, `update-framework`, AND `repair` all walk `manifest.injections` and create any missing target file. A short historical note preserves the pre-fix behavior for adopters running older CLIs.
+- **Governance footers** bumped to `v4.16.2` across `QUICK-REFERENCE.md`, `AGENT-RULES.md`, `DOCUMENTATION-POLICY.md`, `C4-DIAGRAM-GUIDE.md` (EN + ES + zh-CN) and the `CHARTER-CHAIN-EVOLUTION.md` footer (3 languages).
+- **Version tables** in `README.md` + i18n and `CLI-REFERENCE.md` + i18n bumped to `fw-4.16.2` / `cli-3.14.1`. The EN `CLI-REFERENCE.md` CLI row had been left at `cli-3.13.2` since the `fw-4.15.0` cycle — corrected in this patch.
+
+### Adopter guidance
+
+`straymark update-cli` brings `cli-3.14.1` with the fix. `straymark update-framework` brings the docs sync. Adopters who had been working around the bug by manually re-creating a deleted `AGENTS.md` before running `repair` no longer need that step — `straymark repair` will restore any single missing injection target without requiring the rest of the install to be broken.
+
+---
+
 ## Framework 4.16.1 — docs polish (Issue #156 follow-up)
 
 Documentation-only patch addressing two non-blocking observations raised in the [Issue #156 closure comment](https://github.com/StrangeDaysTech/straymark/issues/156#issuecomment-4465050814) after the adopter pulled `fw-4.16.0` / `cli-3.14.0`. No CLI bump.
