@@ -364,9 +364,16 @@ fn run_merge_reports(
 }
 
 /// Append a freshly-rendered `external_audit:` block to an existing Charter
-/// telemetry YAML. v0 deliberately rejects re-audit (file already has the
-/// key) so the operator can reconcile manually rather than silently
-/// duplicating findings.
+/// telemetry YAML.
+///
+/// v0.2 (fw-4.16.0, Issue #156) — placeholder-aware merge:
+/// - missing `external_audit:` key → append the new block (original behavior)
+/// - empty placeholder `external_audit: []` → REPLACE it in place (so the
+///   post-close audit cycle round-trips when close (or any tool) writes the
+///   placeholder)
+/// - populated `external_audit:` array with one or more entries → bail with
+///   guidance (re-audit/append is still unsupported; operator reconciles
+///   manually rather than silently duplicating findings)
 fn merge_external_audit_into(
     telemetry_path: &Path,
     auditor_summaries: &[AuditorSummary],
@@ -385,50 +392,143 @@ fn merge_external_audit_into(
     let mut content = std::fs::read_to_string(telemetry_path)
         .with_context(|| format!("Failed to read {}", telemetry_path.display()))?;
 
-    // Sanity: must parse as YAML.
-    let _: serde_yaml::Value = serde_yaml::from_str(&content)
+    // Parse the full document so we can inspect `charter_telemetry.external_audit`
+    // semantically rather than via fragile string matching (fw-4.16.0).
+    let parsed: serde_yaml::Value = serde_yaml::from_str(&content)
         .with_context(|| format!("{} is not valid YAML", telemetry_path.display()))?;
 
-    if !content.contains("charter_telemetry:") {
+    let charter_telemetry = parsed
+        .as_mapping()
+        .and_then(|m| m.get(serde_yaml::Value::String("charter_telemetry".into())))
+        .ok_or_else(|| {
+            anyhow::anyhow!(
+                "{} does not have a top-level `charter_telemetry:` key — \
+                 expected the standard charter close output shape.",
+                telemetry_path.display()
+            )
+        })?;
+
+    let existing_external_audit = charter_telemetry
+        .as_mapping()
+        .and_then(|m| m.get(serde_yaml::Value::String("external_audit".into())));
+
+    let placeholder = match existing_external_audit {
+        None => ExternalAuditState::Missing,
+        Some(serde_yaml::Value::Sequence(seq)) if seq.is_empty() => {
+            ExternalAuditState::EmptyPlaceholder
+        }
+        Some(serde_yaml::Value::Sequence(_)) => ExternalAuditState::Populated,
+        Some(_) => {
+            bail!(
+                "{} has `charter_telemetry.external_audit` set to a non-array \
+                 value — refusing to overwrite. Fix the YAML by hand or remove \
+                 the key before re-running.",
+                telemetry_path.display()
+            );
+        }
+    };
+
+    if matches!(placeholder, ExternalAuditState::Populated) {
         bail!(
-            "{} does not have a top-level `charter_telemetry:` key — \
-             expected the standard charter close output shape.",
+            "{} already has a populated `external_audit:` block. Re-audit\n  \
+             (appending to an existing array) is not supported in v0. Re-run\n  \
+             `straymark charter audit <id> --merge-reports` (without --merge-into)\n  \
+             to print the new YAML, then merge manually if you want to append.",
             telemetry_path.display()
         );
     }
 
-    // v0: re-audit (appending to existing array) is not supported. Detect
-    // the key at indent 0 or 2 and bail with guidance.
-    if content.contains("\n  external_audit:")
-        || content.contains("\nexternal_audit:")
-        || content.starts_with("  external_audit:")
-        || content.starts_with("external_audit:")
-    {
-        bail!(
-            "{} already has an `external_audit:` block. Re-audit (appending\n  \
-             to an existing array) is not supported in v0. Re-run\n  \
-             `straymark charter audit <id> --finalize` (without --merge-into) to\n  \
-             print the new YAML, then merge manually if you want to append.",
-            telemetry_path.display()
-        );
-    }
+    let rendered = render_external_audit_yaml(auditor_summaries, canonical_charter_id);
 
-    while content.ends_with("\n\n") {
-        content.pop();
+    match placeholder {
+        ExternalAuditState::Missing => {
+            while content.ends_with("\n\n") {
+                content.pop();
+            }
+            if !content.ends_with('\n') {
+                content.push('\n');
+            }
+            content.push_str("\n  external_audit:\n");
+            content.push_str(&rendered);
+        }
+        ExternalAuditState::EmptyPlaceholder => {
+            content = replace_empty_external_audit_placeholder(&content, &rendered)?;
+        }
+        ExternalAuditState::Populated => unreachable!("guarded above"),
     }
-    if !content.ends_with('\n') {
-        content.push('\n');
-    }
-
-    content.push_str("\n  external_audit:\n");
-    content.push_str(&render_external_audit_yaml(
-        auditor_summaries,
-        canonical_charter_id,
-    ));
 
     std::fs::write(telemetry_path, &content)
         .with_context(|| format!("Failed to write {}", telemetry_path.display()))?;
     Ok(())
+}
+
+enum ExternalAuditState {
+    Missing,
+    EmptyPlaceholder,
+    Populated,
+}
+
+/// Replace a `  external_audit: []` placeholder line (at indent 2 inside
+/// `charter_telemetry:`) with a fully-rendered block. Tolerates whitespace
+/// variations (`[]`, `[ ]`) and trailing comments. Bails if the placeholder
+/// line cannot be located — that means the YAML parsed an empty array but
+/// the source uses flow/block syntax we cannot rewrite safely.
+fn replace_empty_external_audit_placeholder(content: &str, rendered: &str) -> Result<String> {
+    let mut out = String::with_capacity(content.len() + rendered.len());
+    let mut replaced = false;
+
+    for line in content.split_inclusive('\n') {
+        if !replaced && is_empty_external_audit_placeholder_line(line) {
+            // Capture the original indentation so we preserve the file's
+            // existing style (charter_telemetry sub-keys are indented by 2
+            // spaces by close.rs, but we don't want to hardcode that).
+            let indent: String = line.chars().take_while(|c| *c == ' ' || *c == '\t').collect();
+            out.push_str(&indent);
+            out.push_str("external_audit:\n");
+            out.push_str(rendered);
+            if !out.ends_with('\n') {
+                out.push('\n');
+            }
+            replaced = true;
+        } else {
+            out.push_str(line);
+        }
+    }
+
+    if !replaced {
+        bail!(
+            "Could not locate `external_audit: []` placeholder line in the\n  \
+             telemetry YAML to replace. The YAML parses as an empty array but\n  \
+             the source uses a block/multi-line form this CLI does not yet\n  \
+             rewrite. Remove the `external_audit:` key by hand and re-run, or\n  \
+             omit --merge-into to print the YAML for manual merge."
+        );
+    }
+
+    Ok(out)
+}
+
+/// Returns true for lines like `  external_audit: []`, `external_audit:[]`,
+/// `  external_audit: [ ]  # comment`, etc. Stays strictly on the empty-array
+/// placeholder form — any inline element (e.g. `[ {auditor: ...} ]`) returns
+/// false and falls back to the populated-array bail path.
+fn is_empty_external_audit_placeholder_line(line: &str) -> bool {
+    let trimmed = line.trim_end_matches(['\n', '\r']);
+    let after_indent = trimmed.trim_start_matches([' ', '\t']);
+    let Some(rest) = after_indent.strip_prefix("external_audit:") else {
+        return false;
+    };
+    let mut rest = rest.trim_start_matches([' ', '\t']);
+    if let Some(after_open) = rest.strip_prefix('[') {
+        rest = after_open.trim_start_matches([' ', '\t']);
+    } else {
+        return false;
+    }
+    let Some(after_close) = rest.strip_prefix(']') else {
+        return false;
+    };
+    let tail = after_close.trim_start_matches([' ', '\t']);
+    tail.is_empty() || tail.starts_with('#')
 }
 
 // ── Audit context + template resolution ────────────────────────────────────

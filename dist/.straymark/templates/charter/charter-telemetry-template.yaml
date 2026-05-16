@@ -112,6 +112,35 @@ charter_telemetry:
     charters_invalidated: 0
     associated_stage_id: ""
 
+  # ---------- Pre-declare SpecKit refresh (optional) ----------
+  # Populate this block ONLY if this Charter was preceded by a SpecKit refresh PR
+  # per the Charter-chain-evolution pattern (see
+  # .straymark/00-governance/CHARTER-CHAIN-EVOLUTION.md Pattern 1). Omit the block
+  # entirely if the refresh did not apply — absence means "pattern not used".
+  # Use `straymark charter refresh-suggest <module>` to check the heuristic.
+  # pre_declare_refresh:
+  #   enabled: true
+  #   refresh_pr: "owner/repo#76"
+  #   refresh_aidec: "AIDEC-YYYY-MM-DD-NNN-slug"
+  #   reusable_patterns_integrated: 0
+  #   code_gaps_integrated: 0
+  #   discipline_patterns_integrated: 0
+  #   empirical_corrections_integrated: 0
+  #   operator_decisions_ratified: 0
+
+  # ---------- Post-close audit-driven amendment (optional) ----------
+  # Populate this block ONLY if this Charter received a Batch N.4 amendment AFTER
+  # `status: closed` (e.g. external audit findings remediated on the same execute
+  # branch). See .straymark/00-governance/CHARTER-CHAIN-EVOLUTION.md Pattern 2.
+  # `straymark charter amend <id>` scaffolds the amendment and emits this block.
+  # post_close_amendment:
+  #   applied: true
+  #   trigger: "external_audit"           # external_audit | production_incident | deferred_implementation
+  #   ailog_id: "AILOG-YYYY-MM-DD-NNN"    # the NEW AILOG that documents the amendment
+  #   findings_closed: 0
+  #   files_modified: 0
+  #   effort_hours: 0.0
+
   # ---------- Qualitative (where insight usually lives) ----------
   # Quantitative fields tell you what happened; qualitative tells you what to change.
   # The format_iteration field is part of the self-evolving feedback loop: each

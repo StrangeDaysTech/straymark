@@ -447,6 +447,13 @@ fn render_yaml(d: TelemetryDraft) -> String {
         d.agent_r_n_plus_one
     ));
 
+    // fw-4.16.0 (Issue #156): emit the external_audit placeholder so the
+    // post-close audit cycle can replace it via `charter audit --merge-into`
+    // without requiring the operator to pre-edit the YAML. The audit merge
+    // distinguishes empty `[]` (replace in place) from a populated array
+    // (bail, anti-duplicate guard).
+    out.push_str("\n  external_audit: []\n");
+
     out.push_str("\n  outcome:\n");
     out.push_str(&format!("    completed_as_planned: {}\n", d.outcome_completed));
     out.push_str(&format!(

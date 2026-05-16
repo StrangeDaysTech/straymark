@@ -6,10 +6,12 @@
 //! drift check, in PR 3).
 //! Phase 3 will add `audit` (multi-model external audit).
 
+pub mod amend;
 pub mod audit;
 pub mod batch_complete;
 pub mod close;
 pub mod drift;
 pub mod list;
 pub mod new;
+pub mod refresh_suggest;
 pub mod status;

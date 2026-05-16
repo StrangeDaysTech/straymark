@@ -126,6 +126,9 @@ follow-up insights are captured if the risk surfaces lessons for a later cycle.]
    ledger before pushing. The drift gate at close will reject any
    `### Batch N` left as `(pending)`. Skip this step for single-batch
    Charters — `## Actions Performed` in the AILOG suffices.
+   *Note*: if audit findings arrive **after** `status: closed` and warrant
+   a bounded code-level fix, see STRAYMARK.md §15.B (post-close Batch N.4
+   amendment) and `straymark charter amend` instead of opening a new Charter.
 7. Local verification passes clean.
 8. **Auto-checklist drift** (when Phase 2 of the CLI roadmap ships):
    `straymark charter drift CHARTER-NN <range>` to detect drifts between declared

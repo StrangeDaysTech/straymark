@@ -425,6 +425,8 @@ Manage **Charters**: bounded, auditable units of work declared ex-ante and valid
 - `straymark charter drift` — detect file-vs-commit drift with AILOG-aware suppression and Batch Ledger gate *(Phase 2, fw-4.6.0+; Batch Ledger gate cli-3.13.0+)*
 - `straymark charter batch-complete` — mark a Charter batch as complete in the AILOG `## Batch Ledger` *(cli-3.13.0+, fw-4.14.0+)*
 - `straymark charter audit` — orchestrate a multi-model external review (3-step prepare/calibrate/finalize) *(Phase 3, fw-4.9.0+)*
+- `straymark charter refresh-suggest` — heuristic recommendation for a pre-declare SpecKit refresh across a multi-Charter module *(cli-3.14.0+, fw-4.16.0+)*
+- `straymark charter amend` — scaffold a post-close Batch N.4 amendment (audit-driven remediation on the same execute branch) *(cli-3.14.0+, fw-4.16.0+)*
 
 #### `straymark charter new [-t XS|S|M|L] [--from-ailog <id> | --from-spec <path>] [--title <title>] [path]`
 
@@ -763,6 +765,86 @@ $ straymark charter audit CHARTER-05 --merge-reports \
 > **Why orchestration-only?** Implementing 3 HTTP clients (OpenAI / Google / Anthropic) is 1-2 weeks + perpetual maintenance when APIs change. v1 audit-skills extend the orchestration-only stance to a second mode (CLI auditor-side with tool use enforcement) where the operator runs their own auditor CLIs and StrayMark's prompts enforce the discipline (`cite path:line of files actually opened`). StrayMark still doesn't manage API keys, doesn't invoke APIs, doesn't maintain HTTP clients.
 
 > **Skill alternative *(fw-4.9.0+, expanded in fw-4.9.0)*.** Three skills wrap the CLI for IDE-driven workflows: `/straymark-audit-prompt CHARTER-ID` (calls `--prepare`), `/straymark-audit-execute CHARTER-ID` (runs in auditor CLIs to read the prompt and write a report), and `/straymark-audit-review CHARTER-ID` (consolidates N reports into `review.md` and merges YAML). With these skills the operator never copies/pastes prompts or reports — file exchange happens via the canonical filesystem paths under `.straymark/audits/`. See the [Skills](#skills) section below. The CLI remains the single source of truth — the skills only add UX-inline.
+
+> **Placeholder-aware merge *(fw-4.16.0+, Issue #156).*** From `fw-4.16.0` `straymark charter close` writes an `external_audit: []` placeholder under `charter_telemetry:`. `--merge-into` now REPLACES that placeholder in place; only a non-empty `external_audit:` array still triggers the re-audit guard (anti-duplicate). Round-trip with the post-close audit cycle (`/straymark-audit-review`) requires no manual YAML editing.
+
+#### `straymark charter refresh-suggest <module> [--threshold N] [--path <dir>]`
+
+*Available since **cli-3.14.0** + **fw-4.16.0**. Operationalizes Pattern 1 of `.straymark/00-governance/CHARTER-CHAIN-EVOLUTION.md` (Issue [#156](https://github.com/StrangeDaysTech/straymark/issues/156)).*
+
+Read-only heuristic recommending a pre-declare SpecKit refresh PR before the next Charter declare for a multi-Charter module. Reads the `.telemetry.yaml` files of closed Charters whose `charter_id` contains the module name (case-insensitive substring), picks the 3 most recent by `closed_at`, computes the rolling mean of `agent_quality.r_n_plus_one_emergent_count`, and compares against a threshold (default 6).
+
+| Argument/Flag | Default | Description |
+|---|---|---|
+| `<module>` | — | Module name to match (e.g. `commshub` matches `CHARTER-18-commshub-us5-...`). Required. |
+| `--threshold N` | `6` | Override the rolling-mean threshold used to trigger the recommendation. |
+| `--path <dir>` | `.` | Project directory |
+
+**Exit code is always 0** — this is informational, never a CI gate. The output is a table of matched Charters (with the 3 in the rolling window highlighted) plus a recommendation: refresh-now, refresh-not-needed, or insufficient-data.
+
+**Example:**
+
+```bash
+$ straymark charter refresh-suggest commshub
+
+  Closed Charters matched (window: top 3 by closed_at)
+
+    charter_id                              closed_at      R<N+1>  telemetry
+    ----------                              ----------     ------  ---------
+  ● CHARTER-18-commshub-us5-cloud-tasks…    2026-05-15          9  18-commshub-us5-….telemetry.yaml
+  ● CHARTER-17-commshub-us4-templating      2026-05-10          8  17-commshub-us4-….telemetry.yaml
+  ● CHARTER-16-commshub-us3-routing         2026-05-04          7  16-commshub-us3-….telemetry.yaml
+    CHARTER-13-commshub-us1-foundation      2026-04-18          5  13-commshub-us1-….telemetry.yaml
+
+  Heuristic
+    Chain length (closed Charters in window): 3
+    Threshold for rolling mean:               > 6
+    Rolling mean of agent_quality.r_n_plus_one_emergent_count: 8.00
+
+  ▶ Recommend a pre-declare SpecKit refresh for `commshub` before the next Charter.
+    See .straymark/00-governance/CHARTER-CHAIN-EVOLUTION.md Pattern 1 for mechanics.
+    Telemetry slot: `charter_telemetry.pre_declare_refresh` in the next Charter.
+```
+
+#### `straymark charter amend <CHARTER-ID> --trigger <kind> --ailog-title <title> [--findings-closed N] [--merge-into <PATH>] [--path <dir>]`
+
+*Available since **cli-3.14.0** + **fw-4.16.0**. Operationalizes Pattern 2 of `.straymark/00-governance/CHARTER-CHAIN-EVOLUTION.md` (Issue [#156](https://github.com/StrangeDaysTech/straymark/issues/156)).*
+
+Scaffold a post-close Batch N.4 amendment for an already-closed Charter when external audit findings, a production incident, or a deferred-implementation gap warrant a bounded code-level fix on the same execute branch (no new Charter, no branch off `main`).
+
+The command does **NOT** touch git. It prepares three artifacts so the operator can commit at their leisure:
+
+1. **A new AILOG stub** under `.straymark/07-ai-audit/agent-logs/AILOG-YYYY-MM-DD-NNN-<slug>.md` with `risk_level: high`, `review_required: true`, and an `amends:` field linking back to the most-recent prior AILOG that mentions the Charter.
+2. **A `## Historical correction (YYYY-MM-DD)` subsection** appended to the located prior AILOG, pointing forward to the new id and recording the trigger.
+3. **A rendered `post_close_amendment:` YAML block**, printed to stdout for manual paste or merged directly into the Charter's telemetry YAML via `--merge-into`.
+
+| Argument/Flag | Default | Description |
+|---|---|---|
+| `<CHARTER-ID>` | — | Same resolution rules as `charter status`. The Charter MUST be `status: closed`. |
+| `--trigger <kind>` | — | Required. One of `external_audit`, `production_incident`, `deferred_implementation`. |
+| `--ailog-title <title>` | — | Required. Drives the slug of the new AILOG filename and its in-body heading. |
+| `--findings-closed N` | `0` | Number of audit findings closed by the amendment. Populates the `post_close_amendment.findings_closed` field. |
+| `--merge-into <PATH>` | — | Optional. Write the `post_close_amendment:` block directly into the telemetry YAML at `<PATH>` instead of printing it. Refuses to overwrite an already-populated block. |
+| `--path <dir>` | `.` | Project directory |
+
+**Bounded-use guard:** the amendment pattern applies only when (a) the fix surface fits in **one cohesive PR** (~< 25 files, no architectural reopen), (b) the Charter's closure criterion is materially unmet by the un-remediated trigger, and (c) the findings are Critical or High (for `external_audit`). Larger fixes warrant a new Charter — the CLI does not enforce these gates, but the doc at `.straymark/00-governance/CHARTER-CHAIN-EVOLUTION.md` Pattern 2 makes them explicit.
+
+**Example:**
+
+```bash
+$ straymark charter amend CHARTER-18 \
+    --trigger external_audit \
+    --findings-closed 5 \
+    --ailog-title "post-close DI wiring + retry header" \
+    --merge-into .straymark/charters/18-commshub-us5.telemetry.yaml
+
+  ✔ Appended `## Historical correction (2026-05-15)` to .straymark/07-ai-audit/agent-logs/AILOG-2026-05-14-049-original.md
+  ✔ Created new AILOG at .straymark/07-ai-audit/agent-logs/AILOG-2026-05-15-050-post-close-di-wiring-retry-header.md
+  ✔ Merged `post_close_amendment:` block into .straymark/charters/18-commshub-us5.telemetry.yaml
+
+  Next: review the new AILOG, edit it with concrete details, then commit
+  on the original execute branch (do NOT branch off main).
+```
 
 ---
 
