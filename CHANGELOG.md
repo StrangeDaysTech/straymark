@@ -7,6 +7,23 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.16.1 — docs polish (Issue #156 follow-up)
+
+Documentation-only patch addressing two non-blocking observations raised in the [Issue #156 closure comment](https://github.com/StrangeDaysTech/straymark/issues/156#issuecomment-4465050814) after the adopter pulled `fw-4.16.0` / `cli-3.14.0`. No CLI bump.
+
+### Changed (Framework)
+
+- **`dist/STRAYMARK.md §Directive Injection Markers`** — added an explicit clarification of how each command treats a missing injection target. `straymark init` and `straymark update-framework` walk `dist-manifest.yml::injections:` end-to-end and create the target file if it does not exist. `straymark repair` is narrower: it re-injects directives only when `STRAYMARK.md` itself is missing. The practical guidance for an adopter who deleted a single target while keeping `STRAYMARK.md` is to re-run `straymark update-framework`, not `straymark repair`. Resolves the AGENTS.md observation from the closure comment.
+- **`docs/adopters/CLI-REFERENCE.md` (EN + ES + zh-CN)** — clarified that the `--threshold N` flag is the only override path for `straymark charter refresh-suggest` in v0.2; there is no `config.yml` field for the heuristic threshold yet (tuning lives at the operator-invocation level until a second adopter validates a project-wide default).
+- **Versioning tables** in `README.md` + i18n and `CLI-REFERENCE.md` + i18n bumped to `fw-4.16.1`. EN CLI-REFERENCE versioning row had been left at `fw-4.15.0` through the `fw-4.16.0` cycle — fixed in this patch.
+- **Governance footers** bumped to `v4.16.1` across `QUICK-REFERENCE.md`, `AGENT-RULES.md`, `DOCUMENTATION-POLICY.md`, `C4-DIAGRAM-GUIDE.md` (EN + ES + zh-CN).
+
+### Adopter guidance
+
+`straymark update-framework` brings the clarifications. No CLI install required — `cli-3.14.0` from the `fw-4.16.0` cycle remains current.
+
+---
+
 ## Framework 4.16.0 / CLI 3.14.0 — Charter-chain evolution patterns (Issue #156)
 
 Codifies two patterns surfaced by the Sentinel adopter after seven consecutive CommsHub Charters (Issue [#156](https://github.com/StrangeDaysTech/straymark/issues/156)): a **pre-declare SpecKit refresh** that absorbs accumulated chain-level learnings before the next Charter is declared, and a **post-close audit-driven Batch N.4 amendment** that handles bounded external-audit findings on the same execute branch without opening a new Charter. Both are operator-driven; the framework ships canonical guidance in `00-governance/CHARTER-CHAIN-EVOLUTION.md` (EN/ES/zh-CN), opt-in telemetry slots in the schema, and two new read-only/scaffolding CLI helpers. Also fixes the `straymark charter audit --merge-into` bug where the v0 re-audit guard rejected the empty-array placeholder `external_audit: []`, breaking the post-close audit-cycle round-trip.

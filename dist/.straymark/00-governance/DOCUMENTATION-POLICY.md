@@ -318,4 +318,4 @@ See also [ADR-2025-01-20-001] for architectural context.
 
 ---
 
-*StrayMark v4.16.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark v4.16.1 | [Strange Days Tech](https://strangedays.tech)*

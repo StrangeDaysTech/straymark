@@ -48,7 +48,7 @@ StrayMark 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.16.0` | 模板（12 种类型）、治理文档、指令 |
+| Framework | `fw-` | `fw-4.16.1` | 模板（12 种类型）、治理文档、指令 |
 | CLI | `cli-` | `cli-3.14.0` | `straymark` 二进制文件 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
@@ -425,7 +425,7 @@ $ straymark validate --check-pending-reviews --max-pending-days 14
 - `straymark charter drift` *(cli-3.7.0+)* — 检查文件 vs 提交的漂移，带 AILOG 感知抑制和 Batch Ledger 门控 *(门控在 cli-3.13.2 添加)*
 - `straymark charter batch-complete` *(cli-3.13.0+, fw-4.14.0+)* — 在 AILOG 的 `## Batch Ledger` 中将章程批次标记为已完成
 - `straymark charter audit` *(cli-3.8.0+)* — 编排多模型外部审计（仅编排，详见下文）
-- `straymark charter refresh-suggest` *(cli-3.14.0+, fw-4.16.0+)* — 多 Charter 模块的预声明 SpecKit 刷新启发式建议（详见 [CHARTER-CHAIN-EVOLUTION.md](https://github.com/StrangeDaysTech/straymark/blob/main/dist/.straymark/00-governance/i18n/zh-CN/CHARTER-CHAIN-EVOLUTION.md) 模式 1）
+- `straymark charter refresh-suggest` *(cli-3.14.0+, fw-4.16.0+)* — 多 Charter 模块的预声明 SpecKit 刷新启发式建议（详见 [CHARTER-CHAIN-EVOLUTION.md](https://github.com/StrangeDaysTech/straymark/blob/main/dist/.straymark/00-governance/i18n/zh-CN/CHARTER-CHAIN-EVOLUTION.md) 模式 1）。默认阈值 `r_n_plus_one_emergent_count` > 6；仅可通过 `--threshold N` 覆盖（v0.2 中 `config.yml` 暂无等效字段）。
 - `straymark charter amend` *(cli-3.14.0+, fw-4.16.0+)* — 关闭后审计驱动的 Batch N.4 修订脚手架（在原 execute 分支上落地，不开新 Charter — 详见 [CHARTER-CHAIN-EVOLUTION.md](https://github.com/StrangeDaysTech/straymark/blob/main/dist/.straymark/00-governance/i18n/zh-CN/CHARTER-CHAIN-EVOLUTION.md) 模式 2）
 
 #### `straymark charter new [-t XS|S|M|L] [--from-ailog <id> | --from-spec <path>] [--title <title>] [path]`
