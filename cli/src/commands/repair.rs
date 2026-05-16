@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use crate::config::Checksums;
 use crate::download;
 use crate::inject;
-use crate::manifest::DistManifest;
+use crate::manifest::{DistManifest, Injection};
 use crate::utils;
 
 /// Expected directories inside .straymark/ (same as init.rs)
@@ -184,6 +184,21 @@ fn check_needs_download(target: &Path) -> bool {
         }
     }
 
+    // Check injection targets declared in the local manifest (fw-4.16.2 / cli-3.14.1).
+    // Before this version, `repair` only triggered the framework download when one
+    // of the essential framework files was missing — a single deleted injection
+    // target (e.g. `AGENTS.md` while `STRAYMARK.md` remained intact) was a silent
+    // no-op. Walking `manifest.injections` here brings the download phase in line
+    // with the restore phase, which now checks each target individually.
+    let manifest_path = target.join(".straymark/dist-manifest.yml");
+    if let Ok(manifest) = DistManifest::load(&manifest_path) {
+        for injection in &manifest.injections {
+            if !target.join(&injection.target).exists() {
+                return true;
+            }
+        }
+    }
+
     false
 }
 
@@ -227,12 +242,26 @@ fn restore_missing_files(zip_path: &Path, target: &Path) -> Result<()> {
         restored += extract_missing_files(&mut archive, &prefix, pattern, target)?;
     }
 
-    // Restore injections if STRAYMARK.md or directive files are missing
-    let straymark_md = target.join("STRAYMARK.md");
-    if !straymark_md.exists() {
-        // Read templates for injection
+    // Restore each missing injection target individually (fw-4.16.2 / cli-3.14.1).
+    // Before this version, this block was gated on `!STRAYMARK.md.exists()` — which
+    // meant a single missing injection target (e.g. `AGENTS.md` while `STRAYMARK.md`
+    // remained intact) was silently skipped, contradicting the `straymark repair`
+    // promise to restore broken installations. The per-target presence check below
+    // brings repair in line with the documented intent and with what `straymark
+    // update-framework` already does for the same set of files.
+    let missing_injections: Vec<&Injection> = manifest
+        .injections
+        .iter()
+        .filter(|inj| !target.join(&inj.target).exists())
+        .collect();
+
+    if !missing_injections.is_empty() {
+        // Load only the templates we will actually re-inject.
         let mut templates: HashMap<String, String> = HashMap::new();
-        for injection in &manifest.injections {
+        for injection in &missing_injections {
+            if templates.contains_key(&injection.template) {
+                continue;
+            }
             let zip_entry_name = format!("{}{}", prefix, injection.template);
             for i in 0..archive.len() {
                 let mut entry = archive.by_index(i)?;
@@ -245,8 +274,8 @@ fn restore_missing_files(zip_path: &Path, target: &Path) -> Result<()> {
             }
         }
 
-        // Re-inject directives
-        for injection in &manifest.injections {
+        // Re-inject only the missing ones.
+        for injection in &missing_injections {
             let template_content = match templates.get(&injection.template) {
                 Some(content) => content,
                 None => continue,
@@ -377,4 +406,141 @@ fn walkdir(dir: PathBuf) -> Result<Vec<PathBuf>> {
         }
     }
     Ok(files)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::manifest::Injection;
+    use tempfile::TempDir;
+
+    fn write_manifest(target: &Path, injection_targets: &[&str]) {
+        let manifest_path = target.join(".straymark/dist-manifest.yml");
+        std::fs::create_dir_all(manifest_path.parent().unwrap()).unwrap();
+        let injections_yaml: String = injection_targets
+            .iter()
+            .map(|t| {
+                format!(
+                    "  - target: {t}\n    template: dist-templates/directives/dummy.md\n"
+                )
+            })
+            .collect();
+        let body = format!(
+            "version: \"4.16.2\"\ndescription: \"test\"\nrepository: \"x\"\nfiles: []\ninjections:\n{injections_yaml}"
+        );
+        std::fs::write(&manifest_path, body).unwrap();
+    }
+
+    fn write_essential_framework_files(target: &Path) {
+        // Files `check_needs_download` requires to be present in order to NOT
+        // already short-circuit to true for other reasons (we want to isolate
+        // the "missing injection target" branch).
+        std::fs::create_dir_all(target.join(".straymark/templates")).unwrap();
+        std::fs::write(target.join(".straymark/templates/template.md"), "x").unwrap();
+        std::fs::create_dir_all(target.join(".straymark/00-governance")).unwrap();
+        std::fs::write(target.join(".straymark/00-governance/AGENT-RULES.md"), "x").unwrap();
+        std::fs::write(target.join(".straymark/config.yml"), "language: en\n").unwrap();
+        std::fs::write(target.join("STRAYMARK.md"), "# StrayMark\n").unwrap();
+    }
+
+    #[test]
+    fn check_needs_download_true_when_injection_target_missing() {
+        let dir = TempDir::new().unwrap();
+        write_essential_framework_files(dir.path());
+        write_manifest(dir.path(), &["AGENTS.md", "CLAUDE.md"]);
+        // Pre-create one target, leave the other missing.
+        std::fs::write(dir.path().join("AGENTS.md"), "existing\n").unwrap();
+
+        assert!(
+            check_needs_download(dir.path()),
+            "must trigger download when an injection target listed in the manifest is missing"
+        );
+    }
+
+    #[test]
+    fn check_needs_download_false_when_all_injection_targets_present() {
+        let dir = TempDir::new().unwrap();
+        write_essential_framework_files(dir.path());
+        write_manifest(dir.path(), &["AGENTS.md", "CLAUDE.md"]);
+        std::fs::write(dir.path().join("AGENTS.md"), "x").unwrap();
+        std::fs::write(dir.path().join("CLAUDE.md"), "x").unwrap();
+
+        assert!(
+            !check_needs_download(dir.path()),
+            "must NOT trigger download when nothing is missing"
+        );
+    }
+
+    #[test]
+    fn check_needs_download_true_when_essential_file_missing_independent_of_injections() {
+        // Regression: pre-fw-4.16.2 behavior must still hold for the essential-file path.
+        let dir = TempDir::new().unwrap();
+        write_essential_framework_files(dir.path());
+        write_manifest(dir.path(), &[]);
+        std::fs::remove_file(dir.path().join("STRAYMARK.md")).unwrap();
+
+        assert!(
+            check_needs_download(dir.path()),
+            "missing STRAYMARK.md must still trigger a download"
+        );
+    }
+
+    #[test]
+    fn missing_injections_filter_identifies_per_target_gaps() {
+        // Exercises the same filter expression used in `restore_missing_files`
+        // (and verifies it does not regress to the pre-fw-4.16.2 STRAYMARK.md gate).
+        let dir = TempDir::new().unwrap();
+        write_essential_framework_files(dir.path());
+        std::fs::write(dir.path().join("AGENTS.md"), "x").unwrap();
+        // CLAUDE.md intentionally missing.
+
+        let injections = vec![
+            Injection {
+                target: "AGENTS.md".to_string(),
+                template: "dist-templates/directives/AGENTS.md".to_string(),
+                embed: None,
+            },
+            Injection {
+                target: "CLAUDE.md".to_string(),
+                template: "dist-templates/directives/CLAUDE.md".to_string(),
+                embed: None,
+            },
+        ];
+
+        let missing: Vec<&Injection> = injections
+            .iter()
+            .filter(|inj| !dir.path().join(&inj.target).exists())
+            .collect();
+
+        assert_eq!(missing.len(), 1, "exactly one target should be flagged missing");
+        assert_eq!(missing[0].target, "CLAUDE.md");
+    }
+
+    #[test]
+    fn missing_injections_filter_is_empty_when_all_present() {
+        let dir = TempDir::new().unwrap();
+        write_essential_framework_files(dir.path());
+        std::fs::write(dir.path().join("AGENTS.md"), "x").unwrap();
+        std::fs::write(dir.path().join("CLAUDE.md"), "x").unwrap();
+
+        let injections = vec![
+            Injection {
+                target: "AGENTS.md".to_string(),
+                template: "x".to_string(),
+                embed: None,
+            },
+            Injection {
+                target: "CLAUDE.md".to_string(),
+                template: "x".to_string(),
+                embed: None,
+            },
+        ];
+
+        let missing: Vec<&Injection> = injections
+            .iter()
+            .filter(|inj| !dir.path().join(&inj.target).exists())
+            .collect();
+
+        assert!(missing.is_empty());
+    }
 }

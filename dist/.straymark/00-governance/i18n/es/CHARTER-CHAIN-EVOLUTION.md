@@ -193,4 +193,4 @@ Este documento es por sí mismo el output del flujo de aceptación que Sentinel 
 
 ---
 
-*StrayMark fw-4.16.1 | [GitHub](https://github.com/StrangeDaysTech/straymark) | Issue [#156](https://github.com/StrangeDaysTech/straymark/issues/156)*
+*StrayMark fw-4.16.2 | [GitHub](https://github.com/StrangeDaysTech/straymark) | Issue [#156](https://github.com/StrangeDaysTech/straymark/issues/156)*
