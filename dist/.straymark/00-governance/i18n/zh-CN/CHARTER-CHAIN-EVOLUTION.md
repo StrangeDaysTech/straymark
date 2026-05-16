@@ -186,6 +186,7 @@ Sentinel CHARTER-18 在 2026-05-15 关闭，带 `external-audit-pending.yaml`。
 
 ## 相关
 
+- [EMERGENT-OBSERVATION-DESIGN.md](EMERGENT-OBSERVATION-DESIGN.md) —— 元模式，Pattern 1 和 Pattern 2 都是其应用（形式化交叉引用 + 浮现的文化许可）。
 - [STRAYMARK.md §15](../../../STRAYMARK.md) —— Charter 生命周期及本文档扩展的逐 Charter 模式。
 - [SPECKIT-CHARTER-BRIDGE.md](SPECKIT-CHARTER-BRIDGE.md) —— SpecKit 工件如何映射到 Charter；模式 1 生活在此接缝上。
 - [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) —— 跨许多 AILOG 累积的 `§Follow-ups` 的姐妹模式。
@@ -193,4 +194,4 @@ Sentinel CHARTER-18 在 2026-05-15 关闭，带 `external-audit-pending.yaml`。
 
 ---
 
-*StrayMark fw-4.16.2 | [GitHub](https://github.com/StrangeDaysTech/straymark) | Issue [#156](https://github.com/StrangeDaysTech/straymark/issues/156)*
+*StrayMark fw-4.17.0 | [GitHub](https://github.com/StrangeDaysTech/straymark) | Issue [#156](https://github.com/StrangeDaysTech/straymark/issues/156)*

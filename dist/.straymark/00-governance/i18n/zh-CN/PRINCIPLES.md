@@ -76,4 +76,16 @@
 
 ---
 
-*StrayMark v1.0.0 | [Strange Days Tech](https://strangedays.tech)*
+## 8. 跨源不一致浮现
+
+> **"当两个规范源不一致时，在继续之前先浮现。"**
+
+当智能体检测到 StrayMark 文档中两个规范源之间的实质性分歧（spec ↔ 代码、AILOG `§Risk` ↔ TDE backlog、ADR ↔ 实现、Charter 声明范围 ↔ commits 等）时，必须在继续被询问的任务之前浮现该分歧。
+
+StrayMark 文档经过审慎设计，以使这些分歧可检测：形式化交叉引用（frontmatter 字段、规范章节、稳定 ID）+ 超越任务的文化浮现许可。智能体的角色是消费该基础设施并报告其所见。
+
+参见 [`EMERGENT-OBSERVATION-DESIGN.md`](EMERGENT-OBSERVATION-DESIGN.md) 以了解元模式和现有应用的金字塔。
+
+---
+
+*StrayMark fw-4.17.0 | [Strange Days Tech](https://strangedays.tech)*

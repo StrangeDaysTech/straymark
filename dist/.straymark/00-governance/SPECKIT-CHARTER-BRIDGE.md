@@ -230,6 +230,7 @@ If your work fits one of those, *declare no Charter*. The cost of a Charter exce
 
 ## See also
 
+- [`EMERGENT-OBSERVATION-DESIGN.md`](EMERGENT-OBSERVATION-DESIGN.md) — the meta-pattern that explains *why* multi-source linkage in this bridge produces emergent observations during multi-Charter execution.
 - `STRAYMARK.md` §6 (When to Document) and §15 (Charters as bounded units of work)
 - `.straymark/templates/charter/charter-template.md` — declarative template
 - `.straymark/templates/charter/charter-telemetry-template.yaml` — telemetry template

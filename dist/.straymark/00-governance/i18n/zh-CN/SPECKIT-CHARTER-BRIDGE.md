@@ -228,6 +228,7 @@ SpecKit 的 Constitution Check 通常在 `/speckit-plan` 时只运行一次。�
 
 ## 另请参阅
 
+- [`EMERGENT-OBSERVATION-DESIGN.md`](EMERGENT-OBSERVATION-DESIGN.md) —— 元模式，解释*为什么*此桥接中的多源链接在多 Charter 执行期间产生涌现观察。
 - `STRAYMARK.md` §6（何时编写文档）与 §15（Charter 作为有界工作单元）
 - `.straymark/templates/charter/charter-template.md` — 声明式模板
 - `.straymark/templates/charter/charter-telemetry-template.yaml` — 遥测模板

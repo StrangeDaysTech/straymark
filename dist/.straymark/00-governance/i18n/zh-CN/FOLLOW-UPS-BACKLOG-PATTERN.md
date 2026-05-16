@@ -233,4 +233,12 @@ AILOG_DIR=".straymark/07-ai-audit/agent-logs"
 
 ---
 
-*StrayMark v4.15.0 | [Strange Days Tech](https://strangedays.tech)*
+## 相关
+
+- [EMERGENT-OBSERVATION-DESIGN.md](EMERGENT-OBSERVATION-DESIGN.md) —— 元模式，此漂移检测约定在每 AILOG ↔ 注册表表面实例化了它。
+- [CHARTER-CHAIN-EVOLUTION.md](CHARTER-CHAIN-EVOLUTION.md) —— 在链级别（Pattern 1）和周期级别（Pattern 2）运作的姐妹模式。
+- [AGENT-RULES.md §3](AGENT-RULES.md) —— 可将 follow-ups 升级为专用债务条目的 TDE-vs-`R<N>` 升级标准。
+
+---
+
+*StrayMark fw-4.17.0 | [Strange Days Tech](https://strangedays.tech)*

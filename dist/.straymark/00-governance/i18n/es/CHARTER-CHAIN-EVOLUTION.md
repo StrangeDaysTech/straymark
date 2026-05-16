@@ -186,6 +186,7 @@ Este documento es por sí mismo el output del flujo de aceptación que Sentinel 
 
 ## Relacionado
 
+- [EMERGENT-OBSERVATION-DESIGN.md](EMERGENT-OBSERVATION-DESIGN.md) — el meta-patrón del cual Pattern 1 y Pattern 2 son aplicaciones (cross-referencing formal + permiso cultural para surfacear).
 - [STRAYMARK.md §15](../../../STRAYMARK.md) — Ciclo de vida del Charter y el patrón por-Charter que este documento extiende.
 - [SPECKIT-CHARTER-BRIDGE.md](SPECKIT-CHARTER-BRIDGE.md) — cómo los artefactos SpecKit mapean a Charters; el Patrón 1 vive en esta costura.
 - [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) — patrón hermano para `§Follow-ups` acumulados a lo largo de muchos AILOGs.
@@ -193,4 +194,4 @@ Este documento es por sí mismo el output del flujo de aceptación que Sentinel 
 
 ---
 
-*StrayMark fw-4.16.2 | [GitHub](https://github.com/StrangeDaysTech/straymark) | Issue [#156](https://github.com/StrangeDaysTech/straymark/issues/156)*
+*StrayMark fw-4.17.0 | [GitHub](https://github.com/StrangeDaysTech/straymark) | Issue [#156](https://github.com/StrangeDaysTech/straymark/issues/156)*

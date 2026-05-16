@@ -311,6 +311,7 @@ related:
 | Going to declare a Charter | `.straymark/templates/charter/charter-template.md` (or `straymark charter new`) |
 | Need to see existing Charters | `straymark charter list` (or list `.straymark/charters/`) |
 | SpecKit user — when does a feature yield a Charter? | `.straymark/00-governance/SPECKIT-CHARTER-BRIDGE.md` |
+| Wondering why agents surface things you didn't ask | `.straymark/00-governance/EMERGENT-OBSERVATION-DESIGN.md` |
 
 ---
 

@@ -186,6 +186,7 @@ This document is itself the output of the acceptance flow Sentinel walked throug
 
 ## Related
 
+- [EMERGENT-OBSERVATION-DESIGN.md](EMERGENT-OBSERVATION-DESIGN.md) — the meta-pattern of which Pattern 1 and Pattern 2 are applications (formal cross-referencing + cultural permission to surface).
 - [STRAYMARK.md §15](../../STRAYMARK.md) — Charter lifecycle and the per-Charter pattern this document extends.
 - [SPECKIT-CHARTER-BRIDGE.md](SPECKIT-CHARTER-BRIDGE.md) — how SpecKit artifacts map to Charters; Pattern 1 lives on this seam.
 - [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) — sibling pattern for accumulated `§Follow-ups` across many AILOGs.
@@ -193,4 +194,4 @@ This document is itself the output of the acceptance flow Sentinel walked throug
 
 ---
 
-*StrayMark fw-4.16.2 | [GitHub](https://github.com/StrangeDaysTech/straymark) | Issue [#156](https://github.com/StrangeDaysTech/straymark/issues/156)*
+*StrayMark fw-4.17.0 | [GitHub](https://github.com/StrangeDaysTech/straymark) | Issue [#156](https://github.com/StrangeDaysTech/straymark/issues/156)*

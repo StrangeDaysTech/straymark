@@ -209,6 +209,14 @@ When populating the `tags` and `related` fields in frontmatter:
 - Identify potential risks
 - Suggest improvements when evident
 - Alert about technical debt
+- **Surface dissonance between canonical sources** (Principle #8 — see [`PRINCIPLES.md`](PRINCIPLES.md)). When the agent detects material divergence between two canonical sources of StrayMark documentation, raise it before proceeding with the asked task. Examples to watch for during routine work:
+  - Spec stale relative to shipped code in long-running multi-Charter chains (see [`CHARTER-CHAIN-EVOLUTION.md`](CHARTER-CHAIN-EVOLUTION.md) Pattern 1)
+  - Accumulated `R<N> (new, not in Charter)` entries that match TDE criteria but were not escalated (see §3 above)
+  - ADR vigente contradicted by current implementation
+  - `§Follow-ups` count crossing the backlog-pattern threshold (see [`FOLLOW-UPS-BACKLOG-PATTERN.md`](FOLLOW-UPS-BACKLOG-PATTERN.md))
+  - Audit findings emerging post-close that warrant amendment (see [`CHARTER-CHAIN-EVOLUTION.md`](CHARTER-CHAIN-EVOLUTION.md) Pattern 2)
+
+  See [`EMERGENT-OBSERVATION-DESIGN.md`](EMERGENT-OBSERVATION-DESIGN.md) for the meta-pattern that ties these surfaces together.
 
 ---
 
@@ -379,4 +387,4 @@ When a project accumulates a high volume of AILOGs across multiple Charters and 
 
 ---
 
-*StrayMark v4.16.2 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.17.0 | [Strange Days Tech](https://strangedays.tech)*

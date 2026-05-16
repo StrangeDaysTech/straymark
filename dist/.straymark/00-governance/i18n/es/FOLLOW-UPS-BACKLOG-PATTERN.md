@@ -233,4 +233,12 @@ Contribuido vía [issue #111](https://github.com/StrangeDaysTech/straymark/issue
 
 ---
 
-*StrayMark v4.15.0 | [Strange Days Tech](https://strangedays.tech)*
+## Relacionado
+
+- [EMERGENT-OBSERVATION-DESIGN.md](EMERGENT-OBSERVATION-DESIGN.md) — el meta-patrón que esta convención de detección de drift instancia en la superficie per-AILOG ↔ registro.
+- [CHARTER-CHAIN-EVOLUTION.md](CHARTER-CHAIN-EVOLUTION.md) — patrón hermano que opera a nivel de cadena (Pattern 1) y a nivel de ciclo (Pattern 2).
+- [AGENT-RULES.md §3](AGENT-RULES.md) — criterios de escalación TDE-vs-`R<N>` que pueden promover follow-ups a entradas de deuda dedicadas.
+
+---
+
+*StrayMark fw-4.17.0 | [Strange Days Tech](https://strangedays.tech)*

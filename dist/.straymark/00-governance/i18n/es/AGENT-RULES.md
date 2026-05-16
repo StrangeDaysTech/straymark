@@ -209,6 +209,14 @@ Al poblar los campos `tags` y `related` en el frontmatter:
 - Identificar riesgos potenciales
 - Sugerir mejoras cuando sean evidentes
 - Alertar sobre deuda técnica
+- **Surfacear disonancia entre fuentes canónicas** (Principio #8 — ver [`PRINCIPLES.md`](PRINCIPLES.md)). Cuando el agente detecte divergencia material entre dos fuentes canónicas de la documentación StrayMark, debe surfacearla antes de proceder con la tarea pedida. Ejemplos a observar durante trabajo rutinario:
+  - Spec stale relativo al código shipped en cadenas multi-Charter de larga duración (ver [`CHARTER-CHAIN-EVOLUTION.md`](CHARTER-CHAIN-EVOLUTION.md) Pattern 1)
+  - Entradas `R<N> (new, not in Charter)` acumuladas que cumplen criterios de TDE pero no fueron escaladas (ver §3 arriba)
+  - ADR vigente contradicho por la implementación actual
+  - Conteo de `§Follow-ups` cruzando el umbral del backlog-pattern (ver [`FOLLOW-UPS-BACKLOG-PATTERN.md`](FOLLOW-UPS-BACKLOG-PATTERN.md))
+  - Hallazgos de audit emergiendo post-close que ameriten enmienda (ver [`CHARTER-CHAIN-EVOLUTION.md`](CHARTER-CHAIN-EVOLUTION.md) Pattern 2)
+
+  Ver [`EMERGENT-OBSERVATION-DESIGN.md`](EMERGENT-OBSERVATION-DESIGN.md) para el meta-patrón que conecta estas superficies.
 
 ---
 
@@ -379,4 +387,4 @@ Cuando un proyecto acumula un volumen alto de AILOGs a lo largo de múltiples Ch
 
 ---
 
-*StrayMark v4.16.2 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.17.0 | [Strange Days Tech](https://strangedays.tech)*
