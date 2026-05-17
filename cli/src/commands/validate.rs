@@ -1,8 +1,10 @@
 use anyhow::{bail, Result};
 use colored::Colorize;
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
+use crate::inject;
+use crate::manifest::DistManifest;
 use crate::utils;
 use crate::validation::{self, Severity, ValidationIssue};
 
@@ -68,7 +70,11 @@ pub fn run(
         }
     }
 
-    if doc_count == 0 {
+    for issue in check_host_marker_health(&target, &straymark_dir) {
+        result.warnings.push(issue);
+    }
+
+    if doc_count == 0 && result.errors.is_empty() && result.warnings.is_empty() {
         utils::info("No documents found to validate.");
         println!(
             "  {} Create documents with {} or {}",
@@ -95,6 +101,9 @@ pub fn run(
             for issue in validation::check_pending_reviews(&straymark_dir, max_pending_days) {
                 result.warnings.push(issue);
             }
+        }
+        for issue in check_host_marker_health(&target, &straymark_dir) {
+            result.warnings.push(issue);
         }
         print_results(&result, doc_count);
         return exit_with_code(&result);
@@ -258,4 +267,61 @@ fn exit_with_code(result: &validation::ValidationResult) -> Result<()> {
     } else {
         std::process::exit(1);
     }
+}
+
+/// Inspect every injection target declared in the local `dist-manifest.yml` and
+/// emit a warning for each host file (`.cursorrules`, `CLAUDE.md`, etc.) whose
+/// StrayMark marker block is malformed (duplicated, orphan, or inverted).
+///
+/// Reparation is the job of `straymark update-framework` / `repair` (which call
+/// `inject::inject_directive` and auto-sanitize). This check is purely diagnostic.
+///
+/// If the manifest cannot be loaded (missing or malformed), the check is silently
+/// skipped — a corrupt manifest is reported elsewhere and we don't want to
+/// double-fail or block `validate` on it.
+fn check_host_marker_health(project_root: &Path, straymark_dir: &Path) -> Vec<ValidationIssue> {
+    let manifest_path = straymark_dir.join("dist-manifest.yml");
+    let manifest = match DistManifest::load(&manifest_path) {
+        Ok(m) => m,
+        Err(_) => return Vec::new(),
+    };
+
+    let mut issues = Vec::new();
+    for injection in &manifest.injections {
+        let target = project_root.join(&injection.target);
+        if !target.exists() {
+            continue;
+        }
+        let health = match inject::inspect_marker_health(&target) {
+            Ok(h) => h,
+            Err(_) => continue,
+        };
+        if !health.is_malformed() {
+            continue;
+        }
+        let mut parts = Vec::new();
+        if health.begin_count != health.end_count {
+            parts.push(format!(
+                "{} begin / {} end marker(s) (counts must match)",
+                health.begin_count, health.end_count
+            ));
+        }
+        if !health.has_canonical_block && (health.begin_count > 0 || health.end_count > 0) {
+            parts.push("no canonical block (only orphan markers)".to_string());
+        }
+        if health.end_before_begin {
+            parts.push("end marker before begin marker".to_string());
+        }
+        let detail = parts.join(", ");
+        issues.push(ValidationIssue {
+            file: target,
+            rule: "host-marker-health".to_string(),
+            message: format!("Malformed StrayMark markers ({detail})."),
+            severity: Severity::Warning,
+            fix_hint: Some(
+                "Run 'straymark update-framework' or 'straymark repair' to auto-repair.".to_string(),
+            ),
+        });
+    }
+    issues
 }
