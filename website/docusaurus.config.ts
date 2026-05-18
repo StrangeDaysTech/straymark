@@ -54,7 +54,25 @@ const config: Config = {
             return `${GITHUB_EDIT_BASE}/docs/${docPath}`;
           },
         },
-        blog: false,
+        blog: {
+          path: 'blog',
+          routeBasePath: 'blog',
+          blogTitle: 'Blog',
+          blogDescription: 'The StrayMark chronicle — how the framework emerged, decision by decision.',
+          showReadingTime: true,
+          feedOptions: {
+            type: ['rss', 'atom'],
+            title: 'StrayMark Blog',
+            description: 'The StrayMark chronicle.',
+            copyright: `Copyright © ${new Date().getFullYear()} Strange Days Tech.`,
+          },
+          editUrl: ({locale, blogDirPath, blogPath}) => {
+            if (locale && locale !== 'en') {
+              return `${GITHUB_EDIT_BASE}/website/i18n/${locale}/docusaurus-plugin-content-blog/${blogPath}`;
+            }
+            return `${GITHUB_EDIT_BASE}/website/${blogDirPath}/${blogPath}`;
+          },
+        },
         theme: {
           customCss: './src/css/custom.css',
         },
@@ -80,6 +98,7 @@ const config: Config = {
           position: 'left',
           label: 'Docs',
         },
+        {to: '/blog', label: 'Blog', position: 'left'},
         {
           type: 'localeDropdown',
           position: 'right',
@@ -105,6 +124,7 @@ const config: Config = {
         {
           title: 'Project',
           items: [
+            {label: 'Blog', to: '/blog'},
             {label: 'GitHub', href: GITHUB_REPO},
             {label: 'Releases', href: `${GITHUB_REPO}/releases`},
             {label: 'Issues', href: `${GITHUB_REPO}/issues`},

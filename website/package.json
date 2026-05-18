@@ -5,6 +5,7 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "sync:docs": "tsx scripts/sync-docs-i18n.ts",
+    "migrate:blog": "tsx scripts/migrate-blog.ts",
     "prestart": "npm run sync:docs",
     "start": "docusaurus start",
     "prebuild": "npm run sync:docs",
@@ -32,6 +33,7 @@
     "@docusaurus/tsconfig": "3.10.1",
     "@docusaurus/types": "3.10.1",
     "@types/react": "^19.0.0",
+    "gray-matter": "^4.0.3",
     "tsx": "^4.19.0",
     "typescript": "~6.0.2"
   },
