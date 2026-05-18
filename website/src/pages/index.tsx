@@ -1,21 +1,19 @@
 import type {ReactNode} from 'react';
 import Layout from '@theme/Layout';
-import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import Hero from '@site/src/components/Hero';
+import WorkflowDiagram from '@site/src/components/WorkflowDiagram';
+import WhyExists from '@site/src/components/WhyExists';
+import FeatureGrid from '@site/src/components/FeatureGrid';
 
 export default function Home(): ReactNode {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout title={siteConfig.title} description={siteConfig.tagline}>
-      <main style={{maxWidth: 760, margin: '4rem auto', padding: '0 1.5rem'}}>
-        <h1>{siteConfig.title}</h1>
-        <p>{siteConfig.tagline}</p>
-        <p>
-          <Link className="button button--primary" to="/docs/">
-            Read the docs
-          </Link>
-        </p>
-      </main>
+      <Hero />
+      <WorkflowDiagram />
+      <WhyExists />
+      <FeatureGrid />
     </Layout>
   );
 }

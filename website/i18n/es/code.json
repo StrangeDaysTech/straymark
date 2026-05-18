@@ -1,0 +1,90 @@
+{
+  "hero.pillar1": {
+    "message": "Cada decisión queda en el repo",
+    "description": "First hero pillar"
+  },
+  "hero.pillar2": {
+    "message": "Detecta la deriva empíricamente",
+    "description": "Second hero pillar"
+  },
+  "hero.pillar3": {
+    "message": "Auditoría lista por construcción",
+    "description": "Third hero pillar"
+  },
+  "hero.cta.docs": {
+    "message": "Leer la documentación",
+    "description": "Hero CTA — read the docs"
+  },
+  "hero.cta.blog": {
+    "message": "Leer la bitácora",
+    "description": "Hero CTA — read the blog"
+  },
+  "workflow.title": {
+    "message": "El flujo de trabajo",
+    "description": "Workflow section title"
+  },
+  "workflow.caption": {
+    "message": "Cada paso deja un artefacto versionado en el repo. Sin sistemas externos, sin decisiones implícitas.",
+    "description": "Workflow section caption"
+  },
+  "why.eyebrow": {
+    "message": "Por qué existe esto",
+    "description": "Why this exists eyebrow"
+  },
+  "why.body": {
+    "message": "La industria está ocupada con modelos, guardrails y compliance. La pieza que falta está río arriba de todas: la disciplina cognitiva del equipo que trabaja con los agentes. Sin estructura, los agentes derivan, las decisiones se pierden, los riesgos no se documentan y la evidencia regulatoria se improvisa. StrayMark estructura el trabajo en sí — nativo del repo, consciente de los agentes, auditable por construcción.",
+    "description": "Why this exists body paragraph"
+  },
+  "features.title": {
+    "message": "Qué trae StrayMark",
+    "description": "Feature grid title"
+  },
+  "features.discipline.title": {
+    "message": "Disciplina cognitiva estructurada",
+    "description": "Feature: structured cognitive discipline (title)"
+  },
+  "features.discipline.body": {
+    "message": "Los Charters definen propósito y límites antes del código. Los AILOGs capturan el intercambio humano/agente. Los AIDECs registran decisiones y trade-offs.",
+    "description": "Feature: structured cognitive discipline (body)"
+  },
+  "features.repo.title": {
+    "message": "Repo-nativo por diseño",
+    "description": "Feature: repo-native by design (title)"
+  },
+  "features.repo.body": {
+    "message": "Todo vive en tu repositorio git: artefactos, reglas de gobernanza, directivas para agentes. Sin plataforma externa, sin segunda fuente de verdad.",
+    "description": "Feature: repo-native by design (body)"
+  },
+  "features.agents.title": {
+    "message": "Gobernanza de agentes declarativa",
+    "description": "Feature: declarative agent governance (title)"
+  },
+  "features.agents.body": {
+    "message": "Reglas versionadas en STRAYMARK.md y AGENT-RULES delimitan el comportamiento del agente al nivel del flujo — no en runtime, no a posteriori.",
+    "description": "Feature: declarative agent governance (body)"
+  },
+  "features.evidence.title": {
+    "message": "Evidencia como subproducto",
+    "description": "Feature: evidence as a byproduct (title)"
+  },
+  "features.evidence.body": {
+    "message": "Los mapeos a EU AI Act, ISO 42001, NIST AI RMF y GDPR emergen de los mismos artefactos que el equipo ya produce. Sin papeleo en paralelo.",
+    "description": "Feature: evidence as a byproduct (body)"
+  },
+  "features.cli.title": {
+    "message": "Un CLI que hace el trabajo",
+    "description": "Feature: a CLI that does the work (title)"
+  },
+  "features.cli.body": {
+    "message": "init, validate, audit, analyze, compliance, metrics — un binario, once comandos, salidas deterministas que puedes pasar por grep y por pipe.",
+    "description": "Feature: a CLI that does the work (body)"
+  },
+  "features.tde.title": {
+    "message": "TDE: detección de deriva",
+    "description": "Feature: TDE drift detection (title)"
+  },
+  "features.tde.body": {
+    "message": "El Transversal Debt Engine expone el acoplamiento oculto entre charters antes de que se acumule en incidentes.",
+    "description": "Feature: TDE drift detection (body)"
+  }
+}
