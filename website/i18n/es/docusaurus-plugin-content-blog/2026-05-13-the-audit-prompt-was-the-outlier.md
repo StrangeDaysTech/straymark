@@ -12,6 +12,10 @@ tags:
 date: 2026-05-13T00:00:00.000Z
 description: El único archivo del framework que vivía en otro idioma
 ---
+*Un archivo entre decenas vivía al revés — canónico en español en un framework canónico en inglés, durante seis semanas, sin que nadie lo notara. Un fix de mantenimiento que registra algo con lo que el blog se encuentra una y otra vez: los outliers enseñan la convención por contraste.*
+
+<!-- truncate -->
+
 ## 1. Una sola línea del commit
 
 Esta es la entrada operativa del post 8. El commit `a8a1ac5` del 12 de mayo de 2026 carga un cuerpo que se abre con esta frase:

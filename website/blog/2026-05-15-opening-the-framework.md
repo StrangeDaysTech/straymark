@@ -13,6 +13,10 @@ tags:
 date: 2026-05-15T00:00:00.000Z
 description: Seventy-two hours of gestures that only make sense together
 ---
+*Two gestures in seventy-two hours: closing the last 5% of i18n parity (20/20/20 governance docs across EN + ES + zh-CN) and publishing the CLA badge in the README. Small separately; together, the moment the framework stops talking to itself and starts talking to whoever wants to read it.*
+
+<!-- truncate -->
+
 ## 1. Two gestures in seventy-two hours
 
 On 13 May 2026, at 06:20 UTC, `fw-4.13.4` merged. It closed two small i18n coverage gaps — the ISO-25010 reference document that was only in English, and the Charter template that was missing in Simplified Chinese. Twenty-two canonical framework files reached structural EN/ES/zh-CN parity.

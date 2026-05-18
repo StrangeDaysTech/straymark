@@ -12,6 +12,10 @@ tags:
 date: 2026-05-09T00:00:00.000Z
 description: The fourth rename — this time with a public ADR and a disciplined arc
 ---
+*The fourth rename, unlike the first three, wasn't searching for the concept — it came from a trademark conflict investigation. Eight days, an ADR, five PRs in forty-three minutes. The first disciplined rebrand of the project, and what "in scope / out of scope" meant when applied to its own past.*
+
+<!-- truncate -->
+
 ## 1. The rename that wasn't looking for the concept
 
 ADR `2026-05-08-001` opens with a sentence that, for anyone who read Post 2 of this blog, sounds out of place:

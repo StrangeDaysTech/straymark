@@ -13,6 +13,10 @@ tags:
 date: 2026-05-15T00:00:00.000Z
 description: Setenta y dos horas de gestos que sólo cobran sentido juntos
 ---
+*Dos gestos en setenta y dos horas: cerrar el último 5% de la paridad i18n (20/20/20 docs de gobernanza en EN + ES + zh-CN) y publicar el badge de CLA en el README. Pequeños por separado; juntos, el momento en que el framework deja de hablarse a sí mismo y empieza a hablarle a cualquiera que quiera leerlo.*
+
+<!-- truncate -->
+
 ## 1. Dos gestos en setenta y dos horas
 
 El 13 de mayo de 2026, a las 06:20 UTC, se fusionó `fw-4.13.4`. Cerró dos huecos pequeños de cobertura i18n — el documento de referencia ISO-25010 que solo estaba en inglés, y el template del Charter que faltaba en chino simplificado. Veintidós archivos canónicos del framework alcanzaron paridad estructural EN/ES/zh-CN.

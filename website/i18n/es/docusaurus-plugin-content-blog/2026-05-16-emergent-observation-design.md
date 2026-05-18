@@ -16,6 +16,10 @@ description: >-
   Cómo nombrar una propiedad de diseño que ya estaba haciendo su trabajo en
   silencio
 ---
+*Un agente señaló un spec desactualizado sin que nadie se lo pidiera. La reconstrucción de esa mañana y la propiedad de diseño que lo hace posible — codificada a posteriori como Principio #8 de StrayMark.*
+
+<!-- truncate -->
+
 > *"Hola, ¿ya tratamos el Issue #153?"*
 
 Así empezó la conversación, hoy 16 de mayo a la mañana. Una pregunta corta, casi de housekeeping, antes de meterme en otra cosa. La respuesta era no — el Issue #153 estaba abierto a propósito, esperando un segundo dominio que ejercitara la mecánica antes de cristalizarla (Principio #12 de StrayMark, validación contra un segundo dominio antes de canonizar). Pero la pregunta abrió otra puerta, y al final de esa conversación había codificado una propiedad de diseño del framework que llevaba meses funcionando sin nombre, señalada por un episodio de hace apenas dos días.

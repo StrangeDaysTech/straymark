@@ -13,6 +13,10 @@ tags:
 date: 2026-05-15T00:00:00.000Z
 description: Four months between the intuition and the open standard
 ---
+*Four months between the project's first AIDEC — "AI agents are a single technical audience" — and the open standard that operationalized it. `AGENTS.md` at the repo root, read by fifteen vendor CLIs, replacing the proliferation of CLAUDE.md / GEMINI.md / .cursorrules and a dozen more.*
+
+<!-- truncate -->
+
 ## 1. Four months between intuition and standard
 
 On 15 May 2026, at 19:05 UTC, PR [#155](https://github.com/StrangeDaysTech/straymark/pull/155) closed the framework as `fw-4.15.0 / cli-3.13.2`. What it brought is a single new file in the list of directives the CLI injects: `AGENTS.md`, at the adopter's repo root, parallel to the ones already there (`CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursorrules`, `.cursor/rules/straymark.md`).

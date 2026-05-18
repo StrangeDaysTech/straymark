@@ -14,6 +14,10 @@ tags:
 date: 2026-05-16T00:00:00.000Z
 description: Naming a design property that was already silently doing its job
 ---
+*An agent flagged a stale spec before being asked to. The reconstruction of that morning, and the design property that surfaces it — codified after the fact as Principle #8 of StrayMark.*
+
+<!-- truncate -->
+
 > *"Hi, did we already deal with Issue #153?"*
 
 That's how the conversation started, today, May 16th, in the morning. A short, almost-housekeeping question, before getting into something else. The answer was no — Issue #153 was open on purpose, waiting for a second domain to exercise the mechanic before crystallizing it (StrayMark's Principle #12: validation against a second domain before canonization). But the question opened another door, and by the end of that conversation I had codified a design property of the framework that had been doing its job in silence for months, surfaced by an episode from just two days ago.

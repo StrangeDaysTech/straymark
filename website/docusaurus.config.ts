@@ -62,6 +62,8 @@ const config: Config = {
           routeBasePath: 'blog',
           blogTitle: 'Blog',
           blogDescription: 'The StrayMark chronicle — how the framework emerged, decision by decision.',
+          blogSidebarCount: 'ALL',
+          blogSidebarTitle: 'All posts',
           showReadingTime: true,
           feedOptions: {
             type: ['rss', 'atom'],

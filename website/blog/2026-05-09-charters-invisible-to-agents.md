@@ -13,6 +13,10 @@ tags:
 date: 2026-05-09T00:00:00.000Z
 description: 'Issue #113 — the gap between having an artifact and the agent seeing it'
 ---
+*Six hours of session work with a capable agent and the framework's full onboarding loaded — and not once did Charters get suggested. Five minutes to apply them when asked directly. The asymmetry isn't about capability; it's about visibility.*
+
+<!-- truncate -->
+
 ## 1. Six hours not to see it, five minutes to see it
 
 Issue [#113](https://github.com/StrangeDaysTech/straymark/issues/113) opens with one of those sentences that, read back months later, sounds obvious and at the same time cost a lot to reach:

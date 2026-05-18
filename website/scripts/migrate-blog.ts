@@ -17,6 +17,10 @@ const ROOT = resolve(__dirname, '..');
 const APARADOR = resolve(ROOT, '../Aparador/Para blog');
 const OUT_EN = resolve(ROOT, 'blog');
 const OUT_ES = resolve(ROOT, 'i18n/es/docusaurus-plugin-content-blog');
+const EXCERPTS_PATH = resolve(__dirname, 'blog-excerpts.json');
+
+type Excerpt = {en: string; es: string};
+const excerpts: Record<string, Excerpt> = JSON.parse(readFileSync(EXCERPTS_PATH, 'utf8'));
 
 const FILE_RE = /^(\d{2})-(.+)\.(en|es)\.md$/;
 
@@ -76,7 +80,15 @@ function transformFrontmatter(fm: Record<string, unknown>, slug: string): Record
   return out;
 }
 
-function emit(srcPath: string, slug: string, outDir: string): {date: string; filename: string} {
+function prependExcerpt(body: string, excerpt: string | undefined): string {
+  if (!excerpt) return body;
+  // Lead paragraph (italics, since it's an editorial excerpt) + truncate
+  // marker. Everything above the marker is what Docusaurus shows on the
+  // /blog and /es/blog listings.
+  return `*${excerpt}*\n\n<!-- truncate -->\n\n${body.replace(/^\n+/, '')}`;
+}
+
+function emit(srcPath: string, slug: string, outDir: string, canonicalSlug: string, locale: 'en' | 'es'): {date: string; filename: string} {
   const raw = readFileSync(srcPath, 'utf8');
   const parsed = matter(raw);
   const fm = parsed.data;
@@ -87,7 +99,8 @@ function emit(srcPath: string, slug: string, outDir: string): {date: string; fil
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     throw new Error(`Invalid date "${date}" in ${srcPath}`);
   }
-  const body = stripLeadingH1(parsed.content, title);
+  let body = stripLeadingH1(parsed.content, title);
+  body = prependExcerpt(body, excerpts[canonicalSlug]?.[locale]);
   const outFm = transformFrontmatter(fm, slug);
   const filename = `${date}-${slug}.md`;
   const outPath = join(outDir, filename);
@@ -121,10 +134,10 @@ function main() {
       continue;
     }
     // EN file under blog/, using EN slug both as filename and frontmatter slug.
-    const en = emit(post.enPath, post.enSlug, OUT_EN);
+    const en = emit(post.enPath, post.enSlug, OUT_EN, post.enSlug, 'en');
     // ES file under i18n/es/, using EN slug as filename (Docusaurus pairs by
     // filename) but ES slug in frontmatter for a clean Spanish URL.
-    emit(post.esPath, post.esSlug, OUT_ES);
+    emit(post.esPath, post.esSlug, OUT_ES, post.enSlug, 'es');
     // Rename the ES output to match the EN filename for i18n pairing.
     const esFilename = `${en.date}-${post.enSlug}.md`;
     const esWritten = join(OUT_ES, `${en.date}-${post.esSlug}.md`);

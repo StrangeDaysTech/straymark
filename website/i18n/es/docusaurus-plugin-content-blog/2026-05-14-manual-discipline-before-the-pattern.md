@@ -15,6 +15,10 @@ description: >-
   Doce aprendizajes en un Issue, tres gates en un PR, y un Charter que cerró
   limpio antes de que existiera el nombre
 ---
+*Siete Charters consecutivos sobre un plan de un mes en Sentinel, ejecutando CHARTER-18 a mano con la sensación de que cualquier paso en falso enterraría seis Charters de trabajo. Cinco horas para canonizar la disciplina manual como gobernanza upstream — sin nombrar todavía el patrón.*
+
+<!-- truncate -->
+
 ## 1. La pregunta correcta
 
 El [Issue #150](https://github.com/StrangeDaysTech/straymark/issues/150), abierto el 14 de mayo a las 16:59 UTC, no buscaba un *yes/no*. Lo que el operador estaba pidiendo era reformular la pregunta:

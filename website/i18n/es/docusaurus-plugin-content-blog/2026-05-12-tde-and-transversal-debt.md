@@ -13,6 +13,10 @@ tags:
 date: 2026-05-12T00:00:00.000Z
 description: El tipo existía. El trigger no. Y la lección stacked-PR que llegó de regalo.
 ---
+*Cero TDEs en trece Charters cerrados de Sentinel, a pesar de al menos siete piezas reconocibles de deuda transversal. El tipo documental existía; el trigger operacional no. Cómo fw-4.13.0 cerró el hueco — y cómo su cadena de PRs codificó accidentalmente una lección sobre stacked PRs.*
+
+<!-- truncate -->
+
 ## 1. Cero TDEs en trece Charters
 
 El Issue [#128](https://github.com/StrangeDaysTech/straymark/issues/128) abre con una asimetría inquietante:

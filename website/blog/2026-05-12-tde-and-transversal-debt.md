@@ -15,6 +15,10 @@ description: >-
   The type existed. The trigger didn't. And the stacked-PR lesson that came
   along for the ride.
 ---
+*Zero TDEs across thirteen closed Charters in Sentinel, despite at least seven recognizable pieces of transversal debt. The document type existed; the operational trigger didn't. How fw-4.13.0 closed the gap — and how its PR chain accidentally codified a lesson about stacked PRs.*
+
+<!-- truncate -->
+
 ## 1. Zero TDEs across thirteen Charters
 
 Issue [#128](https://github.com/StrangeDaysTech/straymark/issues/128) opens with a disquieting asymmetry:

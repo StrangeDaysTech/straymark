@@ -13,6 +13,10 @@ tags:
 date: 2026-04-30T00:00:00.000Z
 description: Primer experimento sistemático y el día que Plan se llamó Charter
 ---
+*Seis Planes sobre el papel, cinco en la práctica — el primer experimento sistemático de Sentinel entre el 25 y el 28 de abril. El ciclo que convirtió un patrón artesanal en Charters, la unidad acotada de trabajo del framework.*
+
+<!-- truncate -->
+
 ## 1. Una nota al pie que dice mucho
 
 En la propuesta `charter-telemetry.md`, escrita el 30 de abril de 2026, hay una nota terminológica al inicio:
