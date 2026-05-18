@@ -1,0 +1,1171 @@
+<!doctype html><html lang=es dir=ltr class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-adopters/CLI-REFERENCE" data-has-hydrated=false><head><meta charset=UTF-8><meta name=generator content="Docusaurus v3.10.1"><title data-rh=true>StrayMark - Referencia CLI | StrayMark</title><meta data-rh=true name=viewport content="width=device-width, initial-scale=1.0"/><meta data-rh=true name=twitter:card content=summary_large_image /><meta data-rh=true property=og:image content=https://strangedaystech.github.io/straymark/es/img/docusaurus-social-card.jpg /><meta data-rh=true name=twitter:image content=https://strangedaystech.github.io/straymark/es/img/docusaurus-social-card.jpg /><meta data-rh=true property=og:url content=https://strangedaystech.github.io/straymark/es/docs/adopters/CLI-REFERENCE /><meta data-rh=true property=og:locale content=es /><meta data-rh=true property=og:locale:alternate content=en /><meta data-rh=true name=docusaurus_locale content=es /><meta data-rh=true name=docsearch:language content=es /><meta data-rh=true name=docusaurus_version content=current /><meta data-rh=true name=docusaurus_tag content=docs-default-current /><meta data-rh=true name=docsearch:version content=current /><meta data-rh=true name=docsearch:docusaurus_tag content=docs-default-current /><meta data-rh=true property=og:title content="StrayMark - Referencia CLI | StrayMark"/><meta data-rh=true name=description content="Referencia completa de la herramienta de línea de comandos straymark."/><meta data-rh=true property=og:description content="Referencia completa de la herramienta de línea de comandos straymark."/><link data-rh=true rel=icon href=/straymark/es/img/favicon.ico /><link data-rh=true rel=canonical href=https://strangedaystech.github.io/straymark/es/docs/adopters/CLI-REFERENCE /><link data-rh=true rel=alternate href=https://strangedaystech.github.io/straymark/docs/adopters/CLI-REFERENCE hreflang=en /><link data-rh=true rel=alternate href=https://strangedaystech.github.io/straymark/es/docs/adopters/CLI-REFERENCE hreflang=es /><link data-rh=true rel=alternate href=https://strangedaystech.github.io/straymark/docs/adopters/CLI-REFERENCE hreflang=x-default /><script data-rh=true type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://strangedaystech.github.io/straymark/es/docs/category/adopters","name":"Adopters","position":1},{"@type":"ListItem","item":"https://strangedaystech.github.io/straymark/es/docs/adopters/CLI-REFERENCE","name":"StrayMark - Referencia CLI","position":2}]}</script><link rel=stylesheet href=/straymark/es/assets/css/styles.c0183b4f.css /><script src=/straymark/es/assets/js/runtime~main.5b9d76eb.js defer></script><script src=/straymark/es/assets/js/main.1f320ad6.js defer></script></head><body><svg style="display: none;"><defs>
+<symbol id=theme-svg-external-link viewBox="0 0 24 24"><path fill=currentColor d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme-946")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{for(var[t,e]of new URLSearchParams(window.location.search).entries())if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id=__docusaurus><link rel=preload as=image href=/straymark/es/img/logo.svg /><div role=region aria-label="Saltar al contenido principal"><a class=skipToContent_fXgn href=#__docusaurus_skipToContent_fallback>Saltar al contenido principal</a></div><nav aria-label=Principal class="theme-layout-navbar navbar navbar--fixed-top"><div class=navbar__inner><div class="theme-layout-navbar-left navbar__items"><button aria-label="Alternar barra lateral" aria-expanded=false class="navbar__toggle clean-btn" type=button><svg width=30 height=30 viewBox="0 0 30 30" aria-hidden=true><path stroke=currentColor stroke-linecap=round stroke-miterlimit=10 stroke-width=2 d="M4 7h22M4 15h22M4 23h22"/></svg></button><a class=navbar__brand href=/straymark/es/><div class=navbar__logo><img src=/straymark/es/img/logo.svg alt=StrayMark class="themedComponent_mlkZ themedComponent--light_NVdE"/><img src=/straymark/es/img/logo.svg alt=StrayMark class="themedComponent_mlkZ themedComponent--dark_xIcU"/></div><b class="navbar__title text--truncate">StrayMark</b></a><a aria-current=page class="navbar__item navbar__link navbar__link--active" href=/straymark/es/docs>Docs</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="navbar__item dropdown dropdown--hoverable dropdown--right"><a href=# aria-haspopup=true aria-expanded=false role=button class=navbar__link><svg viewBox="0 0 24 24" width=20 height=20 aria-hidden=true class=iconLanguage_nlXk><path fill=currentColor d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>Español</a><ul class=dropdown__menu><li><a href=/straymark/docs/adopters/CLI-REFERENCE target=_self rel="noopener noreferrer" class=dropdown__link lang=en>English</a><li><a href=/straymark/es/docs/adopters/CLI-REFERENCE target=_self rel="noopener noreferrer" class="dropdown__link dropdown__link--active" lang=es>Español</a></ul></div><a href=https://github.com/StrangeDaysTech/straymark target=_blank rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type=button disabled title="system mode" aria-label="Cambiar entre modo oscuro y claro (actualmente system mode)"><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill=currentColor d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill=currentColor d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill=currentColor d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"/></svg></button></div><div class=navbarSearchContainer_Bca1></div></div></div><div role=presentation class=navbar-sidebar__backdrop></div></nav><div id=__docusaurus_skipToContent_fallback class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class=docsWrapper_hBAB><button aria-label="Volver al principio" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type=button></button><div class=docRoot_UBD9><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class=sidebarViewport_aRkj><div class=sidebar_njMd><nav aria-label="Barra lateral de Documentos" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/straymark/es/docs><span title="Bienvenida a StrayMark" class=linkLabel_WmDU>Bienvenida a StrayMark</span></a><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href=/straymark/es/docs/category/adopters><span title=Adopters class=categoryLinkLabel_W154>Adopters</span></a><button aria-label="Colapsar categoría 'Adopters' de la barra lateral" aria-expanded=true type=button class="clean-btn menu__caret"></button></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/straymark/es/docs/adopters/ADOPTION-GUIDE><span title="StrayMark - Guía de Adopción" class=linkLabel_WmDU>StrayMark - Guía de Adopción</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current=page tabindex=0 href=/straymark/es/docs/adopters/CLI-REFERENCE><span title="StrayMark - Referencia CLI" class=linkLabel_WmDU>StrayMark - Referencia CLI</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/straymark/es/docs/adopters/WORKFLOWS><span title="StrayMark - Flujos de Trabajo Recomendados" class=linkLabel_WmDU>StrayMark - Flujos de Trabajo Recomendados</span></a></ul><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/straymark/es/docs/category/contributors><span title=Contributors class=categoryLinkLabel_W154>Contributors</span></a><button aria-label="Ampliar la categoría 'Contributors' de la barra lateral" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/straymark/es/docs/category/decisions><span title=Decisions class=categoryLinkLabel_W154>Decisions</span></a><button aria-label="Ampliar la categoría 'Decisions' de la barra lateral" aria-expanded=false type=button class="clean-btn menu__caret"></button></div></ul></nav></div></div></aside><main class=docMainContainer_TBSr><div class="container padding-top--md padding-bottom--lg"><div class=row><div class="col docItemCol_VOVn"><div class=docItemContainer_Djhp><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Rastro de navegación"><ul class=breadcrumbs><li class=breadcrumbs__item><a aria-label="Página de Inicio" class=breadcrumbs__link href=/straymark/es/><svg viewBox="0 0 24 24" class=breadcrumbHomeIcon_YNFT><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill=currentColor /></svg></a><li class=breadcrumbs__item><a class=breadcrumbs__link href=/straymark/es/docs/category/adopters><span>Adopters</span></a><li class="breadcrumbs__item breadcrumbs__item--active"><span class=breadcrumbs__link>StrayMark - Referencia CLI</span></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type=button class="clean-btn tocCollapsibleButton_TO0P">En esta página</button></div><div class="theme-doc-markdown markdown"><header><h1>StrayMark - Referencia CLI</h1></header>
+<p><strong>Referencia completa de la herramienta de línea de comandos <code>straymark</code>.</strong></p>
+<p><a href=https://strangedays.tech target=_blank rel="noopener noreferrer" class=""><img decoding=async loading=lazy src=https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg alt="Strange Days Tech" class=img_ev3q /></a></p>
+<p><strong>Idiomas</strong>: <a class="" href=/straymark/adopters/CLI-REFERENCE.md>English</a> | Español | <a class="" href=/straymark/es/zh-CN/adopters/CLI-REFERENCE.md>简体中文</a></p>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=tabla-de-contenidos>Tabla de Contenidos<a href=#tabla-de-contenidos class=hash-link aria-label="Enlace directo al Tabla de Contenidos" title="Enlace directo al Tabla de Contenidos" translate=no>​</a></h2>
+<ol>
+<li class=""><a href=#instalaci%C3%B3n class="">Instalación</a></li>
+<li class=""><a href=#versionado class="">Versionado</a></li>
+<li class=""><a href=#comandos class="">Comandos</a> — init, update, remove, status, repair, validate, new, charter, compliance, metrics, analyze, audit, explore, about</li>
+<li class=""><a href=#variables-de-entorno class="">Variables de Entorno</a></li>
+<li class=""><a href=#c%C3%B3digos-de-salida class="">Códigos de Salida</a></li>
+</ol>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=instalación>Instalación<a href=#instalación class=hash-link aria-label="Enlace directo al Instalación" title="Enlace directo al Instalación" translate=no>​</a></h2>
+<p>Instala el CLI de StrayMark usando uno de los métodos a continuación. Para instrucciones completas de configuración, consulta el <a class="" href=/straymark/es/docs/README.md#inicio-r%C3%A1pido>README</a>.</p>
+<p><strong>Instalación rápida (binario precompilado):</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token comment" style=color:#999988;font-style:italic># Linux / macOS</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token function" style=color:#d73a49>curl</span><span class="token plain"> </span><span class="token parameter variable" style=color:#36acaa>-fsSL</span><span class="token plain"> https://raw.githubusercontent.com/StrangeDaysTech/straymark/main/install.sh </span><span class="token operator" style=color:#393A34>|</span><span class="token plain"> </span><span class="token function" style=color:#d73a49>sh</span><br/></div></code></pre></div></div>
+<div class="language-powershell codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-powershell codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain"># Windows (PowerShell)</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">irm https://raw.githubusercontent.com/StrangeDaysTech/straymark/main/install.ps1 | iex</span><br/></div></code></pre></div></div>
+<p><strong>Desde el código fuente:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token function" style=color:#d73a49>cargo</span><span class="token plain"> </span><span class="token function" style=color:#d73a49>install</span><span class="token plain"> straymark-cli</span><br/></div></code></pre></div></div>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=versionado>Versionado<a href=#versionado class=hash-link aria-label="Enlace directo al Versionado" title="Enlace directo al Versionado" translate=no>​</a></h2>
+<p>StrayMark usa <strong>tags de versión independientes</strong> para cada componente:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Componente<th>Prefijo de tag<th>Ejemplo<th>Qué incluye<tbody><tr><td>Framework<td><code>fw-</code><td><code>fw-4.17.0</code><td>Plantillas (12 tipos), docs de gobernanza, directivas<tr><td>CLI<td><code>cli-</code><td><code>cli-3.15.0</code><td>El binario <code>straymark</code></table>
+<p>Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.</p>
+<p><strong>Verificar versiones instaladas:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">straymark about    </span><span class="token comment" style=color:#999988;font-style:italic># Muestra versión CLI + versión framework (si está instalado)</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">straymark status   </span><span class="token comment" style=color:#999988;font-style:italic># Muestra estado completo de la instalación incluyendo versiones</span><br/></div></code></pre></div></div>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=comandos>Comandos<a href=#comandos class=hash-link aria-label="Enlace directo al Comandos" title="Enlace directo al Comandos" translate=no>​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-init-path---hooks><code>straymark init [path] [--hooks]</code><a href=#straymark-init-path---hooks class=hash-link aria-label="Enlace directo al straymark-init-path---hooks" title="Enlace directo al straymark-init-path---hooks" translate=no>​</a></h3>
+<p>Inicializa StrayMark en un directorio de proyecto.</p>
+<p><strong>Argumentos y flags:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Argumento/Flag<th>Por defecto<th>Descripción<tbody><tr><td><code>path</code><td><code>.</code> (directorio actual)<td>Directorio del proyecto destino<tr><td><code>--hooks</code> <em>(cli-3.7.0+)</em><td>off<td>Tras <code>init</code>, instala el hook pre-PR del framework (<code>.straymark/hooks/pre-pr.sh</code>) como <code>.git/hooks/pre-push</code>. Ejecuta <code>straymark charter drift</code> automáticamente antes de cada push. Opt-in por principio #6 (disciplina cognitiva > productividad cruda). Se rehúsa a sobreescribir un <code>pre-push</code> ya existente; se omite silenciosamente si no es un repositorio git.</table>
+<p><strong>Qué hace:</strong></p>
+<ol>
+<li class="">Descarga el último release del framework (<code>fw-*</code>) desde GitHub</li>
+<li class="">Crea la estructura de directorios <code>.straymark/</code></li>
+<li class="">Crea <code>STRAYMARK.md</code> con las reglas de gobernanza</li>
+<li class="">Configura archivos de directivas de agentes IA (<code>AGENTS.md</code>, <code>CLAUDE.md</code>, <code>GEMINI.md</code>, <code>.cursorrules</code>, etc.)</li>
+<li class="">Copia workflows de CI/CD</li>
+<li class=""><em>(<code>--hooks</code>)</em> instala el hook pre-PR</li>
+</ol>
+<p><strong>Ejemplo:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">$ straymark init </span><span class="token builtin class-name">.</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">✔ Downloaded StrayMark fw-4.15.0</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">✔ Created .straymark/ directory structure</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">✔ Created STRAYMARK.md</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">✔ Configured AI agent directives</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">StrayMark initialized successfully</span><span class="token operator" style=color:#393A34>!</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">Next: </span><span class="token function" style=color:#d73a49>git</span><span class="token plain"> </span><span class="token function" style=color:#d73a49>add</span><span class="token plain"> .straymark/ STRAYMARK.md </span><span class="token operator" style=color:#393A34>&&</span><span class="token plain"> </span><span class="token function" style=color:#d73a49>git</span><span class="token plain"> commit </span><span class="token parameter variable" style=color:#36acaa>-m</span><span class="token plain"> </span><span class="token string" style=color:#e3116c>"chore: adopt StrayMark"</span><br/></div></code></pre></div></div>
+<hr/>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-update><code>straymark update</code><a href=#straymark-update class=hash-link aria-label="Enlace directo al straymark-update" title="Enlace directo al straymark-update" translate=no>​</a></h3>
+<p>Actualiza <strong>ambos</strong> framework y CLI a sus últimas versiones. Equivale a ejecutar <code>update-framework</code> seguido de <code>update-cli</code>.</p>
+<p>Si <code>.straymark/</code> no existe en el directorio actual, la actualización del framework se omite con una advertencia.</p>
+<p><strong>Ejemplo:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">$ straymark update</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">Updating framework</span><span class="token punctuation" style=color:#393A34>..</span><span class="token plain">.</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">✔ Framework updated to fw-4.15.0</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">Updating CLI</span><span class="token punctuation" style=color:#393A34>..</span><span class="token plain">.</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">✔ CLI updated to cli-3.5.2</span><br/></div></code></pre></div></div>
+<hr/>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-update-framework><code>straymark update-framework</code><a href=#straymark-update-framework class=hash-link aria-label="Enlace directo al straymark-update-framework" title="Enlace directo al straymark-update-framework" translate=no>​</a></h3>
+<p>Actualiza solo los archivos del framework. Busca el último release <code>fw-*</code> en GitHub.</p>
+<p><strong>Manejo de conflictos:</strong> Si has modificado archivos del framework (ej. docs de gobernanza o plantillas), la actualización preserva tus cambios y reporta conflictos para resolución manual.</p>
+<p><strong>Ejemplo:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">$ straymark update-framework</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">✔ Framework updated to fw-4.15.0</span><br/></div></code></pre></div></div>
+<hr/>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-update-cli><code>straymark update-cli</code><a href=#straymark-update-cli class=hash-link aria-label="Enlace directo al straymark-update-cli" title="Enlace directo al straymark-update-cli" translate=no>​</a></h3>
+<p>Auto-actualiza el binario <code>straymark</code>. Detecta automáticamente el método de instalación y usa el mecanismo de actualización apropiado:</p>
+<ul>
+<li class=""><strong>Binario precompilado</strong> (instalado via <code>install.sh</code> / <code>install.ps1</code>): Descarga el último binario de GitHub Releases</li>
+<li class=""><strong>Cargo</strong> (instalado via <code>cargo install</code>): Ejecuta <code>cargo install --force straymark-cli</code></li>
+</ul>
+<p>Usa <code>--method</code> para forzar el método: <code>--method=github</code> o <code>--method=cargo</code>.</p>
+<p><strong>Ejemplo:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">$ straymark update-cli</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">✔ CLI updated to cli-3.5.2</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark update-cli </span><span class="token parameter variable" style=color:#36acaa>--method</span><span class="token operator" style=color:#393A34>=</span><span class="token plain">cargo</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">Compiling from source, this may take a few minutes</span><span class="token punctuation" style=color:#393A34>..</span><span class="token plain">.</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">✔ CLI updated to cli-3.5.2</span><br/></div></code></pre></div></div>
+<hr/>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-remove---full><code>straymark remove [--full]</code><a href=#straymark-remove---full class=hash-link aria-label="Enlace directo al straymark-remove---full" title="Enlace directo al straymark-remove---full" translate=no>​</a></h3>
+<p>Elimina StrayMark del proyecto actual.</p>
+<p><strong>Flags:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag<th>Descripción<tbody><tr><td><code>--full</code><td>Elimina todo, incluyendo documentos creados por el usuario en <code>.straymark/</code>. Pide confirmación.</table>
+<p><strong>Comportamiento por defecto</strong> (sin <code>--full</code>): elimina la estructura del framework pero preserva los documentos que creaste dentro de <code>.straymark/</code>.</p>
+<p><strong>Ejemplo:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">$ straymark remove</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">✔ StrayMark framework removed. User documents preserved </span><span class="token keyword" style=color:#00009f>in</span><span class="token plain"> .straymark/.</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark remove </span><span class="token parameter variable" style=color:#36acaa>--full</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">⚠ This will delete all StrayMark files including your documents.</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">Continue? </span><span class="token punctuation" style=color:#393A34>[</span><span class="token plain">y/N</span><span class="token punctuation" style=color:#393A34>]</span><span class="token plain">: y</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">✔ StrayMark completely removed.</span><br/></div></code></pre></div></div>
+<hr/>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-status-path><code>straymark status [path]</code><a href=#straymark-status-path class=hash-link aria-label="Enlace directo al straymark-status-path" title="Enlace directo al straymark-status-path" translate=no>​</a></h3>
+<p>Muestra el estado de la instalación y estadísticas de documentación.</p>
+<p><strong>Argumentos:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Argumento<th>Por defecto<th>Descripción<tbody><tr><td><code>path</code><td><code>.</code> (directorio actual)<td>Directorio del proyecto destino</table>
+<p><strong>La salida incluye:</strong></p>
+<ul>
+<li class="">Ruta del proyecto</li>
+<li class="">Versión del framework</li>
+<li class="">Versión del CLI</li>
+<li class="">Idioma configurado</li>
+<li class="">Integridad de la estructura de directorios</li>
+<li class="">Estadísticas de documentos (conteo por tipo)</li>
+</ul>
+<p><strong>Ejemplo:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">$ straymark status</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">StrayMark Status</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">───────────────</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">Path:              /home/user/my-project</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">Framework version: fw-4.15.0</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">CLI version:       cli-3.5.2</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">Language:          en</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">Structure:         ✔ Complete</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">Documents:</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  AILOG:  </span><span class="token number" style=color:#36acaa>12</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  AIDEC:   </span><span class="token number" style=color:#36acaa>4</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  ADR:     </span><span class="token number" style=color:#36acaa>7</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  REQ:     </span><span class="token number" style=color:#36acaa>3</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  TES:     </span><span class="token number" style=color:#36acaa>2</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  TDE:     </span><span class="token number" style=color:#36acaa>1</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  INC:     </span><span class="token number" style=color:#36acaa>0</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  ETH:     </span><span class="token number" style=color:#36acaa>1</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  Total:  </span><span class="token number" style=color:#36acaa>30</span><br/></div></code></pre></div></div>
+<hr/>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-repair-path><code>straymark repair [path]</code><a href=#straymark-repair-path class=hash-link aria-label="Enlace directo al straymark-repair-path" title="Enlace directo al straymark-repair-path" translate=no>​</a></h3>
+<p>Repara una instalación de StrayMark rota restaurando directorios y archivos del framework faltantes.</p>
+<p><strong>Argumentos:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Argumento<th>Default<th>Descripción<tbody><tr><td><code>path</code><td><code>.</code> (directorio actual)<td>Directorio del proyecto</table>
+<p><strong>Qué hace:</strong></p>
+<ol>
+<li class="">Verifica directorios faltantes y los restaura con <code>.gitkeep</code></li>
+<li class="">Descarga el release del framework <strong>una sola vez</strong> si se necesitan archivos (templates, governance, config)</li>
+<li class="">Re-inyecta directivas si falta <code>STRAYMARK.md</code></li>
+<li class="">Recalcula checksums después de la reparación</li>
+<li class="">Nunca modifica ni elimina documentos generados por el usuario</li>
+</ol>
+<p><strong>Ejemplo:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">$ straymark repair</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">Repairing StrayMark </span><span class="token keyword" style=color:#00009f>in</span><span class="token plain"> /home/user/mi-proyecto</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  → Found </span><span class="token number" style=color:#36acaa>1</span><span class="token plain"> issue</span><span class="token punctuation" style=color:#393A34>(</span><span class="token plain">s</span><span class="token punctuation" style=color:#393A34>)</span><span class="token plain"> to repair</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">→ Restoring </span><span class="token number" style=color:#36acaa>1</span><span class="token plain"> missing directory</span><span class="token punctuation" style=color:#393A34>..</span><span class="token plain">.</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">✓ Restored .straymark/templates/</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">→ Downloading framework to restore missing files</span><span class="token punctuation" style=color:#393A34>..</span><span class="token plain">.</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">✓ Restored </span><span class="token number" style=color:#36acaa>16</span><span class="token plain"> file</span><span class="token punctuation" style=color:#393A34>(</span><span class="token plain">s</span><span class="token punctuation" style=color:#393A34>)</span><span class="token plain"> from framework</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">✓ StrayMark repaired successfully</span><span class="token operator" style=color:#393A34>!</span><br/></div></code></pre></div></div>
+<hr/>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-validate-path---fix---staged---include-charters---check-pending-reviews---max-pending-days-n><code>straymark validate [path] [--fix] [--staged] [--include-charters] [--check-pending-reviews [--max-pending-days N]]</code><a href=#straymark-validate-path---fix---staged---include-charters---check-pending-reviews---max-pending-days-n class=hash-link aria-label="Enlace directo al straymark-validate-path---fix---staged---include-charters---check-pending-reviews---max-pending-days-n" title="Enlace directo al straymark-validate-path---fix---staged---include-charters---check-pending-reviews---max-pending-days-n" translate=no>​</a></h3>
+<p>Valida documentos StrayMark verificando cumplimiento y corrección.</p>
+<p><strong>Argumentos y flags:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Argumento/Flag<th>Default<th>Descripción<tbody><tr><td><code>path</code><td><code>.</code> (directorio actual)<td>Directorio del proyecto<tr><td><code>--fix</code><td>—<td>Corregir automáticamente problemas simples<tr><td><code>--staged</code><td>—<td>Validar solo archivos staged en Git (ideal para hooks pre-commit)<tr><td><code>--include-charters</code><td>—<td>Validar también los Charters en <code>.straymark/charters/</code> contra el JSON Schema y la integridad referencial (los IDs en <code>originating_ailogs</code> resuelven; el path en <code>originating_spec</code> existe). Opt-in, default <code>false</code> para no afectar a proyectos que no usan el patrón. Por ahora solo se honra fuera de <code>--staged</code>; la validación de Charters en modo staged llega en cli-3.10.0.<tr><td><code>--check-pending-reviews</code> <em>(cli-3.7.0+)</em><td>off<td>Lista documentos con <code>review_required: true</code> y sin <code>review_outcome</code> cuya antigüedad supere <code>--max-pending-days</code>. <strong>Solo warn</strong> — nunca falla el exit code de validate; útil para dashboards de CI sobre el backlog de aprobaciones.<tr><td><code>--max-pending-days</code> <em>(cli-3.7.0+)</em><td><code>14</code><td>Umbral en días para <code>--check-pending-reviews</code>.</table>
+<p><strong>Reglas de validación:</strong></p>
+<ul>
+<li class=""><code>NAMING-001</code>: Convención de nombres de archivo</li>
+<li class=""><code>META-001/002/003</code>: Campos obligatorios, id vs nombre de archivo, valores válidos</li>
+<li class=""><code>CROSS-001/002/003</code>: Riesgo alto requiere revisión, EU AI Act, tipos SEC/MCARD/DPIA</li>
+<li class=""><code>TYPE-001/002</code>: INC necesita severidad, ETH necesita base legal GDPR</li>
+<li class=""><code>REF-001</code>: Documentos referenciados existen</li>
+<li class=""><code>SEC-001</code>: No contiene información sensible</li>
+<li class=""><code>OBS-001</code>: Tag observabilidad requiere sección de alcance</li>
+</ul>
+<p>Cuando <code>regional_scope</code> incluye <code>china</code>, se activan doce reglas adicionales (<code>CROSS-004</code> a <code>CROSS-011</code>, <code>TYPE-003</code> a <code>TYPE-006</code>) que cubren escalado de revisión TC260, vínculo PIPIA desde documentos con datos sensibles, cross-references de CACFILE / AILABEL, coherencia severidad-deadline CSL, y retención de 3 años de PIPIA. Sin <code>china</code> en scope, estas reglas se omiten — sin falsos positivos.</p>
+<p><strong>Código de salida:</strong> 0 si no hay errores (warnings OK), 1 si hay errores.</p>
+<hr/>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-new-path--t-tipo---title-titulo><code>straymark new [path] [-t &lt;tipo>] [--title &lt;titulo>]</code><a href=#straymark-new-path--t-tipo---title-titulo class=hash-link aria-label="Enlace directo al straymark-new-path--t-tipo---title-titulo" title="Enlace directo al straymark-new-path--t-tipo---title-titulo" translate=no>​</a></h3>
+<p>Crea un nuevo documento StrayMark a partir de una plantilla.</p>
+<p><strong>Argumentos y flags:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Argumento/Flag<th>Default<th>Descripción<tbody><tr><td><code>path</code><td><code>.</code> (directorio actual)<td>Directorio del proyecto<tr><td><code>--doc-type</code>, <code>-t</code><td>—<td>Tipo de documento. Core (12): <code>ailog</code>, <code>aidec</code>, <code>adr</code>, <code>eth</code>, <code>req</code>, <code>tes</code>, <code>inc</code>, <code>tde</code>, <code>sec</code>, <code>mcard</code>, <code>sbom</code>, <code>dpia</code>. China (4, opt-in): <code>pipia</code>, <code>cacfile</code>, <code>tc260ra</code>, <code>ailabel</code>.<tr><td><code>--title</code><td>—<td>Título del documento</table>
+<p>Si no se especifica <code>--doc-type</code> o <code>--title</code>, se solicitan de forma interactiva. Los tipos chinos se filtran del prompt (y se rechazan en <code>-t</code>) cuando <code>regional_scope</code> no incluye <code>china</code>.</p>
+<p><strong>Ejemplos:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token comment" style=color:#999988;font-style:italic># Creación interactiva</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark new</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token comment" style=color:#999988;font-style:italic># Crear un AILOG con título (no-interactivo)</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark new </span><span class="token parameter variable" style=color:#36acaa>-t</span><span class="token plain"> ailog </span><span class="token parameter variable" style=color:#36acaa>--title</span><span class="token plain"> </span><span class="token string" style=color:#e3116c>"Implementar autenticación JWT"</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token comment" style=color:#999988;font-style:italic># Crear un ADR</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark new --doc-type adr </span><span class="token parameter variable" style=color:#36acaa>--title</span><span class="token plain"> </span><span class="token string" style=color:#e3116c>"Elegir PostgreSQL como base de datos"</span><br/></div></code></pre></div></div>
+<p><strong>Ejemplo de salida:</strong></p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-text codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">$ straymark new -t ailog --title "Refactorizar módulo de pagos"</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  ✔ Created: .straymark/07-ai-audit/agent-logs/AILOG-2026-04-01-001-refactorizar-modulo-de-pagos.md</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  Next steps:</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    1. Edit the document to fill in details</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    2. Commit: git add .straymark/07-ai-audit/agent-logs/AILOG-2026-04-01-001-refactorizar-modulo-de-pagos.md</span><br/></div></code></pre></div></div>
+<hr/>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-approve-doc-id---outcome-outcome---reviewer-id---at-yyyy-mm-dd---notes----path-dir><code>straymark approve &lt;doc-id> --outcome &lt;outcome> --reviewer &lt;id> [--at YYYY-MM-DD] [--notes "..."] [--path &lt;dir>]</code><a href=#straymark-approve-doc-id---outcome-outcome---reviewer-id---at-yyyy-mm-dd---notes----path-dir class=hash-link aria-label="Enlace directo al straymark-approve-doc-id---outcome-outcome---reviewer-id---at-yyyy-mm-dd---notes----path-dir" title="Enlace directo al straymark-approve-doc-id---outcome-outcome---reviewer-id---at-yyyy-mm-dd---notes----path-dir" translate=no>​</a></h3>
+<p><em>Disponible desde <strong>cli-3.7.0</strong> + <strong>fw-4.6.0</strong>. <code>--quiet</code> y warning de alto riesgo añadidos en cli-3.8.0.</em></p>
+<p>Registra una aprobación humana formal sobre un documento con <code>review_required: true</code>. Escribe los tres campos de aprobación en el frontmatter (<code>reviewed_by</code>, <code>reviewed_at</code>, <code>review_outcome</code>) <strong>y</strong> añade la sección canónica <code>## Approval</code> al cuerpo en una edición atómica. Implementa la señal de cierre canonizada en <code>DOCUMENTATION-POLICY.md §3.5</code>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Argumento/Flag<th>Default<th>Descripción<tbody><tr><td><code>&lt;doc-id></code><td>—<td>ID del documento. Acepta el prefijo (<code>AIDEC-2026-05-02-001</code>) o el ID completo con slug (<code>AIDEC-2026-05-02-001-foo</code>).<tr><td><code>--outcome</code><td>—<td>Uno de <code>approved</code>, <code>revisions_requested</code>, <code>rejected</code>. Solicita prompt en TTY si está ausente.<tr><td><code>--reviewer</code><td>—<td>Identidad del revisor: email, GitHub handle, o DID. Solicita prompt en TTY si está ausente.<tr><td><code>--at</code><td>hoy<td>Fecha de aprobación (<code>YYYY-MM-DD</code>).<tr><td><code>--notes</code><td>—<td>Notas opcionales del revisor (anexadas en la sección del cuerpo).<tr><td><code>--path</code><td><code>.</code><td>Directorio del proyecto.</table>
+<p><strong>Comportamiento:</strong></p>
+<ul>
+<li class="">Advierte (no falla) si el documento no tiene <code>review_required: true</code> — el sign-off retroactivo es un caso real.</li>
+<li class=""><strong>Mutación de frontmatter</strong> (latest-wins): reemplaza los <code>reviewed_by/_at/outcome</code> existentes; si no existen, los inserta tras <code>review_required:</code>. Implementa la convención multi-revisor de §3.5: el frontmatter mantiene la <em>última</em> aprobación.</li>
+<li class=""><strong>Mutación del cuerpo</strong> (cronológica): añade un nuevo bloque <code>## Approval</code> antes de cualquier firma de plantilla final. Re-ejecutar <code>approve</code> preserva los bloques anteriores, así el cuerpo muestra el historial completo de revisiones.</li>
+<li class=""><code>review_required: true</code> <strong>no</strong> se cambia a <code>false</code> tras la aprobación — permanece como registro histórico de por qué fue necesario revisar.</li>
+</ul>
+<p><strong>Ejemplos:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token comment" style=color:#999988;font-style:italic># Driven por flags (CI / scripts)</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark approve AIDEC-2026-05-02-001 </span><span class="token punctuation" style=color:#393A34>\</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    </span><span class="token parameter variable" style=color:#36acaa>--outcome</span><span class="token plain"> approved </span><span class="token punctuation" style=color:#393A34>\</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    </span><span class="token parameter variable" style=color:#36acaa>--reviewer</span><span class="token plain"> pepe@example.com </span><span class="token punctuation" style=color:#393A34>\</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    </span><span class="token parameter variable" style=color:#36acaa>--notes</span><span class="token plain"> </span><span class="token string" style=color:#e3116c>"Revisado contra ADR-007. LGTM."</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  ✔ AIDEC-2026-05-02-001 marked as approved.</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    Reviewer: pepe@example.com</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    Date:     </span><span class="token number" style=color:#36acaa>2026</span><span class="token plain">-05-02</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    File:     .straymark/07-ai-audit/decisions/AIDEC-2026-05-02-001-foo.md</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token comment" style=color:#999988;font-style:italic># Ciclo iterativo: revisions_requested → re-aprobación</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark approve AIDEC-</span><span class="token punctuation" style=color:#393A34>..</span><span class="token plain">. </span><span class="token parameter variable" style=color:#36acaa>--outcome</span><span class="token plain"> revisions_requested </span><span class="token parameter variable" style=color:#36acaa>--reviewer</span><span class="token plain"> reviewer@x.io</span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token comment" style=color:#999988;font-style:italic># (autor itera)</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark approve AIDEC-</span><span class="token punctuation" style=color:#393A34>..</span><span class="token plain">. </span><span class="token parameter variable" style=color:#36acaa>--outcome</span><span class="token plain"> approved </span><span class="token parameter variable" style=color:#36acaa>--reviewer</span><span class="token plain"> reviewer@x.io</span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token comment" style=color:#999988;font-style:italic># Frontmatter muestra la última (approved); el cuerpo conserva AMBOS bloques cronológicamente.</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token comment" style=color:#999988;font-style:italic># Visibilidad del backlog</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark validate --check-pending-reviews --max-pending-days </span><span class="token number" style=color:#36acaa>14</span><br/></div></code></pre></div></div>
+<blockquote>
+<p>Ver <code>dist/.straymark/00-governance/DOCUMENTATION-POLICY.md</code> §3.5 "Recording Approval" para la definición canónica del flujo (semántica de cierre, formato del cuerpo, convención multi-revisor).</p>
+</blockquote>
+<hr/>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-charter-subcomando><code>straymark charter &lt;subcomando></code><a href=#straymark-charter-subcomando class=hash-link aria-label="Enlace directo al straymark-charter-subcomando" title="Enlace directo al straymark-charter-subcomando" translate=no>​</a></h3>
+<p>Gestiona <strong>Charters</strong>: unidades acotadas y auditables de trabajo, declaradas ex-ante y validadas ex-post. Un Charter empareja scope declarativo (archivos a tocar, riesgos, comandos de verificación ejecutables) con el ancla de auditoría ex-post (drift detection, auditoría multi-modelo). Los Charters viven en <code>.straymark/charters/NN-slug.md</code> (a nivel del project root, <strong>no</strong> bajo <code>.straymark/</code>).</p>
+<blockquote>
+<p><strong>Nota histórica.</strong> En el experimento Sentinel <code>/plan-audit</code> que cristalizó este patrón (abril 2026, 6 ciclos), los Charters se llamaban <em>Plans</em>. El CLI StrayMark usa <strong>Charter</strong> going-forward para evitar la colisión nominal con el <code>plan.md</code> de GitHub SpecKit. Los archivos históricos de Sentinel preservan "Plan" deliberadamente. El alcance conceptual completo y la justificación del rename viven en <code>Propuesta/que-es-un-charter.md</code>.</p>
+</blockquote>
+<p><strong>Subcomandos:</strong></p>
+<ul>
+<li class=""><code>straymark charter new</code> — crea un nuevo Charter desde el template del framework</li>
+<li class=""><code>straymark charter list</code> — enumera Charters con filtros opcionales</li>
+<li class=""><code>straymark charter status</code> — muestra detalle de un Charter, o los 5 más recientes</li>
+<li class=""><code>straymark charter close</code> <em>(cli-3.7.0+)</em> — registra la telemetría post-ejecución y mueve el Charter a <code>closed</code></li>
+<li class=""><code>straymark charter drift</code> <em>(cli-3.7.0+)</em> — chequea drift archivo-vs-commit con supresión AILOG-aware y gate de Batch Ledger <em>(gate añadido en cli-3.13.2)</em></li>
+<li class=""><code>straymark charter batch-complete</code> <em>(cli-3.13.0+, fw-4.14.0+)</em> — marca un batch del Charter como completado en la <code>## Batch Ledger</code> del AILOG</li>
+<li class=""><code>straymark charter audit</code> <em>(cli-3.8.0+)</em> — orquesta una revisión externa multi-modelo (orchestration-only, ver más abajo)</li>
+<li class=""><code>straymark charter refresh-suggest</code> <em>(cli-3.14.0+, fw-4.16.0+)</em> — recomendación heurística para refresh SpecKit pre-declare en módulos multi-Charter (ver <a href=https://github.com/StrangeDaysTech/straymark/blob/main/dist/.straymark/00-governance/i18n/es/CHARTER-CHAIN-EVOLUTION.md target=_blank rel="noopener noreferrer" class="">CHARTER-CHAIN-EVOLUTION.md</a> Patrón 1). Umbral por defecto <code>r_n_plus_one_emergent_count</code> > 6; override solo vía <code>--threshold N</code> (no hay campo equivalente en <code>config.yml</code> en v0.2).</li>
+<li class=""><code>straymark charter amend</code> <em>(cli-3.14.0+, fw-4.16.0+)</em> — scaffolding para enmienda post-close Batch N.4 (remediación dirigida por auditoría sobre la misma rama de execute, sin abrir un Charter nuevo — ver <a href=https://github.com/StrangeDaysTech/straymark/blob/main/dist/.straymark/00-governance/i18n/es/CHARTER-CHAIN-EVOLUTION.md target=_blank rel="noopener noreferrer" class="">CHARTER-CHAIN-EVOLUTION.md</a> Patrón 2)</li>
+</ul>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-charter-new--t-xssml---from-ailog-id----from-spec-path---title-titulo-path><code>straymark charter new [-t XS|S|M|L] [--from-ailog &lt;id> | --from-spec &lt;path>] [--title &lt;titulo>] [path]</code><a href=#straymark-charter-new--t-xssml---from-ailog-id----from-spec-path---title-titulo-path class=hash-link aria-label="Enlace directo al straymark-charter-new--t-xssml---from-ailog-id----from-spec-path---title-titulo-path" title="Enlace directo al straymark-charter-new--t-xssml---from-ailog-id----from-spec-path---title-titulo-path" translate=no>​</a></h4>
+<p>Crea un Charter desde el template del framework en <code>.straymark/charters/NN-slug.md</code>. Si no se pasa <code>--title</code>, se solicita interactivamente. Los dos flags de origen son mutuamente excluyentes a nivel de clap.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Argumento/Flag<th>Default<th>Descripción<tbody><tr><td><code>path</code><td><code>.</code> (directorio actual)<td>Directorio del proyecto<tr><td><code>--type</code>, <code>-t</code><td><code>M</code><td>Estimación de esfuerzo. Uno de <code>XS</code>, <code>S</code>, <code>M</code>, <code>L</code>.<tr><td><code>--title</code><td>—<td>Título del Charter. Se usa para construir el slug y el nombre de archivo. Solicita prompt si está ausente.<tr><td><code>--from-ailog</code><td>—<td>ID del AILOG origen (p.ej. <code>AILOG-2026-04-28-021</code>). Pre-popula <code>originating_ailogs</code> en el frontmatter. <strong>Mutuamente excluyente con <code>--from-spec</code>.</strong><tr><td><code>--from-spec</code><td>—<td>Path a un spec.md de SpecKit (p.ej. <code>specs/001-feature/spec.md</code>). Pre-popula <code>originating_spec</code> en el frontmatter. El path se verifica al crear. <strong>Mutuamente excluyente con <code>--from-ailog</code>.</strong></table>
+<p>Cuando ningún flag de origen se pasa, ambos <code>originating_ailogs</code> y <code>originating_spec</code> quedan comentados en el frontmatter generado — el Charter se crea "sin origen explícito" y el usuario lo llena antes de mover el status a <code>in-progress</code>.</p>
+<p><strong>Ejemplos:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token comment" style=color:#999988;font-style:italic># Standalone (sin origen) — prompt interactivo de título</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark charter new </span><span class="token parameter variable" style=color:#36acaa>--type</span><span class="token plain"> M</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token comment" style=color:#999988;font-style:italic># Modo mantenimiento / post-MVP — Charter rooteado en un AILOG existente</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark charter new </span><span class="token parameter variable" style=color:#36acaa>-t</span><span class="token plain"> S --from-ailog AILOG-2026-04-28-021 </span><span class="token parameter variable" style=color:#36acaa>--title</span><span class="token plain"> </span><span class="token string" style=color:#e3116c>"thresholds por servicio"</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token comment" style=color:#999988;font-style:italic># Modo greenfield — Charter implementando un spec de SpecKit</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark charter new </span><span class="token parameter variable" style=color:#36acaa>-t</span><span class="token plain"> L --from-spec specs/001-pagos/spec.md </span><span class="token parameter variable" style=color:#36acaa>--title</span><span class="token plain"> </span><span class="token string" style=color:#e3116c>"integrar provider de pagos"</span><br/></div></code></pre></div></div>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-charter-list---status-declaredin-progressclosedall---origin-ailogspecany-path><code>straymark charter list [--status declared|in-progress|closed|all] [--origin ailog|spec|any] [path]</code><a href=#straymark-charter-list---status-declaredin-progressclosedall---origin-ailogspecany-path class=hash-link aria-label="Enlace directo al straymark-charter-list---status-declaredin-progressclosedall---origin-ailogspecany-path" title="Enlace directo al straymark-charter-list---status-declaredin-progressclosedall---origin-ailogspecany-path" translate=no>​</a></h4>
+<p>Enumera Charters como tabla.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Argumento/Flag<th>Default<th>Descripción<tbody><tr><td><code>path</code><td><code>.</code><td>Directorio del proyecto<tr><td><code>--status</code><td><code>all</code><td>Filtra por status del ciclo de vida<tr><td><code>--origin</code><td><code>any</code> (sin filtro)<td>Filtra por tipo de origen: <code>ailog</code>, <code>spec</code>, o <code>any</code></table>
+<p>Los archivos que no parsean se reportan como warnings en stderr sin abortar el comando — la tabla muestra lo que puede.</p>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-charter-status-charter-id---path-dir><code>straymark charter status [CHARTER-ID] [--path &lt;dir>]</code><a href=#straymark-charter-status-charter-id---path-dir class=hash-link aria-label="Enlace directo al straymark-charter-status-charter-id---path-dir" title="Enlace directo al straymark-charter-status-charter-id---path-dir" translate=no>​</a></h4>
+<p>Con un ID: imprime el detalle completo del Charter (frontmatter, ubicación del archivo, lista de secciones del cuerpo). Sin ID: imprime los 5 Charters más recientes por NN descendente.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Argumento/Flag<th>Default<th>Descripción<tbody><tr><td><code>CHARTER-ID</code><td>—<td>Identificador del Charter. Acepta el <code>charter_id</code> completo (<code>CHARTER-01-test</code>), el prefijo <code>CHARTER-NN</code> (<code>CHARTER-01</code>), o solo el NN numérico (<code>01</code> o <code>1</code>). El match numérico es permisivo respecto al zero-padding.<tr><td><code>--path</code><td><code>.</code><td>Directorio del proyecto. Es flag (no positional) para evitar colisión con el positional opcional <code>CHARTER-ID</code>.</table>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-charter-close-charter-id---from-template---non-interactive---path-dir><code>straymark charter close &lt;CHARTER-ID> [--from-template] [--non-interactive] [--path &lt;dir>]</code><a href=#straymark-charter-close-charter-id---from-template---non-interactive---path-dir class=hash-link aria-label="Enlace directo al straymark-charter-close-charter-id---from-template---non-interactive---path-dir" title="Enlace directo al straymark-charter-close-charter-id---from-template---non-interactive---path-dir" translate=no>​</a></h4>
+<p>Registra la telemetría post-ejecución y mueve el status del Charter a <code>closed</code>. La telemetría se escribe en <code>.straymark/charters/CHARTER-NN.telemetry.yaml</code> (archivo lateral, <strong>no</strong> embebido en el frontmatter del Charter — el frontmatter es declarativo ex-ante; la telemetría es voluminosa ex-post). El shape se valida contra <code>.straymark/schemas/charter-telemetry.schema.v0.json</code>.</p>
+<p>Dos modos:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Modo<th>Combinación de flags<th>Cuándo usar<tbody><tr><td><strong>Interactivo</strong> (default)<td>(ninguno)<td>Recorre el schema campo por campo con prompts. Tiempo objetivo: 5–10 min.<tr><td><strong>From template</strong><td><code>--from-template</code><td>Copia el esqueleto YAML junto al Charter para edición manual. Pre-llena <code>charter_id</code>, título, <code>closed_at</code>.<tr><td><strong>From template, scripted</strong><td><code>--from-template --non-interactive</code><td>Uso CI / batch. Omite todos los prompts; idempotente al re-ejecutar.</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Argumento/Flag<th>Default<th>Descripción<tbody><tr><td><code>CHARTER-ID</code><td>—<td>Mismas reglas de resolución que <code>charter status</code>.<tr><td><code>--from-template</code><td>false<td>Copia el esqueleto del template en lugar de correr el flujo interactivo.<tr><td><code>--non-interactive</code><td>false<td>Omite todos los prompts. Requiere <code>--from-template</code>.<tr><td><code>--path</code><td><code>.</code><td>Directorio del proyecto.</table>
+<p><strong>Ejemplo:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">$ straymark charter close CHARTER-01</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  Closing CHARTER-01-test-charter</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    Title: Test charter</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  Press Enter to accept defaults</span><span class="token punctuation" style=color:#393A34>;</span><span class="token plain"> </span><span class="token builtin class-name">type</span><span class="token plain"> to override.</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  ── Trigger ──</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  Declared trigger kind › event_trigger</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  Declared trigger description › first false-positive ticket</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  Fired at </span><span class="token punctuation" style=color:#393A34>(</span><span class="token plain">YYYY-MM-DD</span><span class="token punctuation" style=color:#393A34>)</span><span class="token plain"> </span><span class="token punctuation" style=color:#393A34>[</span><span class="token number" style=color:#36acaa>2026</span><span class="token plain">-05-02</span><span class="token punctuation" style=color:#393A34>]</span><span class="token plain">:</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  </span><span class="token punctuation" style=color:#393A34>..</span><span class="token plain">.</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  ✔ Charter CHARTER-01 closed.</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    Telemetry: .straymark/charters/CHARTER-01.telemetry.yaml</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    Status updated: in-progress/declared → closed</span><br/></div></code></pre></div></div>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-charter-drift-charter-id---range-revrev---no-ailog-suppress---no-batch-ledger-check---path-dir><code>straymark charter drift &lt;CHARTER-ID> [--range &lt;REV..REV>] [--no-ailog-suppress] [--no-batch-ledger-check] [--path &lt;dir>]</code><a href=#straymark-charter-drift-charter-id---range-revrev---no-ailog-suppress---no-batch-ledger-check---path-dir class=hash-link aria-label="Enlace directo al straymark-charter-drift-charter-id---range-revrev---no-ailog-suppress---no-batch-ledger-check---path-dir" title="Enlace directo al straymark-charter-drift-charter-id---range-revrev---no-ailog-suppress---no-batch-ledger-check---path-dir" translate=no>​</a></h4>
+<p>Detecta drift archivo-vs-commit al cierre del Charter. Envuelve el script del framework <code>.straymark/scripts/check-charter-drift.sh</code> (cero falsos positivos validados empíricamente en PLAN-05 retrospectivo + PLAN-06 prospectivo en Sentinel). El valor agregado del CLI sobre el script crudo es la <strong>AILOG-awareness</strong>: los paths reportados como "declarados pero no modificados" se silencian cuando aparecen en la sección <code>## Risk</code> / <code>## Riesgos</code> / <code>## 风险</code> de algún AILOG referenciado por <code>originating_ailogs</code> del Charter. Usa <code>--no-ailog-suppress</code> para deshabilitarlo.</p>
+<p><strong>Gate de Batch Ledger</strong> <em>(cli-3.13.0+)</em>. Cuando el Charter está en estado <code>in-progress</code> o <code>closed</code>, el comando también revisa cada AILOG originante por entradas <code>## Batch Ledger</code> que sigan en <code>(pending)</code> y falla con un diagnóstico claro listando los batches faltantes. Los AILOGs sin ledger no contribuyen — la sección es opt-in. Usa <code>--no-batch-ledger-check</code> para bypass (pensado para adopters que consolidan la ledger post-close).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Argumento/Flag<th>Default<th>Descripción<tbody><tr><td><code>CHARTER-ID</code><td>—<td>Mismas reglas de resolución que <code>charter status</code>.<tr><td><code>--range</code><td><code>HEAD~1..HEAD</code><td>Rango de revisiones git a chequear.<tr><td><code>--no-ailog-suppress</code> <em>(cli-3.10.0+ siempre emite una línea INFO de confirmación)</em><td>false<td>Deshabilita la supresión AILOG-aware (muestra todo path declarado-omitido). Cuando se pasa el flag, el CLI siempre imprime una línea <code>INFO: AILOG-aware suppression bypassed (would have suppressed: N path(s)…)</code> — incluso cuando N=0 — para que el modo diagnóstico sea visible en la salida aun en una corrida limpia.<tr><td><code>--no-batch-ledger-check</code> <em>(cli-3.13.0+)</em><td>false<td>Deshabilita el gate de Batch Ledger. Usar cuando el AILOG del Charter optó por no usar el patrón al momento del close.<tr><td><code>--path</code><td><code>.</code><td>Directorio del proyecto.</table>
+<p><strong>Códigos de salida:</strong> <code>0</code> si no hay drift (o solo AILOG-suprimido) y ningún batch pendiente; <code>1</code> si hay drift no contabilizado o algún <code>### Batch N</code> sigue <code>(pending)</code>; <code>2</code> para errores de uso (Charter no encontrado, bash ausente, etc.).</p>
+<p><strong>Ejemplo:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">$ straymark charter drift CHARTER-01 </span><span class="token parameter variable" style=color:#36acaa>--range</span><span class="token plain"> origin/main</span><span class="token punctuation" style=color:#393A34>..</span><span class="token plain">HEAD</span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token operator" style=color:#393A34>==</span><span class="token operator" style=color:#393A34>=</span><span class="token plain"> Charter drift check </span><span class="token operator" style=color:#393A34>==</span><span class="token operator" style=color:#393A34>=</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  Charter: .straymark/charters/01-test.md</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  Range:   origin/main</span><span class="token punctuation" style=color:#393A34>..</span><span class="token plain">HEAD</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  Declared: </span><span class="token number" style=color:#36acaa>5</span><span class="token plain"> files</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  Modified: </span><span class="token number" style=color:#36acaa>3</span><span class="token plain"> files</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">WARNING: Declared </span><span class="token keyword" style=color:#00009f>in</span><span class="token plain"> Charter but NOT modified </span><span class="token punctuation" style=color:#393A34>(</span><span class="token number" style=color:#36acaa>1</span><span class="token plain"> files</span><span class="token punctuation" style=color:#393A34>)</span><span class="token plain">:</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  - src/services/policy/repository.go</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">AILOG-suppressed: </span><span class="token number" style=color:#36acaa>1</span><span class="token plain"> path</span><span class="token punctuation" style=color:#393A34>(</span><span class="token plain">s</span><span class="token punctuation" style=color:#393A34>)</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  - src/services/policy/repository.go </span><span class="token punctuation" style=color:#393A34>[</span><span class="token plain">documented </span><span class="token keyword" style=color:#00009f>in</span><span class="token plain"> AILOG-2026-05-02-001</span><span class="token punctuation" style=color:#393A34>]</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">OK all declared-omitted paths are documented </span><span class="token keyword" style=color:#00009f>in</span><span class="token plain"> AILOGs — drift accepted.</span><br/></div></code></pre></div></div>
+<blockquote>
+<p><strong>Nota de plataforma.</strong> El chequeo de drift delega en <code>bash</code>. En Linux/macOS/WSL/Git Bash funciona out-of-the-box. En Windows nativo sin WSL, instalar Git Bash; un fallback puro Rust está en el roadmap pero no en fw-4.6.x.</p>
+</blockquote>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=soporte-de-wildcards-en-paths-declarados-fw-490>Soporte de wildcards en paths declarados <em>(fw-4.9.0+)</em><a href=#soporte-de-wildcards-en-paths-declarados-fw-490 class=hash-link aria-label="Enlace directo al soporte-de-wildcards-en-paths-declarados-fw-490" title="Enlace directo al soporte-de-wildcards-en-paths-declarados-fw-490" translate=no>​</a></h4>
+<p>El chequeo de drift resuelve dos formas de wildcard en <code>## Files to modify</code>:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Forma<th>Ejemplo<th>Caso de uso<tbody><tr><td>Elipsis<td><code>`.straymark/07-ai-audit/agent-logs/AILOG-...md`</code><td>Cualquier path modificado con ese prefijo satisface el wildcard. Usado históricamente cuando un número desconocido de AILOGs serían creados durante la ejecución.<tr><td>Glob<td><code>`AILOG-*.md`</code> o <code>`src/services/foo-*.rs`</code><td>Cualquier path modificado que matchee el glob (<code>*</code> → <code>.*</code>) satisface el wildcard. Usado para declaraciones bulk de Charter donde un set parametrizado es tocado. Añadido en fw-4.9.0 tras la fricción surgida en Sentinel CHARTER-04 (<a href=https://github.com/StrangeDaysTech/straymark/issues/81 target=_blank rel="noopener noreferrer" class="">issue #81</a>).</table>
+<p>Ambas formas se manejan en ambas direcciones: un wildcard declarado suprime tanto warnings de "declarado pero no modificado" (cuando al menos un archivo matching fue modificado) como warnings de "modificado pero no declarado" (cuando un path modificado matchea un wildcard declarado).</p>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=por-diseño-rutas-de-gobernanza-siempre-están-en-scope>Por diseño: rutas de gobernanza siempre están en scope<a href=#por-diseño-rutas-de-gobernanza-siempre-están-en-scope class=hash-link aria-label="Enlace directo al Por diseño: rutas de gobernanza siempre están en scope" title="Enlace directo al Por diseño: rutas de gobernanza siempre están en scope" translate=no>​</a></h4>
+<p>Los paths bajo <code>.straymark/charters/*</code> y <code>.straymark/07-ai-audit/*</code> <strong>nunca</strong> se reportan como "modificado pero no declarado". Es opinionated por diseño — esos paths son siempre legítimos cuando el Charter mismo o el AILOG de ejecución son tocados. Validado empíricamente en Sentinel CHARTER-04: un <code>git add -A</code> accidental stageó archivos no-tracked del usuario (<code>.claude/skills/</code>, <code>cmd/sentinel/sentinel</code>); la regla suprimió correctamente el ruido de gobernanza sin esconder la expansión genuina de archivos del proyecto (<a href=https://github.com/StrangeDaysTech/straymark/issues/81#issuecomment-update target=_blank rel="noopener noreferrer" class="">issue #81 W2</a>).</p>
+<p>Si corres un Charter cuyo scope explícito es churn de gobernanza (p.ej. un Charter de aprobación bulk que toca solo <code>.straymark/07-ai-audit/</code>), el chequeo reportará 0 archivos modificados y necesitarás verificar el scope leyendo el AILOG. Un flag <code>--strict-scope</code> que deshabilite la regla "siempre en scope" está sobre la mesa para una minor futura si un adopter real reporta la asimetría como fricción.</p>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-charter-batch-complete-charter-id-n---note-body---non-interactive---path-dir><code>straymark charter batch-complete &lt;CHARTER-ID> &lt;N> [--note &lt;body>] [--non-interactive] [--path &lt;dir>]</code><a href=#straymark-charter-batch-complete-charter-id-n---note-body---non-interactive---path-dir class=hash-link aria-label="Enlace directo al straymark-charter-batch-complete-charter-id-n---note-body---non-interactive---path-dir" title="Enlace directo al straymark-charter-batch-complete-charter-id-n---note-body---non-interactive---path-dir" translate=no>​</a></h4>
+<p><em>Disponible desde <strong>cli-3.13.0</strong> + <strong>fw-4.14.0</strong>.</em></p>
+<p>Marca un batch del Charter como completado en la <code>## Batch Ledger</code> del AILOG originante. El comando sustituye el placeholder <code>(pending)</code> bajo <code>### Batch &lt;N></code> con notas del batch capturadas interactivamente (por defecto) o vía <code>--note</code> (one-shot / scripted). El gate de drift al cierre (<code>straymark charter drift</code>) rechaza cualquier <code>### Batch N</code> que quede como <code>(pending)</code>, haciendo la actualización por-batch load-bearing en vez de un recordatorio de disciplina.</p>
+<p><strong>Cuándo usarlo.</strong> Solo para Charters multi-batch que abarquen 3+ lotes o >1 día de ejecución. AILOGs de un solo batch documentan todo en <code>## Acciones Realizadas</code> y saltan la ledger por completo. El template Charter en §Tasks recuerda al autor mantener la ledger cuando aplica.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Argumento/Flag<th>Default<th>Descripción<tbody><tr><td><code>CHARTER-ID</code><td>—<td>Mismas reglas de resolución que <code>charter status</code>.<tr><td><code>N</code><td>—<td>Número de batch (1-based) — coincide con el heading <code>### Batch &lt;N></code> en <code>## Batch Ledger</code> del AILOG.<tr><td><code>--note &lt;body></code><td>—<td>Cuerpo de la nota pre-llenado. Con este flag, el comando escribe la nota no-interactivamente y salta los prompts. Diseñado para agentes y scripts.<tr><td><code>--non-interactive</code><td>false<td>Deshabilita prompts. Requiere <code>--note</code> (la ausencia de <code>--note</code> aborta en lugar de colgarse).<tr><td><code>--path</code><td><code>.</code><td>Directorio del proyecto.</table>
+<p>El comando lee <code>originating_ailogs[0]</code> del frontmatter del Charter para localizar el AILOG destino. Rechaza con error claro cuando:</p>
+<ul>
+<li class="">el Charter no tiene entrada <code>originating_ailogs</code> (no puede resolver archivo destino);</li>
+<li class="">el archivo AILOG no existe en <code>.straymark/07-ai-audit/agent-logs/</code>;</li>
+<li class="">el AILOG no tiene sección <code>## Batch Ledger</code> (añadir la sección primero, o saltar el comando si el Charter es de un solo batch);</li>
+<li class="">no existe heading <code>### Batch &lt;N></code> bajo <code>## Batch Ledger</code>;</li>
+<li class="">el batch destino ya está completado (rehúsa sobrescribir — editar el AILOG manualmente para correcciones).</li>
+</ul>
+<p><strong>Flujo interactivo.</strong> Tres prompts: archivos tocados (one-liner), tests añadidos o estado (one-liner), y nota de diseño multilínea (terminar con <code>.</code> solo en una línea o Ctrl-D). Los campos vacíos se omiten en la salida. El cuerpo resultante se escribe bajo el heading <code>### Batch &lt;N></code>; el placeholder <code>(pending)</code> se reemplaza.</p>
+<p><strong>Ejemplos:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token comment" style=color:#999988;font-style:italic># Interactivo — humanos pegando notas</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark charter batch-complete CHARTER-17 </span><span class="token number" style=color:#36acaa>5</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">✔ AILOG: .straymark/07-ai-audit/agent-logs/AILOG-2026-05-13-048-charter-17.md</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">✔ </span><span class="token comment" style=color:#999988;font-style:italic>### Batch 5 — Migración 022 + handlers</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">OK </span><span class="token variable" style=color:#36acaa>`</span><span class="token variable comment" style=color:#999988;font-style:italic>### Batch 5</span><span class="token variable" style=color:#36acaa>`</span><span class="token plain"> written.</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">Reminder: </span><span class="token variable" style=color:#36acaa>`</span><span class="token variable function" style=color:#d73a49>git</span><span class="token variable" style=color:#36acaa> </span><span class="token variable function" style=color:#d73a49>add</span><span class="token variable" style=color:#36acaa> .straymark/07-ai-audit/agent-logs/AILOG-2026-05-13-048-charter-17.md</span><span class="token variable" style=color:#36acaa>`</span><span class="token plain"> before pushing.</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token comment" style=color:#999988;font-style:italic># One-shot — agentes / scripts</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark charter batch-complete CHARTER-17 </span><span class="token number" style=color:#36acaa>5</span><span class="token plain"> </span><span class="token punctuation" style=color:#393A34>\</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    </span><span class="token parameter variable" style=color:#36acaa>--note</span><span class="token plain"> </span><span class="token string" style=color:#e3116c>"Migración 022 + handlers. Archivos: migrations/022.sql, services/handler_x.go. Tests pasando. R8 surgió (CHECK constraint sin ARCHIVED), fix atómico."</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">OK </span><span class="token variable" style=color:#36acaa>`</span><span class="token variable comment" style=color:#999988;font-style:italic>### Batch 5</span><span class="token variable" style=color:#36acaa>`</span><span class="token plain"> written.</span><br/></div></code></pre></div></div>
+<p><strong>Integración con workflow.</strong> Según la guía del template Charter en §Tasks, correr <code>batch-complete</code> <em>inmediatamente después</em> de que aterriza el commit del batch pero <em>antes</em> de pushear. La actualización del AILOG y el trabajo que documenta viajan en el mismo push. El gate de drift al cierre (<code>straymark charter drift CHARTER-NN</code>) rechaza cualquier batch pendiente e imprime la lista — convirtiendo "olvidé actualizar la ledger" en una falla dura en lugar de erosión silenciosa del audit trail.</p>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-charter-audit-charter-id---range-revrev---prepare----merge-reports---merge-into-path---path-dir><code>straymark charter audit &lt;CHARTER-ID> [--range &lt;REV..REV>] [--prepare | --merge-reports] [--merge-into &lt;PATH>] [--path &lt;dir>]</code><a href=#straymark-charter-audit-charter-id---range-revrev---prepare----merge-reports---merge-into-path---path-dir class=hash-link aria-label="Enlace directo al straymark-charter-audit-charter-id---range-revrev---prepare----merge-reports---merge-into-path---path-dir" title="Enlace directo al straymark-charter-audit-charter-id---range-revrev---prepare----merge-reports---merge-into-path---path-dir" translate=no>​</a></h4>
+<p><em>Disponible desde <strong>cli-3.8.0</strong> + <strong>fw-4.7.0</strong>. Flujo unificado v1 shippeado en <strong>cli-3.10.0</strong> + <strong>fw-4.9.0</strong> — reemplaza los 3 pasos v0 (PREPARE/CALIBRATE/FINALIZE) por 2 (PREPARE/MERGE-REPORTS), unifica la plantilla del auditor, y mueve los paths canónicos a <code>.straymark/audits/</code>.</em></p>
+<p>Orquesta una revisión externa multi-modelo de la ejecución de un Charter. <strong>Orchestration-only</strong> — el CLI prepara la plantilla unificada del audit, valida los reports de auditores contra el schema, y emite/mergea el bloque YAML <code>external_audit</code>. <strong>NO invoca APIs de LLM.</strong> El operador corre N CLIs auditoras (gemini-cli, claude-cli, copilot-cli, codex-cli — la que tenga) configuradas con acceso read-only al filesystem; cada una invoca el skill <code>/straymark-audit-execute</code> para leer el prompt, auditar con tool use citando <code>path:line</code>, y escribir el report.</p>
+<p>Dos pasos, cada uno invocable independientemente:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Paso<th>Flag<th>Qué pasa<tbody><tr><td>1. PREPARE<td><code>--prepare</code> (default)<td>Resuelve la plantilla unificada del audit contra el Charter + git diff + AILOGs origen. La escribe en <code>.straymark/audits/&lt;CHARTER-ID>/audit-prompt.md</code>.<tr><td>2. MERGE-REPORTS<td><code>--merge-reports</code><td>Lee todos los archivos <code>report-*.md</code> en <code>.straymark/audits/&lt;CHARTER-ID>/</code> (uno por auditor que terminó). Valida cada uno contra <code>audit-output.schema.v0.json</code>. Emite el array YAML <code>external_audit</code> — combina con <code>--merge-into &lt;PATH></code> para anexarlo directamente a la telemetría del Charter.</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Argumento/Flag<th>Default<th>Descripción<tbody><tr><td><code>&lt;CHARTER-ID></code><td>—<td>Mismas reglas de resolución que <code>charter status</code>.<tr><td><code>--range</code><td><code>origin/main..HEAD</code> (con fallback a <code>origin/master..HEAD</code>, luego <code>HEAD~1..HEAD</code> con warning)<td>Rango git que los auditores revisan. El default captura el set completo de commits de la feature branch; el override explícito vía <code>--range &lt;REV..REV></code> no prueba upstream.<tr><td><code>--prepare</code><td>off (acción default cuando ningún otro flag se pasa)<td>Corre el paso 1. Mutuamente excluyente con <code>--merge-reports</code>.<tr><td><code>--merge-reports</code><td>off<td>Corre el paso 2. Mutuamente excluyente con <code>--prepare</code>.<tr><td><code>--merge-into &lt;PATH></code><td>—<td>Con <code>--merge-reports</code>: anexa el array <code>external_audit:</code> directamente a la telemetría YAML en <code>&lt;PATH></code> en lugar de imprimir a stdout. El CLI rechaza re-audit (la telemetría ya tiene la clave) con error claro.<tr><td><code>--path</code><td><code>.</code><td>Directorio del proyecto.</table>
+<p><strong>Flags v0 deprecated (ocultos en <code>--help</code>):</strong></p>
+<ul>
+<li class=""><code>--calibrate</code> — emite warning y sale con error. El paso v0 calibrate se reemplaza por la skill <code>/straymark-audit-review</code> que reconcilia N reports inline con acceso al filesystem (sin prompt paste-based separado).</li>
+<li class=""><code>--finalize</code> — alias deprecated de <code>--merge-reports</code> con comportamiento backwards-compat. Emite warning y rutea por la nueva ruta.</li>
+</ul>
+<h5 class="anchor anchorTargetStickyNavbar_Vzrq" id=recomendación-de-heterogeneidad-no-enforced-en-v0>Recomendación de heterogeneidad (no enforced en v0)<a href=#recomendación-de-heterogeneidad-no-enforced-en-v0 class=hash-link aria-label="Enlace directo al Recomendación de heterogeneidad (no enforced en v0)" title="Enlace directo al Recomendación de heterogeneidad (no enforced en v0)" translate=no>​</a></h5>
+<p>El par de auditores debería ser de <strong>familias de modelo distintas</strong>: uno Anthropic + uno Google + uno OpenAI, en cualquier combinación, nunca dos de la misma familia. La heterogeneidad inter-familia es lo que hace que la convergencia en findings sea de alta señal — auditores de la misma familia comparten blind spots.</p>
+<p>v1 soporta <strong>N≥2 auditores</strong> (ya no fijo a 2). El operador puede optar por 3 o 4 auditores para Charters de alto riesgo, incluyendo modelos especializados. La skill <code>/straymark-audit-review</code> itera sobre todos los archivos <code>report-*.md</code> en el audit dir.</p>
+<p>El rol calibrador se mueve de una plantilla paste-based (v0) al agente principal in-conversation vía la skill <code>/straymark-audit-review</code> — su tarea es definicional (reconciliar veredictos ya producidos), por lo que la heterogeneidad respecto al implementador NO es requerida.</p>
+<h5 class="anchor anchorTargetStickyNavbar_Vzrq" id=layout-canónico-producido-v1>Layout canónico producido (v1)<a href=#layout-canónico-producido-v1 class=hash-link aria-label="Enlace directo al Layout canónico producido (v1)" title="Enlace directo al Layout canónico producido (v1)" translate=no>​</a></h5>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-text codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">.straymark/audits/CHARTER-NN/</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">├── audit-prompt.md                          # resuelto por --prepare (single unified prompt)</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">├── report-claude-sonnet-4-6.md              # escrito por /straymark-audit-execute en claude-cli</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">├── report-gemini-2-5-pro.md                 # escrito por /straymark-audit-execute en gemini-cli</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">├── report-gpt-5-3-codex.md                  # 3er auditor opcional</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">├── review.md                                # escrito por /straymark-audit-review (análisis consolidado de 6 secciones)</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">└── external-audit-pending.yaml              # escrito por /straymark-audit-review cuando la telemetría aún no existe (Branch B)</span><br/></div></code></pre></div></div>
+<p>El directorio está namespaceado bajo <code>.straymark/</code> para evitar colisiones con carpetas <code>audit/</code> que el adoptante haya definido. El shape <code>&lt;UNIT-TYPE>-&lt;UNIT-ID></code> deja espacio para futuras categorías de unidad de auditoría más allá de Charter (ej. <code>MODULE-payments/</code>, <code>RELEASE-v2.0/</code>) sin reestructurar.</p>
+<p>Los adopters pueden <code>git add</code> el directorio entero <code>.straymark/audits/</code> para un audit trail completamente versionado, o <code>.gitignore</code> si prefieren un ciclo efímero.</p>
+<p><strong>Ejemplo (v1, con los wrappers de skills — recomendado para flujos IDE-driven):</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token comment" style=color:#999988;font-style:italic># En el IDE principal (Claude Code, Gemini Code, Cursor, ...):</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token operator" style=color:#393A34>></span><span class="token plain"> /straymark-audit-prompt CHARTER-05</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  → corre </span><span class="token variable" style=color:#36acaa>`</span><span class="token variable" style=color:#36acaa>straymark charter audit CHARTER-05 </span><span class="token variable parameter variable" style=color:#36acaa>--prepare</span><span class="token variable" style=color:#36acaa>`</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  → escribe .straymark/audits/CHARTER-05/audit-prompt.md</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  → instruye al operador abrir CLIs auditoras</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token comment" style=color:#999988;font-style:italic># En claude-cli (con acceso read al repo):</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token operator" style=color:#393A34>></span><span class="token plain"> /straymark-audit-execute CHARTER-05</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  → escribe .straymark/audits/CHARTER-05/report-claude-sonnet-4-6.md</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  → recuerda al operador esperar a TODAS las auditorías antes de review</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token comment" style=color:#999988;font-style:italic># En gemini-cli:</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token operator" style=color:#393A34>></span><span class="token plain"> /straymark-audit-execute CHARTER-05</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  → escribe .straymark/audits/CHARTER-05/report-gemini-2-5-pro.md</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token comment" style=color:#999988;font-style:italic># De vuelta en el IDE principal, después de que TODAS las auditorías terminen:</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token operator" style=color:#393A34>></span><span class="token plain"> /straymark-audit-review CHARTER-05</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  → lee N reports, verifica cada finding contra el código</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  → escribe .straymark/audits/CHARTER-05/review.md </span><span class="token punctuation" style=color:#393A34>(</span><span class="token plain">consolidado de </span><span class="token number" style=color:#36acaa>6</span><span class="token plain"> secciones</span><span class="token punctuation" style=color:#393A34>)</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  → corre </span><span class="token variable" style=color:#36acaa>`</span><span class="token variable" style=color:#36acaa>straymark charter audit CHARTER-05 --merge-reports --merge-into </span><span class="token variable operator" style=color:#393A34>&lt;</span><span class="token variable" style=color:#36acaa>telemetría</span><span class="token variable operator" style=color:#393A34>></span><span class="token variable" style=color:#36acaa>`</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  → external_audit YAML mergeado en la telemetría del Charter</span><br/></div></code></pre></div></div>
+<blockquote>
+<p><strong>¿Por qué orchestration-only?</strong> Implementar 3 HTTP clients (OpenAI / Google / Anthropic) son 1-2 semanas + mantenimiento perpetuo. v1 audit-skills extiende el orchestration-only a un segundo modo (CLI auditor-side con tool use enforcement) donde el operador corre sus propias CLIs auditoras y los prompts de StrayMark enforzan la disciplina (<code>citar path:línea de archivos efectivamente abiertos</code>). StrayMark no maneja API keys, no invoca APIs, no mantiene HTTP clients.</p>
+</blockquote>
+<blockquote>
+<p><strong>Alternativa con skill <em>(fw-4.9.0+, expandida en fw-4.9.0)</em>.</strong> Tres skills envuelven el CLI para flujos IDE-driven: <code>/straymark-audit-prompt CHARTER-ID</code> (llama a <code>--prepare</code>), <code>/straymark-audit-execute CHARTER-ID</code> (corre en CLIs auditoras para leer el prompt y escribir un report), y <code>/straymark-audit-review CHARTER-ID</code> (consolida N reports en <code>review.md</code> y mergea YAML). Con estas skills el operador nunca copia/pega prompts ni reports — el intercambio sucede vía paths canónicos del filesystem bajo <code>.straymark/audits/</code>. Ver la sección <a href=#skills class="">Skills</a> más abajo. El CLI sigue siendo la fuente única de verdad — las skills solo añaden UX-inline.</p>
+</blockquote>
+<hr/>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-compliance-path---standard-nombre---region-nombre---all---output-formato><code>straymark compliance [path] [--standard &lt;nombre>] [--region &lt;nombre>] [--all] [--output &lt;formato>]</code><a href=#straymark-compliance-path---standard-nombre---region-nombre---all---output-formato class=hash-link aria-label="Enlace directo al straymark-compliance-path---standard-nombre---region-nombre---all---output-formato" title="Enlace directo al straymark-compliance-path---standard-nombre---region-nombre---all---output-formato" translate=no>​</a></h3>
+<p>Verifica cumplimiento regulatorio. Por defecto evalúa los estándares cuya región esté incluida en <code>regional_scope</code> de <code>.straymark/config.yml</code> (default <code>[global, eu]</code>). Seis frameworks chinos disponibles opt-in cuando <code>china</code> se añade a <code>regional_scope</code>.</p>
+<p><strong>Argumentos y flags:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Argumento/Flag<th>Default<th>Descripción<tbody><tr><td><code>path</code><td><code>.</code> (directorio actual)<td>Directorio del proyecto<tr><td><code>--standard</code><td>—<td>Verificar estándar específico: <code>eu-ai-act</code>, <code>iso-42001</code>, <code>nist-ai-rmf</code>, <code>china-tc260</code>, <code>china-pipl</code>, <code>china-gb45438</code>, <code>china-cac</code>, <code>china-gb45652</code>, <code>china-csl</code><tr><td><code>--region</code><td>—<td>Ejecutar todos los estándares de una región: <code>global</code>, <code>eu</code>, <code>china</code>, o <code>all</code><tr><td><code>--all</code><td>—<td>Verificar todos los estándares (ignora <code>regional_scope</code>)<tr><td><code>--output</code><td><code>text</code><td>Formato de salida: <code>text</code>, <code>markdown</code>, o <code>json</code></table>
+<p>Precedencia: <code>--standard</code> > <code>--all</code> > <code>--region</code> > el <code>regional_scope</code> del proyecto.</p>
+<p><strong>Estándares chinos (opt-in vía <code>regional_scope: china</code>):</strong></p>
+<ul>
+<li class=""><strong>TC260 v2.0</strong>: existe TC260RA; niveles altos requieren review; los tres criterios (escenario × inteligencia × escala) están completos</li>
+<li class=""><strong>PIPL</strong>: PIPIA cuando <code>pipl_applicable: true</code>; transferencia transfronteriza documentada; retención ≥ 3 años (Art. 56)</li>
+<li class=""><strong>GB 45438</strong>: AILABEL para contenido generativo; estrategia explícita + implícita declaradas; campos de metadata mandatorios</li>
+<li class=""><strong>CAC</strong>: CACFILE cuando es requerido; <code>cac_filing_status</code> explícito; <code>cac_filing_number</code> cuando el estado es <code>*_approved</code></li>
+<li class=""><strong>GB/T 45652</strong>: SBOM y MCARD declaran cumplimiento de seguridad de datos de entrenamiento</li>
+<li class=""><strong>CSL 2026</strong>: cada INC con <code>csl_severity_level</code>; horas coherentes con severidad (1h ↔ particularly_serious, 4h ↔ relatively_major); post-mortem 30 días para incidentes major+</li>
+</ul>
+<p><strong>Ejemplos:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token comment" style=color:#999988;font-style:italic># Default: solo estándares cuya región esté en regional_scope</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark compliance</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token comment" style=color:#999988;font-style:italic># Los seis frameworks chinos (requiere regional_scope: china)</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark compliance </span><span class="token parameter variable" style=color:#36acaa>--region</span><span class="token plain"> china</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token comment" style=color:#999988;font-style:italic># Un solo framework chino</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark compliance </span><span class="token parameter variable" style=color:#36acaa>--standard</span><span class="token plain"> china-pipl </span><span class="token parameter variable" style=color:#36acaa>--output</span><span class="token plain"> json</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token comment" style=color:#999988;font-style:italic># Todos los estándares ignorando regional_scope</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark compliance </span><span class="token parameter variable" style=color:#36acaa>--all</span><br/></div></code></pre></div></div>
+<blockquote>
+<p><strong>Activación</strong>: para evaluar los frameworks chinos automáticamente, añadir a <code>.straymark/config.yml</code>:</p>
+<div class="language-yaml codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-yaml codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token key atrule" style=color:#00a4db>regional_scope</span><span class="token punctuation" style=color:#393A34>:</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  </span><span class="token punctuation" style=color:#393A34>-</span><span class="token plain"> global</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  </span><span class="token punctuation" style=color:#393A34>-</span><span class="token plain"> eu</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  </span><span class="token punctuation" style=color:#393A34>-</span><span class="token plain"> china</span><br/></div></code></pre></div></div>
+</blockquote>
+<hr/>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-metrics-path---period-periodo---output-formato><code>straymark metrics [path] [--period &lt;periodo>] [--output &lt;formato>]</code><a href=#straymark-metrics-path---period-periodo---output-formato class=hash-link aria-label="Enlace directo al straymark-metrics-path---period-periodo---output-formato" title="Enlace directo al straymark-metrics-path---period-periodo---output-formato" translate=no>​</a></h3>
+<p>Muestra métricas de gobernanza y estadísticas de documentación.</p>
+<p><strong>Argumentos y flags:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Argumento/Flag<th>Default<th>Descripción<tbody><tr><td><code>path</code><td><code>.</code> (directorio actual)<td>Directorio del proyecto<tr><td><code>--period</code><td><code>last-30-days</code><td>Período: <code>last-7-days</code>, <code>last-30-days</code>, <code>last-90-days</code>, o <code>all</code><tr><td><code>--output</code><td><code>text</code><td>Formato de salida: <code>text</code>, <code>markdown</code>, o <code>json</code></table>
+<p><strong>Métricas incluidas:</strong></p>
+<ul>
+<li class="">Conteo de documentos por tipo dentro del período</li>
+<li class="">Tasa de cumplimiento de revisiones</li>
+<li class="">Distribución de niveles de riesgo</li>
+<li class="">Actividad por agente</li>
+<li class="">Tendencias vs período anterior (↑/↓/→)</li>
+</ul>
+<hr/>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-analyze-path---threshold-n---output-formato---top-n><code>straymark analyze [path] [--threshold &lt;N>] [--output &lt;formato>] [--top &lt;N>]</code><a href=#straymark-analyze-path---threshold-n---output-formato---top-n class=hash-link aria-label="Enlace directo al straymark-analyze-path---threshold-n---output-formato---top-n" title="Enlace directo al straymark-analyze-path---threshold-n---output-formato---top-n" translate=no>​</a></h3>
+<p>Analiza la complejidad del código fuente usando métricas cognitivas y ciclomáticas, impulsado por <a href=https://crates.io/crates/arborist-metrics target=_blank rel="noopener noreferrer" class="">arborist-metrics</a>.</p>
+<p><strong>Argumentos y flags:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Argumento/Flag<th>Predeterminado<th>Descripción<tbody><tr><td><code>path</code><td><code>.</code> (directorio actual)<td>Directorio a analizar<tr><td><code>--threshold</code><td><code>8</code> (o desde config)<td>Umbral de complejidad cognitiva<tr><td><code>--output</code><td><code>text</code><td>Formato de salida: <code>text</code>, <code>json</code> o <code>markdown</code><tr><td><code>--top</code><td>—<td>Mostrar solo las N funciones más complejas</table>
+<p><strong>Lenguajes soportados:</strong> Rust, Python, JavaScript, TypeScript, Java, Go, C, C++, C#, PHP, Kotlin, Swift</p>
+<p><strong>Resolución de umbral:</strong> flag CLI → <code>.straymark/config.yml</code> → predeterminado (8)</p>
+<p><strong>Configuración</strong> (opcional, en <code>.straymark/config.yml</code>):</p>
+<div class="language-yaml codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-yaml codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token key atrule" style=color:#00a4db>complexity</span><span class="token punctuation" style=color:#393A34>:</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  </span><span class="token key atrule" style=color:#00a4db>threshold</span><span class="token punctuation" style=color:#393A34>:</span><span class="token plain"> </span><span class="token number" style=color:#36acaa>8</span><br/></div></code></pre></div></div>
+<p><strong>Ejemplos:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token comment" style=color:#999988;font-style:italic># Analizar directorio actual</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark analyze</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token comment" style=color:#999988;font-style:italic># Umbral personalizado y top 10</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark analyze </span><span class="token parameter variable" style=color:#36acaa>--threshold</span><span class="token plain"> </span><span class="token number" style=color:#36acaa>5</span><span class="token plain"> </span><span class="token parameter variable" style=color:#36acaa>--top</span><span class="token plain"> </span><span class="token number" style=color:#36acaa>10</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token comment" style=color:#999988;font-style:italic># Salida JSON para integración CI</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark analyze </span><span class="token parameter variable" style=color:#36acaa>--output</span><span class="token plain"> json</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token comment" style=color:#999988;font-style:italic># Analizar un proyecto específico</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark analyze /ruta/al/proyecto</span><br/></div></code></pre></div></div>
+<p><strong>Ejemplo de salida:</strong></p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-text codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">  StrayMark Analyze</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  /home/user/project</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  Threshold: cognitive complexity > 8</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  Functions exceeding threshold (3 of 42 total)</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    FILE                                     FUNCTION                  LINE  COGN  CYCL  SLOC</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    src/parser.rs                            parse_expression            42    18    12    45</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    src/compiler.rs                          Compiler::emit             128    15     9    38</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    src/eval.rs                              evaluate                    67    12     8    29</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  Summary</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    → Files analyzed: 12</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    → Total functions: 42</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    → Above threshold: 3 (7.1%)</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    → Max cognitive complexity: 18 (src/parser.rs:parse_expression)</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    → Average cognitive complexity: 3.8</span><br/></div></code></pre></div></div>
+<blockquote>
+<p><strong>Nota:</strong> Este comando funciona sin <code>straymark init</code>. Opera sobre archivos fuente, no documentos StrayMark. La feature <code>analyze</code> se puede desactivar en compilación con <code>--no-default-features</code>.</p>
+</blockquote>
+<blockquote>
+<p><strong>Trigger de documentación:</strong> Los agentes de IA usan <code>straymark analyze --output json</code> como método primario para determinar cuándo crear documentos AILOG. Si <code>summary.above_threshold > 0</code> en la salida JSON, el agente debe crear un AILOG. Cuando el CLI no está disponible, los agentes usan la heurística de >20 líneas de lógica de negocio como alternativa.</p>
+</blockquote>
+<hr/>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-audit-path---from-fecha---to-fecha---system-nombre---output-formato><code>straymark audit [path] [--from &lt;fecha>] [--to &lt;fecha>] [--system &lt;nombre>] [--output &lt;formato>]</code><a href=#straymark-audit-path---from-fecha---to-fecha---system-nombre---output-formato class=hash-link aria-label="Enlace directo al straymark-audit-path---from-fecha---to-fecha---system-nombre---output-formato" title="Enlace directo al straymark-audit-path---from-fecha---to-fecha---system-nombre---output-formato" translate=no>​</a></h3>
+<p>Genera reportes de trazas de auditoría con línea temporal, mapa de trazabilidad y resumen de cumplimiento.</p>
+<p><strong>Argumentos y flags:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Argumento/Flag<th>Default<th>Descripción<tbody><tr><td><code>path</code><td><code>.</code> (directorio actual)<td>Directorio del proyecto<tr><td><code>--from</code><td>—<td>Fecha de inicio del período (YYYY-MM-DD)<tr><td><code>--to</code><td>—<td>Fecha de fin del período (YYYY-MM-DD)<tr><td><code>--system</code><td>—<td>Filtrar por nombre de sistema/componente (busca en tags y título)<tr><td><code>--output</code><td><code>text</code><td>Formato de salida: <code>text</code>, <code>markdown</code>, <code>json</code>, o <code>html</code></table>
+<p><strong>El reporte incluye:</strong></p>
+<ul>
+<li class="">Línea temporal cronológica de todos los documentos</li>
+<li class="">Mapa de trazabilidad mostrando cadenas de relaciones (ej. REQ → ADR → AILOG → TES)</li>
+<li class="">Distribución de riesgo</li>
+<li class="">Resumen de cumplimiento (EU AI Act, ISO 42001, NIST AI RMF)</li>
+</ul>
+<p><strong>Formatos de salida:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Formato<th>Caso de uso<tbody><tr><td><code>text</code><td>Revisión en terminal (coloreado, formateado)<tr><td><code>markdown</code><td>Incluir en PRs, wikis o reportes<tr><td><code>json</code><td>Integración con herramientas externas<tr><td><code>html</code><td>Reportes independientes con tablas estilizadas y gráfico SVG de riesgo</table>
+<hr/>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-explore-path><code>straymark explore [path]</code><a href=#straymark-explore-path class=hash-link aria-label="Enlace directo al straymark-explore-path" title="Enlace directo al straymark-explore-path" translate=no>​</a></h3>
+<p>Explora y lee la documentación de StrayMark interactivamente en una interfaz de terminal (TUI).</p>
+<p><strong>Argumentos:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Argumento<th>Default<th>Descripción<tbody><tr><td><code>path</code><td><code>.</code> (directorio actual)<td>Directorio del proyecto</table>
+<p><strong>Flags:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Flag<th>Default<th>Descripción<tbody><tr><td><code>--lang &lt;código></code><td>resuelto desde el proyecto (ver abajo)<td>Idioma del shell del TUI y los docs de gobernanza del framework (<code>en</code>, <code>es</code>, <code>zh-CN</code>). Cae silenciosamente al inglés si falta la traducción.</table>
+<p><strong>Orden de resolución del idioma</strong> (desde cli-3.5.2):</p>
+<ol>
+<li class="">Flag <code>--lang &lt;código></code>, cuando se especifica</li>
+<li class="">Campo <code>language</code> en <code>.straymark/config.yml</code>, cuando el archivo existe (un valor explícito — incluso <code>language: en</code> — se respeta como una decisión deliberada del usuario)</li>
+<li class="">Variables de entorno <code>$LC_ALL</code> / <code>$LANG</code>, mapeadas a un idioma soportado (p.ej., <code>zh_CN.UTF-8</code> → <code>zh-CN</code>, <code>es_MX.UTF-8</code> → <code>es</code>). Chino tradicional (<code>zh_TW</code> / <code>zh_HK</code>) y otros locales no soportados pasan al siguiente fallback.</li>
+<li class=""><code>en</code></li>
+</ol>
+<p><strong>Características:</strong></p>
+<ul>
+<li class="">Layout de dos paneles: árbol de navegación + visor de documentos</li>
+<li class="">Panel de metadatos con estado, confianza, riesgo, tags y enlaces relacionados</li>
+<li class="">Renderizado de Markdown con colores, tablas, bloques de código e indentación por niveles</li>
+<li class="">Navegación entre documentos relacionados mediante hipervínculos</li>
+<li class="">Búsqueda por nombre de archivo, título, tags o fecha</li>
+<li class="">Modo pantalla completa, con <code>j</code> / <code>k</code> como teclas alternas para <code>↓</code> / <code>↑</code></li>
+<li class="">Consciente de localización: los docs del framework (<code>QUICK-REFERENCE</code>, <code>AGENT-RULES</code>, guías regulatorias de China, etc.) se sirven en el idioma definido por <code>language</code> en <code>.straymark/config.yml</code> o por <code>--lang</code></li>
+</ul>
+<p><strong>Atajos de teclado:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Tecla<th>Acción<tbody><tr><td><code>↑↓</code> / <code>j/k</code><td>Navegar / Scroll<tr><td><code>Enter</code><td>Expandir grupo / Abrir documento<tr><td><code>Tab</code><td>Ciclar paneles: Navegación → Metadatos → Documento<tr><td><code>f</code><td>Pantalla completa del documento<tr><td><code>/</code><td>Buscar<tr><td><code>L</code><td>Cambiar idioma de la interfaz (<code>en → es → zh-CN</code>)<tr><td><code>Esc</code><td>Volver / Colapsar / Limpiar búsqueda<tr><td><code>?</code><td>Popup de ayuda con todos los atajos<tr><td><code>q</code><td>Salir</table>
+<p><strong>Ejemplos:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">$ straymark explore                       </span><span class="token comment" style=color:#999988;font-style:italic># usa config.language (default en)</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark explore </span><span class="token parameter variable" style=color:#36acaa>--lang</span><span class="token plain"> zh-CN          </span><span class="token comment" style=color:#999988;font-style:italic># navegar docs del framework en chino simplificado</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">$ straymark explore </span><span class="token parameter variable" style=color:#36acaa>--lang</span><span class="token plain"> es             </span><span class="token comment" style=color:#999988;font-style:italic># override de sesión a español</span><br/></div></code></pre></div></div>
+<blockquote>
+<p><strong>Nota:</strong> El comando <code>explore</code> requiere la feature <code>tui</code> (habilitada por defecto). Para compilar sin ella: <code>cargo build --no-default-features</code>.</p>
+</blockquote>
+<hr/>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=straymark-about><code>straymark about</code><a href=#straymark-about class=hash-link aria-label="Enlace directo al straymark-about" title="Enlace directo al straymark-about" translate=no>​</a></h3>
+<p>Muestra información de versión, autoría y licencia.</p>
+<p><strong>Ejemplo:</strong></p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">$ straymark about</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">StrayMark CLI</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  CLI version:       cli-3.5.2</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  Framework version: fw-4.15.0</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  Author:            Strange Days Tech, S.A.S.</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  License:           MIT</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  Repository:        https://github.com/StrangeDaysTech/straymark</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">  Website:           https://strangedays.tech</span><br/></div></code></pre></div></div>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=skills>Skills<a href=#skills class=hash-link aria-label="Enlace directo al Skills" title="Enlace directo al Skills" translate=no>​</a></h2>
+<p>StrayMark incluye un conjunto de skills (slash commands) para usar dentro de un asistente IA (Claude Code, Gemini Code, Cursor, runtimes de agente genérico). Cada skill se instala en 3 formas paralelas durante <code>straymark init</code>:</p>
+<ul>
+<li class=""><code>dist/.claude/skills/&lt;skill>/SKILL.md</code> (Claude — frontmatter con <code>allowed-tools</code>)</li>
+<li class=""><code>dist/.gemini/skills/&lt;skill>/SKILL.md</code> (Gemini — frontmatter sin <code>allowed-tools</code>)</li>
+<li class=""><code>dist/.agent/workflows/&lt;skill>.md</code> (agente genérico — frontmatter solo <code>description</code>)</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Skill<th>Propósito<th>Archivos producidos<tbody><tr><td><code>/straymark-status</code><td>Verificar cumplimiento de documentación para cambios recientes.<td>ninguno (read-only)<tr><td><code>/straymark-new</code><td>Crear cualquier tipo de documento interactivamente. Sugiere el más adecuado al contexto.<td><code>.straymark/&lt;dir-tipo>/&lt;TIPO>-YYYY-MM-DD-NNN-*.md</code><tr><td><code>/straymark-ailog</code><td>Atajo de creación rápida de AILOG.<td><code>.straymark/07-ai-audit/agent-logs/AILOG-*.md</code><tr><td><code>/straymark-aidec</code><td>Atajo de creación rápida de AIDEC.<td><code>.straymark/07-ai-audit/decisions/AIDEC-*.md</code><tr><td><code>/straymark-adr</code><td>Atajo de creación rápida de ADR.<td><code>.straymark/02-design/decisions/ADR-*.md</code><tr><td><code>/straymark-mcard</code><td>Flujo interactivo de creación de Model Card.<td><code>.straymark/09-ai-models/MCARD-*.md</code><tr><td><code>/straymark-sec</code><td>Flujo interactivo SEC (security assessment).<td><code>.straymark/08-security/SEC-*.md</code><tr><td><code>/straymark-audit-prompt CHARTER-ID</code> <em>(fw-4.9.0+, refactorizada en fw-4.9.0)</em><td>Genera la plantilla unificada del audit prompt para un Charter en el path canónico. Envuelve <code>straymark charter audit --prepare</code>. El operador entonces abre N CLIs auditoras en el mismo repo e invoca <code>/straymark-audit-execute</code> en cada una — sin copy/paste.<td><code>.straymark/audits/&lt;CHARTER-ID>/audit-prompt.md</code><tr><td><code>/straymark-audit-execute [CHARTER-ID]</code> <em>(fw-4.9.0+)</em><td><strong>Corre dentro de una CLI auditora</strong> (gemini-cli, claude-cli, copilot-cli, codex-cli, ...). Lee el prompt preparado del disco, audita con tool use citando <code>path:línea</code>, escribe un report con el id del modelo en el nombre. El argumento CHARTER-ID es opcional — auto-descubre prompts que aún no tienen report de este modelo.<td><code>.straymark/audits/&lt;CHARTER-ID>/report-&lt;sluggified-model-id>.md</code><tr><td><code>/straymark-audit-review CHARTER-ID</code> <em>(fw-4.9.0+, expandida en fw-4.9.0)</em><td>Contraparte de <code>/straymark-audit-prompt</code>. Lee N reports en <code>.straymark/audits/&lt;CHARTER-ID>/</code>, verifica cada finding contra el código real (Explore agents en paralelo), produce un <code>review.md</code> consolidado de seis secciones (Resumen ejecutivo, Alcance, Evaluación por auditor, Plan de remediación P0-P4, Hallazgos descartados, Calificación de auditores), y corre <code>straymark charter audit --merge-reports --merge-into</code> para anexar <code>external_audit:</code> en la telemetría del Charter. Si la telemetría aún no existe (Charter no cerrado), escribe <code>external-audit-pending.yaml</code> para merge posterior al close.<td><code>.straymark/audits/&lt;CHARTER-ID>/review.md</code>, array <code>external_audit:</code> mergeado en telemetría (o pending YAML)</table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=skill-vs-cli>Skill vs CLI<a href=#skill-vs-cli class=hash-link aria-label="Enlace directo al Skill vs CLI" title="Enlace directo al Skill vs CLI" translate=no>​</a></h3>
+<p>Las tres skills de auditoría son <strong>wrappers</strong> sobre los comandos del CLI y la disciplina del flujo. Los paths canónicos bajo <code>.straymark/audits/</code>, la plantilla unificada del prompt, la validación de schema, y el shape de <code>external_audit</code> viven en el CLI + framework — las skills manejan la parte UX-inline: dispatchan al operador a través del audit cycle sin gestión manual de archivos. <strong>El operador nunca copia/pega prompts ni reports</strong> — las skills intercambian artefactos vía los paths canónicos del filesystem.</p>
+<p>Adoptantes que usen StrayMark sin asistente IA en el loop pueden manejar el mismo workflow directamente vía <code>straymark charter audit</code> (<code>--prepare</code> / <code>--merge-reports [--merge-into &lt;path>]</code>). El audit prompt en <code>.straymark/audits/&lt;id>/audit-prompt.md</code> funciona igualmente bien pegado en un LLM de chat si no hay CLI auditora disponible — la skill solo automatiza el intercambio de archivos.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=audit-checkpoint-fw-490>Audit checkpoint <em>(fw-4.9.0+)</em><a href=#audit-checkpoint-fw-490 class=hash-link aria-label="Enlace directo al audit-checkpoint-fw-490" title="Enlace directo al audit-checkpoint-fw-490" translate=no>​</a></h3>
+<p><code>.straymark/00-governance/AGENT-RULES.md</code> §12 codifica un checkpoint del workflow donde el agente proactivamente ofrece la auditoría en un momento específico — cuando la implementación del Charter está lista, drift está limpio, y <code>charter close</code> no se ha invocado aún. La recomendación es SÍ/NO basada en heurísticas (superficie de seguridad, componentes nuevos, riesgos AILOG, complejidad). La auditoría externa es <strong>completamente opcional</strong>; el checkpoint es <strong>soft</strong> — nunca bloquea <code>charter close</code>, nunca enforced (decisión de diseño v0+v1 permanente).</p>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=variables-de-entorno>Variables de Entorno<a href=#variables-de-entorno class=hash-link aria-label="Enlace directo al Variables de Entorno" title="Enlace directo al Variables de Entorno" translate=no>​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable<th>Descripción<tbody><tr><td><code>GITHUB_TOKEN</code><td>Token de acceso personal de GitHub para solicitudes autenticadas a la API. Útil para evitar límites de tasa al descargar releases.</table>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=códigos-de-salida>Códigos de Salida<a href=#códigos-de-salida class=hash-link aria-label="Enlace directo al Códigos de Salida" title="Enlace directo al Códigos de Salida" translate=no>​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Código<th>Significado<tbody><tr><td><code>0</code><td>Éxito<tr><td><code>1</code><td>Error (detalles impresos en stderr)</table>
+<hr/>
+<div align=center>
+<p><strong>StrayMark</strong> — Porque cada cambio cuenta una historia.</p>
+<p><a class="" href=/straymark/es/README.md>Volver a docs</a> • <a class="" href=/straymark/es/docs/README.md>README</a> • <a href=https://strangedays.tech target=_blank rel="noopener noreferrer" class="">Strange Days Tech</a></p>
+</div></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href=https://github.com/StrangeDaysTech/straymark/edit/main/docs/i18n/es/adopters/CLI-REFERENCE.md target=_blank rel="noopener noreferrer" class=theme-edit-this-page><svg fill=currentColor height=20 width=20 viewBox="0 0 40 40" class=iconEdit_Z9Sw aria-hidden=true><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"/></g></svg>Editar esta página</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Página del documento"><a class="pagination-nav__link pagination-nav__link--prev" href=/straymark/es/docs/adopters/ADOPTION-GUIDE><div class=pagination-nav__sublabel>Anterior</div><div class=pagination-nav__label>StrayMark - Guía de Adopción</div></a><a class="pagination-nav__link pagination-nav__link--next" href=/straymark/es/docs/adopters/WORKFLOWS><div class=pagination-nav__sublabel>Siguiente</div><div class=pagination-nav__label>StrayMark - Flujos de Trabajo Recomendados</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href=#tabla-de-contenidos class="table-of-contents__link toc-highlight">Tabla de Contenidos</a><li><a href=#instalación class="table-of-contents__link toc-highlight">Instalación</a><li><a href=#versionado class="table-of-contents__link toc-highlight">Versionado</a><li><a href=#comandos class="table-of-contents__link toc-highlight">Comandos</a><ul><li><a href=#straymark-init-path---hooks class="table-of-contents__link toc-highlight"><code>straymark init [path] [--hooks]</code></a><li><a href=#straymark-update class="table-of-contents__link toc-highlight"><code>straymark update</code></a><li><a href=#straymark-update-framework class="table-of-contents__link toc-highlight"><code>straymark update-framework</code></a><li><a href=#straymark-update-cli class="table-of-contents__link toc-highlight"><code>straymark update-cli</code></a><li><a href=#straymark-remove---full class="table-of-contents__link toc-highlight"><code>straymark remove [--full]</code></a><li><a href=#straymark-status-path class="table-of-contents__link toc-highlight"><code>straymark status [path]</code></a><li><a href=#straymark-repair-path class="table-of-contents__link toc-highlight"><code>straymark repair [path]</code></a><li><a href=#straymark-validate-path---fix---staged---include-charters---check-pending-reviews---max-pending-days-n class="table-of-contents__link toc-highlight"><code>straymark validate [path] [--fix] [--staged] [--include-charters] [--check-pending-reviews [--max-pending-days N]]</code></a><li><a href=#straymark-new-path--t-tipo---title-titulo class="table-of-contents__link toc-highlight"><code>straymark new [path] [-t &lt;tipo>] [--title &lt;titulo>]</code></a><li><a href=#straymark-approve-doc-id---outcome-outcome---reviewer-id---at-yyyy-mm-dd---notes----path-dir class="table-of-contents__link toc-highlight"><code>straymark approve &lt;doc-id> --outcome &lt;outcome> --reviewer &lt;id> [--at YYYY-MM-DD] [--notes "..."] [--path &lt;dir>]</code></a><li><a href=#straymark-charter-subcomando class="table-of-contents__link toc-highlight"><code>straymark charter &lt;subcomando></code></a><li><a href=#straymark-compliance-path---standard-nombre---region-nombre---all---output-formato class="table-of-contents__link toc-highlight"><code>straymark compliance [path] [--standard &lt;nombre>] [--region &lt;nombre>] [--all] [--output &lt;formato>]</code></a><li><a href=#straymark-metrics-path---period-periodo---output-formato class="table-of-contents__link toc-highlight"><code>straymark metrics [path] [--period &lt;periodo>] [--output &lt;formato>]</code></a><li><a href=#straymark-analyze-path---threshold-n---output-formato---top-n class="table-of-contents__link toc-highlight"><code>straymark analyze [path] [--threshold &lt;N>] [--output &lt;formato>] [--top &lt;N>]</code></a><li><a href=#straymark-audit-path---from-fecha---to-fecha---system-nombre---output-formato class="table-of-contents__link toc-highlight"><code>straymark audit [path] [--from &lt;fecha>] [--to &lt;fecha>] [--system &lt;nombre>] [--output &lt;formato>]</code></a><li><a href=#straymark-explore-path class="table-of-contents__link toc-highlight"><code>straymark explore [path]</code></a><li><a href=#straymark-about class="table-of-contents__link toc-highlight"><code>straymark about</code></a></ul><li><a href=#skills class="table-of-contents__link toc-highlight">Skills</a><ul><li><a href=#skill-vs-cli class="table-of-contents__link toc-highlight">Skill vs CLI</a><li><a href=#audit-checkpoint-fw-490 class="table-of-contents__link toc-highlight">Audit checkpoint <em>(fw-4.9.0+)</em></a></ul><li><a href=#variables-de-entorno class="table-of-contents__link toc-highlight">Variables de Entorno</a><li><a href=#códigos-de-salida class="table-of-contents__link toc-highlight">Códigos de Salida</a></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class=footer__title>Docs</div><ul class="footer__items clean-list"><li class=footer__item><a class=footer__link-item href=/straymark/es/docs/adopters/ADOPTION-GUIDE>Adoption Guide</a><li class=footer__item><a class=footer__link-item href=/straymark/es/docs/adopters/CLI-REFERENCE>CLI Reference</a><li class=footer__item><a class=footer__link-item href=/straymark/es/docs/adopters/WORKFLOWS>Workflows</a></ul></div><div class="theme-layout-footer-column col footer__col"><div class=footer__title>Project</div><ul class="footer__items clean-list"><li class=footer__item><a href=https://github.com/StrangeDaysTech/straymark target=_blank rel="noopener noreferrer" class=footer__link-item>GitHub<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a><li class=footer__item><a href=https://github.com/StrangeDaysTech/straymark/releases target=_blank rel="noopener noreferrer" class=footer__link-item>Releases<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a><li class=footer__item><a href=https://github.com/StrangeDaysTech/straymark/issues target=_blank rel="noopener noreferrer" class=footer__link-item>Issues<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a></ul></div><div class="theme-layout-footer-column col footer__col"><div class=footer__title>Strange Days Tech</div><ul class="footer__items clean-list"><li class=footer__item><a href=https://github.com/StrangeDaysTech target=_blank rel="noopener noreferrer" class=footer__link-item>Organization<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a></ul></div></div><div class="footer__bottom text--center"><div class=footer__copyright>Copyright © 2026 Strange Days Tech. Built with Docusaurus.</div></div></div></footer></div></body>
