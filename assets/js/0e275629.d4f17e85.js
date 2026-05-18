@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwebsite=self.webpackChunkwebsite||[]).push([["4638"],{2046(e){e.exports=JSON.parse('{"metadata":{"permalink":"/straymark/blog","page":1,"postsPerPage":10,"totalPages":2,"totalCount":14,"nextPage":"/straymark/blog/page/2","blogDescription":"The StrayMark chronicle \u2014 how the framework emerged, decision by decision.","blogTitle":"Blog"}}')}}]);
