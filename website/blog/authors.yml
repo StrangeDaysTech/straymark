@@ -1,0 +1,13 @@
+jose:
+  name: José Villaseñor Montfort
+  title: Strange Days Tech
+  url: https://github.com/montfort
+  page: true
+  socials:
+    github: montfort
+
+claude-opus-47:
+  name: Claude Opus 4.7 (1M context)
+  title: Anthropic
+  url: https://www.anthropic.com/claude
+  page: false
