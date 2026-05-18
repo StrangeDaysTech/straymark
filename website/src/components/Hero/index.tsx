@@ -2,17 +2,19 @@ import type {ReactNode} from 'react';
 import Link from '@docusaurus/Link';
 import Translate from '@docusaurus/Translate';
 import CodeBlock from '@theme/CodeBlock';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import styles from './styles.module.css';
 
 const INSTALL = 'curl -fsSL https://raw.githubusercontent.com/StrangeDaysTech/straymark/main/install.sh | sh';
 
 export default function Hero(): ReactNode {
-  const {siteConfig} = useDocusaurusContext();
   return (
     <header className={styles.hero}>
       <div className={styles.inner}>
-        <h1 className={styles.tagline}>{siteConfig.tagline}</h1>
+        <h1 className={styles.tagline}>
+          <Translate id="hero.tagline" description="Hero tagline (H1 on the landing)">
+            Cognitive discipline for AI-assisted engineering
+          </Translate>
+        </h1>
         <ul className={styles.pillars}>
           <li>
             <Translate id="hero.pillar1" description="First hero pillar">

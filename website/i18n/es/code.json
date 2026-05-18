@@ -1,4 +1,8 @@
 {
+  "hero.tagline": {
+    "message": "Disciplina cognitiva para la ingeniería asistida por IA",
+    "description": "Hero tagline (H1 on the landing)"
+  },
   "hero.pillar1": {
     "message": "Cada decisión queda en el repo",
     "description": "First hero pillar"
