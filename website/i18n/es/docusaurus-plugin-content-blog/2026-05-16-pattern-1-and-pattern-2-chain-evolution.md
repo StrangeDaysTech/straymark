@@ -12,6 +12,10 @@ tags:
 date: 2026-05-16T00:00:00.000Z
 description: Cuando la disciplina deja de ser hábito y se vuelve nombre
 ---
+*Veintisiete horas después, la disciplina manual obtuvo dos nombres: Patrón 1 — pre-declare SpecKit refresh, y Patrón 2 — post-close audit-driven Batch N.4. El documento canónico, el schema de telemetría, los helpers del CLI — y una hora después, un meta-patrón que reabsorbe ambos hacia arriba.*
+
+<!-- truncate -->
+
 ## 1. Veintisiete horas para nombrarlos
 
 El PR [#152](https://github.com/StrangeDaysTech/straymark/pull/152), que cerró el episodio del Post 9, se fusionó el 14 de mayo a las 21:39 UTC. Trajo `fw-4.14.3` y los tres gates canonizados del refresh manual.

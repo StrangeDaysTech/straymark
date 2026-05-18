@@ -12,6 +12,10 @@ tags:
 date: 2026-05-13T00:00:00.000Z
 description: The only file in the framework that lived in another language
 ---
+*One file among dozens lived backwards — Spanish-canonical in an EN-canonical framework, for six weeks, without anyone noticing. A maintenance fix that records something the blog keeps running into: outliers teach you the convention by contrast.*
+
+<!-- truncate -->
+
 ## 1. One line from the commit
 
 This is the post's operational opening. Commit `a8a1ac5` from 12 May 2026 carries a body that begins with this sentence:

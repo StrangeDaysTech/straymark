@@ -1,0 +1,73 @@
+{
+  "_comment": "Excerpts shown above the <!-- truncate --> marker on /blog and /es/blog listings. Keyed by canonical (EN) slug; both locales are required. Edit here, then re-run `npm run migrate:blog`.",
+
+  "emergent-observation-design": {
+    "en": "An agent flagged a stale spec before being asked to. The reconstruction of that morning, and the design property that surfaces it — codified after the fact as Principle #8 of StrayMark.",
+    "es": "Un agente señaló un spec desactualizado sin que nadie se lo pidiera. La reconstrucción de esa mañana y la propiedad de diseño que lo hace posible — codificada a posteriori como Principio #8 de StrayMark."
+  },
+
+  "four-names-in-four-months": {
+    "en": "Chronicle → Monimen → DevTrail → Strange Days Tech → StrayMark. The project's prehistoric arc of four renames in four months — three rushed ones in January and a disciplined one in May. The idea didn't move; the name did.",
+    "es": "Chronicle → Monimen → DevTrail → Strange Days Tech → StrayMark. El arco prehistórico de cuatro renames en cuatro meses — tres apresurados en enero y uno disciplinado en mayo. La idea no se movió; el nombre sí."
+  },
+
+  "six-plans-and-the-rename-to-charter": {
+    "en": "Six Plans on paper, five in practice — Sentinel's first systematic experiment between April 25 and 28. The cycle that turned an artisanal pattern into Charters, the framework's bounded unit of work.",
+    "es": "Seis Planes sobre el papel, cinco en la práctica — el primer experimento sistemático de Sentinel entre el 25 y el 28 de abril. El ciclo que convirtió un patrón artesanal en Charters, la unidad acotada de trabajo del framework."
+  },
+
+  "charters-and-the-external-audit-cycle": {
+    "en": "Forty minutes of copy-paste per Charter on top of two hours of work. Discipline was working; the ritual was becoming the problem. How the Charter became a first-class CLI entity, and the architectural decision that left audit orchestration to the framework and the prompt-eval to anyone else.",
+    "es": "Cuarenta minutos de copy-paste por Charter encima de dos horas de trabajo. La disciplina funcionaba; el ritual se estaba volviendo el problema. Cómo el Charter pasó a ser entidad de primera clase del CLI, y la decisión arquitectónica que dejó la orquestación de auditoría al framework y la evaluación del prompt a cualquier otro."
+  },
+
+  "charters-invisible-to-agents": {
+    "en": "Six hours of session work with a capable agent and the framework's full onboarding loaded — and not once did Charters get suggested. Five minutes to apply them when asked directly. The asymmetry isn't about capability; it's about visibility.",
+    "es": "Seis horas de sesión con un agente capaz y todo el onboarding del framework cargado — y ni una vez se sugirieron los Charters. Cinco minutos para aplicarlos al pedirlos directamente. La asimetría no es de capacidad; es de visibilidad."
+  },
+
+  "the-rebrand-to-straymark": {
+    "en": "The fourth rename, unlike the first three, wasn't searching for the concept — it came from a trademark conflict investigation. Eight days, an ADR, five PRs in forty-three minutes. The first disciplined rebrand of the project, and what \"in scope / out of scope\" meant when applied to its own past.",
+    "es": "El cuarto rename, a diferencia de los tres primeros, no buscaba el concepto — vino de una investigación de conflicto de marca. Ocho días, un ADR, cinco PRs en cuarenta y tres minutos. El primer rebrand disciplinado del proyecto, y lo que \"in scope / out of scope\" significó al aplicarlo sobre su propio pasado."
+  },
+
+  "tde-and-transversal-debt": {
+    "en": "Zero TDEs across thirteen closed Charters in Sentinel, despite at least seven recognizable pieces of transversal debt. The document type existed; the operational trigger didn't. How fw-4.13.0 closed the gap — and how its PR chain accidentally codified a lesson about stacked PRs.",
+    "es": "Cero TDEs en trece Charters cerrados de Sentinel, a pesar de al menos siete piezas reconocibles de deuda transversal. El tipo documental existía; el trigger operacional no. Cómo fw-4.13.0 cerró el hueco — y cómo su cadena de PRs codificó accidentalmente una lección sobre stacked PRs."
+  },
+
+  "the-audit-prompt-was-the-outlier": {
+    "en": "One file among dozens lived backwards — Spanish-canonical in an EN-canonical framework, for six weeks, without anyone noticing. A maintenance fix that records something the blog keeps running into: outliers teach you the convention by contrast.",
+    "es": "Un archivo entre decenas vivía al revés — canónico en español en un framework canónico en inglés, durante seis semanas, sin que nadie lo notara. Un fix de mantenimiento que registra algo con lo que el blog se encuentra una y otra vez: los outliers enseñan la convención por contraste."
+  },
+
+  "manual-discipline-before-the-pattern": {
+    "en": "Seven consecutive Charters on a one-month-old plan in Sentinel, executing CHARTER-18 by hand with the feeling that any false step would bury six Charters of work. Five hours to canonize the manual discipline as upstream governance — without naming the pattern yet.",
+    "es": "Siete Charters consecutivos sobre un plan de un mes en Sentinel, ejecutando CHARTER-18 a mano con la sensación de que cualquier paso en falso enterraría seis Charters de trabajo. Cinco horas para canonizar la disciplina manual como gobernanza upstream — sin nombrar todavía el patrón."
+  },
+
+  "pattern-1-and-pattern-2-chain-evolution": {
+    "en": "Twenty-seven hours later, the manual discipline got two names: Pattern 1 — pre-declare SpecKit refresh, and Pattern 2 — post-close audit-driven Batch N.4. The canonical document, the telemetry schema, the CLI helpers — and one hour after that, a meta-pattern that reabsorbs both upward.",
+    "es": "Veintisiete horas después, la disciplina manual obtuvo dos nombres: Patrón 1 — pre-declare SpecKit refresh, y Patrón 2 — post-close audit-driven Batch N.4. El documento canónico, el schema de telemetría, los helpers del CLI — y una hora después, un meta-patrón que reabsorbe ambos hacia arriba."
+  },
+
+  "exploring-the-framework": {
+    "en": "By April 2026 the framework had ~50 governed Markdown files and they had become opaque. `straymark explore` — a TUI that renders the whole repo as a navigable surface — was born three weeks before it accidentally revealed the outlier from Post 8. New tools produce visibility without meaning to.",
+    "es": "Para abril de 2026 el framework tenía ~50 archivos Markdown gobernados y se había vuelto opaco. `straymark explore` — un TUI que renderiza todo el repo como superficie navegable — nació tres semanas antes de revelar accidentalmente el outlier del Post 8. Las herramientas nuevas producen visibilidad sin proponérselo."
+  },
+
+  "validate-and-schemas-as-a-formal-layer": {
+    "en": "464 lines of bash got replaced with a flag. From \"I check this looks like a document\" to \"I check this satisfies the canonical schema, in the mode you ask for, with concrete operational consequences.\" Phase 2 of the CLI roadmap and the formalization of validate.",
+    "es": "464 líneas de bash reemplazadas por una flag. De \"verifico que esto parezca un documento\" a \"verifico que esto satisface el schema canónico, en el modo que pidas, con consecuencias operacionales concretas.\" Fase 2 del roadmap del CLI y la formalización de validate."
+  },
+
+  "agents-md-as-a-universal-standard": {
+    "en": "Four months between the project's first AIDEC — \"AI agents are a single technical audience\" — and the open standard that operationalized it. `AGENTS.md` at the repo root, read by fifteen vendor CLIs, replacing the proliferation of CLAUDE.md / GEMINI.md / .cursorrules and a dozen more.",
+    "es": "Cuatro meses entre el primer AIDEC del proyecto — \"los agentes de IA son una única audiencia técnica\" — y el estándar abierto que lo operacionalizó. `AGENTS.md` en la raíz del repo, leído por quince CLIs de distintos vendors, reemplazando la proliferación de CLAUDE.md / GEMINI.md / .cursorrules y una docena más."
+  },
+
+  "opening-the-framework": {
+    "en": "Two gestures in seventy-two hours: closing the last 5% of i18n parity (20/20/20 governance docs across EN + ES + zh-CN) and publishing the CLA badge in the README. Small separately; together, the moment the framework stops talking to itself and starts talking to whoever wants to read it.",
+    "es": "Dos gestos en setenta y dos horas: cerrar el último 5% de la paridad i18n (20/20/20 docs de gobernanza en EN + ES + zh-CN) y publicar el badge de CLA en el README. Pequeños por separado; juntos, el momento en que el framework deja de hablarse a sí mismo y empieza a hablarle a cualquiera que quiera leerlo."
+  }
+}

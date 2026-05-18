@@ -13,6 +13,10 @@ tags:
 date: 2026-04-30T00:00:00.000Z
 description: 'The first systematic experiment, and the day Plan became Charter'
 ---
+*Six Plans on paper, five in practice — Sentinel's first systematic experiment between April 25 and 28. The cycle that turned an artisanal pattern into Charters, the framework's bounded unit of work.*
+
+<!-- truncate -->
+
 ## 1. A footnote that says a lot
 
 In the `charter-telemetry.md` proposal, written on 30 April 2026, there's a terminological note at the top:

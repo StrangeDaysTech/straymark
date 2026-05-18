@@ -15,6 +15,10 @@ description: >-
   Twelve learnings in an Issue, three gates in a PR, and a Charter that closed
   cleanly before the name existed
 ---
+*Seven consecutive Charters on a one-month-old plan in Sentinel, executing CHARTER-18 by hand with the feeling that any false step would bury six Charters of work. Five hours to canonize the manual discipline as upstream governance — without naming the pattern yet.*
+
+<!-- truncate -->
+
 ## 1. The right question
 
 [Issue #150](https://github.com/StrangeDaysTech/straymark/issues/150), opened on 14 May at 16:59 UTC, wasn't looking for a *yes/no*. What the operator was asking was for the question to be reframed:

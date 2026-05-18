@@ -12,6 +12,10 @@ tags:
 date: 2026-05-09T00:00:00.000Z
 description: 'El cuarto rename, esta vez con ADR público y arco disciplinado'
 ---
+*El cuarto rename, a diferencia de los tres primeros, no buscaba el concepto — vino de una investigación de conflicto de marca. Ocho días, un ADR, cinco PRs en cuarenta y tres minutos. El primer rebrand disciplinado del proyecto, y lo que "in scope / out of scope" significó al aplicarlo sobre su propio pasado.*
+
+<!-- truncate -->
+
 ## 1. El rename que no buscaba el concepto
 
 El ADR `2026-05-08-001` se abre con una frase que, para cualquiera que haya leído el Post 2 de este blog, suena ajena:

@@ -13,6 +13,10 @@ tags:
 date: 2026-05-06T00:00:00.000Z
 description: From manual ritual in Sentinel to canonized CLI command
 ---
+*Forty minutes of copy-paste per Charter on top of two hours of work. Discipline was working; the ritual was becoming the problem. How the Charter became a first-class CLI entity, and the architectural decision that left audit orchestration to the framework and the prompt-eval to anyone else.*
+
+<!-- truncate -->
+
 ## 1. When discipline starts to feel like ceremony
 
 By late April, Sentinel closed its fourth Charter of the month with a feeling that, in writing, sounds slightly pathetic: external audit was working — Copilot 9.25, Gemini 9.5, the drift script with zero false positives — but every close had me opening three files by hand, copying three prompts into three different windows, waiting for replies, pasting three calibration YAMLs back into the telemetry file, and eyeballing the hashes to make sure they matched. Forty minutes of copy-paste per Charter on top of work that took two hours. Discipline was working; the ritual was becoming a problem.

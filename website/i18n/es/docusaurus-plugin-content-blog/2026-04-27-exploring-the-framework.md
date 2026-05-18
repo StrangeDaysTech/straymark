@@ -13,6 +13,10 @@ tags:
 date: 2026-04-27T00:00:00.000Z
 description: La TUI que produjo visibilidad sin proponérselo
 ---
+*Para abril de 2026 el framework tenía ~50 archivos Markdown gobernados y se había vuelto opaco. `straymark explore` — un TUI que renderiza todo el repo como superficie navegable — nació tres semanas antes de revelar accidentalmente el outlier del Post 8. Las herramientas nuevas producen visibilidad sin proponérselo.*
+
+<!-- truncate -->
+
 ## 1. La herramienta que dos semanas después reveló el outlier
 
 El Post 8 de este blog cubrió un episodio muy específico: el descubrimiento del único archivo del framework cuyo idioma canónico era el español. El operador no lo encontró por inspección sistemática; lo encontró ejecutando `straymark explore --lang es` durante una preparación de auditoría y notando, visualmente, que un template estaba escrito al revés respecto a los demás. La frase de aquel post fue:

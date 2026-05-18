@@ -13,6 +13,10 @@ tags:
 date: 2026-05-06T00:00:00.000Z
 description: De ritual manual en Sentinel a comando CLI canonizado
 ---
+*Cuarenta minutos de copy-paste por Charter encima de dos horas de trabajo. La disciplina funcionaba; el ritual se estaba volviendo el problema. Cómo el Charter pasó a ser entidad de primera clase del CLI, y la decisión arquitectónica que dejó la orquestación de auditoría al framework y la evaluación del prompt a cualquier otro.*
+
+<!-- truncate -->
+
 ## 1. Cuando la disciplina amenaza con volverse ceremonia
 
 A finales de abril, Sentinel cerró su cuarto Charter del mes con una sensación que, escrita, suena un poco patética: la auditoría externa funcionaba — Copilot 9.25, Gemini 9.5, el drift script con cero falsos positivos — pero cada cierre me hacía abrir tres archivos a mano, copiar tres prompts a tres ventanas distintas, esperar respuestas, copiar tres YAMLs de calibración de vuelta al archivo de telemetría, y verificar a ojo que los hashes coincidían. Cuarenta minutos de copy-paste por Charter, sobre un trabajo que tomaba dos horas. La disciplina estaba funcionando; el ritual estaba volviéndose un problema.

@@ -13,6 +13,10 @@ tags:
 date: 2026-05-09T00:00:00.000Z
 description: 'Issue #113 — la brecha entre tener un artefacto y que el agente lo vea'
 ---
+*Seis horas de sesión con un agente capaz y todo el onboarding del framework cargado — y ni una vez se sugirieron los Charters. Cinco minutos para aplicarlos al pedirlos directamente. La asimetría no es de capacidad; es de visibilidad.*
+
+<!-- truncate -->
+
 ## 1. Seis horas para no verlo, cinco minutos para verlo
 
 El Issue [#113](https://github.com/StrangeDaysTech/straymark/issues/113) abre con una de esas frases que, cuando uno la lee de regreso meses después, suena obvia y al mismo tiempo costó mucho llegar:

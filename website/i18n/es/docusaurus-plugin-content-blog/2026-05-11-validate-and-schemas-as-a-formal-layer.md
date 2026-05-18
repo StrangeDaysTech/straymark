@@ -13,6 +13,10 @@ tags:
 date: 2026-05-11T00:00:00.000Z
 description: 'Phase 2: cuando el framework empieza a verificar lo que prometía'
 ---
+*464 líneas de bash reemplazadas por una flag. De "verifico que esto parezca un documento" a "verifico que esto satisface el schema canónico, en el modo que pidas, con consecuencias operacionales concretas." Fase 2 del roadmap del CLI y la formalización de validate.*
+
+<!-- truncate -->
+
 ## 1. Tener schemas no es lo mismo que validar contra schemas
 
 `straymark validate` existía desde el 25 de marzo de 2026 — PR #27, parte del primer arco de Phase 1 del CLI. Lo que hacía entonces era pequeño: verificar que los documentos en `.straymark/` tuvieran sintaxis Markdown válida, frontmatter parseable, y los campos mínimos del tipo correcto. Era útil. No era *enforcement*.

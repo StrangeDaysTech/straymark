@@ -12,6 +12,10 @@ tags:
 date: 2026-04-05T00:00:00.000Z
 description: Looking for the concept by trying out names
 ---
+*Chronicle → Monimen → DevTrail → Strange Days Tech → StrayMark. The project's prehistoric arc of four renames in four months — three rushed ones in January and a disciplined one in May. The idea didn't move; the name did.*
+
+<!-- truncate -->
+
 > **Editorial note**: this is the first post published retroactively on the blog. The `date` in the frontmatter corresponds to a point inside the arc the post narrates, not the day it was written. The entire blog is being built this way, backwards, starting from the episode that triggered me to write it at all (`emergent-observation-design`, 2026-05-16). Pretending otherwise wouldn't help anyone.
 
 ---

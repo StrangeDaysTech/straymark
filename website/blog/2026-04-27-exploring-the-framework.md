@@ -13,6 +13,10 @@ tags:
 date: 2026-04-27T00:00:00.000Z
 description: The TUI that produced visibility without meaning to
 ---
+*By April 2026 the framework had ~50 governed Markdown files and they had become opaque. `straymark explore` — a TUI that renders the whole repo as a navigable surface — was born three weeks before it accidentally revealed the outlier from Post 8. New tools produce visibility without meaning to.*
+
+<!-- truncate -->
+
 ## 1. The tool that two weeks later revealed the outlier
 
 Post 8 of this blog covered a very specific episode: the discovery of the only framework file whose canonical language was Spanish. The operator didn't find it through systematic inspection; they found it by running `straymark explore --lang es` during an audit preparation and noticing, visually, that one template was written backwards relative to the rest. The line from that post:
