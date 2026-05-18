@@ -15,7 +15,9 @@
             <guid>https://strangedaystech.github.io/straymark/es/blog/emergent-observation-design</guid>
             <pubDate>Sat, 16 May 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[Cómo nombrar una propiedad de diseño que ya estaba haciendo su trabajo en silencio]]></description>
-            <content:encoded><![CDATA[<blockquote>
+            <content:encoded><![CDATA[<p><em>Un agente señaló un spec desactualizado sin que nadie se lo pidiera. La reconstrucción de esa mañana y la propiedad de diseño que lo hace posible — codificada a posteriori como Principio #8 de StrayMark.</em></p>
+<!-- -->
+<blockquote>
 <p><em>"Hola, ¿ya tratamos el Issue #153?"</em></p>
 </blockquote>
 <p>Así empezó la conversación, hoy 16 de mayo a la mañana. Una pregunta corta, casi de housekeeping, antes de meterme en otra cosa. La respuesta era no — el Issue #153 estaba abierto a propósito, esperando un segundo dominio que ejercitara la mecánica antes de cristalizarla (Principio #12 de StrayMark, validación contra un segundo dominio antes de canonizar). Pero la pregunta abrió otra puerta, y al final de esa conversación había codificado una propiedad de diseño del framework que llevaba meses funcionando sin nombre, señalada por un episodio de hace apenas dos días.</p>
@@ -103,7 +105,9 @@
             <guid>https://strangedaystech.github.io/straymark/es/blog/pattern-1-y-pattern-2-chain-evolution</guid>
             <pubDate>Sat, 16 May 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[Cuando la disciplina deja de ser hábito y se vuelve nombre]]></description>
-            <content:encoded><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-veintisiete-horas-para-nombrarlos">1. Veintisiete horas para nombrarlos<a href="https://strangedaystech.github.io/straymark/es/blog/pattern-1-y-pattern-2-chain-evolution#1-veintisiete-horas-para-nombrarlos" class="hash-link" aria-label="Enlace directo al 1. Veintisiete horas para nombrarlos" title="Enlace directo al 1. Veintisiete horas para nombrarlos" translate="no">​</a></h2>
+            <content:encoded><![CDATA[<p><em>Veintisiete horas después, la disciplina manual obtuvo dos nombres: Patrón 1 — pre-declare SpecKit refresh, y Patrón 2 — post-close audit-driven Batch N.4. El documento canónico, el schema de telemetría, los helpers del CLI — y una hora después, un meta-patrón que reabsorbe ambos hacia arriba.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-veintisiete-horas-para-nombrarlos">1. Veintisiete horas para nombrarlos<a href="https://strangedaystech.github.io/straymark/es/blog/pattern-1-y-pattern-2-chain-evolution#1-veintisiete-horas-para-nombrarlos" class="hash-link" aria-label="Enlace directo al 1. Veintisiete horas para nombrarlos" title="Enlace directo al 1. Veintisiete horas para nombrarlos" translate="no">​</a></h2>
 <p>El PR <a href="https://github.com/StrangeDaysTech/straymark/pull/152" target="_blank" rel="noopener noreferrer" class="">#152</a>, que cerró el episodio del Post 9, se fusionó el 14 de mayo a las 21:39 UTC. Trajo <code>fw-4.14.3</code> y los tres gates canonizados del refresh manual.</p>
 <p>El PR <a href="https://github.com/StrangeDaysTech/straymark/pull/157" target="_blank" rel="noopener noreferrer" class="">#157</a> — el que este post viene a contar — se fusionó el 16 de mayo a las 00:31 UTC. Veintisiete horas después. Trajo <code>fw-4.16.0 / cli-3.14.0</code> y, con eso, dos meta-patrones nombrados:</p>
 <ul>
@@ -240,7 +244,9 @@
             <guid>https://strangedaystech.github.io/straymark/es/blog/agents-md-como-estandar-universal</guid>
             <pubDate>Fri, 15 May 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[Cuatro meses entre la intuición y el estándar abierto]]></description>
-            <content:encoded><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-cuatro-meses-entre-la-intuición-y-el-estándar">1. Cuatro meses entre la intuición y el estándar<a href="https://strangedaystech.github.io/straymark/es/blog/agents-md-como-estandar-universal#1-cuatro-meses-entre-la-intuici%C3%B3n-y-el-est%C3%A1ndar" class="hash-link" aria-label="Enlace directo al 1. Cuatro meses entre la intuición y el estándar" title="Enlace directo al 1. Cuatro meses entre la intuición y el estándar" translate="no">​</a></h2>
+            <content:encoded><![CDATA[<p><em>Cuatro meses entre el primer AIDEC del proyecto — "los agentes de IA son una única audiencia técnica" — y el estándar abierto que lo operacionalizó. <code>AGENTS.md</code> en la raíz del repo, leído por quince CLIs de distintos vendors, reemplazando la proliferación de CLAUDE.md / GEMINI.md / .cursorrules y una docena más.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-cuatro-meses-entre-la-intuición-y-el-estándar">1. Cuatro meses entre la intuición y el estándar<a href="https://strangedaystech.github.io/straymark/es/blog/agents-md-como-estandar-universal#1-cuatro-meses-entre-la-intuici%C3%B3n-y-el-est%C3%A1ndar" class="hash-link" aria-label="Enlace directo al 1. Cuatro meses entre la intuición y el estándar" title="Enlace directo al 1. Cuatro meses entre la intuición y el estándar" translate="no">​</a></h2>
 <p>El 15 de mayo de 2026, a las 19:05 UTC, el PR <a href="https://github.com/StrangeDaysTech/straymark/pull/155" target="_blank" rel="noopener noreferrer" class="">#155</a> cerró el framework como <code>fw-4.15.0 / cli-3.13.2</code>. Lo que trajo es un solo archivo nuevo en la lista de directivas que el CLI inyecta: <code>AGENTS.md</code>, en la raíz del repo del adoptante, paralelo a los que ya estaban (<code>CLAUDE.md</code>, <code>GEMINI.md</code>, <code>.github/copilot-instructions.md</code>, <code>.cursorrules</code>, <code>.cursor/rules/straymark.md</code>).</p>
 <p>Esto sería trivial si no fuera porque hace exactamente cuatro meses, el 27 de enero de 2026, el primer AIDEC del proyecto — el que el Post 2 cubrió con la anécdota del año tipográfico — había declarado:</p>
 <blockquote>
@@ -336,7 +342,9 @@
             <guid>https://strangedaystech.github.io/straymark/es/blog/abrir-el-framework</guid>
             <pubDate>Fri, 15 May 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[Setenta y dos horas de gestos que sólo cobran sentido juntos]]></description>
-            <content:encoded><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-dos-gestos-en-setenta-y-dos-horas">1. Dos gestos en setenta y dos horas<a href="https://strangedaystech.github.io/straymark/es/blog/abrir-el-framework#1-dos-gestos-en-setenta-y-dos-horas" class="hash-link" aria-label="Enlace directo al 1. Dos gestos en setenta y dos horas" title="Enlace directo al 1. Dos gestos en setenta y dos horas" translate="no">​</a></h2>
+            <content:encoded><![CDATA[<p><em>Dos gestos en setenta y dos horas: cerrar el último 5% de la paridad i18n (20/20/20 docs de gobernanza en EN + ES + zh-CN) y publicar el badge de CLA en el README. Pequeños por separado; juntos, el momento en que el framework deja de hablarse a sí mismo y empieza a hablarle a cualquiera que quiera leerlo.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-dos-gestos-en-setenta-y-dos-horas">1. Dos gestos en setenta y dos horas<a href="https://strangedaystech.github.io/straymark/es/blog/abrir-el-framework#1-dos-gestos-en-setenta-y-dos-horas" class="hash-link" aria-label="Enlace directo al 1. Dos gestos en setenta y dos horas" title="Enlace directo al 1. Dos gestos en setenta y dos horas" translate="no">​</a></h2>
 <p>El 13 de mayo de 2026, a las 06:20 UTC, se fusionó <code>fw-4.13.4</code>. Cerró dos huecos pequeños de cobertura i18n — el documento de referencia ISO-25010 que solo estaba en inglés, y el template del Charter que faltaba en chino simplificado. Veintidós archivos canónicos del framework alcanzaron paridad estructural EN/ES/zh-CN.</p>
 <p>El 15 de mayo, a las 00:14 UTC, sesenta y cinco horas después, se fusionó el PR <a href="https://github.com/StrangeDaysTech/straymark/pull/154" target="_blank" rel="noopener noreferrer" class="">#154</a>. Agregó un badge al README — el de CLA Assistant, ese cuadrito visible que avisa al visitante que el repo acepta contribuciones bajo un Contributor License Agreement. La política del CLA ya existía desde meses antes en <code>CONTRIBUTING.md</code>; lo único que cambió fue que ahora aparece en el README al primer vistazo.</p>
 <p>Este post cubre los dos gestos. Vistos por separado, son pequeños — uno completa el último 5% de un trabajo técnico, el otro publica algo que ya estaba escrito. Vistos juntos, son el momento en que el framework decide presentarse al exterior. La pieza que un proyecto open-source hace cuando deja de hablar solo consigo mismo y empieza a hablar con quien quiera leerlo.</p>
@@ -428,7 +436,9 @@
             <guid>https://strangedaystech.github.io/straymark/es/blog/la-disciplina-manual-antes-del-patron</guid>
             <pubDate>Thu, 14 May 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[Doce aprendizajes en un Issue, tres gates en un PR, y un Charter que cerró limpio antes de que existiera el nombre]]></description>
-            <content:encoded><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-la-pregunta-correcta">1. La pregunta correcta<a href="https://strangedaystech.github.io/straymark/es/blog/la-disciplina-manual-antes-del-patron#1-la-pregunta-correcta" class="hash-link" aria-label="Enlace directo al 1. La pregunta correcta" title="Enlace directo al 1. La pregunta correcta" translate="no">​</a></h2>
+            <content:encoded><![CDATA[<p><em>Siete Charters consecutivos sobre un plan de un mes en Sentinel, ejecutando CHARTER-18 a mano con la sensación de que cualquier paso en falso enterraría seis Charters de trabajo. Cinco horas para canonizar la disciplina manual como gobernanza upstream — sin nombrar todavía el patrón.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-la-pregunta-correcta">1. La pregunta correcta<a href="https://strangedaystech.github.io/straymark/es/blog/la-disciplina-manual-antes-del-patron#1-la-pregunta-correcta" class="hash-link" aria-label="Enlace directo al 1. La pregunta correcta" title="Enlace directo al 1. La pregunta correcta" translate="no">​</a></h2>
 <p>El <a href="https://github.com/StrangeDaysTech/straymark/issues/150" target="_blank" rel="noopener noreferrer" class="">Issue #150</a>, abierto el 14 de mayo a las 16:59 UTC, no buscaba un <em>yes/no</em>. Lo que el operador estaba pidiendo era reformular la pregunta:</p>
 <blockquote>
 <p><em>"The real question the bridge doc should address is how, not whether: what discipline ensures spec stays in sync with code during multi-Charter execution without the regeneration step lying about the parts that already shipped."</em></p>
@@ -596,7 +606,9 @@
             <guid>https://strangedaystech.github.io/straymark/es/blog/el-audit-prompt-era-el-outlier</guid>
             <pubDate>Wed, 13 May 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[El único archivo del framework que vivía en otro idioma]]></description>
-            <content:encoded><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-una-sola-línea-del-commit">1. Una sola línea del commit<a href="https://strangedaystech.github.io/straymark/es/blog/el-audit-prompt-era-el-outlier#1-una-sola-l%C3%ADnea-del-commit" class="hash-link" aria-label="Enlace directo al 1. Una sola línea del commit" title="Enlace directo al 1. Una sola línea del commit" translate="no">​</a></h2>
+            <content:encoded><![CDATA[<p><em>Un archivo entre decenas vivía al revés — canónico en español en un framework canónico en inglés, durante seis semanas, sin que nadie lo notara. Un fix de mantenimiento que registra algo con lo que el blog se encuentra una y otra vez: los outliers enseñan la convención por contraste.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-una-sola-línea-del-commit">1. Una sola línea del commit<a href="https://strangedaystech.github.io/straymark/es/blog/el-audit-prompt-era-el-outlier#1-una-sola-l%C3%ADnea-del-commit" class="hash-link" aria-label="Enlace directo al 1. Una sola línea del commit" title="Enlace directo al 1. Una sola línea del commit" translate="no">​</a></h2>
 <p>Esta es la entrada operativa del post 8. El commit <code>a8a1ac5</code> del 12 de mayo de 2026 carga un cuerpo que se abre con esta frase:</p>
 <blockquote>
 <p><em>"The unified audit-prompt template at <code>dist/.straymark/audit-prompts/</code> was the only framework artifact whose canonical content lived in Spanish — every other template, skill, workflow, and governance doc follows the EN-canonical + <code>i18n/&lt;lang&gt;/</code> overlay pattern resolved by <code>cli/src/utils.rs:146</code>."</em></p>
@@ -659,7 +671,9 @@
             <guid>https://strangedaystech.github.io/straymark/es/blog/tde-y-la-deuda-transversal</guid>
             <pubDate>Tue, 12 May 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[El tipo existía. El trigger no. Y la lección stacked-PR que llegó de regalo.]]></description>
-            <content:encoded><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-cero-tdes-en-trece-charters">1. Cero TDEs en trece Charters<a href="https://strangedaystech.github.io/straymark/es/blog/tde-y-la-deuda-transversal#1-cero-tdes-en-trece-charters" class="hash-link" aria-label="Enlace directo al 1. Cero TDEs en trece Charters" title="Enlace directo al 1. Cero TDEs en trece Charters" translate="no">​</a></h2>
+            <content:encoded><![CDATA[<p><em>Cero TDEs en trece Charters cerrados de Sentinel, a pesar de al menos siete piezas reconocibles de deuda transversal. El tipo documental existía; el trigger operacional no. Cómo fw-4.13.0 cerró el hueco — y cómo su cadena de PRs codificó accidentalmente una lección sobre stacked PRs.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-cero-tdes-en-trece-charters">1. Cero TDEs en trece Charters<a href="https://strangedaystech.github.io/straymark/es/blog/tde-y-la-deuda-transversal#1-cero-tdes-en-trece-charters" class="hash-link" aria-label="Enlace directo al 1. Cero TDEs en trece Charters" title="Enlace directo al 1. Cero TDEs en trece Charters" translate="no">​</a></h2>
 <p>El Issue <a href="https://github.com/StrangeDaysTech/straymark/issues/128" target="_blank" rel="noopener noreferrer" class="">#128</a> abre con una asimetría inquietante:</p>
 <blockquote>
 <p><em>"Sentinel adopter (primary, fw-4.12.0) created zero TDEs across 13 closed Charters despite ≥7 instances of transversal debt routed through parallel mechanisms."</em></p>
@@ -794,7 +808,9 @@
             <guid>https://strangedaystech.github.io/straymark/es/blog/validate-y-los-schemas-como-capa-formal</guid>
             <pubDate>Mon, 11 May 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[Phase 2: cuando el framework empieza a verificar lo que prometía]]></description>
-            <content:encoded><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-tener-schemas-no-es-lo-mismo-que-validar-contra-schemas">1. Tener schemas no es lo mismo que validar contra schemas<a href="https://strangedaystech.github.io/straymark/es/blog/validate-y-los-schemas-como-capa-formal#1-tener-schemas-no-es-lo-mismo-que-validar-contra-schemas" class="hash-link" aria-label="Enlace directo al 1. Tener schemas no es lo mismo que validar contra schemas" title="Enlace directo al 1. Tener schemas no es lo mismo que validar contra schemas" translate="no">​</a></h2>
+            <content:encoded><![CDATA[<p><em>464 líneas de bash reemplazadas por una flag. De "verifico que esto parezca un documento" a "verifico que esto satisface el schema canónico, en el modo que pidas, con consecuencias operacionales concretas." Fase 2 del roadmap del CLI y la formalización de validate.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-tener-schemas-no-es-lo-mismo-que-validar-contra-schemas">1. Tener schemas no es lo mismo que validar contra schemas<a href="https://strangedaystech.github.io/straymark/es/blog/validate-y-los-schemas-como-capa-formal#1-tener-schemas-no-es-lo-mismo-que-validar-contra-schemas" class="hash-link" aria-label="Enlace directo al 1. Tener schemas no es lo mismo que validar contra schemas" title="Enlace directo al 1. Tener schemas no es lo mismo que validar contra schemas" translate="no">​</a></h2>
 <p><code>straymark validate</code> existía desde el 25 de marzo de 2026 — PR #27, parte del primer arco de Phase 1 del CLI. Lo que hacía entonces era pequeño: verificar que los documentos en <code>.straymark/</code> tuvieran sintaxis Markdown válida, frontmatter parseable, y los campos mínimos del tipo correcto. Era útil. No era <em>enforcement</em>.</p>
 <p>Lo que cambió el 11 de mayo de 2026, con el release <code>fw-4.6.0 / cli-3.7.0</code>, fue otra cosa: Phase 2 del roadmap del CLI cerró un arco completo de siete PRs (#73 a #79) y los consolidó en uno solo (#80). El CHANGELOG lo dice sin metáfora:</p>
 <blockquote>
@@ -920,7 +936,9 @@
             <guid>https://strangedaystech.github.io/straymark/es/blog/charters-invisibles-para-los-agentes</guid>
             <pubDate>Sat, 09 May 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[Issue #113 — la brecha entre tener un artefacto y que el agente lo vea]]></description>
-            <content:encoded><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-seis-horas-para-no-verlo-cinco-minutos-para-verlo">1. Seis horas para no verlo, cinco minutos para verlo<a href="https://strangedaystech.github.io/straymark/es/blog/charters-invisibles-para-los-agentes#1-seis-horas-para-no-verlo-cinco-minutos-para-verlo" class="hash-link" aria-label="Enlace directo al 1. Seis horas para no verlo, cinco minutos para verlo" title="Enlace directo al 1. Seis horas para no verlo, cinco minutos para verlo" translate="no">​</a></h2>
+            <content:encoded><![CDATA[<p><em>Seis horas de sesión con un agente capaz y todo el onboarding del framework cargado — y ni una vez se sugirieron los Charters. Cinco minutos para aplicarlos al pedirlos directamente. La asimetría no es de capacidad; es de visibilidad.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-seis-horas-para-no-verlo-cinco-minutos-para-verlo">1. Seis horas para no verlo, cinco minutos para verlo<a href="https://strangedaystech.github.io/straymark/es/blog/charters-invisibles-para-los-agentes#1-seis-horas-para-no-verlo-cinco-minutos-para-verlo" class="hash-link" aria-label="Enlace directo al 1. Seis horas para no verlo, cinco minutos para verlo" title="Enlace directo al 1. Seis horas para no verlo, cinco minutos para verlo" translate="no">​</a></h2>
 <p>El Issue <a href="https://github.com/StrangeDaysTech/straymark/issues/113" target="_blank" rel="noopener noreferrer" class="">#113</a> abre con una de esas frases que, cuando uno la lee de regreso meses después, suena obvia y al mismo tiempo costó mucho llegar:</p>
 <blockquote>
 <p><em>"Time to detect: ~6 hours of session work; never autonomously surfaced. Time to resolve once user prompted: ~5 minutes."</em></p>
@@ -1060,7 +1078,9 @@
             <guid>https://strangedaystech.github.io/straymark/es/blog/el-rebrand-a-straymark</guid>
             <pubDate>Sat, 09 May 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[El cuarto rename, esta vez con ADR público y arco disciplinado]]></description>
-            <content:encoded><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-el-rename-que-no-buscaba-el-concepto">1. El rename que no buscaba el concepto<a href="https://strangedaystech.github.io/straymark/es/blog/el-rebrand-a-straymark#1-el-rename-que-no-buscaba-el-concepto" class="hash-link" aria-label="Enlace directo al 1. El rename que no buscaba el concepto" title="Enlace directo al 1. El rename que no buscaba el concepto" translate="no">​</a></h2>
+            <content:encoded><![CDATA[<p><em>El cuarto rename, a diferencia de los tres primeros, no buscaba el concepto — vino de una investigación de conflicto de marca. Ocho días, un ADR, cinco PRs en cuarenta y tres minutos. El primer rebrand disciplinado del proyecto, y lo que "in scope / out of scope" significó al aplicarlo sobre su propio pasado.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-el-rename-que-no-buscaba-el-concepto">1. El rename que no buscaba el concepto<a href="https://strangedaystech.github.io/straymark/es/blog/el-rebrand-a-straymark#1-el-rename-que-no-buscaba-el-concepto" class="hash-link" aria-label="Enlace directo al 1. El rename que no buscaba el concepto" title="Enlace directo al 1. El rename que no buscaba el concepto" translate="no">​</a></h2>
 <p>El ADR <code>2026-05-08-001</code> se abre con una frase que, para cualquiera que haya leído el Post 2 de este blog, suena ajena:</p>
 <blockquote>
 <p><em>"The decision is motivated by legal certainty over the trademark rather than by product strategy or user feedback."</em></p>
@@ -1250,7 +1270,9 @@
             <guid>https://strangedaystech.github.io/straymark/es/blog/charters-y-el-audit-cycle-externo</guid>
             <pubDate>Wed, 06 May 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[De ritual manual en Sentinel a comando CLI canonizado]]></description>
-            <content:encoded><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-cuando-la-disciplina-amenaza-con-volverse-ceremonia">1. Cuando la disciplina amenaza con volverse ceremonia<a href="https://strangedaystech.github.io/straymark/es/blog/charters-y-el-audit-cycle-externo#1-cuando-la-disciplina-amenaza-con-volverse-ceremonia" class="hash-link" aria-label="Enlace directo al 1. Cuando la disciplina amenaza con volverse ceremonia" title="Enlace directo al 1. Cuando la disciplina amenaza con volverse ceremonia" translate="no">​</a></h2>
+            <content:encoded><![CDATA[<p><em>Cuarenta minutos de copy-paste por Charter encima de dos horas de trabajo. La disciplina funcionaba; el ritual se estaba volviendo el problema. Cómo el Charter pasó a ser entidad de primera clase del CLI, y la decisión arquitectónica que dejó la orquestación de auditoría al framework y la evaluación del prompt a cualquier otro.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-cuando-la-disciplina-amenaza-con-volverse-ceremonia">1. Cuando la disciplina amenaza con volverse ceremonia<a href="https://strangedaystech.github.io/straymark/es/blog/charters-y-el-audit-cycle-externo#1-cuando-la-disciplina-amenaza-con-volverse-ceremonia" class="hash-link" aria-label="Enlace directo al 1. Cuando la disciplina amenaza con volverse ceremonia" title="Enlace directo al 1. Cuando la disciplina amenaza con volverse ceremonia" translate="no">​</a></h2>
 <p>A finales de abril, Sentinel cerró su cuarto Charter del mes con una sensación que, escrita, suena un poco patética: la auditoría externa funcionaba — Copilot 9.25, Gemini 9.5, el drift script con cero falsos positivos — pero cada cierre me hacía abrir tres archivos a mano, copiar tres prompts a tres ventanas distintas, esperar respuestas, copiar tres YAMLs de calibración de vuelta al archivo de telemetría, y verificar a ojo que los hashes coincidían. Cuarenta minutos de copy-paste por Charter, sobre un trabajo que tomaba dos horas. La disciplina estaba funcionando; el ritual estaba volviéndose un problema.</p>
 <p>La propuesta <code>audit-skills-design.md</code>, escrita el 3 de mayo, lo nombró sin atenuar:</p>
 <blockquote>
@@ -1387,7 +1409,9 @@
             <guid>https://strangedaystech.github.io/straymark/es/blog/seis-planes-y-el-rename-a-charter</guid>
             <pubDate>Thu, 30 Apr 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[Primer experimento sistemático y el día que Plan se llamó Charter]]></description>
-            <content:encoded><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-una-nota-al-pie-que-dice-mucho">1. Una nota al pie que dice mucho<a href="https://strangedaystech.github.io/straymark/es/blog/seis-planes-y-el-rename-a-charter#1-una-nota-al-pie-que-dice-mucho" class="hash-link" aria-label="Enlace directo al 1. Una nota al pie que dice mucho" title="Enlace directo al 1. Una nota al pie que dice mucho" translate="no">​</a></h2>
+            <content:encoded><![CDATA[<p><em>Seis Planes sobre el papel, cinco en la práctica — el primer experimento sistemático de Sentinel entre el 25 y el 28 de abril. El ciclo que convirtió un patrón artesanal en Charters, la unidad acotada de trabajo del framework.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-una-nota-al-pie-que-dice-mucho">1. Una nota al pie que dice mucho<a href="https://strangedaystech.github.io/straymark/es/blog/seis-planes-y-el-rename-a-charter#1-una-nota-al-pie-que-dice-mucho" class="hash-link" aria-label="Enlace directo al 1. Una nota al pie que dice mucho" title="Enlace directo al 1. Una nota al pie que dice mucho" translate="no">​</a></h2>
 <p>En la propuesta <code>charter-telemetry.md</code>, escrita el 30 de abril de 2026, hay una nota terminológica al inicio:</p>
 <blockquote>
 <p><em>"Lo que este documento llama 'Charter' se llamó 'Plan' en el experimento Sentinel (PLAN-01..06). Los datos empíricos citados abajo se refieren a esos Plans históricos por su nombre original; el shape del schema y los ejemplos prospectivos usan el nombre going-forward 'Charter'."</em></p>
@@ -1605,7 +1629,9 @@
             <guid>https://strangedaystech.github.io/straymark/es/blog/explorando-el-framework</guid>
             <pubDate>Mon, 27 Apr 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[La TUI que produjo visibilidad sin proponérselo]]></description>
-            <content:encoded><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-la-herramienta-que-dos-semanas-después-reveló-el-outlier">1. La herramienta que dos semanas después reveló el outlier<a href="https://strangedaystech.github.io/straymark/es/blog/explorando-el-framework#1-la-herramienta-que-dos-semanas-despu%C3%A9s-revel%C3%B3-el-outlier" class="hash-link" aria-label="Enlace directo al 1. La herramienta que dos semanas después reveló el outlier" title="Enlace directo al 1. La herramienta que dos semanas después reveló el outlier" translate="no">​</a></h2>
+            <content:encoded><![CDATA[<p><em>Para abril de 2026 el framework tenía ~50 archivos Markdown gobernados y se había vuelto opaco. <code>straymark explore</code> — un TUI que renderiza todo el repo como superficie navegable — nació tres semanas antes de revelar accidentalmente el outlier del Post 8. Las herramientas nuevas producen visibilidad sin proponérselo.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-la-herramienta-que-dos-semanas-después-reveló-el-outlier">1. La herramienta que dos semanas después reveló el outlier<a href="https://strangedaystech.github.io/straymark/es/blog/explorando-el-framework#1-la-herramienta-que-dos-semanas-despu%C3%A9s-revel%C3%B3-el-outlier" class="hash-link" aria-label="Enlace directo al 1. La herramienta que dos semanas después reveló el outlier" title="Enlace directo al 1. La herramienta que dos semanas después reveló el outlier" translate="no">​</a></h2>
 <p>El Post 8 de este blog cubrió un episodio muy específico: el descubrimiento del único archivo del framework cuyo idioma canónico era el español. El operador no lo encontró por inspección sistemática; lo encontró ejecutando <code>straymark explore --lang es</code> durante una preparación de auditoría y notando, visualmente, que un template estaba escrito al revés respecto a los demás. La frase de aquel post fue:</p>
 <blockquote>
 <p><em>"Una nueva superficie del framework (la TUI) puso todos los archivos en visión simultánea, y la inconsistencia se hizo evidente como cuando uno ordena los libros del librero y nota que uno tiene el lomo al revés."</em></p>
@@ -1720,7 +1746,9 @@
             <guid>https://strangedaystech.github.io/straymark/es/blog/cuatro-nombres-en-cuatro-meses</guid>
             <pubDate>Sun, 05 Apr 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[Buscar el concepto buscando el nombre]]></description>
-            <content:encoded><![CDATA[<blockquote>
+            <content:encoded><![CDATA[<p><em>Chronicle → Monimen → DevTrail → Strange Days Tech → StrayMark. El arco prehistórico de cuatro renames en cuatro meses — tres apresurados en enero y uno disciplinado en mayo. La idea no se movió; el nombre sí.</em></p>
+<!-- -->
+<blockquote>
 <p><strong>Nota editorial</strong>: este es el primer post publicado de forma retroactiva en el blog. La <code>date</code> del frontmatter corresponde a un momento dentro del arco que el post narra, no al día en que se escribió. El blog completo se está construyendo así, hacia atrás, desde el episodio que motivó empezar a escribirlo (<code>emergent-observation-design</code>, 2026-05-16). No tiene sentido fingir lo contrario.</p>
 </blockquote>
 <hr>

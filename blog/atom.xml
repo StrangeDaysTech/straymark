@@ -14,7 +14,9 @@
         <link href="https://strangedaystech.github.io/straymark/blog/emergent-observation-design"/>
         <updated>2026-05-16T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[Naming a design property that was already silently doing its job]]></summary>
-        <content type="html"><![CDATA[<blockquote>
+        <content type="html"><![CDATA[<p><em>An agent flagged a stale spec before being asked to. The reconstruction of that morning, and the design property that surfaces it — codified after the fact as Principle #8 of StrayMark.</em></p>
+<!-- -->
+<blockquote>
 <p><em>"Hi, did we already deal with Issue #153?"</em></p>
 </blockquote>
 <p>That's how the conversation started, today, May 16th, in the morning. A short, almost-housekeeping question, before getting into something else. The answer was no — Issue #153 was open on purpose, waiting for a second domain to exercise the mechanic before crystallizing it (StrayMark's Principle #12: validation against a second domain before canonization). But the question opened another door, and by the end of that conversation I had codified a design property of the framework that had been doing its job in silence for months, surfaced by an episode from just two days ago.</p>
@@ -110,7 +112,9 @@
         <link href="https://strangedaystech.github.io/straymark/blog/pattern-1-and-pattern-2-chain-evolution"/>
         <updated>2026-05-16T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[When discipline stops being habit and becomes name]]></summary>
-        <content type="html"><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-twenty-seven-hours-to-name-them">1. Twenty-seven hours to name them<a href="https://strangedaystech.github.io/straymark/blog/pattern-1-and-pattern-2-chain-evolution#1-twenty-seven-hours-to-name-them" class="hash-link" aria-label="Direct link to 1. Twenty-seven hours to name them" title="Direct link to 1. Twenty-seven hours to name them" translate="no">​</a></h2>
+        <content type="html"><![CDATA[<p><em>Twenty-seven hours later, the manual discipline got two names: Pattern 1 — pre-declare SpecKit refresh, and Pattern 2 — post-close audit-driven Batch N.4. The canonical document, the telemetry schema, the CLI helpers — and one hour after that, a meta-pattern that reabsorbs both upward.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-twenty-seven-hours-to-name-them">1. Twenty-seven hours to name them<a href="https://strangedaystech.github.io/straymark/blog/pattern-1-and-pattern-2-chain-evolution#1-twenty-seven-hours-to-name-them" class="hash-link" aria-label="Direct link to 1. Twenty-seven hours to name them" title="Direct link to 1. Twenty-seven hours to name them" translate="no">​</a></h2>
 <p>PR <a href="https://github.com/StrangeDaysTech/straymark/pull/152" target="_blank" rel="noopener noreferrer" class="">#152</a>, which closed the Post 9 episode, merged on 14 May at 21:39 UTC. It brought <code>fw-4.14.3</code> and the three canonized gates of the manual refresh.</p>
 <p>PR <a href="https://github.com/StrangeDaysTech/straymark/pull/157" target="_blank" rel="noopener noreferrer" class="">#157</a> — the one this post comes to tell — merged on 16 May at 00:31 UTC. Twenty-seven hours later. It brought <code>fw-4.16.0 / cli-3.14.0</code> and, with that, two named meta-patterns:</p>
 <ul>
@@ -255,7 +259,9 @@
         <link href="https://strangedaystech.github.io/straymark/blog/agents-md-as-a-universal-standard"/>
         <updated>2026-05-15T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[Four months between the intuition and the open standard]]></summary>
-        <content type="html"><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-four-months-between-intuition-and-standard">1. Four months between intuition and standard<a href="https://strangedaystech.github.io/straymark/blog/agents-md-as-a-universal-standard#1-four-months-between-intuition-and-standard" class="hash-link" aria-label="Direct link to 1. Four months between intuition and standard" title="Direct link to 1. Four months between intuition and standard" translate="no">​</a></h2>
+        <content type="html"><![CDATA[<p><em>Four months between the project's first AIDEC — "AI agents are a single technical audience" — and the open standard that operationalized it. <code>AGENTS.md</code> at the repo root, read by fifteen vendor CLIs, replacing the proliferation of CLAUDE.md / GEMINI.md / .cursorrules and a dozen more.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-four-months-between-intuition-and-standard">1. Four months between intuition and standard<a href="https://strangedaystech.github.io/straymark/blog/agents-md-as-a-universal-standard#1-four-months-between-intuition-and-standard" class="hash-link" aria-label="Direct link to 1. Four months between intuition and standard" title="Direct link to 1. Four months between intuition and standard" translate="no">​</a></h2>
 <p>On 15 May 2026, at 19:05 UTC, PR <a href="https://github.com/StrangeDaysTech/straymark/pull/155" target="_blank" rel="noopener noreferrer" class="">#155</a> closed the framework as <code>fw-4.15.0 / cli-3.13.2</code>. What it brought is a single new file in the list of directives the CLI injects: <code>AGENTS.md</code>, at the adopter's repo root, parallel to the ones already there (<code>CLAUDE.md</code>, <code>GEMINI.md</code>, <code>.github/copilot-instructions.md</code>, <code>.cursorrules</code>, <code>.cursor/rules/straymark.md</code>).</p>
 <p>This would be trivial if it weren't for the fact that exactly four months earlier, on 27 January 2026, the project's first AIDEC — the one Post 2 covered with the typo'd-year anecdote — had declared:</p>
 <blockquote>
@@ -359,7 +365,9 @@
         <link href="https://strangedaystech.github.io/straymark/blog/opening-the-framework"/>
         <updated>2026-05-15T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[Seventy-two hours of gestures that only make sense together]]></summary>
-        <content type="html"><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-two-gestures-in-seventy-two-hours">1. Two gestures in seventy-two hours<a href="https://strangedaystech.github.io/straymark/blog/opening-the-framework#1-two-gestures-in-seventy-two-hours" class="hash-link" aria-label="Direct link to 1. Two gestures in seventy-two hours" title="Direct link to 1. Two gestures in seventy-two hours" translate="no">​</a></h2>
+        <content type="html"><![CDATA[<p><em>Two gestures in seventy-two hours: closing the last 5% of i18n parity (20/20/20 governance docs across EN + ES + zh-CN) and publishing the CLA badge in the README. Small separately; together, the moment the framework stops talking to itself and starts talking to whoever wants to read it.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-two-gestures-in-seventy-two-hours">1. Two gestures in seventy-two hours<a href="https://strangedaystech.github.io/straymark/blog/opening-the-framework#1-two-gestures-in-seventy-two-hours" class="hash-link" aria-label="Direct link to 1. Two gestures in seventy-two hours" title="Direct link to 1. Two gestures in seventy-two hours" translate="no">​</a></h2>
 <p>On 13 May 2026, at 06:20 UTC, <code>fw-4.13.4</code> merged. It closed two small i18n coverage gaps — the ISO-25010 reference document that was only in English, and the Charter template that was missing in Simplified Chinese. Twenty-two canonical framework files reached structural EN/ES/zh-CN parity.</p>
 <p>On 15 May, at 00:14 UTC, sixty-five hours later, PR <a href="https://github.com/StrangeDaysTech/straymark/pull/154" target="_blank" rel="noopener noreferrer" class="">#154</a> merged. It added a badge to the README — the CLA Assistant one, that small visible square that tells the visitor the repo accepts contributions under a Contributor License Agreement. The CLA policy had existed for months already in <code>CONTRIBUTING.md</code>; the only thing that changed was that it now appears in the README at first glance.</p>
 <p>This post covers the two gestures. Seen separately, they're small — one completes the last 5% of a technical job, the other publishes something that was already there. Seen together, they're the moment the framework decides to present itself to the outside. The piece an open-source project does when it stops talking to itself and starts talking to whoever wants to read it.</p>
@@ -459,7 +467,9 @@
         <link href="https://strangedaystech.github.io/straymark/blog/manual-discipline-before-the-pattern"/>
         <updated>2026-05-14T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[Twelve learnings in an Issue, three gates in a PR, and a Charter that closed cleanly before the name existed]]></summary>
-        <content type="html"><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-the-right-question">1. The right question<a href="https://strangedaystech.github.io/straymark/blog/manual-discipline-before-the-pattern#1-the-right-question" class="hash-link" aria-label="Direct link to 1. The right question" title="Direct link to 1. The right question" translate="no">​</a></h2>
+        <content type="html"><![CDATA[<p><em>Seven consecutive Charters on a one-month-old plan in Sentinel, executing CHARTER-18 by hand with the feeling that any false step would bury six Charters of work. Five hours to canonize the manual discipline as upstream governance — without naming the pattern yet.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-the-right-question">1. The right question<a href="https://strangedaystech.github.io/straymark/blog/manual-discipline-before-the-pattern#1-the-right-question" class="hash-link" aria-label="Direct link to 1. The right question" title="Direct link to 1. The right question" translate="no">​</a></h2>
 <p><a href="https://github.com/StrangeDaysTech/straymark/issues/150" target="_blank" rel="noopener noreferrer" class="">Issue #150</a>, opened on 14 May at 16:59 UTC, wasn't looking for a <em>yes/no</em>. What the operator was asking was for the question to be reframed:</p>
 <blockquote>
 <p><em>"The real question the bridge doc should address is how, not whether: what discipline ensures spec stays in sync with code during multi-Charter execution without the regeneration step lying about the parts that already shipped."</em></p>
@@ -635,7 +645,9 @@
         <link href="https://strangedaystech.github.io/straymark/blog/the-audit-prompt-was-the-outlier"/>
         <updated>2026-05-13T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[The only file in the framework that lived in another language]]></summary>
-        <content type="html"><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-one-line-from-the-commit">1. One line from the commit<a href="https://strangedaystech.github.io/straymark/blog/the-audit-prompt-was-the-outlier#1-one-line-from-the-commit" class="hash-link" aria-label="Direct link to 1. One line from the commit" title="Direct link to 1. One line from the commit" translate="no">​</a></h2>
+        <content type="html"><![CDATA[<p><em>One file among dozens lived backwards — Spanish-canonical in an EN-canonical framework, for six weeks, without anyone noticing. A maintenance fix that records something the blog keeps running into: outliers teach you the convention by contrast.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-one-line-from-the-commit">1. One line from the commit<a href="https://strangedaystech.github.io/straymark/blog/the-audit-prompt-was-the-outlier#1-one-line-from-the-commit" class="hash-link" aria-label="Direct link to 1. One line from the commit" title="Direct link to 1. One line from the commit" translate="no">​</a></h2>
 <p>This is the post's operational opening. Commit <code>a8a1ac5</code> from 12 May 2026 carries a body that begins with this sentence:</p>
 <blockquote>
 <p><em>"The unified audit-prompt template at <code>dist/.straymark/audit-prompts/</code> was the only framework artifact whose canonical content lived in Spanish — every other template, skill, workflow, and governance doc follows the EN-canonical + <code>i18n/&lt;lang&gt;/</code> overlay pattern resolved by <code>cli/src/utils.rs:146</code>."</em></p>
@@ -706,7 +718,9 @@
         <link href="https://strangedaystech.github.io/straymark/blog/tde-and-transversal-debt"/>
         <updated>2026-05-12T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[The type existed. The trigger didn't. And the stacked-PR lesson that came along for the ride.]]></summary>
-        <content type="html"><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-zero-tdes-across-thirteen-charters">1. Zero TDEs across thirteen Charters<a href="https://strangedaystech.github.io/straymark/blog/tde-and-transversal-debt#1-zero-tdes-across-thirteen-charters" class="hash-link" aria-label="Direct link to 1. Zero TDEs across thirteen Charters" title="Direct link to 1. Zero TDEs across thirteen Charters" translate="no">​</a></h2>
+        <content type="html"><![CDATA[<p><em>Zero TDEs across thirteen closed Charters in Sentinel, despite at least seven recognizable pieces of transversal debt. The document type existed; the operational trigger didn't. How fw-4.13.0 closed the gap — and how its PR chain accidentally codified a lesson about stacked PRs.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-zero-tdes-across-thirteen-charters">1. Zero TDEs across thirteen Charters<a href="https://strangedaystech.github.io/straymark/blog/tde-and-transversal-debt#1-zero-tdes-across-thirteen-charters" class="hash-link" aria-label="Direct link to 1. Zero TDEs across thirteen Charters" title="Direct link to 1. Zero TDEs across thirteen Charters" translate="no">​</a></h2>
 <p>Issue <a href="https://github.com/StrangeDaysTech/straymark/issues/128" target="_blank" rel="noopener noreferrer" class="">#128</a> opens with a disquieting asymmetry:</p>
 <blockquote>
 <p><em>"Sentinel adopter (primary, fw-4.12.0) created zero TDEs across 13 closed Charters despite ≥7 instances of transversal debt routed through parallel mechanisms."</em></p>
@@ -849,7 +863,9 @@
         <link href="https://strangedaystech.github.io/straymark/blog/validate-and-schemas-as-a-formal-layer"/>
         <updated>2026-05-11T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[Phase 2: when the framework starts to verify what it had been promising]]></summary>
-        <content type="html"><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-having-schemas-is-not-the-same-as-validating-against-schemas">1. Having schemas is not the same as validating against schemas<a href="https://strangedaystech.github.io/straymark/blog/validate-and-schemas-as-a-formal-layer#1-having-schemas-is-not-the-same-as-validating-against-schemas" class="hash-link" aria-label="Direct link to 1. Having schemas is not the same as validating against schemas" title="Direct link to 1. Having schemas is not the same as validating against schemas" translate="no">​</a></h2>
+        <content type="html"><![CDATA[<p><em>464 lines of bash got replaced with a flag. From "I check this looks like a document" to "I check this satisfies the canonical schema, in the mode you ask for, with concrete operational consequences." Phase 2 of the CLI roadmap and the formalization of validate.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-having-schemas-is-not-the-same-as-validating-against-schemas">1. Having schemas is not the same as validating against schemas<a href="https://strangedaystech.github.io/straymark/blog/validate-and-schemas-as-a-formal-layer#1-having-schemas-is-not-the-same-as-validating-against-schemas" class="hash-link" aria-label="Direct link to 1. Having schemas is not the same as validating against schemas" title="Direct link to 1. Having schemas is not the same as validating against schemas" translate="no">​</a></h2>
 <p><code>straymark validate</code> had existed since 25 March 2026 — PR #27, part of the first arc of CLI Phase 1. What it did back then was small: verify that documents in <code>.straymark/</code> had valid Markdown syntax, parseable frontmatter, and the minimum fields of the correct type. It was useful. It was not <em>enforcement</em>.</p>
 <p>What changed on 11 May 2026, with the <code>fw-4.6.0 / cli-3.7.0</code> release, was something else: Phase 2 of the CLI roadmap closed a full arc of seven PRs (#73 to #79) and consolidated them into one (#80). The CHANGELOG says it without metaphor:</p>
 <blockquote>
@@ -983,7 +999,9 @@
         <link href="https://strangedaystech.github.io/straymark/blog/charters-invisible-to-agents"/>
         <updated>2026-05-09T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[Issue #113 — the gap between having an artifact and the agent seeing it]]></summary>
-        <content type="html"><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-six-hours-not-to-see-it-five-minutes-to-see-it">1. Six hours not to see it, five minutes to see it<a href="https://strangedaystech.github.io/straymark/blog/charters-invisible-to-agents#1-six-hours-not-to-see-it-five-minutes-to-see-it" class="hash-link" aria-label="Direct link to 1. Six hours not to see it, five minutes to see it" title="Direct link to 1. Six hours not to see it, five minutes to see it" translate="no">​</a></h2>
+        <content type="html"><![CDATA[<p><em>Six hours of session work with a capable agent and the framework's full onboarding loaded — and not once did Charters get suggested. Five minutes to apply them when asked directly. The asymmetry isn't about capability; it's about visibility.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-six-hours-not-to-see-it-five-minutes-to-see-it">1. Six hours not to see it, five minutes to see it<a href="https://strangedaystech.github.io/straymark/blog/charters-invisible-to-agents#1-six-hours-not-to-see-it-five-minutes-to-see-it" class="hash-link" aria-label="Direct link to 1. Six hours not to see it, five minutes to see it" title="Direct link to 1. Six hours not to see it, five minutes to see it" translate="no">​</a></h2>
 <p>Issue <a href="https://github.com/StrangeDaysTech/straymark/issues/113" target="_blank" rel="noopener noreferrer" class="">#113</a> opens with one of those sentences that, read back months later, sounds obvious and at the same time cost a lot to reach:</p>
 <blockquote>
 <p><em>"Time to detect: ~6 hours of session work; never autonomously surfaced. Time to resolve once user prompted: ~5 minutes."</em></p>
@@ -1131,7 +1149,9 @@
         <link href="https://strangedaystech.github.io/straymark/blog/the-rebrand-to-straymark"/>
         <updated>2026-05-09T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[The fourth rename — this time with a public ADR and a disciplined arc]]></summary>
-        <content type="html"><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-the-rename-that-wasnt-looking-for-the-concept">1. The rename that wasn't looking for the concept<a href="https://strangedaystech.github.io/straymark/blog/the-rebrand-to-straymark#1-the-rename-that-wasnt-looking-for-the-concept" class="hash-link" aria-label="Direct link to 1. The rename that wasn't looking for the concept" title="Direct link to 1. The rename that wasn't looking for the concept" translate="no">​</a></h2>
+        <content type="html"><![CDATA[<p><em>The fourth rename, unlike the first three, wasn't searching for the concept — it came from a trademark conflict investigation. Eight days, an ADR, five PRs in forty-three minutes. The first disciplined rebrand of the project, and what "in scope / out of scope" meant when applied to its own past.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-the-rename-that-wasnt-looking-for-the-concept">1. The rename that wasn't looking for the concept<a href="https://strangedaystech.github.io/straymark/blog/the-rebrand-to-straymark#1-the-rename-that-wasnt-looking-for-the-concept" class="hash-link" aria-label="Direct link to 1. The rename that wasn't looking for the concept" title="Direct link to 1. The rename that wasn't looking for the concept" translate="no">​</a></h2>
 <p>ADR <code>2026-05-08-001</code> opens with a sentence that, for anyone who read Post 2 of this blog, sounds out of place:</p>
 <blockquote>
 <p><em>"The decision is motivated by legal certainty over the trademark rather than by product strategy or user feedback."</em></p>
@@ -1329,7 +1349,9 @@
         <link href="https://strangedaystech.github.io/straymark/blog/charters-and-the-external-audit-cycle"/>
         <updated>2026-05-06T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[From manual ritual in Sentinel to canonized CLI command]]></summary>
-        <content type="html"><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-when-discipline-starts-to-feel-like-ceremony">1. When discipline starts to feel like ceremony<a href="https://strangedaystech.github.io/straymark/blog/charters-and-the-external-audit-cycle#1-when-discipline-starts-to-feel-like-ceremony" class="hash-link" aria-label="Direct link to 1. When discipline starts to feel like ceremony" title="Direct link to 1. When discipline starts to feel like ceremony" translate="no">​</a></h2>
+        <content type="html"><![CDATA[<p><em>Forty minutes of copy-paste per Charter on top of two hours of work. Discipline was working; the ritual was becoming the problem. How the Charter became a first-class CLI entity, and the architectural decision that left audit orchestration to the framework and the prompt-eval to anyone else.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-when-discipline-starts-to-feel-like-ceremony">1. When discipline starts to feel like ceremony<a href="https://strangedaystech.github.io/straymark/blog/charters-and-the-external-audit-cycle#1-when-discipline-starts-to-feel-like-ceremony" class="hash-link" aria-label="Direct link to 1. When discipline starts to feel like ceremony" title="Direct link to 1. When discipline starts to feel like ceremony" translate="no">​</a></h2>
 <p>By late April, Sentinel closed its fourth Charter of the month with a feeling that, in writing, sounds slightly pathetic: external audit was working — Copilot 9.25, Gemini 9.5, the drift script with zero false positives — but every close had me opening three files by hand, copying three prompts into three different windows, waiting for replies, pasting three calibration YAMLs back into the telemetry file, and eyeballing the hashes to make sure they matched. Forty minutes of copy-paste per Charter on top of work that took two hours. Discipline was working; the ritual was becoming a problem.</p>
 <p>The <code>audit-skills-design.md</code> proposal, written on 3 May, named it without softening:</p>
 <blockquote>
@@ -1474,7 +1496,9 @@
         <link href="https://strangedaystech.github.io/straymark/blog/six-plans-and-the-rename-to-charter"/>
         <updated>2026-04-30T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[The first systematic experiment, and the day Plan became Charter]]></summary>
-        <content type="html"><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-a-footnote-that-says-a-lot">1. A footnote that says a lot<a href="https://strangedaystech.github.io/straymark/blog/six-plans-and-the-rename-to-charter#1-a-footnote-that-says-a-lot" class="hash-link" aria-label="Direct link to 1. A footnote that says a lot" title="Direct link to 1. A footnote that says a lot" translate="no">​</a></h2>
+        <content type="html"><![CDATA[<p><em>Six Plans on paper, five in practice — Sentinel's first systematic experiment between April 25 and 28. The cycle that turned an artisanal pattern into Charters, the framework's bounded unit of work.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-a-footnote-that-says-a-lot">1. A footnote that says a lot<a href="https://strangedaystech.github.io/straymark/blog/six-plans-and-the-rename-to-charter#1-a-footnote-that-says-a-lot" class="hash-link" aria-label="Direct link to 1. A footnote that says a lot" title="Direct link to 1. A footnote that says a lot" translate="no">​</a></h2>
 <p>In the <code>charter-telemetry.md</code> proposal, written on 30 April 2026, there's a terminological note at the top:</p>
 <blockquote>
 <p><em>"What this document calls 'Charter' was called 'Plan' in the Sentinel experiment (PLAN-01..06). The empirical data cited below refers to those historical Plans by their original name; the schema shape and prospective examples use the going-forward name 'Charter'."</em></p>
@@ -1700,7 +1724,9 @@
         <link href="https://strangedaystech.github.io/straymark/blog/exploring-the-framework"/>
         <updated>2026-04-27T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[The TUI that produced visibility without meaning to]]></summary>
-        <content type="html"><![CDATA[<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-the-tool-that-two-weeks-later-revealed-the-outlier">1. The tool that two weeks later revealed the outlier<a href="https://strangedaystech.github.io/straymark/blog/exploring-the-framework#1-the-tool-that-two-weeks-later-revealed-the-outlier" class="hash-link" aria-label="Direct link to 1. The tool that two weeks later revealed the outlier" title="Direct link to 1. The tool that two weeks later revealed the outlier" translate="no">​</a></h2>
+        <content type="html"><![CDATA[<p><em>By April 2026 the framework had ~50 governed Markdown files and they had become opaque. <code>straymark explore</code> — a TUI that renders the whole repo as a navigable surface — was born three weeks before it accidentally revealed the outlier from Post 8. New tools produce visibility without meaning to.</em></p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="1-the-tool-that-two-weeks-later-revealed-the-outlier">1. The tool that two weeks later revealed the outlier<a href="https://strangedaystech.github.io/straymark/blog/exploring-the-framework#1-the-tool-that-two-weeks-later-revealed-the-outlier" class="hash-link" aria-label="Direct link to 1. The tool that two weeks later revealed the outlier" title="Direct link to 1. The tool that two weeks later revealed the outlier" translate="no">​</a></h2>
 <p>Post 8 of this blog covered a very specific episode: the discovery of the only framework file whose canonical language was Spanish. The operator didn't find it through systematic inspection; they found it by running <code>straymark explore --lang es</code> during an audit preparation and noticing, visually, that one template was written backwards relative to the rest. The line from that post:</p>
 <blockquote>
 <p><em>"A new surface of the framework (the TUI) put all the files into simultaneous view, and the inconsistency became obvious — like tidying the bookshelf and noticing one book is shelved spine-backwards."</em></p>
@@ -1823,7 +1849,9 @@
         <link href="https://strangedaystech.github.io/straymark/blog/four-names-in-four-months"/>
         <updated>2026-04-05T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[Looking for the concept by trying out names]]></summary>
-        <content type="html"><![CDATA[<blockquote>
+        <content type="html"><![CDATA[<p><em>Chronicle → Monimen → DevTrail → Strange Days Tech → StrayMark. The project's prehistoric arc of four renames in four months — three rushed ones in January and a disciplined one in May. The idea didn't move; the name did.</em></p>
+<!-- -->
+<blockquote>
 <p><strong>Editorial note</strong>: this is the first post published retroactively on the blog. The <code>date</code> in the frontmatter corresponds to a point inside the arc the post narrates, not the day it was written. The entire blog is being built this way, backwards, starting from the episode that triggered me to write it at all (<code>emergent-observation-design</code>, 2026-05-16). Pretending otherwise wouldn't help anyone.</p>
 </blockquote>
 <hr>
