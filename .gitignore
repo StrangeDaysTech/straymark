@@ -71,6 +71,9 @@ yarn-error.log*
 package-lock.json
 yarn.lock
 
+# Website lockfile must be committed — CI uses `npm ci` for reproducible builds.
+!website/package-lock.json
+
 # =============================================================================
 # Temporary Files
 # =============================================================================
