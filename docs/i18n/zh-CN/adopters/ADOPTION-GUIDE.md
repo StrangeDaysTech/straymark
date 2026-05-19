@@ -512,7 +512,7 @@ Agent 会在工作流的特定时刻**主动提议**审计 — 当实现完成�
 
 **外部审计完全可选**且**永不强制**。Charter 的声明性范围 + drift check + AILOG 纪律已为关闭提供严格支撑。审计在 Charter 触及安全面、引入新组件或 diff 中存在高复杂度函数时增加跨模型信号。如果你的情况下成本（2-3 个 LLM 审计员）与价值不匹配，可以自由拒绝。
 
-底层 CLI 命令（PREPARE / CALIBRATE / FINALIZE / `--merge-into`）见 [`CLI-REFERENCE.md` § straymark charter audit](./CLI-REFERENCE.md#straymark-charter-audit-charter-id-range-revrev-calibrate--finalize-path-dir)。
+底层 CLI 命令（PREPARE / CALIBRATE / FINALIZE / `--merge-into`）见 [`CLI-REFERENCE.md` § straymark charter audit](./CLI-REFERENCE.md#straymark-charter-audit)。
 
 ---
 

@@ -601,7 +601,7 @@ OK `### Batch 5` written.
 
 **Workflow 集成。** 根据 Charter §Tasks 模板的指引，在批次的 commit 落地**之后**但推送**之前**运行 `batch-complete`。AILOG 的更新和它所记录的工作随后乘同一次 push。关闭时的 drift 门控（`straymark charter drift CHARTER-NN`）拒绝任何 pending 批次并打印列表 — 将"忘记更新 ledger"从审计轨迹的静默侵蚀变为硬失败。
 
-#### `straymark charter audit <CHARTER-ID> [--range <REV..REV>] [--prepare | --merge-reports] [--merge-into <PATH>] [--path <dir>]`
+#### `straymark charter audit <CHARTER-ID> [--range <REV..REV>] [--prepare | --merge-reports] [--merge-into <PATH>] [--path <dir>]` {#straymark-charter-audit}
 
 *自 **cli-3.8.0** + **fw-4.7.0** 起可用。v1 统一流程在 **cli-3.10.0** + **fw-4.9.0** 中发布 — 用两步（PREPARE/MERGE-REPORTS）替换 v0 的三步（PREPARE/CALIBRATE/FINALIZE），统一审计员模板，并将规范路径迁移到 `.straymark/audits/`。*
 

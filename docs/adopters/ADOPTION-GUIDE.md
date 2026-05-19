@@ -22,7 +22,7 @@
 
 ---
 
-## What is StrayMark?
+## What is StrayMark? {#what-is-straymark-framework}
 
 StrayMark is a **framework + CLI** that externalizes the cognitive discipline of senior software engineering work — explicit scope, declared decisions, named risks, recorded alternatives, audited trails — into versioned files that live alongside the code. The intent is to constrain the agent's decision space so AI-assisted work stays coherent across many turns instead of drifting into hidden technical debt.
 
@@ -511,7 +511,7 @@ The agent will **proactively offer** the audit at one specific moment in the wor
 
 **External audit is fully optional** and **never enforced**. The Charter's declarative scope + drift check + AILOG discipline already provides rigorous closure. Audit adds cross-model signal where the Charter touched security surface, introduced new components, or has high-complexity functions in the diff. Decline freely if the cost (2-3 LLM auditors) does not match the value for your case.
 
-For the underlying CLI commands (PREPARE / CALIBRATE / FINALIZE / `--merge-into`), see [`CLI-REFERENCE.md` § straymark charter audit](./CLI-REFERENCE.md#straymark-charter-audit-charter-id-range-revrev-calibrate--finalize-path-dir).
+For the underlying CLI commands (PREPARE / CALIBRATE / FINALIZE / `--merge-into`), see [`CLI-REFERENCE.md` § straymark charter audit](./CLI-REFERENCE.md#straymark-charter-audit).
 
 ---
 
