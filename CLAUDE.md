@@ -275,3 +275,107 @@ cargo test    # All 121 tests
 | `serde_yaml` | YAML parsing |
 | `chrono` | Date parsing (metrics, audit) |
 | `anyhow` | Error handling |
+
+## Website (straymark.dev)
+
+Public marketing + docs + blog site, served at https://straymark.dev. Source under `website/`. Stack: **Docusaurus 3.10**, TypeScript, React 19, Node ≥ 20. Engine of record: GitHub Pages **with the official Actions pipeline** (build_type=workflow), not the legacy `gh-pages` branch.
+
+### Layout
+
+```
+website/
+├── docusaurus.config.ts    # Site config: title, url, baseUrl, i18n, plugins, theme
+├── sidebars.ts             # Docs sidebar structure
+├── package.json            # npm scripts: start/build/sync:docs/migrate:blog
+├── blog/                   # Blog posts (canonical EN). 14 posts.
+├── src/                    # React components (custom landing, Hero, etc.)
+├── static/                 # Static assets served at /, incl. CNAME
+├── scripts/
+│   ├── sync-docs-i18n.ts   # Copies docs/i18n/{locale}/ → website/i18n/{locale}/...
+│   ├── migrate-blog.ts     # One-off migration helper (Aparador → blog/)
+│   └── blog-excerpts.json  # Hand-authored blog excerpts (overrides auto-truncation)
+├── i18n/                   # Per-locale overrides (UI strings + blog translations + docs mirror)
+└── (build/ + .docusaurus/  # Generated, gitignored)
+```
+
+Canonical docs live at the repo root in `docs/` (read by the `path: '../docs'` setting in the classic preset config). Translations of those docs live in `docs/i18n/{locale}/` and get mirrored into `website/i18n/{locale}/docusaurus-plugin-content-docs/current/` by the `sync:docs` script — Docusaurus reads them from the mirror at build time. Edit canonical content in `docs/`, edit translated content in `docs/i18n/{locale}/`, never edit `website/i18n/.../current/` directly (it's clobbered on every build).
+
+### npm scripts
+
+| Script | What it does |
+|---|---|
+| `npm run start` | Dev server with hot reload (`prestart` runs `sync:docs` first). |
+| `npm run build` | Production build into `build/`. `prebuild` runs `sync:docs`. |
+| `npm run serve` | Serve the production build locally for smoke-testing. |
+| `npm run sync:docs` | Mirror `docs/i18n/{locale}/` into `website/i18n/{locale}/.../current/`. Idempotent. |
+| `npm run migrate:blog` | One-off — only used during the initial Aparador → Docusaurus migration. |
+| `npm run clear` | Wipe `.docusaurus/` cache + `build/`. |
+| `npm run typecheck` | `tsc` over the website's TypeScript. |
+| `npm run write-translations` | Extract translatable strings from JSX/markdown into `i18n/{locale}/code.json` skeletons. Use when adding a new locale or new translatable UI strings. |
+
+### Locales
+
+Configured in `docusaurus.config.ts` under `i18n`:
+
+```ts
+i18n: {
+  defaultLocale: 'en',
+  locales: ['en', 'es'],
+  localeConfigs: {
+    en: {label: 'English'},
+    es: {label: 'Español'},
+  },
+}
+```
+
+For each non-default locale you need three things:
+
+1. The locale code in `locales` + a `localeConfigs[code]` entry (label shown in the dropdown).
+2. `website/i18n/{code}/code.json` — UI strings (hero, workflow, features section). Generate skeleton with `npm run write-translations -- --locale {code}` and translate the `message` fields. The `es` file is the reference shape.
+3. `website/i18n/{code}/docusaurus-plugin-content-blog/` — blog post translations + `authors.yml`. One file per canonical post (same filename).
+4. `docs/i18n/{code}/` — doc translations, copied automatically into `website/i18n/.../current/` by `sync:docs`. Also add the locale to `LOCALES` array in `website/scripts/sync-docs-i18n.ts`.
+5. Optionally `website/i18n/{code}/docusaurus-theme-classic/{navbar,footer}.json` for theme overrides.
+
+### Deploy pipeline
+
+Workflow: `.github/workflows/deploy-website.yml`. Triggers on push to `main` when files under `website/**`, `docs/**`, or the workflow itself change. Two jobs:
+
+1. **build** — checkout, `npm ci` (cache keyed on `website/package-lock.json`), `npm run build`, `actions/configure-pages` + `actions/upload-pages-artifact` upload the `website/build/` dir as a Pages artifact.
+2. **deploy** — `actions/deploy-pages` consumes the artifact, publishes to the `github-pages` environment, surfaces the URL on the PR/run.
+
+Permissions required (already set in the workflow): `contents: read`, `pages: write`, `id-token: write`.
+
+Repo-side Pages config (one-time setup, can be inspected with `gh api repos/StrangeDaysTech/straymark/pages`):
+
+| Field | Value | Why |
+|---|---|---|
+| `build_type` | `workflow` | Required by `actions/deploy-pages`. Was `legacy` until the migration to the official pipeline (PR #169) — see the "Pages source migration gotcha" note below. |
+| `cname` | `straymark.dev` | Custom domain. Must be set via `gh api -X PUT .../pages -f cname=straymark.dev` once. Auto-detection from `website/static/CNAME` only works in legacy `build_type`. |
+| `https_enforced` | `true` | Let's Encrypt cert auto-provisions after the cname is set. |
+
+### Custom domain
+
+`website/static/CNAME` carries `straymark.dev` into the published artifact (used by Pages for the legacy redirect from `strangedaystech.github.io/straymark/`). The authoritative source of the custom domain when running under `build_type: workflow` is the Pages API `cname` field — not the file.
+
+To change the domain: update `website/static/CNAME`, update `url:` in `docusaurus.config.ts`, and `gh api -X PUT .../pages -f cname=<new-domain>`. Then redeploy. DNS must already point at GitHub Pages or the cert provisioning will fail.
+
+### Build gotchas (lessons from PR #169–#171 cycle)
+
+1. **Docusaurus build has a slow tail.** After the production build is logically complete (artifacts written to `build/`), the Node process can take 5–20 extra seconds to exit cleanly (workers, fs watchers). The command is **not hung** — wait it out. Markers of real completion: `build/index.html` and `build/docs/intro/index.html` both exist.
+2. **Never run two builds in parallel.** Both write to the same `build/` dir and race. If `npm run build` seems stuck, kill it first (`pkill -f "docusaurus build"`); do not relaunch on top of it.
+3. **Avoid `npm run build | tail -N` for monitoring.** `tail -N` waits for EOF on its stdin, and Docusaurus's slow tail makes that close late — making the whole command appear hung when it isn't. Either run the build without a pipe, or redirect to a file (`npm run build > build.log 2>&1`) and `tail` the file separately.
+4. **`exclude` semantics.** Patterns in the docs plugin's `exclude` are matched relative to `path: '../docs'`. Use `'**/decisions/**'` (with leading `**`), not `'decisions/**'`, when you want to exclude a sub-tree across all i18n mirrors as well.
+5. **Pages source migration gotcha.** Switching the workflow from `peaceiris/actions-gh-pages` to the official `actions/deploy-pages` requires `build_type=workflow` at the repo level. If you migrate the workflow without flipping the repo setting, the `deploy` job fails with zero visible steps (the environment can't bind to a legacy source). Fix: `gh api -X PUT repos/<org>/<repo>/pages -f build_type=workflow`.
+
+### Verifying a deploy
+
+```bash
+# Pages config is sane
+gh api repos/StrangeDaysTech/straymark/pages --jq '{build_type, cname, html_url, https_enforced}'
+# Workflow run succeeded
+gh run list --workflow=deploy-website.yml --branch=main --limit 1 --json conclusion --jq '.[0].conclusion'
+# Live site responds
+curl -sI https://straymark.dev/ | head -1                     # HTTP/2 200
+curl -sL https://straymark.dev/ | grep -oE '<title>[^<]*</title>'   # site title present
+curl -sIL https://strangedaystech.github.io/straymark/ | head -2    # 301 → straymark.dev
+```
