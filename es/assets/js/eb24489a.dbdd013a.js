@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwebsite=self.webpackChunkwebsite||[]).push([["8171"],{8834(t){t.exports=JSON.parse('{"authors":[{"name":"Jos\xe9 Villase\xf1or Montfort","title":"Strange Days Tech","url":"https://github.com/montfort","page":{"permalink":"/straymark/es/blog/authors/jose"},"socials":{"github":"https://github.com/montfort"},"key":"jose","count":14}]}')}}]);

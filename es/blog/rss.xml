@@ -91,7 +91,7 @@
 <p>Si estás leyendo esto y trabajas con agentes para desarrollar software, te invito a mirar tu propio aparato documental con estas dos preguntas: <em>¿qué fuentes están conectadas formalmente, con enlaces explícitos que un agente pueda triangular sin trabajo creativo?</em> y <em>¿qué tan barato es para el agente señalar algo no pedido cuando detecta una divergencia?</em> Si la respuesta a la primera pregunta es "pocas" y a la segunda es "caro", probablemente estás dejando observaciones emergentes sobre la mesa. Lo cual no es el fin del mundo — pero es exactamente lo que separa un proceso de desarrollo asistido por IA <em>bajo control humano</em> de uno que se nos va de las manos.</p>
 <hr>
 <p><em>StrayMark fw-4.17.0 — Issue <a href="https://github.com/StrangeDaysTech/straymark/issues/150" target="_blank" rel="noopener noreferrer" class="">#150</a> · <a href="https://github.com/StrangeDaysTech/straymark/issues/156" target="_blank" rel="noopener noreferrer" class="">#156</a> · <a href="https://github.com/StrangeDaysTech/straymark/issues/161" target="_blank" rel="noopener noreferrer" class="">#161</a> · PR <a href="https://github.com/StrangeDaysTech/straymark/pull/160" target="_blank" rel="noopener noreferrer" class="">#160</a> · tag <a href="https://github.com/StrangeDaysTech/straymark/releases/tag/fw-4.17.0" target="_blank" rel="noopener noreferrer" class=""><code>fw-4.17.0</code></a></em></p>
-<p><em>Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).</em></p>]]></content:encoded>
+<p><em>Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.</em></p>]]></content:encoded>
             <category>straymark</category>
             <category>agentes-ia</category>
             <category>governance</category>
@@ -231,7 +231,7 @@
 <p>El blog termina de contar la historia. El framework sigue.</p>
 <hr>
 <p><em>Anclas: <a href="https://github.com/StrangeDaysTech/straymark/issues/156" target="_blank" rel="noopener noreferrer" class="">Issue #156</a>. PR <a href="https://github.com/StrangeDaysTech/straymark/pull/157" target="_blank" rel="noopener noreferrer" class="">#157</a> — <code>fw-4.16.0 / cli-3.14.0</code> (fusionado 2026-05-16 00:31 UTC). Documento canónico: <a href="https://github.com/StrangeDaysTech/straymark/blob/main/dist/.straymark/00-governance/CHARTER-CHAIN-EVOLUTION.md" target="_blank" rel="noopener noreferrer" class=""><code>CHARTER-CHAIN-EVOLUTION.md</code></a>. Schema: <code>dist/.straymark/schemas/charter-telemetry.schema.v0.json</code> v0.2. Meta-patrón sucesor: <a href="https://github.com/StrangeDaysTech/straymark/blob/main/dist/.straymark/00-governance/EMERGENT-OBSERVATION-DESIGN.md" target="_blank" rel="noopener noreferrer" class=""><code>EMERGENT-OBSERVATION-DESIGN.md</code></a>, <code>fw-4.17.0</code> (fusionado 2026-05-16 01:48 UTC, 77 minutos después).</em></p>
-<p><em>Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).</em></p>
+<p><em>Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.</em></p>
 <p><em>— Fin del arco H-01 → H-13 del blog StrayMark.</em></p>]]></content:encoded>
             <category>straymark</category>
             <category>charters</category>
@@ -329,7 +329,7 @@
 </ol>
 <hr>
 <p><em>Anclas: PR <a href="https://github.com/StrangeDaysTech/straymark/pull/155" target="_blank" rel="noopener noreferrer" class="">#155</a> — <code>fw-4.15.0 / cli-3.13.2</code> (fusionado 2026-05-15 19:05 UTC). AIDEC original (Post 2): <code>.chronicle/07-ai-audit/decisions/AIDEC-2025-01-27-001-i18n-strategy.md</code> (commit <code>7b7193e</code>, ID con año tipográfico). Template inyectado: <code>dist/dist-templates/directives/AGENTS.md</code>. Especificación del estándar: <a href="https://agents.md/" target="_blank" rel="noopener noreferrer" class="">agents.md</a> — donado a la Agentic AI Foundation (Linux Foundation), diciembre 2025.</em></p>
-<p><em>Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).</em></p>]]></content:encoded>
+<p><em>Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.</em></p>]]></content:encoded>
             <category>straymark</category>
             <category>agents-md</category>
             <category>governance</category>
@@ -422,7 +422,7 @@
 <p>Con esto el blog cierra la segunda tanda. El arco que arrancó retroactivamente con la prehistoria del proyecto (Post 2, enero) y se completó con los meta-patrones (Post 10, mayo) tiene ahora también su corolario: los hitos que volvieron al framework adoptable. Catorce posts, veintiocho archivos (catorce ES + catorce EN), entre veinticinco y veintiséis mil palabras por idioma. Como decía el cierre del Post 10: <em>el blog termina de contar la historia. El framework sigue</em>.</p>
 <hr>
 <p><em>Anclas: PR <a href="https://github.com/StrangeDaysTech/straymark/pull/144" target="_blank" rel="noopener noreferrer" class="">#144</a> — <code>fw-4.13.4</code> (fusionado 2026-05-13 06:20 UTC, cobertura i18n completa). PR <a href="https://github.com/StrangeDaysTech/straymark/pull/154" target="_blank" rel="noopener noreferrer" class="">#154</a> — badge CLA Assistant en READMEs (fusionado 2026-05-15 00:14 UTC). Política completa: <code>CONTRIBUTING.md</code> (raíz del repo + traducciones en <code>docs/i18n/{es,zh-CN}/CONTRIBUTING.md</code>).</em></p>
-<p><em>Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).</em></p>
+<p><em>Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.</em></p>
 <p><em>— Fin de la segunda tanda del blog StrayMark.</em></p>]]></content:encoded>
             <category>straymark</category>
             <category>i18n</category>
@@ -593,7 +593,7 @@
 <p>Sigue, en el siguiente post, el último episodio del arco que el blog vino a contar: <em>"Pattern 1 + Pattern 2 — chain evolution"</em> (<code>H-12</code>). Veintisiete horas después del PR #152, los tres gates de gobernanza se cristalizaron como dos meta-patrones nombrados — <em>pre-declare refresh</em> y <em>amend-on-emergence</em> — con telemetry schema y CLI helpers. Es el cierre del arco que el Post 1 abrió por delante.</p>
 <hr>
 <p><em>Anclas: <a href="https://github.com/StrangeDaysTech/straymark/issues/150" target="_blank" rel="noopener noreferrer" class="">Issue #150</a> (14 may 16:59 UTC). PR <a href="https://github.com/StrangeDaysTech/straymark/pull/152" target="_blank" rel="noopener noreferrer" class="">#152</a> — <code>fw-4.14.3</code> (14 may 21:39 UTC). Sección canonizada: <code>SPECKIT-CHARTER-BRIDGE.md §"Spec maintenance during multi-Charter execution"</code>. Métricas del CHARTER-18 reportadas en <code>CHARTER-CHAIN-EVOLUTION.md</code> (fw-4.16.0). Fuente privada parafraseada conforme <code>GUIA-EDITORIAL.md §7</code>: <code>AIDEC-2026-05-14-001-speckit-plan-scope-limited-us5-refresh.md</code> en el repo de Sentinel.</em></p>
-<p><em>Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).</em></p>]]></content:encoded>
+<p><em>Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.</em></p>]]></content:encoded>
             <category>straymark</category>
             <category>charters</category>
             <category>speckit</category>
@@ -659,7 +659,7 @@
 <p>Sigue, en el siguiente post, un episodio que ya rozó al Post 1 pero merece su propio tratamiento: <em>"La disciplina manual antes del patrón"</em> (<code>H-11</code>). Cómo Sentinel manejó <code>CHARTER-18</code> antes de que existiera el <code>Pattern 1</code> de chain evolution — el aprendizaje empírico que el <code>Post 1</code> después nombró como meta-patrón.</p>
 <hr>
 <p><em>Anclas: PR <a href="https://github.com/StrangeDaysTech/straymark/pull/142" target="_blank" rel="noopener noreferrer" class="">#142</a>. Releases: <code>fw-4.13.3</code> / <code>cli-3.12.3</code>. Commit clave: <code>a8a1ac5</code>. Archivos: <code>dist/.straymark/audit-prompts/audit-prompt.md</code> (EN canonical) + <code>dist/.straymark/audit-prompts/i18n/es/audit-prompt.md</code> (overlay). CLI: <code>cli/src/commands/charter/audit.rs</code> cableado al resolver i18n.</em></p>
-<p><em>Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).</em></p>]]></content:encoded>
+<p><em>Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.</em></p>]]></content:encoded>
             <category>straymark</category>
             <category>i18n</category>
             <category>audit</category>
@@ -795,7 +795,7 @@
 <p>Sigue, en el siguiente post, un episodio breve pero estructural: <em>"El audit-prompt en español era el outlier"</em> (<code>H-10</code>). Un detalle de convención i18n que reveló qué idioma estaba siendo el canónico — y por qué corregirlo cambió, sin proponérselo, cómo el framework piensa sobre traducción.</p>
 <hr>
 <p><em>Anclas: <a href="https://github.com/StrangeDaysTech/straymark/issues/128" target="_blank" rel="noopener noreferrer" class="">Issue #128</a>. PRs <a href="https://github.com/StrangeDaysTech/straymark/pull/129" target="_blank" rel="noopener noreferrer" class="">#129</a> · <a href="https://github.com/StrangeDaysTech/straymark/pull/131" target="_blank" rel="noopener noreferrer" class="">#131</a> · <a href="https://github.com/StrangeDaysTech/straymark/pull/134" target="_blank" rel="noopener noreferrer" class="">#134</a> · <a href="https://github.com/StrangeDaysTech/straymark/pull/136" target="_blank" rel="noopener noreferrer" class="">#136</a>. Releases: <code>fw-4.13.0</code> / <code>cli-3.12.1</code> / <code>fw-4.13.1</code>. Lección stacked-PR codificada en <a href="https://github.com/StrangeDaysTech/straymark/blob/main/CLAUDE.md" target="_blank" rel="noopener noreferrer" class=""><code>CLAUDE.md</code> líneas 181-220</a> del repo.</em></p>
-<p><em>Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).</em></p>]]></content:encoded>
+<p><em>Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.</em></p>]]></content:encoded>
             <category>straymark</category>
             <category>tde</category>
             <category>deuda-técnica</category>
@@ -923,7 +923,7 @@
 </ol>
 <hr>
 <p><em>Anclas: PR <a href="https://github.com/StrangeDaysTech/straymark/pull/27" target="_blank" rel="noopener noreferrer" class="">#27</a> — versión original de <code>validate</code> (marzo 2026). Phase 2: PRs #73 a #79 + PR <a href="https://github.com/StrangeDaysTech/straymark/pull/80" target="_blank" rel="noopener noreferrer" class="">#80</a> — <code>fw-4.6.0 / cli-3.7.0</code> (fusionado 2026-05-11). Schemas: <code>dist/.straymark/schemas/{charter,charter-telemetry,audit-output}.schema.v0.json</code>. <a href="https://github.com/StrangeDaysTech/straymark/issues/67" target="_blank" rel="noopener noreferrer" class="">Issue #67</a> — origen del <code>--check-pending-reviews</code>.</em></p>
-<p><em>Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).</em></p>]]></content:encoded>
+<p><em>Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.</em></p>]]></content:encoded>
             <category>straymark</category>
             <category>validate</category>
             <category>schemas</category>
@@ -1065,7 +1065,7 @@
 <p>Sigue, en el siguiente post, un episodio adyacente al de este: <em>el rebranding a StrayMark</em> (<code>H-08</code>). El Issue #113 se resolvió en el mismo arco temporal que el rename de DevTrail a StrayMark, y los dos comparten algo que vale la pena nombrar — la responsabilidad de que un framework declare con claridad su identidad, hacia sus agentes y hacia sus adopters.</p>
 <hr>
 <p><em>Anclas: <a href="https://github.com/StrangeDaysTech/straymark/issues/113" target="_blank" rel="noopener noreferrer" class="">Issue #113</a> (abierto 2026-05-07). <a href="https://github.com/StrangeDaysTech/straymark/pull/122" target="_blank" rel="noopener noreferrer" class="">PR #122</a> — <code>fw-4.12.0</code> (fusionado 2026-05-09). Documento generado por el PR: <a href="https://github.com/StrangeDaysTech/straymark/blob/main/dist/.straymark/00-governance/SPECKIT-CHARTER-BRIDGE.md" target="_blank" rel="noopener noreferrer" class=""><code>SPECKIT-CHARTER-BRIDGE.md</code></a>.</em></p>
-<p><em>Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).</em></p>]]></content:encoded>
+<p><em>Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.</em></p>]]></content:encoded>
             <category>straymark</category>
             <category>charters</category>
             <category>agentes</category>
@@ -1258,7 +1258,7 @@
 <p>Sigue, en el siguiente post, un episodio que conecta directamente con el último punto: <em>TDE como mecanismo para nombrar deuda transversal</em> (<code>H-09</code>). El primer caso real que el framework usó para articular cómo evidenciar la deuda — y que dejó una lección dura sobre stacked-PRs que merece su propio párrafo cuando llegue ahí.</p>
 <hr>
 <p><em>Anclas: ADR <a href="https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/ADR-2026-05-08-rebranding-straymark.md" target="_blank" rel="noopener noreferrer" class=""><code>2026-05-08-001</code></a>. Arco nuclear: PRs <a href="https://github.com/StrangeDaysTech/straymark/pull/114" target="_blank" rel="noopener noreferrer" class="">#114</a> · <a href="https://github.com/StrangeDaysTech/straymark/pull/115" target="_blank" rel="noopener noreferrer" class="">#115</a> · <a href="https://github.com/StrangeDaysTech/straymark/pull/116" target="_blank" rel="noopener noreferrer" class="">#116</a> · <a href="https://github.com/StrangeDaysTech/straymark/pull/117" target="_blank" rel="noopener noreferrer" class="">#117</a> · <a href="https://github.com/StrangeDaysTech/straymark/pull/118" target="_blank" rel="noopener noreferrer" class="">#118</a>. Manifesto: PR <a href="https://github.com/StrangeDaysTech/straymark/pull/120" target="_blank" rel="noopener noreferrer" class="">#120</a>. Residuos: PRs <a href="https://github.com/StrangeDaysTech/straymark/pull/137" target="_blank" rel="noopener noreferrer" class="">#137</a> · <a href="https://github.com/StrangeDaysTech/straymark/pull/138" target="_blank" rel="noopener noreferrer" class="">#138</a> · <a href="https://github.com/StrangeDaysTech/straymark/pull/139" target="_blank" rel="noopener noreferrer" class="">#139</a> · <a href="https://github.com/StrangeDaysTech/straymark/pull/140" target="_blank" rel="noopener noreferrer" class="">#140</a>. Release: <code>fw-4.11.0</code> / <code>cli-3.11.0</code>.</em></p>
-<p><em>Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).</em></p>]]></content:encoded>
+<p><em>Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.</em></p>]]></content:encoded>
             <category>straymark</category>
             <category>rebranding</category>
             <category>governance</category>
@@ -1396,7 +1396,7 @@
 <p>Sigue, en el siguiente post, el episodio metodológico que conecta con el inicio mismo del blog — <em>Issue #113: Charters invisibles para los agentes</em> — donde el framework descubre que crear comandos y schemas no basta si la <em>superficie</em> del repo no le habla al agente. Es el contrapeso natural a este post: aquí hablamos de lo que se canonizó; allá hablamos de lo que no se vio.</p>
 <hr>
 <p><em>Anclas: PRs <a href="https://github.com/StrangeDaysTech/straymark/pull/65" target="_blank" rel="noopener noreferrer" class="">#65</a> · <a href="https://github.com/StrangeDaysTech/straymark/pull/68" target="_blank" rel="noopener noreferrer" class="">#68</a> · <a href="https://github.com/StrangeDaysTech/straymark/pull/69" target="_blank" rel="noopener noreferrer" class="">#69</a> (Charters first-class). Propuestas <a href="https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/proposals/2026-05-03-audit-skills-design.md" target="_blank" rel="noopener noreferrer" class=""><code>audit-skills-design.md</code></a> · <a href="https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/proposals/2026-05-03-audit-skills-rollout.md" target="_blank" rel="noopener noreferrer" class=""><code>audit-skills-rollout.md</code></a> · <a href="https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/proposals/2026-05-04-audit-cli-flow.md" target="_blank" rel="noopener noreferrer" class=""><code>audit-cli-flow.md</code></a> · <a href="https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/proposals/2026-05-03-cli-roadmap.md" target="_blank" rel="noopener noreferrer" class=""><code>cli-roadmap.md</code></a> (decisión A1 §0). Releases fw-4.4.0 → fw-4.9.0.</em></p>
-<p><em>Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).</em></p>]]></content:encoded>
+<p><em>Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.</em></p>]]></content:encoded>
             <category>straymark</category>
             <category>charters</category>
             <category>audit</category>
@@ -1616,7 +1616,7 @@
 <p>Sigue, en el siguiente post, dos hitos cercanos que codifican capacidades cualitativamente nuevas: <em>Charters como entidad de primera clase</em> (PR #65, fw-4.4.0) y <em>el audit cycle externo multi-modelo</em> (<code>audit-skills-design</code>, <code>audit-cli-flow</code>, releases fw-4.7 → fw-4.9). Es donde el experimento de Sentinel se convirtió en funcionalidad de CLI.</p>
 <hr>
 <p><em>Anclas: propuestas <a href="https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/proposals/2026-04-30-thesis-validation.md" target="_blank" rel="noopener noreferrer" class=""><code>thesis-validation.md</code></a> y <a href="https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/proposals/2026-04-30-charter-telemetry.md" target="_blank" rel="noopener noreferrer" class=""><code>charter-telemetry.md</code></a> (ambas 2026-04-30). Definición canónica del Charter: <a href="https://github.com/StrangeDaysTech/straymark/blob/main/docs/contributors/WHAT-IS-A-CHARTER.md" target="_blank" rel="noopener noreferrer" class=""><code>WHAT-IS-A-CHARTER.md</code></a>. Schema operacional: <code>dist/.straymark/schemas/charter-telemetry.schema.v0.json</code>.</em></p>
-<p><em>Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).</em></p>]]></content:encoded>
+<p><em>Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.</em></p>]]></content:encoded>
             <category>straymark</category>
             <category>sentinel</category>
             <category>charters</category>
@@ -1733,7 +1733,7 @@
 <p>Con este post el blog cubre el hito <code>H-14</code> que la primera tanda dejó como deuda explícita. Los hitos candidatos restantes que <code>PLAN-INVESTIGACION.md §1.43-55</code> registró — <code>AGENTS.md</code> universal inject, cobertura i18n completa, <code>straymark validate</code> como capa formal, CLA assistant — siguen disponibles para futuras tandas. Sin promesa de cadencia, pero registrados.</p>
 <hr>
 <p><em>Anclas: PR <a href="https://github.com/StrangeDaysTech/straymark/pull/57" target="_blank" rel="noopener noreferrer" class="">#57</a> — <code>cli-3.4.0</code> (language-aware explore, 25 abr 2026). PRs <a href="https://github.com/StrangeDaysTech/straymark/pull/60" target="_blank" rel="noopener noreferrer" class="">#60</a> · <a href="https://github.com/StrangeDaysTech/straymark/pull/61" target="_blank" rel="noopener noreferrer" class="">#61</a> · <a href="https://github.com/StrangeDaysTech/straymark/pull/62" target="_blank" rel="noopener noreferrer" class="">#62</a> · <a href="https://github.com/StrangeDaysTech/straymark/pull/63" target="_blank" rel="noopener noreferrer" class="">#63</a> — refinamientos <code>cli-3.5.0</code> a <code>cli-3.5.2</code> (25-26 abr 2026). Código: <code>cli/src/tui/</code> (15 archivos). Doc adopter: <code>docs/adopters/CLI-REFERENCE.md</code> §<code>straymark explore</code>.</em></p>
-<p><em>Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).</em></p>]]></content:encoded>
+<p><em>Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.</em></p>]]></content:encoded>
             <category>straymark</category>
             <category>tui</category>
             <category>cli</category>
@@ -1895,7 +1895,7 @@
 <p>Sigue, en el siguiente post, el primer experimento metodológico real del framework: los seis Planes de Sentinel y el día que <em>Plan</em> se renombró a <em>Charter</em>. Ahí empieza la historia que el blog vino a contar.</p>
 <hr>
 <p><em>Anclas: commits <a href="https://github.com/StrangeDaysTech/straymark/commit/7c58b6d" target="_blank" rel="noopener noreferrer" class=""><code>7c58b6d</code></a> · <a href="https://github.com/StrangeDaysTech/straymark/commit/0b772bc" target="_blank" rel="noopener noreferrer" class=""><code>0b772bc</code></a> · <a href="https://github.com/StrangeDaysTech/straymark/commit/25ab7a4" target="_blank" rel="noopener noreferrer" class=""><code>25ab7a4</code></a> · <a href="https://github.com/StrangeDaysTech/straymark/commit/7b7193e" target="_blank" rel="noopener noreferrer" class=""><code>7b7193e</code></a> · <a href="https://github.com/StrangeDaysTech/straymark/commit/c7e9026" target="_blank" rel="noopener noreferrer" class=""><code>c7e9026</code></a> · <a href="https://github.com/StrangeDaysTech/straymark/commit/21e03b2" target="_blank" rel="noopener noreferrer" class=""><code>21e03b2</code></a>. README original: <code>git show v1.0.0:README.md</code>.</em></p>
-<p><em>Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).</em></p>]]></content:encoded>
+<p><em>Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.</em></p>]]></content:encoded>
             <category>straymark</category>
             <category>prehistoria</category>
             <category>identidad</category>
