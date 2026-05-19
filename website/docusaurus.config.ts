@@ -14,8 +14,8 @@ const config: Config = {
     v4: true,
   },
 
-  url: 'https://strangedaystech.github.io',
-  baseUrl: '/straymark/',
+  url: 'https://straymark.dev',
+  baseUrl: '/',
 
   organizationName: 'StrangeDaysTech',
   projectName: 'straymark',
