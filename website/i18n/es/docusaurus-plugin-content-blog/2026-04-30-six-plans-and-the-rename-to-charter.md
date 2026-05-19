@@ -3,7 +3,6 @@ slug: seis-planes-y-el-rename-a-charter
 title: Seis Planes para una tesis (y el rename a Charter)
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - sentinel
@@ -152,4 +151,4 @@ Sigue, en el siguiente post, dos hitos cercanos que codifican capacidades cualit
 
 *Anclas: propuestas [`thesis-validation.md`](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/proposals/2026-04-30-thesis-validation.md) y [`charter-telemetry.md`](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/proposals/2026-04-30-charter-telemetry.md) (ambas 2026-04-30). Definición canónica del Charter: [`WHAT-IS-A-CHARTER.md`](https://github.com/StrangeDaysTech/straymark/blob/main/docs/contributors/WHAT-IS-A-CHARTER.md). Schema operacional: `dist/.straymark/schemas/charter-telemetry.schema.v0.json`.*
 
-*Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).*
+*Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.*

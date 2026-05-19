@@ -3,7 +3,6 @@ slug: emergent-observation-design
 title: The day the agent saw something nobody asked it to see
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - ai-agents
@@ -124,4 +123,4 @@ If you're reading this and you work with agents to develop software, I invite yo
 
 *StrayMark fw-4.17.0 — Issue [#150](https://github.com/StrangeDaysTech/straymark/issues/150) · [#156](https://github.com/StrangeDaysTech/straymark/issues/156) · [#161](https://github.com/StrangeDaysTech/straymark/issues/161) · PR [#160](https://github.com/StrangeDaysTech/straymark/pull/160) · tag [`fw-4.17.0`](https://github.com/StrangeDaysTech/straymark/releases/tag/fw-4.17.0)*
 
-*Co-authored by José Villaseñor Montfort (Strange Days Tech) and Claude Opus 4.7 (1M context).*
+*This document was produced with assistance from generative AI tools (Claude 4.7); all responsibility for the content rests with the human author.*

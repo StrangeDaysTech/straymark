@@ -3,7 +3,6 @@ slug: la-disciplina-manual-antes-del-patron
 title: La disciplina manual antes del patrón
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - charters
@@ -145,4 +144,4 @@ Sigue, en el siguiente post, el último episodio del arco que el blog vino a con
 
 *Anclas: [Issue #150](https://github.com/StrangeDaysTech/straymark/issues/150) (14 may 16:59 UTC). PR [#152](https://github.com/StrangeDaysTech/straymark/pull/152) — `fw-4.14.3` (14 may 21:39 UTC). Sección canonizada: `SPECKIT-CHARTER-BRIDGE.md §"Spec maintenance during multi-Charter execution"`. Métricas del CHARTER-18 reportadas en `CHARTER-CHAIN-EVOLUTION.md` (fw-4.16.0). Fuente privada parafraseada conforme `GUIA-EDITORIAL.md §7`: `AIDEC-2026-05-14-001-speckit-plan-scope-limited-us5-refresh.md` en el repo de Sentinel.*
 
-*Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).*
+*Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.*

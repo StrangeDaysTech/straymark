@@ -3,7 +3,6 @@ slug: opening-the-framework
 title: Opening the framework
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - i18n
@@ -131,6 +130,6 @@ With this the blog closes the second batch. The arc that started retroactively w
 
 *Anchors: PR [#144](https://github.com/StrangeDaysTech/straymark/pull/144) — `fw-4.13.4` (merged 2026-05-13 06:20 UTC, full i18n coverage). PR [#154](https://github.com/StrangeDaysTech/straymark/pull/154) — CLA Assistant badge in READMEs (merged 2026-05-15 00:14 UTC). Full policy: `CONTRIBUTING.md` (repo root + translations in `docs/i18n/{es,zh-CN}/CONTRIBUTING.md`).*
 
-*Co-written by José Villaseñor Montfort (Strange Days Tech) and Claude Opus 4.7 (1M context).*
+*This document was produced with assistance from generative AI tools (Claude 4.7); all responsibility for the content rests with the human author.*
 
 *— End of the second batch of the StrayMark blog.*

@@ -229,7 +229,9 @@ AILOG_DIR=".straymark/07-ai-audit/agent-logs"
 
 ## 致谢
 
-通过 [issue #111](https://github.com/StrangeDaysTech/straymark/issues/111) 由 Sentinel adopter 贡献。经验基础:`StrangeDaysTech/sentinel` 中的 CHARTER-08 → CHARTER-11 链。作者:Claude Opus 4.7,代表操作员 José Villaseñor Montfort。
+通过 [issue #111](https://github.com/StrangeDaysTech/straymark/issues/111) 由 Sentinel adopter 贡献。经验基础:`StrangeDaysTech/sentinel` 中的 CHARTER-08 → CHARTER-11 链。作者：José Villaseñor Montfort。
+
+*本文档在生成式 AI 工具（Claude 4.7）的协助下撰写；内容的全部责任由人类作者承担。*
 
 ---
 

@@ -3,7 +3,6 @@ slug: charters-y-el-audit-cycle-externo
 title: 'Charters como entidad de primera clase, y el audit cycle externo'
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - charters
@@ -147,4 +146,4 @@ Sigue, en el siguiente post, el episodio metodológico que conecta con el inicio
 
 *Anclas: PRs [#65](https://github.com/StrangeDaysTech/straymark/pull/65) · [#68](https://github.com/StrangeDaysTech/straymark/pull/68) · [#69](https://github.com/StrangeDaysTech/straymark/pull/69) (Charters first-class). Propuestas [`audit-skills-design.md`](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/proposals/2026-05-03-audit-skills-design.md) · [`audit-skills-rollout.md`](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/proposals/2026-05-03-audit-skills-rollout.md) · [`audit-cli-flow.md`](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/proposals/2026-05-04-audit-cli-flow.md) · [`cli-roadmap.md`](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/proposals/2026-05-03-cli-roadmap.md) (decisión A1 §0). Releases fw-4.4.0 → fw-4.9.0.*
 
-*Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).*
+*Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.*

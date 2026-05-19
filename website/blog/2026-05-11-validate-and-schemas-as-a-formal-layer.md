@@ -3,7 +3,6 @@ slug: validate-and-schemas-as-a-formal-layer
 title: Validate and the schemas as a formal layer
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - validate
@@ -137,4 +136,4 @@ What I took from the process, in four claims:
 
 *Anchors: PR [#27](https://github.com/StrangeDaysTech/straymark/pull/27) — original `validate` version (March 2026). Phase 2: PRs #73 to #79 + PR [#80](https://github.com/StrangeDaysTech/straymark/pull/80) — `fw-4.6.0 / cli-3.7.0` (merged 2026-05-11). Schemas: `dist/.straymark/schemas/{charter,charter-telemetry,audit-output}.schema.v0.json`. [Issue #67](https://github.com/StrangeDaysTech/straymark/issues/67) — origin of `--check-pending-reviews`.*
 
-*Co-written by José Villaseñor Montfort (Strange Days Tech) and Claude Opus 4.7 (1M context).*
+*This document was produced with assistance from generative AI tools (Claude 4.7); all responsibility for the content rests with the human author.*

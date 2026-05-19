@@ -7,7 +7,7 @@
  * conventions; the source files in Aparador stay as the editorial archive.
  *
  * Run once: `npm run migrate:blog` (from website/).
- * Idempotent: deletes output dirs before writing, so re-running rewrites.
+ * Idempotent: only deletes .md files in output dirs, preserving authors.yml.
  */
 import {readdirSync, readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, unlinkSync} from 'node:fs';
 import {join, resolve} from 'node:path';
@@ -72,7 +72,7 @@ function transformFrontmatter(fm: Record<string, unknown>, slug: string): Record
   const out: Record<string, unknown> = {
     slug,
     title: fm.title,
-    authors: ['jose', 'claude-opus-47'],
+    authors: ['jose'],
     tags: fm.tags ?? [],
     date: fm.date,
   };

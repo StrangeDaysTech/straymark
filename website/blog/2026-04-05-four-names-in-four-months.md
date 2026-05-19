@@ -3,7 +3,6 @@ slug: four-names-in-four-months
 title: Four names in four months
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - prehistory
@@ -178,4 +177,4 @@ Next, in the following post: the framework's first real methodological experimen
 
 *Anchors: commits [`7c58b6d`](https://github.com/StrangeDaysTech/straymark/commit/7c58b6d) · [`0b772bc`](https://github.com/StrangeDaysTech/straymark/commit/0b772bc) · [`25ab7a4`](https://github.com/StrangeDaysTech/straymark/commit/25ab7a4) · [`7b7193e`](https://github.com/StrangeDaysTech/straymark/commit/7b7193e) · [`c7e9026`](https://github.com/StrangeDaysTech/straymark/commit/c7e9026) · [`21e03b2`](https://github.com/StrangeDaysTech/straymark/commit/21e03b2). Original README: `git show v1.0.0:README.md`.*
 
-*Co-written by José Villaseñor Montfort (Strange Days Tech) and Claude Opus 4.7 (1M context).*
+*This document was produced with assistance from generative AI tools (Claude 4.7); all responsibility for the content rests with the human author.*

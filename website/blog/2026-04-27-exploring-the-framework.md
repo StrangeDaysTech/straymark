@@ -3,7 +3,6 @@ slug: exploring-the-framework
 title: Exploring the framework
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - tui
@@ -118,4 +117,4 @@ With this post the blog covers the `H-14` milestone the first batch left as expl
 
 *Anchors: PR [#57](https://github.com/StrangeDaysTech/straymark/pull/57) — `cli-3.4.0` (language-aware explore, 25 Apr 2026). PRs [#60](https://github.com/StrangeDaysTech/straymark/pull/60) · [#61](https://github.com/StrangeDaysTech/straymark/pull/61) · [#62](https://github.com/StrangeDaysTech/straymark/pull/62) · [#63](https://github.com/StrangeDaysTech/straymark/pull/63) — refinements `cli-3.5.0` to `cli-3.5.2` (25-26 Apr 2026). Code: `cli/src/tui/` (15 files). Adopter doc: `docs/adopters/CLI-REFERENCE.md` §`straymark explore`.*
 
-*Co-written by José Villaseñor Montfort (Strange Days Tech) and Claude Opus 4.7 (1M context).*
+*This document was produced with assistance from generative AI tools (Claude 4.7); all responsibility for the content rests with the human author.*

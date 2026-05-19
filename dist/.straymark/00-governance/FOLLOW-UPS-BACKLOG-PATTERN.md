@@ -229,7 +229,9 @@ These are not resolved in v0. Future revisions of this pattern, or a CLI helper,
 
 ## Credits
 
-Contributed via [issue #111](https://github.com/StrangeDaysTech/straymark/issues/111) by the Sentinel adopter. Empirical foundation: CHARTER-08 → CHARTER-11 chain in `StrangeDaysTech/sentinel`. Author: Claude Opus 4.7 on behalf of operator José Villaseñor Montfort.
+Contributed via [issue #111](https://github.com/StrangeDaysTech/straymark/issues/111) by the Sentinel adopter. Empirical foundation: CHARTER-08 → CHARTER-11 chain in `StrangeDaysTech/sentinel`. Author: José Villaseñor Montfort.
+
+*This document was produced with assistance from generative AI tools (Claude 4.7); all responsibility for the content rests with the human author.*
 
 ---
 

@@ -3,7 +3,6 @@ slug: the-rebrand-to-straymark
 title: The rebrand to StrayMark
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - rebranding
@@ -146,4 +145,4 @@ Next, in the following post, an episode that connects directly with the last poi
 
 *Anchors: ADR [`2026-05-08-001`](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/ADR-2026-05-08-rebranding-straymark.md). Core arc: PRs [#114](https://github.com/StrangeDaysTech/straymark/pull/114) · [#115](https://github.com/StrangeDaysTech/straymark/pull/115) · [#116](https://github.com/StrangeDaysTech/straymark/pull/116) · [#117](https://github.com/StrangeDaysTech/straymark/pull/117) · [#118](https://github.com/StrangeDaysTech/straymark/pull/118). Manifesto: PR [#120](https://github.com/StrangeDaysTech/straymark/pull/120). Residuals: PRs [#137](https://github.com/StrangeDaysTech/straymark/pull/137) · [#138](https://github.com/StrangeDaysTech/straymark/pull/138) · [#139](https://github.com/StrangeDaysTech/straymark/pull/139) · [#140](https://github.com/StrangeDaysTech/straymark/pull/140). Release: `fw-4.11.0` / `cli-3.11.0`.*
 
-*Co-written by José Villaseñor Montfort (Strange Days Tech) and Claude Opus 4.7 (1M context).*
+*This document was produced with assistance from generative AI tools (Claude 4.7); all responsibility for the content rests with the human author.*

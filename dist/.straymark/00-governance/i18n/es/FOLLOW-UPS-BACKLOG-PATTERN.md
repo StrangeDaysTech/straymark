@@ -229,7 +229,9 @@ Estas no se resuelven en v0. Revisiones futuras de este patrón, o un helper CLI
 
 ## Créditos
 
-Contribuido vía [issue #111](https://github.com/StrangeDaysTech/straymark/issues/111) por el adopter Sentinel. Fundamento empírico: cadena CHARTER-08 → CHARTER-11 en `StrangeDaysTech/sentinel`. Autor: Claude Opus 4.7 a nombre del operador José Villaseñor Montfort.
+Contribuido vía [issue #111](https://github.com/StrangeDaysTech/straymark/issues/111) por el adopter Sentinel. Fundamento empírico: cadena CHARTER-08 → CHARTER-11 en `StrangeDaysTech/sentinel`. Autor: José Villaseñor Montfort.
+
+*Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.*
 
 ---
 

@@ -3,7 +3,6 @@ slug: manual-discipline-before-the-pattern
 title: Manual discipline before the pattern
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - charters
@@ -145,4 +144,4 @@ Next, in the following post, the last episode of the arc this blog came to tell:
 
 *Anchors: [Issue #150](https://github.com/StrangeDaysTech/straymark/issues/150) (14 May 16:59 UTC). PR [#152](https://github.com/StrangeDaysTech/straymark/pull/152) — `fw-4.14.3` (14 May 21:39 UTC). Canonized section: `SPECKIT-CHARTER-BRIDGE.md §"Spec maintenance during multi-Charter execution"`. CHARTER-18 metrics reported in `CHARTER-CHAIN-EVOLUTION.md` (fw-4.16.0). Private source paraphrased per `GUIA-EDITORIAL.md §7`: `AIDEC-2026-05-14-001-speckit-plan-scope-limited-us5-refresh.md` in Sentinel's repo.*
 
-*Co-written by José Villaseñor Montfort (Strange Days Tech) and Claude Opus 4.7 (1M context).*
+*This document was produced with assistance from generative AI tools (Claude 4.7); all responsibility for the content rests with the human author.*
