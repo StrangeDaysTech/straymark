@@ -3,7 +3,6 @@ slug: agents-md-as-a-universal-standard
 title: AGENTS.md as a universal standard
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - agents-md
@@ -133,4 +132,4 @@ What I took from the process, in four claims:
 
 *Anchors: PR [#155](https://github.com/StrangeDaysTech/straymark/pull/155) — `fw-4.15.0 / cli-3.13.2` (merged 2026-05-15 19:05 UTC). Original AIDEC (Post 2): `.chronicle/07-ai-audit/decisions/AIDEC-2025-01-27-001-i18n-strategy.md` (commit `7b7193e`, ID with typo'd year). Injected template: `dist/dist-templates/directives/AGENTS.md`. Standard specification: [agents.md](https://agents.md) — donated to the Agentic AI Foundation (Linux Foundation), December 2025.*
 
-*Co-written by José Villaseñor Montfort (Strange Days Tech) and Claude Opus 4.7 (1M context).*
+*This document was produced with assistance from generative AI tools (Claude 4.7); all responsibility for the content rests with the human author.*

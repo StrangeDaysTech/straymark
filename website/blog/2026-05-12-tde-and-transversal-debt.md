@@ -3,7 +3,6 @@ slug: tde-and-transversal-debt
 title: TDE and transversal debt
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - tde
@@ -161,4 +160,4 @@ Next, in the following post, a brief but structural episode: *"The Spanish audit
 
 *Anchors: [Issue #128](https://github.com/StrangeDaysTech/straymark/issues/128). PRs [#129](https://github.com/StrangeDaysTech/straymark/pull/129) · [#131](https://github.com/StrangeDaysTech/straymark/pull/131) · [#134](https://github.com/StrangeDaysTech/straymark/pull/134) · [#136](https://github.com/StrangeDaysTech/straymark/pull/136). Releases: `fw-4.13.0` / `cli-3.12.1` / `fw-4.13.1`. Stacked-PR lesson codified in [`CLAUDE.md` lines 181-220](https://github.com/StrangeDaysTech/straymark/blob/main/CLAUDE.md) of the repo.*
 
-*Co-written by José Villaseñor Montfort (Strange Days Tech) and Claude Opus 4.7 (1M context).*
+*This document was produced with assistance from generative AI tools (Claude 4.7); all responsibility for the content rests with the human author.*

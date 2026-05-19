@@ -3,7 +3,6 @@ slug: pattern-1-y-pattern-2-chain-evolution
 title: Pattern 1 y Pattern 2 — chain evolution
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - charters
@@ -190,6 +189,6 @@ El blog termina de contar la historia. El framework sigue.
 
 *Anclas: [Issue #156](https://github.com/StrangeDaysTech/straymark/issues/156). PR [#157](https://github.com/StrangeDaysTech/straymark/pull/157) — `fw-4.16.0 / cli-3.14.0` (fusionado 2026-05-16 00:31 UTC). Documento canónico: [`CHARTER-CHAIN-EVOLUTION.md`](https://github.com/StrangeDaysTech/straymark/blob/main/dist/.straymark/00-governance/CHARTER-CHAIN-EVOLUTION.md). Schema: `dist/.straymark/schemas/charter-telemetry.schema.v0.json` v0.2. Meta-patrón sucesor: [`EMERGENT-OBSERVATION-DESIGN.md`](https://github.com/StrangeDaysTech/straymark/blob/main/dist/.straymark/00-governance/EMERGENT-OBSERVATION-DESIGN.md), `fw-4.17.0` (fusionado 2026-05-16 01:48 UTC, 77 minutos después).*
 
-*Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).*
+*Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.*
 
 *— Fin del arco H-01 → H-13 del blog StrayMark.*

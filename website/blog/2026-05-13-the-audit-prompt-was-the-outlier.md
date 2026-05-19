@@ -3,7 +3,6 @@ slug: the-audit-prompt-was-the-outlier
 title: The audit-prompt was the outlier
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - i18n
@@ -88,4 +87,4 @@ Next, in the following post, an episode that already brushed Post 1 but deserves
 
 *Anchors: PR [#142](https://github.com/StrangeDaysTech/straymark/pull/142). Releases: `fw-4.13.3` / `cli-3.12.3`. Key commit: `a8a1ac5`. Files: `dist/.straymark/audit-prompts/audit-prompt.md` (EN canonical) + `dist/.straymark/audit-prompts/i18n/es/audit-prompt.md` (overlay). CLI: `cli/src/commands/charter/audit.rs` wired to the i18n resolver.*
 
-*Co-written by José Villaseñor Montfort (Strange Days Tech) and Claude Opus 4.7 (1M context).*
+*This document was produced with assistance from generative AI tools (Claude 4.7); all responsibility for the content rests with the human author.*

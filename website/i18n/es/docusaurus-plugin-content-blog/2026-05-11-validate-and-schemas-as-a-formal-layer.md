@@ -3,7 +3,6 @@ slug: validate-y-los-schemas-como-capa-formal
 title: Validate y los schemas como capa formal
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - validate
@@ -137,4 +136,4 @@ Lo que aprendí del proceso, en cuatro tesis:
 
 *Anclas: PR [#27](https://github.com/StrangeDaysTech/straymark/pull/27) — versión original de `validate` (marzo 2026). Phase 2: PRs #73 a #79 + PR [#80](https://github.com/StrangeDaysTech/straymark/pull/80) — `fw-4.6.0 / cli-3.7.0` (fusionado 2026-05-11). Schemas: `dist/.straymark/schemas/{charter,charter-telemetry,audit-output}.schema.v0.json`. [Issue #67](https://github.com/StrangeDaysTech/straymark/issues/67) — origen del `--check-pending-reviews`.*
 
-*Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).*
+*Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.*

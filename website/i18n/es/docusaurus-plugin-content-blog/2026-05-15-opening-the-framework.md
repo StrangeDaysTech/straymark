@@ -3,7 +3,6 @@ slug: abrir-el-framework
 title: Abrir el framework
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - i18n
@@ -131,6 +130,6 @@ Con esto el blog cierra la segunda tanda. El arco que arrancó retroactivamente 
 
 *Anclas: PR [#144](https://github.com/StrangeDaysTech/straymark/pull/144) — `fw-4.13.4` (fusionado 2026-05-13 06:20 UTC, cobertura i18n completa). PR [#154](https://github.com/StrangeDaysTech/straymark/pull/154) — badge CLA Assistant en READMEs (fusionado 2026-05-15 00:14 UTC). Política completa: `CONTRIBUTING.md` (raíz del repo + traducciones en `docs/i18n/{es,zh-CN}/CONTRIBUTING.md`).*
 
-*Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).*
+*Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.*
 
 *— Fin de la segunda tanda del blog StrayMark.*

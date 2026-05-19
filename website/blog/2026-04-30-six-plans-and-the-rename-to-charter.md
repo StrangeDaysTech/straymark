@@ -3,7 +3,6 @@ slug: six-plans-and-the-rename-to-charter
 title: Six Plans for one thesis (and the rename to Charter)
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - sentinel
@@ -152,4 +151,4 @@ Next, in the following post: two close-by milestones that codify qualitatively n
 
 *Anchors: proposals [`thesis-validation.md`](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/proposals/2026-04-30-thesis-validation.md) and [`charter-telemetry.md`](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/proposals/2026-04-30-charter-telemetry.md) (both 2026-04-30). Canonical Charter definition: [`WHAT-IS-A-CHARTER.md`](https://github.com/StrangeDaysTech/straymark/blob/main/docs/contributors/WHAT-IS-A-CHARTER.md). Operational schema: `dist/.straymark/schemas/charter-telemetry.schema.v0.json`.*
 
-*Co-written by José Villaseñor Montfort (Strange Days Tech) and Claude Opus 4.7 (1M context).*
+*This document was produced with assistance from generative AI tools (Claude 4.7); all responsibility for the content rests with the human author.*
