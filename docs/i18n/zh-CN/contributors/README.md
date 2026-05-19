@@ -23,7 +23,7 @@
 
 ## 历史提案（已归档）
 
-项目在 CLI 之前演化阶段的提案与路线图，作为上下文保留——它们解释了当前形态是如何浮现的。这些**不**在向前的方向上维护；当前行为的权威来源是代码、`dist/.straymark/schemas/` 下的 schema，以及 CHANGELOG。可在 [`docs/decisions/proposals/`](../../../decisions/proposals/) 中浏览：
+项目在 CLI 之前演化阶段的提案与路线图，作为上下文保留——它们解释了当前形态是如何浮现的。这些**不**在向前的方向上维护；当前行为的权威来源是代码、`dist/.straymark/schemas/` 下的 schema，以及 CHANGELOG。可在 GitHub 上的 [`docs/decisions/proposals/`](https://github.com/StrangeDaysTech/straymark/tree/main/docs/decisions/proposals) 浏览：
 
 | 文件 | 快照日期 | 捕获了什么 |
 |---|---|---|
@@ -34,7 +34,7 @@
 | `2026-05-03-audit-skills-rollout.md` | 2026-05-03 | audit skill 的运营性铺开计划（gating 标准、遥测、分阶段发布）。 |
 | `2026-05-04-audit-cli-flow.md` | 2026-05-04 | 在首次实际遇到一个跨多次提交的 L 级 Charter（Sentinel CHARTER-07）之后，对外部审计流程的重新设计。在 `cli-3.10+` 中实施。 |
 
-当前代码库的 ADR（架构决策记录）位于上一级的 [`docs/decisions/`](../../../decisions/)。
+当前代码库的 ADR（架构决策记录）位于 GitHub 上的 [`docs/decisions/`](https://github.com/StrangeDaysTech/straymark/tree/main/docs/decisions)。
 
 ---
 
