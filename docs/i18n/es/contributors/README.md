@@ -23,7 +23,7 @@ El material atemporal — leer esto para entender *qué* es StrayMark y *por qu�
 
 ## Propuestas históricas (archivadas)
 
-Propuestas y roadmaps de la evolución del proyecto previa al CLI, preservadas como contexto — explican cómo emergió la forma actual. **No** se mantienen hacia adelante; la fuente canónica del comportamiento actual son el código, los schemas bajo `dist/.straymark/schemas/` y el CHANGELOG. Examinarlas en [`docs/decisions/proposals/`](../../../decisions/proposals/):
+Propuestas y roadmaps de la evolución del proyecto previa al CLI, preservadas como contexto — explican cómo emergió la forma actual. **No** se mantienen hacia adelante; la fuente canónica del comportamiento actual son el código, los schemas bajo `dist/.straymark/schemas/` y el CHANGELOG. Examinarlas en GitHub en [`docs/decisions/proposals/`](https://github.com/StrangeDaysTech/straymark/tree/main/docs/decisions/proposals):
 
 | Archivo | Fecha del snapshot | Qué capturó |
 |---|---|---|
@@ -34,7 +34,7 @@ Propuestas y roadmaps de la evolución del proyecto previa al CLI, preservadas c
 | `2026-05-03-audit-skills-rollout.md` | 2026-05-03 | Plan operacional de rollout de las audit skills (criterios de gating, telemetría, shipping por fases). |
 | `2026-05-04-audit-cli-flow.md` | 2026-05-04 | Rediseño del flujo de auditoría externa tras el primer encuentro empírico con un Charter L multi-commit (Sentinel CHARTER-07). Implementado en `cli-3.10+`. |
 
-Los ADRs (registros de decisión arquitectónica) del código actual viven en [`docs/decisions/`](../../../decisions/) un nivel más arriba.
+Los ADRs (registros de decisión arquitectónica) del código actual viven en GitHub en [`docs/decisions/`](https://github.com/StrangeDaysTech/straymark/tree/main/docs/decisions).
 
 ---
 
