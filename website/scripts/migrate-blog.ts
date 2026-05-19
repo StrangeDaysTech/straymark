@@ -6,6 +6,11 @@
  * by the `NN-` numeric prefix. Frontmatter is normalized to Docusaurus blog
  * conventions; the source files in Aparador stay as the editorial archive.
  *
+ * zh-CN is intentionally NOT handled here. zh-CN posts are translations of
+ * the editorial work (not original authoring), so they live directly under
+ * `website/i18n/zh-CN/docusaurus-plugin-content-blog/` with no migrator
+ * round-trip. See the feat/website-zh-CN PR for that workflow.
+ *
  * Run once: `npm run migrate:blog` (from website/).
  * Idempotent: only deletes .md files in output dirs, preserving authors.yml.
  */
