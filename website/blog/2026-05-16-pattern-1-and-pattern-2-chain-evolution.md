@@ -3,7 +3,6 @@ slug: pattern-1-and-pattern-2-chain-evolution
 title: Pattern 1 and Pattern 2 — chain evolution
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - charters

@@ -3,7 +3,6 @@ slug: el-audit-prompt-era-el-outlier
 title: El audit-prompt era el outlier
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - i18n
@@ -88,4 +87,4 @@ Sigue, en el siguiente post, un episodio que ya rozó al Post 1 pero merece su p
 
 *Anclas: PR [#142](https://github.com/StrangeDaysTech/straymark/pull/142). Releases: `fw-4.13.3` / `cli-3.12.3`. Commit clave: `a8a1ac5`. Archivos: `dist/.straymark/audit-prompts/audit-prompt.md` (EN canonical) + `dist/.straymark/audit-prompts/i18n/es/audit-prompt.md` (overlay). CLI: `cli/src/commands/charter/audit.rs` cableado al resolver i18n.*
 
-*Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).*
+*Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.*

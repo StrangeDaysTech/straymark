@@ -3,7 +3,6 @@ slug: six-plans-and-the-rename-to-charter
 title: Six Plans for one thesis (and the rename to Charter)
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - sentinel

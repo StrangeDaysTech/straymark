@@ -3,7 +3,6 @@ slug: tde-y-la-deuda-transversal
 title: TDE y la deuda transversal
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - tde
@@ -159,4 +158,4 @@ Sigue, en el siguiente post, un episodio breve pero estructural: *"El audit-prom
 
 *Anclas: [Issue #128](https://github.com/StrangeDaysTech/straymark/issues/128). PRs [#129](https://github.com/StrangeDaysTech/straymark/pull/129) · [#131](https://github.com/StrangeDaysTech/straymark/pull/131) · [#134](https://github.com/StrangeDaysTech/straymark/pull/134) · [#136](https://github.com/StrangeDaysTech/straymark/pull/136). Releases: `fw-4.13.0` / `cli-3.12.1` / `fw-4.13.1`. Lección stacked-PR codificada en [`CLAUDE.md` líneas 181-220](https://github.com/StrangeDaysTech/straymark/blob/main/CLAUDE.md) del repo.*
 
-*Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).*
+*Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.*

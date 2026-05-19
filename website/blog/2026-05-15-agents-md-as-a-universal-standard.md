@@ -3,7 +3,6 @@ slug: agents-md-as-a-universal-standard
 title: AGENTS.md as a universal standard
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - agents-md

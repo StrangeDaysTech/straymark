@@ -35,7 +35,7 @@ language: en
 2. Based on the `language` value, they use templates from the appropriate path:
 
 | Language | Template Path |
-|----------|---------------|
+| --- | --- |
 | `en` (default) | `.straymark/templates/TEMPLATE-*.md` |
 | `es` | `.straymark/templates/i18n/es/TEMPLATE-*.md` |
 | `zh-CN` | `.straymark/templates/i18n/zh-CN/TEMPLATE-*.md` |
@@ -59,7 +59,7 @@ The AI agent will then use Spanish templates when creating documentation.
 ### Files to Translate
 
 | Category | Files | Location |
-|----------|-------|----------|
+| --- | --- | --- |
 | **Main Documentation** | README.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md | `docs/i18n/{lang}/` |
 | **Adopter Documentation** | ADOPTION-GUIDE.md, CLI-REFERENCE.md, WORKFLOWS.md | `docs/i18n/{lang}/adopters/` |
 | **Templates** | TEMPLATE-*.md (8 files) | `.straymark/templates/i18n/{lang}/` |
@@ -68,7 +68,7 @@ The AI agent will then use Spanish templates when creating documentation.
 ### Files NOT to Translate
 
 | File | Reason |
-|------|--------|
+| --- | --- |
 | `CLAUDE.md` | AI agent configuration - works identically in any language |
 | `GEMINI.md` | AI agent configuration |
 | `.cursorrules` | AI agent configuration |
@@ -167,7 +167,7 @@ tags:
 Keep these values in English:
 
 | Category | Values |
-|----------|--------|
+| --- | --- |
 | **Status** | `draft`, `accepted`, `deprecated`, `superseded` |
 | **Confidence** | `high`, `medium`, `low` |
 | **Risk Level** | `low`, `medium`, `high`, `critical` |
@@ -284,7 +284,7 @@ straymark/
 Translated files keep the same filename as the original:
 
 | Original | Translation |
-|----------|-------------|
+| --- | --- |
 | `README.md` | `docs/i18n/es/README.md` |
 | `docs/adopters/ADOPTION-GUIDE.md` | `docs/i18n/es/adopters/ADOPTION-GUIDE.md` |
 | `TEMPLATE-AILOG.md` | `.straymark/templates/i18n/es/TEMPLATE-AILOG.md` |
@@ -350,7 +350,7 @@ Before submitting a translation, verify:
 ## Supported Languages
 
 | Code | Language | Status |
-|------|----------|--------|
+| --- | --- | --- |
 | `es` | Spanish (Español) | Available |
 | `pt` | Portuguese (Português) | Planned |
 | `zh-CN` | Chinese Simplified (简体中文) | Available |
@@ -366,7 +366,7 @@ To contribute a new translation:
 3. Submit a pull request with all translated files
 4. Include the language code in PR title: `i18n(XX): Add [Language] translation`
 
-See [CONTRIBUTING.md](../../CONTRIBUTING.md) for general contribution guidelines.
+See [CONTRIBUTING.md](./../../CONTRIBUTING.md) for general contribution guidelines.
 
 ---
 

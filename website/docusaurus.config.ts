@@ -14,8 +14,8 @@ const config: Config = {
     v4: true,
   },
 
-  url: 'https://strangedaystech.github.io',
-  baseUrl: '/straymark/',
+  url: 'https://straymark.dev',
+  baseUrl: '/',
 
   organizationName: 'StrangeDaysTech',
   projectName: 'straymark',
@@ -33,10 +33,11 @@ const config: Config = {
 
   i18n: {
     defaultLocale: 'en',
-    locales: ['en', 'es'],
+    locales: ['en', 'es', 'zh-CN'],
     localeConfigs: {
       en: {label: 'English'},
       es: {label: 'Español'},
+      'zh-CN': {label: '简体中文'},
     },
   },
 

@@ -3,7 +3,6 @@ slug: validate-and-schemas-as-a-formal-layer
 title: Validate and the schemas as a formal layer
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - validate

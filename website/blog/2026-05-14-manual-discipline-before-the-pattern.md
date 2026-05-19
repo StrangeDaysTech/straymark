@@ -3,7 +3,6 @@ slug: manual-discipline-before-the-pattern
 title: Manual discipline before the pattern
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - charters

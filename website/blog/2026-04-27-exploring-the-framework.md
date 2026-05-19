@@ -3,7 +3,6 @@ slug: exploring-the-framework
 title: Exploring the framework
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - tui

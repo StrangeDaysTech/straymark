@@ -3,7 +3,6 @@ slug: charters-invisibles-para-los-agentes
 title: Charters invisibles para los agentes
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - charters
@@ -130,4 +129,4 @@ Sigue, en el siguiente post, un episodio adyacente al de este: *el rebranding a 
 
 *Anclas: [Issue #113](https://github.com/StrangeDaysTech/straymark/issues/113) (abierto 2026-05-07). [PR #122](https://github.com/StrangeDaysTech/straymark/pull/122) — `fw-4.12.0` (fusionado 2026-05-09). Documento generado por el PR: [`SPECKIT-CHARTER-BRIDGE.md`](https://github.com/StrangeDaysTech/straymark/blob/main/dist/.straymark/00-governance/SPECKIT-CHARTER-BRIDGE.md).*
 
-*Co-escrito por José Villaseñor Montfort (Strange Days Tech) y Claude Opus 4.7 (1M context).*
+*Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.*

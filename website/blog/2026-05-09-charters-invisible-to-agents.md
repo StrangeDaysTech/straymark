@@ -3,7 +3,6 @@ slug: charters-invisible-to-agents
 title: Charters invisible to the agents
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - charters

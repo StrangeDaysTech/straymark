@@ -3,7 +3,6 @@ slug: the-audit-prompt-was-the-outlier
 title: The audit-prompt was the outlier
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - i18n

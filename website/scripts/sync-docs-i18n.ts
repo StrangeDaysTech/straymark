@@ -5,7 +5,7 @@ const ROOT = resolve(__dirname, '..');
 const DOCS_I18N = resolve(ROOT, '../docs/i18n');
 const SITE_I18N = resolve(ROOT, 'i18n');
 
-const LOCALES = ['es'];
+const LOCALES = ['es', 'zh-CN'];
 const SUBDIRS = ['adopters', 'contributors', 'decisions'];
 
 for (const locale of LOCALES) {

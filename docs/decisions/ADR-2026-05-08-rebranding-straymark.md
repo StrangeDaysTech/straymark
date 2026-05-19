@@ -213,6 +213,8 @@ The full plan with branch names, scopes, and risks is in the operator's plan fil
 
 | Date | Author | Change |
 |------|--------|--------|
-| 2026-05-08 | Claude Opus 4.7 (1M context) on behalf of operator José Villaseñor Montfort | Initial creation. Status: accepted. |
+| 2026-05-08 | José Villaseñor Montfort | Initial creation. Status: accepted. |
+
+*This document was produced with assistance from generative AI tools (Claude 4.7); all responsibility for the content rests with the human author.*
 
 <!-- Template: DevTrail | https://strangedays.tech (the project, at the time of this ADR's creation, was named DevTrail; this footer is preserved as historical evidence of the pre-rebrand state) -->

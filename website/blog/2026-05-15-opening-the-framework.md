@@ -3,7 +3,6 @@ slug: opening-the-framework
 title: Opening the framework
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - i18n

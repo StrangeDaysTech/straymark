@@ -6,8 +6,13 @@
  * by the `NN-` numeric prefix. Frontmatter is normalized to Docusaurus blog
  * conventions; the source files in Aparador stay as the editorial archive.
  *
+ * zh-CN is intentionally NOT handled here. zh-CN posts are translations of
+ * the editorial work (not original authoring), so they live directly under
+ * `website/i18n/zh-CN/docusaurus-plugin-content-blog/` with no migrator
+ * round-trip. See the feat/website-zh-CN PR for that workflow.
+ *
  * Run once: `npm run migrate:blog` (from website/).
- * Idempotent: deletes output dirs before writing, so re-running rewrites.
+ * Idempotent: only deletes .md files in output dirs, preserving authors.yml.
  */
 import {readdirSync, readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, unlinkSync} from 'node:fs';
 import {join, resolve} from 'node:path';
@@ -72,7 +77,7 @@ function transformFrontmatter(fm: Record<string, unknown>, slug: string): Record
   const out: Record<string, unknown> = {
     slug,
     title: fm.title,
-    authors: ['jose', 'claude-opus-47'],
+    authors: ['jose'],
     tags: fm.tags ?? [],
     date: fm.date,
   };

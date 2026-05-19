@@ -3,7 +3,6 @@ slug: four-names-in-four-months
 title: Four names in four months
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - prehistory

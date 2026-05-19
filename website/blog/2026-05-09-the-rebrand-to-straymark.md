@@ -3,7 +3,6 @@ slug: the-rebrand-to-straymark
 title: The rebrand to StrayMark
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - rebranding

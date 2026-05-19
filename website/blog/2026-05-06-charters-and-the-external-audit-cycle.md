@@ -3,7 +3,6 @@ slug: charters-and-the-external-audit-cycle
 title: 'Charters as a first-class entity, and the external audit cycle'
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - charters

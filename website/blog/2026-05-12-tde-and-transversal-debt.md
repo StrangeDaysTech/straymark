@@ -3,7 +3,6 @@ slug: tde-and-transversal-debt
 title: TDE and transversal debt
 authors:
   - jose
-  - claude-opus-47
 tags:
   - straymark
   - tde
