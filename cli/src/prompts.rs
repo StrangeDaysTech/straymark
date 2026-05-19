@@ -130,7 +130,12 @@ mod tests {
 
     #[test]
     fn require_interactive_errors_in_non_tty() {
-        // Cargo test runs without a TTY.
+        // Skip when stdin is a TTY (e.g. `cargo test` run from an interactive
+        // shell). Under `cargo test` in CI or piped invocations stdin is not a
+        // TTY and the assertion below exercises the real code path.
+        if std::io::stdin().is_terminal() {
+            return;
+        }
         let result = require_interactive();
         assert!(result.is_err());
     }
