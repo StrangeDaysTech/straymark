@@ -584,7 +584,7 @@ OK `### Batch 5` written.
 
 **Integración con workflow.** Según la guía del template Charter en §Tasks, correr `batch-complete` *inmediatamente después* de que aterriza el commit del batch pero *antes* de pushear. La actualización del AILOG y el trabajo que documenta viajan en el mismo push. El gate de drift al cierre (`straymark charter drift CHARTER-NN`) rechaza cualquier batch pendiente e imprime la lista — convirtiendo "olvidé actualizar la ledger" en una falla dura en lugar de erosión silenciosa del audit trail.
 
-#### `straymark charter audit <CHARTER-ID> [--range <REV..REV>] [--prepare | --merge-reports] [--merge-into <PATH>] [--path <dir>]`
+#### `straymark charter audit <CHARTER-ID> [--range <REV..REV>] [--prepare | --merge-reports] [--merge-into <PATH>] [--path <dir>]` {#straymark-charter-audit}
 
 *Disponible desde **cli-3.8.0** + **fw-4.7.0**. Flujo unificado v1 shippeado en **cli-3.10.0** + **fw-4.9.0** — reemplaza los 3 pasos v0 (PREPARE/CALIBRATE/FINALIZE) por 2 (PREPARE/MERGE-REPORTS), unifica la plantilla del auditor, y mueve los paths canónicos a `.straymark/audits/`.*
 
