@@ -48,8 +48,8 @@ const config: Config = {
           path: '../docs',
           routeBasePath: 'docs',
           sidebarPath: './sidebars.ts',
-          include: ['intro.md', 'adopters/**', 'contributors/**', 'decisions/**'],
-          exclude: ['**/i18n/**', '**/proposals/**'],
+          include: ['intro.md', 'adopters/**', 'contributors/**'],
+          exclude: ['**/i18n/**', '**/proposals/**', '**/decisions/**'],
           editUrl: ({versionDocsDirPath, docPath, locale}) => {
             if (locale && locale !== 'en') {
               return `${GITHUB_EDIT_BASE}/docs/i18n/${locale}/${docPath}`;
