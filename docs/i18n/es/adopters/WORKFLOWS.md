@@ -4,7 +4,6 @@
 
 [![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
 
-**Idiomas**: [English](../../../adopters/WORKFLOWS.md) | Español | [简体中文](../../zh-CN/adopters/WORKFLOWS.md)
 
 ---
 
@@ -126,7 +125,7 @@ StrayMark tiene dos sistemas de documentación:
 | `/straymark-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | **Corre dentro de una CLI auditora** (gemini-cli, claude-cli, copilot-cli, codex-cli). Lee el prompt del disco, audita con tool use citando `path:línea`, escribe un report con el id del modelo. Argumento opcional — auto-descubre prompts pendientes de este modelo. |
 | `/straymark-audit-review CHARTER-XX` *(fw-4.8.0+, expandida en fw-4.9.0)* | Contraparte de `audit-prompt`. Lee N reports, verifica findings contra el código real, produce `review.md` consolidado de 6 secciones (Resumen ejecutivo / Alcance / Evaluación por auditor / Plan de remediación P0-P4 / Descartados / Calificación de auditores), y mergea YAML `external_audit:` en la telemetría. |
 
-Para detalles completos de skills, consulta el [README](../README.md#skills).
+Para detalles completos de skills, consulta el [README](https://github.com/StrangeDaysTech/straymark/blob/main/docs/i18n/es/README.md#skills).
 
 ### Charter audit checkpoint *(fw-4.8.0+)*
 
@@ -257,6 +256,6 @@ Para información detallada del CLI, consulta la [Referencia CLI](CLI-REFERENCE.
 
 **StrayMark** — Porque cada cambio cuenta una historia.
 
-[Volver a docs](../../README.md) • [README](../README.md) • [Strange Days Tech](https://strangedays.tech)
+[Volver a docs](https://github.com/StrangeDaysTech/straymark/blob/main/docs/i18n/es/README.md) • [README](https://github.com/StrangeDaysTech/straymark/blob/main/README.md) • [Strange Days Tech](https://strangedays.tech)
 
 </div>

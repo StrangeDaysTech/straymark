@@ -4,7 +4,6 @@
 **日期：** 2026-05-02
 **作者：** Jose Villaseñor Montfort — StrangeDaysTech
 **目的：** 以紧凑形式阐明产品哲学，作为设计决策的参考依据，以及对不相契合的功能说"不"的判断标准。
-**语言：** [English](../../../contributors/DESIGN-PRINCIPLES.md) | [Español](../../es/contributors/DESIGN-PRINCIPLES.md) | 简体中文
 
 ---
 

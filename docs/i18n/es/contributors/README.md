@@ -2,7 +2,6 @@
 
 Recursos para personas que contribuyen a StrayMark — ya sea leyendo el código, escribiendo traducciones, proponiendo cambios, o tratando de entender el *por qué* detrás de la forma del framework.
 
-**Idiomas:** [English](../../../contributors/README.md) | Español | [简体中文](../../zh-CN/contributors/README.md)
 
 ---
 
@@ -19,7 +18,7 @@ El material atemporal — leer esto para entender *qué* es StrayMark y *por qu�
 
 | Documento | Qué cubre |
 |---|---|
-| [`TRANSLATION-GUIDE.md`](../../../contributors/TRANSLATION-GUIDE.md) | Reglas y convenciones para traducir la documentación de StrayMark a idiomas adicionales. Leer antes de enviar un PR que agregue o modifique un archivo de `i18n/`. *(Solo en inglés por ahora.)* |
+| [`TRANSLATION-GUIDE.md`](/docs/contributors/TRANSLATION-GUIDE) | Reglas y convenciones para traducir la documentación de StrayMark a idiomas adicionales. Leer antes de enviar un PR que agregue o modifique un archivo de `i18n/`. *(Solo en inglés por ahora.)* |
 
 ## Propuestas históricas (archivadas)
 
@@ -38,4 +37,4 @@ Los ADRs (registros de decisión arquitectónica) del código actual viven en Gi
 
 ---
 
-*Ver también: [`../adopters/`](../adopters/) para documentación dirigida a equipos que adoptan StrayMark en sus propios proyectos, incluyendo [`ADOPTION-GUIDE.md`](../adopters/ADOPTION-GUIDE.md), [`CLI-REFERENCE.md`](../adopters/CLI-REFERENCE.md) y [`WORKFLOWS.md`](../adopters/WORKFLOWS.md).*
+*Ver también: [`../adopters/`](../adopters/ADOPTION-GUIDE.md) para documentación dirigida a equipos que adoptan StrayMark en sus propios proyectos, incluyendo [`ADOPTION-GUIDE.md`](../adopters/ADOPTION-GUIDE.md), [`CLI-REFERENCE.md`](../adopters/CLI-REFERENCE.md) y [`WORKFLOWS.md`](../adopters/WORKFLOWS.md).*

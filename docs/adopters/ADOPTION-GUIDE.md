@@ -4,7 +4,6 @@
 
 [![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
 
-**Languages**: English | [Español](../i18n/es/adopters/ADOPTION-GUIDE.md) | [简体中文](../i18n/zh-CN/adopters/ADOPTION-GUIDE.md)
 
 ---
 
@@ -580,7 +579,7 @@ A: StrayMark rules are instructions, not enforcement. If an AI assistant creates
 - **Workflows**: [WORKFLOWS.md](WORKFLOWS.md) — recommended daily usage patterns
 - **Issues**: [GitHub Issues](https://github.com/StrangeDaysTech/straymark/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/StrangeDaysTech/straymark/discussions)
-- **Contributing**: See [CONTRIBUTING.md](../../CONTRIBUTING.md)
+- **Contributing**: See [CONTRIBUTING.md](https://github.com/StrangeDaysTech/straymark/blob/main/CONTRIBUTING.md)
 
 ---
 
@@ -590,6 +589,6 @@ A: StrayMark rules are instructions, not enforcement. If an AI assistant creates
 
 **StrayMark** — Because every change tells a story.
 
-[Back to README](../../README.md) • [Strange Days Tech](https://strangedays.tech)
+[Back to README](https://github.com/StrangeDaysTech/straymark/blob/main/README.md) • [Strange Days Tech](https://strangedays.tech)
 
 </div>

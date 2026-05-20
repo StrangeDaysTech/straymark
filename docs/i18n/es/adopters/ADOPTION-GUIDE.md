@@ -4,7 +4,6 @@
 
 [![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
 
-**Idiomas**: [English](../../../adopters/ADOPTION-GUIDE.md) | Español | [简体中文](../../zh-CN/adopters/ADOPTION-GUIDE.md)
 
 ---
 
@@ -574,7 +573,7 @@ R: Las reglas de StrayMark son instrucciones, no cumplimiento forzado. Si un asi
 - **Flujos de Trabajo**: [WORKFLOWS.md](WORKFLOWS.md) — patrones de uso diario recomendados
 - **Issues**: [GitHub Issues](https://github.com/StrangeDaysTech/straymark/issues)
 - **Discusiones**: [GitHub Discussions](https://github.com/StrangeDaysTech/straymark/discussions)
-- **Contribuir**: Ver [CONTRIBUTING.md](../CONTRIBUTING.md)
+- **Contribuir**: Ver [CONTRIBUTING.md](https://github.com/StrangeDaysTech/straymark/blob/main/docs/i18n/es/CONTRIBUTING.md)
 
 ---
 
@@ -582,6 +581,6 @@ R: Las reglas de StrayMark son instrucciones, no cumplimiento forzado. Si un asi
 
 **StrayMark** — Porque cada cambio cuenta una historia.
 
-[Volver al README](../README.md) • [Strange Days Tech](https://strangedays.tech)
+[Volver al README](https://github.com/StrangeDaysTech/straymark/blob/main/docs/i18n/es/README.md) • [Strange Days Tech](https://strangedays.tech)
 
 </div>
