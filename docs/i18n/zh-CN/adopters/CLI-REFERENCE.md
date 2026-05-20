@@ -4,7 +4,6 @@
 
 [![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
 
-**语言**: [English](../../../adopters/CLI-REFERENCE.md) | [Español](../../es/adopters/CLI-REFERENCE.md) | 简体中文
 
 ---
 
@@ -20,7 +19,7 @@
 
 ## 安装
 
-使用以下方法之一安装 StrayMark CLI。完整安装说明参见 [README](../README.md#快速开始)。
+使用以下方法之一安装 StrayMark CLI。完整安装说明参见 [README](https://github.com/StrangeDaysTech/straymark/blob/main/docs/i18n/zh-CN/README.md#快速开始)。
 
 **快速安装（预编译二进制文件）：**
 
@@ -991,7 +990,6 @@ $ straymark audit --output markdown
 |------|--------|------|
 | `--lang <代码>` | 从项目解析（见下方） | TUI 界面与框架治理文档的显示语言（`en`、`es`、`zh-CN`）。缺少翻译时静默回退到英文。 |
 
-**语言解析顺序**（自 cli-3.5.2 起）：
 
 1. 提供 `--lang <代码>` 标志时优先
 2. `.straymark/config.yml` 文件存在时使用其中的 `language` 字段（即便是显式的 `language: en` 也视为用户的明确选择）
@@ -1107,6 +1105,6 @@ StrayMark 提供一组 skills（slash 命令）供 AI 助手内使用（Claude C
 
 **StrayMark** — 因为每一次变更都值得被记录。
 
-[返回文档](../../README.md) • [README](../README.md) • [Strange Days Tech](https://strangedays.tech)
+[返回文档](https://github.com/StrangeDaysTech/straymark/blob/main/docs/i18n/zh-CN/README.md) • [README](https://github.com/StrangeDaysTech/straymark/blob/main/README.md) • [Strange Days Tech](https://strangedays.tech)
 
 </div>

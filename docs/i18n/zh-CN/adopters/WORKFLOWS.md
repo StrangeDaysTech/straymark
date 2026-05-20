@@ -4,7 +4,6 @@
 
 [![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
 
-**语言**: [English](../../../adopters/WORKFLOWS.md) | [Español](../../es/adopters/WORKFLOWS.md) | 简体中文
 
 ---
 
@@ -126,7 +125,7 @@ StrayMark 有两个文档系统：
 | `/straymark-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | **在审计员 CLI 中运行**（gemini-cli、claude-cli、copilot-cli、codex-cli）。从磁盘读取 prompt，使用 tool use 进行审计并引用 `path:line`，写入以审计员模型 ID 为键的 report。参数可选 — 自动发现此模型待处理的 prompts。 |
 | `/straymark-audit-review CHARTER-XX` *(fw-4.8.0+，在 fw-4.9.0 中扩展)* | `audit-prompt` 的对应。读取 N 个 reports，对 findings 与实际代码交叉验证，生成 `review.md` 六节合并分析（执行摘要 / 范围 / 按审计员评估 / 修复计划 P0-P4 / 丢弃 / 审计员评分），并将 `external_audit:` YAML 合并到遥测。 |
 
-完整 Skill 详情参见 [README](../README.md#skills)。
+完整 Skill 详情参见 [README](https://github.com/StrangeDaysTech/straymark/blob/main/docs/i18n/zh-CN/README.md#skills)。
 
 ### Charter 审计检查点 *(fw-4.8.0+)*
 
@@ -257,6 +256,6 @@ straymark status    # 完整的健康报告，包含版本信息
 
 **StrayMark** — 因为每一次变更都值得被记录。
 
-[返回文档](../../README.md) • [README](../README.md) • [Strange Days Tech](https://strangedays.tech)
+[返回文档](https://github.com/StrangeDaysTech/straymark/blob/main/docs/i18n/zh-CN/README.md) • [README](https://github.com/StrangeDaysTech/straymark/blob/main/README.md) • [Strange Days Tech](https://strangedays.tech)
 
 </div>

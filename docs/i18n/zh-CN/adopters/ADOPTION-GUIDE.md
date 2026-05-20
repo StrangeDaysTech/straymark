@@ -4,7 +4,6 @@
 
 [![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
 
-**语言**: [English](../../../adopters/ADOPTION-GUIDE.md) | [Español](../../es/adopters/ADOPTION-GUIDE.md) | 简体中文
 
 ---
 
@@ -581,7 +580,7 @@ Agent 会在工作流的特定时刻**主动提议**审计 — 当实现完成�
 - **工作流**: [WORKFLOWS.md](WORKFLOWS.md) — 推荐的日常使用模式
 - **Issues**: [GitHub Issues](https://github.com/StrangeDaysTech/straymark/issues)
 - **讨论**: [GitHub Discussions](https://github.com/StrangeDaysTech/straymark/discussions)
-- **贡献**: 参见 [CONTRIBUTING.md](../CONTRIBUTING.md)
+- **贡献**: 参见 [CONTRIBUTING.md](https://github.com/StrangeDaysTech/straymark/blob/main/docs/i18n/zh-CN/CONTRIBUTING.md)
 
 ---
 
@@ -591,6 +590,6 @@ Agent 会在工作流的特定时刻**主动提议**审计 — 当实现完成�
 
 **StrayMark** — 因为每一次变更都值得被记录。
 
-[返回 README](../README.md) • [Strange Days Tech](https://strangedays.tech)
+[返回 README](https://github.com/StrangeDaysTech/straymark/blob/main/docs/i18n/zh-CN/README.md) • [Strange Days Tech](https://strangedays.tech)
 
 </div>

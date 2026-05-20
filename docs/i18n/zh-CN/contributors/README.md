@@ -2,7 +2,6 @@
 
 为 StrayMark 贡献者准备的资源——不论是阅读代码、撰写翻译、提议变更，还是想理解 framework 形成现貌背后的*为什么*。
 
-**语言：** [English](../../../contributors/README.md) | [Español](../../es/contributors/README.md) | 简体中文
 
 ---
 
@@ -19,7 +18,7 @@
 
 | 文档 | 涵盖什么 |
 |---|---|
-| [`TRANSLATION-GUIDE.md`](../../../contributors/TRANSLATION-GUIDE.md) | 将 StrayMark 文档翻译为其他语言的规则与约定。在提交新增或修改 `i18n/` 文件的 PR 之前请先阅读。*（目前仅英文版。）* |
+| [`TRANSLATION-GUIDE.md`](/docs/contributors/TRANSLATION-GUIDE) | 将 StrayMark 文档翻译为其他语言的规则与约定。在提交新增或修改 `i18n/` 文件的 PR 之前请先阅读。*（目前仅英文版。）* |
 
 ## 历史提案（已归档）
 
@@ -38,4 +37,4 @@
 
 ---
 
-*另请参阅：[`../adopters/`](../adopters/) 是面向在自有项目中采用 StrayMark 的团队的文档，包括 [`ADOPTION-GUIDE.md`](../adopters/ADOPTION-GUIDE.md)、[`CLI-REFERENCE.md`](../adopters/CLI-REFERENCE.md) 与 [`WORKFLOWS.md`](../adopters/WORKFLOWS.md)。*
+*另请参阅：[`../adopters/`](../adopters/ADOPTION-GUIDE.md) 是面向在自有项目中采用 StrayMark 的团队的文档，包括 [`ADOPTION-GUIDE.md`](../adopters/ADOPTION-GUIDE.md)、[`CLI-REFERENCE.md`](../adopters/CLI-REFERENCE.md) 与 [`WORKFLOWS.md`](../adopters/WORKFLOWS.md)。*

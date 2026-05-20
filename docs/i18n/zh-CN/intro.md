@@ -18,8 +18,8 @@ StrayMark 将 AI 协同工程的认知纪律外化出来 —— 原生于仓库�
 
 - [设计原则](./contributors/DESIGN-PRINCIPLES.md) —— 塑造这个框架的约束条件。
 - [什么是 charter](./contributors/WHAT-IS-A-CHARTER.md) —— 核心产物。
-- [翻译指南](./contributors/TRANSLATION-GUIDE.md) —— 文档与博文如何本地化。
+- [翻译指南](/docs/contributors/TRANSLATION-GUIDE) —— 文档与博文如何本地化。
 
 ## 决策
 
-[决策（Decisions）](./decisions) 目录追踪所有 ADR —— 每一个承重的技术或流程选择，及其背后的理由。
+[决策（Decisions）](https://github.com/StrangeDaysTech/straymark/tree/main/docs/decisions) 目录追踪所有 ADR —— 每一个承重的技术或流程选择，及其背后的理由。

@@ -4,7 +4,6 @@
 
 [![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
 
-**Languages**: English | [Español](../i18n/es/adopters/CLI-REFERENCE.md) | [简体中文](../i18n/zh-CN/adopters/CLI-REFERENCE.md)
 
 ---
 
@@ -20,7 +19,7 @@
 
 ## Installation
 
-Install the StrayMark CLI using one of the methods below. For full setup instructions, see the [README](../../README.md#getting-started).
+Install the StrayMark CLI using one of the methods below. For full setup instructions, see the [README](https://github.com/StrangeDaysTech/straymark/blob/main/README.md#getting-started).
 
 **Quick install (prebuilt binary):**
 
@@ -1252,6 +1251,6 @@ Adopters using StrayMark without an AI assistant in the loop can drive the same 
 
 **StrayMark** — Because every change tells a story.
 
-[Back to docs](../README.md) • [README](../../README.md) • [Strange Days Tech](https://strangedays.tech)
+[Back to docs](https://github.com/StrangeDaysTech/straymark/blob/main/docs/README.md) • [README](https://github.com/StrangeDaysTech/straymark/blob/main/README.md) • [Strange Days Tech](https://strangedays.tech)
 
 </div>

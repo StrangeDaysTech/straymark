@@ -4,7 +4,6 @@
 **Fecha:** 30 de abril de 2026
 **Autor:** Jose Villaseñor Montfort — StrangeDaysTech
 **Propósito:** Fijar el alcance conceptual del artefacto **Charter** tal como emerge del experimento Sentinel (donde se llamó *Plan*), y explicar cómo coexiste con flujos de diseño y desarrollo que ya usan SpecKit (spec → plan → tasks).
-**Idiomas:** [English](../../../contributors/WHAT-IS-A-CHARTER.md) | Español | [简体中文](../../zh-CN/contributors/WHAT-IS-A-CHARTER.md)
 **Documentos relacionados:** `straymark-cli-roadmap.md` (§3 Fase 1, §6 mapeo Sentinel→CLI), `straymark-thesis-validation.md`, `straymark-charter-telemetry.md` — todos preservados en `docs/decisions/proposals/` para referencia histórica.
 
 ---

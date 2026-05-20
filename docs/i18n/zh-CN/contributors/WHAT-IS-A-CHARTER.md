@@ -4,7 +4,6 @@
 **日期：** 2026-04-30
 **作者：** Jose Villaseñor Montfort — StrangeDaysTech
 **目的：** 锁定 **Charter** 工件的概念范围——按其在 Sentinel 实验中（彼时称为 *Plan*）所呈现的样子——并解释它如何与已使用 SpecKit（spec → plan → tasks）的设计与开发流程共存。
-**语言：** [English](../../../contributors/WHAT-IS-A-CHARTER.md) | [Español](../../es/contributors/WHAT-IS-A-CHARTER.md) | 简体中文
 **相关文档：** `straymark-cli-roadmap.md`（§3 阶段 1，§6 Sentinel→CLI 映射）、`straymark-thesis-validation.md`、`straymark-charter-telemetry.md` — 均保存在 `docs/decisions/proposals/` 中，以供历史参考。
 
 ---

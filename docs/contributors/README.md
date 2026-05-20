@@ -2,7 +2,6 @@
 
 Resources for people contributing to StrayMark — whether reading the code, writing translations, proposing changes, or trying to understand the *why* behind the framework's shape.
 
-**Languages:** English | [Español](../i18n/es/contributors/README.md) | [简体中文](../i18n/zh-CN/contributors/README.md)
 
 ---
 
@@ -38,4 +37,4 @@ Decision records (ADRs) for the live codebase live on GitHub at [`docs/decisions
 
 ---
 
-*See also: [`../adopters/`](../adopters/) for documentation aimed at teams adopting StrayMark in their own projects, including [`ADOPTION-GUIDE.md`](../adopters/ADOPTION-GUIDE.md), [`CLI-REFERENCE.md`](../adopters/CLI-REFERENCE.md), and [`WORKFLOWS.md`](../adopters/WORKFLOWS.md).*
+*See also: [`../adopters/`](../adopters/ADOPTION-GUIDE.md) for documentation aimed at teams adopting StrayMark in their own projects, including [`ADOPTION-GUIDE.md`](../adopters/ADOPTION-GUIDE.md), [`CLI-REFERENCE.md`](../adopters/CLI-REFERENCE.md), and [`WORKFLOWS.md`](../adopters/WORKFLOWS.md).*

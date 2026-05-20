@@ -5,7 +5,6 @@
 **Autor:** Jose Villaseñor Montfort — StrangeDaysTech
 **Propósito:** Articular la filosofía del producto en forma compacta, para servir como referencia frente a decisiones de diseño y como criterio para decir no a features que no encajan.
 **Documentos relacionados:** `straymark-thesis-validation.md` (cuerpo de evidencia que motivó las anotaciones de v0.2; preservado en `docs/decisions/proposals/`).
-**Idiomas:** [English](../../../contributors/DESIGN-PRINCIPLES.md) | Español | [简体中文](../../zh-CN/contributors/DESIGN-PRINCIPLES.md)
 
 ---
 

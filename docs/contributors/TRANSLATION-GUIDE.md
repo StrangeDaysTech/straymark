@@ -366,7 +366,7 @@ To contribute a new translation:
 3. Submit a pull request with all translated files
 4. Include the language code in PR title: `i18n(XX): Add [Language] translation`
 
-See [CONTRIBUTING.md](../../CONTRIBUTING.md) for general contribution guidelines.
+See [CONTRIBUTING.md](https://github.com/StrangeDaysTech/straymark/blob/main/CONTRIBUTING.md) for general contribution guidelines.
 
 ---
 

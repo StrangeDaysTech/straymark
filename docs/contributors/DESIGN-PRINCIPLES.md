@@ -4,7 +4,6 @@
 **Date:** 2026-05-02
 **Author:** Jose Villaseñor Montfort — StrangeDaysTech
 **Purpose:** Articulate the product philosophy in compact form, to serve as a reference against design decisions and as a criterion for saying no to features that don't fit.
-**Languages:** English | [Español](../i18n/es/contributors/DESIGN-PRINCIPLES.md) | [简体中文](../i18n/zh-CN/contributors/DESIGN-PRINCIPLES.md)
 
 ---
 

@@ -18,7 +18,7 @@ StrayMark externaliza la disciplina cognitiva de la ingeniería asistida por IA 
 
 - [Principios de diseño](./contributors/DESIGN-PRINCIPLES.md) — las restricciones que dan forma al framework.
 - [Qué es un charter](./contributors/WHAT-IS-A-CHARTER.md) — el artefacto central.
-- [Guía de traducción](./contributors/TRANSLATION-GUIDE.md) — cómo se localizan docs y posts.
+- [Guía de traducción](/docs/contributors/TRANSLATION-GUIDE) — cómo se localizan docs y posts.
 
 ## Decisiones
 
