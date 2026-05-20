@@ -7,6 +7,10 @@
     "message": "StrayMark 提供什么",
     "description": "Feature grid title"
   },
+  "features.sidebar.title": {
+    "message": "StrayMark 提供什么",
+    "description": "Title for the left sidebar shared across feature pages"
+  },
   "features.discipline.title": {
     "message": "结构化的认知纪律",
     "description": "Feature: structured cognitive discipline (title)"

@@ -35,6 +35,10 @@
     "message": "Qué trae StrayMark",
     "description": "Feature grid title"
   },
+  "features.sidebar.title": {
+    "message": "Qué trae StrayMark",
+    "description": "Title for the left sidebar shared across feature pages"
+  },
   "features.discipline.title": {
     "message": "Disciplina cognitiva estructurada",
     "description": "Feature: structured cognitive discipline (title)"
