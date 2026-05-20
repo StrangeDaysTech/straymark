@@ -1,0 +1,34 @@
+/*
+ * Paths use pathLength="1", so all dash/offset values below are in path-unit
+ * space (0 = origin, 1 = full path length). 4% dash + 2.5% gap = ~16 dashes
+ * along any edge — chunky enough to read clearly as marching ants.
+ *
+ * Negative dashoffset moves the dashes forward along the path (toward the
+ * arrowhead). 0.13 per 1.2s = roughly 2 pattern cycles per second.
+ */
+.edgeFlow {
+  stroke-dasharray: 0.04 0.025;
+  stroke-dashoffset: 0;
+  animation: dashFlow 1.2s linear infinite;
+}
+
+@keyframes dashFlow {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -0.13;
+  }
+}
+
+/* Kept as a no-op class so the Edge component can pass it through harmlessly. */
+.edgeDraw {
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edgeFlow {
+    animation: none !important;
+    stroke-dasharray: 1 !important;
+    stroke-dashoffset: 0 !important;
+  }
+}

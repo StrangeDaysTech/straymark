@@ -83,14 +83,6 @@
     "message": "整个行业都在忙于模型、防护栏（guardrails）与合规。最缺失的一环却在所有这些之上游：与智能体协作的团队的认知纪律。没有结构，智能体就会漂移，决策会被遗忘，风险无人记录，监管证据只能临时拼凑。StrayMark 直接结构化工作本身 —— 原生于仓库、感知智能体、按构造即可审计。",
     "description": "Why this exists body paragraph"
   },
-  "workflow.title": {
-    "message": "工作流",
-    "description": "Workflow section title"
-  },
-  "workflow.caption": {
-    "message": "每一步都在仓库里留下版本化的产物。没有外部系统，没有隐含决策。",
-    "description": "Workflow section caption"
-  },
   "theme.ErrorPageContent.title": {
     "message": "页面已崩溃。",
     "description": "The title of the fallback page when the page crashed"
@@ -417,5 +409,180 @@
   "theme.tags.tagsPageTitle": {
     "message": "标签",
     "description": "The title of the tag list page"
+  },
+  "workflow.section.title": {
+    "message": "五条工作流，一个仓库",
+    "description": "Workflow section title"
+  },
+  "workflow.section.caption": {
+    "message": "每一步都在你的仓库里留下版本化的产物。没有外部系统，没有隐含决策。",
+    "description": "Workflow section caption"
+  },
+  "workflow.controls.previous": {
+    "message": "上一个工作流",
+    "description": "Aria label for the previous-workflow button"
+  },
+  "workflow.controls.next": {
+    "message": "下一个工作流",
+    "description": "Aria label for the next-workflow button"
+  },
+  "workflow.charter.short": {
+    "message": "Charter"
+  },
+  "workflow.charter.title": {
+    "message": "Charter —— 有界的工作单元"
+  },
+  "workflow.charter.caption": {
+    "message": "事前声明范围、文件、验证方式与风险。执行之后，声明与现实之间的漂移要在同一个 PR 中被对齐，否则该 charter 无法关闭。"
+  },
+  "workflow.charter.node.scaffold": {
+    "message": "创建 charter"
+  },
+  "workflow.charter.node.scope": {
+    "message": "定义范围与文件"
+  },
+  "workflow.charter.node.verification": {
+    "message": "编写验证方式"
+  },
+  "workflow.charter.node.risks": {
+    "message": "列出风险"
+  },
+  "workflow.charter.node.execute": {
+    "message": "执行并产出 AILOG"
+  },
+  "workflow.charter.node.drift": {
+    "message": "是否漂移？"
+  },
+  "workflow.charter.node.reconcile": {
+    "message": "在 PR 中对齐"
+  },
+  "workflow.charter.node.close": {
+    "message": "关闭 charter"
+  },
+  "workflow.ailog.short": {
+    "message": "AILOG"
+  },
+  "workflow.ailog.title": {
+    "message": "AILOG —— AI 动作日志"
+  },
+  "workflow.ailog.caption": {
+    "message": "每一次变更的执行账本：做了什么、为什么、过程中发现的风险，以及考虑过的备选方案。每个 commit 一份 AILOG，按日期顺序编号。"
+  },
+  "workflow.ailog.node.context": {
+    "message": "收集上下文"
+  },
+  "workflow.ailog.node.sequence": {
+    "message": "计算序号 #"
+  },
+  "workflow.ailog.node.template": {
+    "message": "加载模板"
+  },
+  "workflow.ailog.node.metadata": {
+    "message": "填写元数据"
+  },
+  "workflow.ailog.node.changes": {
+    "message": "记录变更"
+  },
+  "workflow.ailog.node.risks": {
+    "message": "登记风险"
+  },
+  "workflow.ailog.node.commit": {
+    "message": "Commit 引用 AILOG"
+  },
+  "workflow.tde.short": {
+    "message": "TDE"
+  },
+  "workflow.tde.title": {
+    "message": "TDE —— 跨越式技术债"
+  },
+  "workflow.tde.caption": {
+    "message": "当技术债是历史遗留、跨越多个模块、需要专属 charter，或需要人来排优先级时，它就不再只是某个 charter 的风险，而成为被追踪、被打分的 TDE。"
+  },
+  "workflow.tde.node.identify": {
+    "message": "识别技术债"
+  },
+  "workflow.tde.node.eligible": {
+    "message": "符合条件？"
+  },
+  "workflow.tde.node.drop": {
+    "message": "登记为 R<N>"
+  },
+  "workflow.tde.node.create": {
+    "message": "创建 TDE 文档"
+  },
+  "workflow.tde.node.score": {
+    "message": "打分：影响 × 投入"
+  },
+  "workflow.tde.node.prioritize": {
+    "message": "由人排优先级"
+  },
+  "workflow.tde.node.remediate": {
+    "message": "修复"
+  },
+  "workflow.tde.node.resolved": {
+    "message": "标记为已解决"
+  },
+  "workflow.compliance.short": {
+    "message": "合规"
+  },
+  "workflow.compliance.title": {
+    "message": "Compliance —— 监管扫描"
+  },
+  "workflow.compliance.caption": {
+    "message": "CLI 遍历 .straymark/ 下的文档，解析 frontmatter，按生效范围中的标准（EU AI Act、ISO 42001、NIST、TC260、PIPL……）进行扫描。发现的缺口会以可执行的建议呈现。"
+  },
+  "workflow.compliance.node.scope": {
+    "message": "加载区域范围"
+  },
+  "workflow.compliance.node.discover": {
+    "message": "发现 .straymark/ 文档"
+  },
+  "workflow.compliance.node.parse": {
+    "message": "解析 frontmatter"
+  },
+  "workflow.compliance.node.scan": {
+    "message": "扫描标准"
+  },
+  "workflow.compliance.node.gaps": {
+    "message": "存在缺口？"
+  },
+  "workflow.compliance.node.pass": {
+    "message": "报告通过"
+  },
+  "workflow.compliance.node.suggest": {
+    "message": "建议 DPIA/MCARD/ETH"
+  },
+  "workflow.audit.short": {
+    "message": "审计轨迹"
+  },
+  "workflow.audit.title": {
+    "message": "Audit trail —— 多模型验证"
+  },
+  "workflow.audit.caption": {
+    "message": "多个审计方 CLI（gemini、claude、copilot……）读取同一份提示，对一个已关闭的 Charter 进行审计。发现项会被去重、对照代码核实、重新分级，并以签名的证据块形式合并入遥测数据。"
+  },
+  "workflow.audit.node.resolve": {
+    "message": "解析 charter"
+  },
+  "workflow.audit.node.prompt": {
+    "message": "生成审计提示"
+  },
+  "workflow.audit.node.run": {
+    "message": "运行 N 个审计方"
+  },
+  "workflow.audit.node.collect": {
+    "message": "收集报告"
+  },
+  "workflow.audit.node.verify": {
+    "message": "核实发现项"
+  },
+  "workflow.audit.node.reclassify": {
+    "message": "重新分级"
+  },
+  "workflow.audit.node.plan": {
+    "message": "构建修复计划"
+  },
+  "workflow.audit.node.merge": {
+    "message": "合并入遥测"
   }
 }

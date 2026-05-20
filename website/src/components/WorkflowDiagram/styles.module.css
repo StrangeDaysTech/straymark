@@ -1,12 +1,43 @@
+/* Blueprint theme tokens — light (drafting paper) by default, overridden in dark. */
 .section {
-  padding: 4rem 1rem;
+  /* Light: drafting paper */
+  --bp-bg: #eef3fb;
+  --bp-bg-deep: #e3eaf6;
+  --bp-grid: #c6d4e6;
+  --bp-grid-major: #98aecd;
+  --bp-stroke: #1a3a6b;
+  --bp-stroke-dim: #6b87b0;
+  --bp-stroke-faint: rgba(26, 58, 107, 0.4);
+  --bp-accent: #0b66c2;
+  --bp-text: #0b1f3a;
+  --bp-text-dim: #4a6285;
+  --bp-fill-soft: rgba(11, 102, 194, 0.06);
+  --bp-fill-decision: rgba(11, 102, 194, 0.08);
+  --bp-fill-output: rgba(11, 102, 194, 0.14);
+
+  padding: 5rem 1rem 4.5rem;
   background: var(--ifm-background-color);
 }
 
+:global([data-theme='dark']) .section {
+  --bp-bg: #0b1f3a;
+  --bp-bg-deep: #081730;
+  --bp-grid: #1c3963;
+  --bp-grid-major: #2b507f;
+  --bp-stroke: #cfe2ff;
+  --bp-stroke-dim: #6f8db3;
+  --bp-stroke-faint: rgba(207, 226, 255, 0.35);
+  --bp-accent: #4fc3ff;
+  --bp-text: #e8f0ff;
+  --bp-text-dim: #97b1d4;
+  --bp-fill-soft: rgba(79, 195, 255, 0.08);
+  --bp-fill-decision: rgba(79, 195, 255, 0.1);
+  --bp-fill-output: rgba(79, 195, 255, 0.18);
+}
+
 .inner {
-  max-width: 980px;
+  max-width: 1080px;
   margin: 0 auto;
-  text-align: center;
 }
 
 .title {
@@ -14,25 +45,306 @@
   font-weight: 700;
   letter-spacing: -0.01em;
   margin: 0 0 0.75rem;
+  text-align: center;
 }
 
 .caption {
   color: var(--ifm-color-emphasis-700);
-  max-width: 620px;
+  max-width: 640px;
   margin: 0 auto 2.5rem;
   font-size: 1.05rem;
-  line-height: 1.5;
+  line-height: 1.55;
+  text-align: center;
 }
 
-.diagram {
-  background: var(--ifm-background-surface-color);
-  border: 1px solid var(--ifm-color-emphasis-200);
-  border-radius: 12px;
-  padding: 1.5rem;
-  overflow-x: auto;
+/* ---- Tablist (desktop) ---- */
+.tablist {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0 auto 1.25rem;
+  padding: 0;
+  list-style: none;
 }
 
-.diagram :global(svg) {
-  max-width: 100%;
+.tabButton {
+  font-family: var(--ifm-font-family-monospace, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.55rem 0.95rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  background: transparent;
+  color: var(--ifm-color-emphasis-700);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.tabButton:hover {
+  color: var(--ifm-color-emphasis-900);
+  border-color: var(--ifm-color-emphasis-500);
+}
+
+.tabButton[aria-selected='true'] {
+  color: var(--bp-accent);
+  border-color: var(--bp-accent);
+  background: var(--bp-fill-soft);
+}
+
+.tabButton:focus-visible {
+  outline: 2px solid var(--bp-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+  .tablist {
+    display: none;
+  }
+}
+
+/* ---- Embla viewport ---- */
+.viewport {
+  overflow: hidden;
+}
+
+.container {
+  display: flex;
+  align-items: stretch;
+}
+
+.slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  padding: 0 0.25rem;
+}
+
+/* ---- Blueprint frame ---- */
+.frame {
+  position: relative;
+  background: var(--bp-bg);
+  border: 1px solid var(--bp-stroke-faint);
+  border-radius: 4px;
+  overflow: hidden;
+  font-family: var(--ifm-font-family-monospace, ui-monospace, SFMono-Regular, Menlo, monospace);
+  color: var(--bp-text);
+  box-shadow: 0 1px 0 var(--bp-stroke-faint), 0 10px 32px -20px rgba(11, 31, 58, 0.4);
+}
+
+.frameHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  background: var(--bp-bg-deep);
+  border-bottom: 1px solid var(--bp-stroke-faint);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bp-text-dim);
+}
+
+.frameStamp {
+  font-weight: 700;
+  color: var(--bp-text);
+  letter-spacing: 0.22em;
+}
+
+.frameSeparator {
+  opacity: 0.5;
+}
+
+.frameIndex {
+  color: var(--bp-accent);
+  font-weight: 600;
+}
+
+.frameTitle {
+  margin-left: 0.25rem;
+  flex: 1;
+  color: var(--bp-text);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.frameVersion {
+  font-size: 0.7rem;
+  color: var(--bp-text-dim);
+  letter-spacing: 0.14em;
+}
+
+.frameCanvas {
+  position: relative;
+  padding: 1.5rem 1.25rem;
+  background: var(--bp-bg);
+}
+
+.corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--bp-stroke-dim);
+  pointer-events: none;
+}
+
+.cornerTL {
+  top: 8px;
+  left: 8px;
+  border-right: none;
+  border-bottom: none;
+}
+.cornerTR {
+  top: 8px;
+  right: 8px;
+  border-left: none;
+  border-bottom: none;
+}
+.cornerBL {
+  bottom: 8px;
+  left: 8px;
+  border-right: none;
+  border-top: none;
+}
+.cornerBR {
+  bottom: 8px;
+  right: 8px;
+  border-left: none;
+  border-top: none;
+}
+
+.frameFooter {
+  padding: 0.55rem 1rem 0.7rem;
+  border-top: 1px solid var(--bp-stroke-faint);
+  background: var(--bp-bg-deep);
+  font-size: 0.78rem;
+  color: var(--bp-text-dim);
+  letter-spacing: 0.04em;
+}
+
+/* ---- SVG primitives ---- */
+.svg {
+  display: block;
+  width: 100%;
   height: auto;
+}
+
+.node {
+  /* group for hover effects */
+}
+
+.nodeShape {
+  fill: var(--bp-fill-soft);
+  stroke: var(--bp-stroke);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+}
+
+.shapeDecision {
+  fill: var(--bp-fill-decision);
+}
+
+.shapeTerminal {
+  fill: transparent;
+  stroke-width: 1.5;
+}
+
+.shapeOutput {
+  fill: var(--bp-fill-output);
+  stroke: var(--bp-accent);
+}
+
+.nodeLabel {
+  fill: var(--bp-text);
+  font-family: var(--ifm-font-family-monospace, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+
+.edge {
+  stroke: var(--bp-stroke-dim);
+  stroke-width: 1.1;
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.edgeLabel {
+  fill: var(--bp-text-dim);
+  font-family: var(--ifm-font-family-monospace, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.arrowHead {
+  fill: var(--bp-stroke-dim);
+}
+
+.axisLabel {
+  fill: var(--bp-text-dim);
+  font-family: var(--ifm-font-family-monospace, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ---- Carousel controls (mobile) ---- */
+.controls {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 767px) {
+  .controls {
+    display: flex;
+  }
+}
+
+.controlButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  background: transparent;
+  color: var(--ifm-color-emphasis-700);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.controlButton:hover:not(:disabled) {
+  color: var(--bp-accent);
+  border-color: var(--bp-accent);
+}
+
+.controlButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dots {
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--ifm-color-emphasis-400);
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.dot[aria-selected='true'] {
+  background: var(--bp-accent);
+  border-color: var(--bp-accent);
 }
