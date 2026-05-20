@@ -1,5 +1,5 @@
 ---
-slug: 智能体的涌现观察
+slug: emergent-observation-design
 title: 智能体发现了一件没人要求它发现的事
 authors:
   - jose

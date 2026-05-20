@@ -1,5 +1,5 @@
 ---
-slug: 四个月里的四个名字
+slug: four-names-in-four-months
 title: 四个月里的四个名字
 authors:
   - jose

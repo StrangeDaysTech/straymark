@@ -1,5 +1,5 @@
 ---
-slug: 模式之前的手工纪律
+slug: manual-discipline-before-the-pattern
 title: 模式之前的手工纪律
 authors:
   - jose

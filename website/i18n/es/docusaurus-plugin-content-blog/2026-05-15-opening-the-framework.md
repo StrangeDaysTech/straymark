@@ -1,5 +1,5 @@
 ---
-slug: abrir-el-framework
+slug: opening-the-framework
 title: Abrir el framework
 authors:
   - jose

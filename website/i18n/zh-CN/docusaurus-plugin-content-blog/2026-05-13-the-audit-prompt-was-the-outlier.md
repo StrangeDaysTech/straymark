@@ -1,5 +1,5 @@
 ---
-slug: 审计-prompt-是异常值
+slug: the-audit-prompt-was-the-outlier
 title: "audit-prompt 是异常值"
 authors:
   - jose

@@ -1,5 +1,5 @@
 ---
-slug: seis-planes-y-el-rename-a-charter
+slug: six-plans-and-the-rename-to-charter
 title: Seis Planes para una tesis (y el rename a Charter)
 authors:
   - jose

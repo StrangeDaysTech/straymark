@@ -1,5 +1,5 @@
 ---
-slug: explorando-el-framework
+slug: exploring-the-framework
 title: Explorando el framework
 authors:
   - jose

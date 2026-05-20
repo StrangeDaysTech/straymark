@@ -1,5 +1,5 @@
 ---
-slug: agents-md-como-estandar-universal
+slug: agents-md-as-a-universal-standard
 title: AGENTS.md como estándar universal
 authors:
   - jose

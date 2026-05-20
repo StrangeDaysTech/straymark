@@ -1,5 +1,5 @@
 ---
-slug: la-disciplina-manual-antes-del-patron
+slug: manual-discipline-before-the-pattern
 title: La disciplina manual antes del patrón
 authors:
   - jose

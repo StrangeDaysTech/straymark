@@ -1,5 +1,5 @@
 ---
-slug: charter-与外部审计周期
+slug: charters-and-the-external-audit-cycle
 title: Charter 作为一等实体与外部审计周期
 authors:
   - jose

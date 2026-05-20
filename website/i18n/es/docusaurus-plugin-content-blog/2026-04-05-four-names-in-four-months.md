@@ -1,5 +1,5 @@
 ---
-slug: cuatro-nombres-en-cuatro-meses
+slug: four-names-in-four-months
 title: Cuatro nombres en cuatro meses
 authors:
   - jose

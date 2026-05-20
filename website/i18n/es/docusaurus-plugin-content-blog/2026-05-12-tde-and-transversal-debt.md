@@ -1,5 +1,5 @@
 ---
-slug: tde-y-la-deuda-transversal
+slug: tde-and-transversal-debt
 title: TDE y la deuda transversal
 authors:
   - jose

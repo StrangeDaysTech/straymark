@@ -1,5 +1,5 @@
 ---
-slug: charters-invisibles-para-los-agentes
+slug: charters-invisible-to-agents
 title: Charters invisibles para los agentes
 authors:
   - jose

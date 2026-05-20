@@ -1,5 +1,5 @@
 ---
-slug: 更名为-straymark
+slug: the-rebrand-to-straymark
 title: 更名为 StrayMark
 authors:
   - jose

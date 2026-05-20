@@ -1,5 +1,5 @@
 ---
-slug: 模式-1-与模式-2-链演化
+slug: pattern-1-and-pattern-2-chain-evolution
 title: "Pattern 1 与 Pattern 2 —— 链演化"
 authors:
   - jose

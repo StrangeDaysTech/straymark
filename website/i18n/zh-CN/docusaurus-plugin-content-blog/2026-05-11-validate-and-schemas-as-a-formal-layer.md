@@ -1,5 +1,5 @@
 ---
-slug: validate-与作为形式层的-schema
+slug: validate-and-schemas-as-a-formal-layer
 title: validate 与作为形式层的 schema
 authors:
   - jose

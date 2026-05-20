@@ -1,5 +1,5 @@
 ---
-slug: 六个-plan-与-charter-之名
+slug: six-plans-and-the-rename-to-charter
 title: 为一个论题设计的六个 Plan（以及更名为 Charter 的那天）
 authors:
   - jose

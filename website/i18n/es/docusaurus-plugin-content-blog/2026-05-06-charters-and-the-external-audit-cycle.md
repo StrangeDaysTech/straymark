@@ -1,5 +1,5 @@
 ---
-slug: charters-y-el-audit-cycle-externo
+slug: charters-and-the-external-audit-cycle
 title: 'Charters como entidad de primera clase, y el audit cycle externo'
 authors:
   - jose
