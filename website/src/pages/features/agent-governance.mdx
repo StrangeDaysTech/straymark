@@ -1,0 +1,32 @@
+---
+title: Declarative agent governance
+description: Versioned rules in STRAYMARK.md and AGENT-RULES bind agent behavior at the workflow level — not at runtime, not after the fact.
+---
+import FeaturesLayout from '@site/src/components/FeaturesLayout';
+
+<FeaturesLayout>
+
+# Declarative agent governance
+
+Runtime guardrails come too late. By the time the agent has typed a destructive command, the prompt is over and you're triaging the cleanup. StrayMark moves agent governance upstream: the rules are declared in versioned files the agent reads *before* it begins, and updates to those rules are visible in `git log`.
+
+## Why this matters
+
+- **Runtime ≠ workflow.** Most LLM guardrails are prompt-injection defenses or output filters — important, but they don't decide whether the agent should write that DB migration in the first place. Workflow-level governance does.
+- **Versioned rules are reviewable rules.** `STRAYMARK.md` is a file with PR diffs. Tightening or loosening a rule shows up in `git log` with an author, a date, and a discussion thread. That's auditable in a way runtime configs aren't.
+- **Same contract across CLIs.** The same `STRAYMARK.md` directs Claude Code, Gemini CLI, Copilot CLI, Codex CLI. One source of truth, N agents. Switching models doesn't mean rewriting the operating contract.
+
+## The contract layers
+
+1. **`STRAYMARK.md`** at the repo root (~600 lines, ~12 sections). The unified rules: hierarchies, prohibited operations, documentation policy, security stance, when to ask before acting. Agents are required to read it before any non-trivial action.
+2. **`AGENT-RULES.md`** under `.straymark/00-governance/`: stricter operational rules — when to flag drift, when to recommend a TDE, the "Be Proactive" clause that authorizes the agent to surface findings unprompted.
+3. **Skill frontmatter** augments the global rules for specific rituals. Each `/straymark-*` skill has its own preconditions, output contract, and post-conditions.
+
+When the framework version bumps, the contract bumps. `straymark update-framework` shows you the diff before applying.
+
+## Learn more
+
+- [Workflows](/docs/adopters/WORKFLOWS)
+- [STRAYMARK.md on GitHub](https://github.com/StrangeDaysTech/straymark/blob/main/dist/STRAYMARK.md)
+
+</FeaturesLayout>

@@ -1,0 +1,54 @@
+---
+title: A CLI that does the work
+description: One Rust binary, eleven commands. Deterministic, scriptable, no daemons.
+---
+import FeaturesLayout from '@site/src/components/FeaturesLayout';
+
+<FeaturesLayout>
+
+# A CLI that does the work
+
+`straymark` is a single Rust binary with eleven subcommands that operate on your repo: scaffolding, validating, auditing, analyzing complexity, generating compliance reports. Deterministic outputs you can pipe to `grep`, `jq`, or CI.
+
+## Why this matters
+
+- **One install path, one upgrade path.** No language-runtime hunt, no Docker layer, no orchestration. `curl -fsSL .../install.sh | sh` puts it on `$PATH`. `straymark update-cli` keeps it current.
+- **No hidden side effects.** `straymark validate` reads files; `straymark audit` produces a markdown report. None of the subcommands call out to APIs or modify your git state without you asking. Safe to wire into pre-commit and CI.
+- **The CLI is the contract.** The same `straymark validate` runs locally, in pre-commit, and in pipelines. There isn't a "CI mode" with different rules.
+
+## The eleven commands
+
+| Command | What it does |
+|---|---|
+| `straymark init [path]` | Initialize StrayMark in a project |
+| `straymark update` | Update both framework and CLI |
+| `straymark status [path]` | Show installation health and doc stats |
+| `straymark repair [path]` | Restore missing directories and framework files |
+| `straymark validate [path] [--staged]` | Validate documents for compliance and correctness |
+| `straymark new [-t type] [--title]` | Create a new document from a template |
+| `straymark compliance [path]` | Check regulatory compliance (EU AI Act, ISO 42001, NIST, ...) |
+| `straymark metrics [path]` | Show governance metrics and documentation statistics |
+| `straymark analyze [path]` | Analyze code complexity (cognitive + cyclomatic) |
+| `straymark audit [path]` | Generate audit trail reports with timeline and traceability |
+| `straymark explore [path]` | Interactive TUI documentation browser |
+
+All commands respect `--json` where it makes sense, so output is machine-readable.
+
+## Built for piping
+
+```bash
+# Find every open TDE sorted by impact:
+straymark metrics --json | jq '.tde[] | select(.status=="identified") | .id'
+
+# Fail CI when any high-risk Charter lacks an AILOG:
+straymark validate --staged || exit 1
+
+# Diff complexity between two commits:
+straymark analyze --since HEAD~10
+```
+
+## Learn more
+
+- [CLI Reference](/docs/adopters/CLI-REFERENCE)
+
+</FeaturesLayout>

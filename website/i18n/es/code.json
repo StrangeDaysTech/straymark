@@ -35,6 +35,10 @@
     "message": "Qué trae StrayMark",
     "description": "Feature grid title"
   },
+  "features.sidebar.title": {
+    "message": "Qué trae StrayMark",
+    "description": "Title for the left sidebar shared across feature pages"
+  },
   "features.discipline.title": {
     "message": "Disciplina cognitiva estructurada",
     "description": "Feature: structured cognitive discipline (title)"
@@ -82,6 +86,30 @@
   "features.tde.body": {
     "message": "El Transversal Debt Engine expone el acoplamiento oculto entre charters antes de que se acumule en incidentes.",
     "description": "Feature: TDE drift detection (body)"
+  },
+  "features.skills.title": {
+    "message": "Skills para agentes de IA",
+    "description": "Feature: skills for AI agents (title)"
+  },
+  "features.skills.body": {
+    "message": "Once slash-commands envuelven los rituales: /straymark-charter-new, /straymark-ailog, /straymark-audit-prompt, /straymark-status. El agente conduce el framework, no tú.",
+    "description": "Feature: skills for AI agents (body)"
+  },
+  "features.audit.title": {
+    "message": "Auditoría externa multi-modelo",
+    "description": "Feature: multi-model external audit (title)"
+  },
+  "features.audit.body": {
+    "message": "Tres CLIs auditores (ej. claude, copilot, gemini) leen el mismo prompt y auditan un Charter cerrado de forma independiente. Un calibrador deduplica, reclasifica severidad y fusiona evidencia firmada en la telemetría.",
+    "description": "Feature: multi-model external audit (body)"
+  },
+  "features.eod.title": {
+    "message": "Observación emergente por diseño",
+    "description": "Feature: emergent observation by design (title)"
+  },
+  "features.eod.body": {
+    "message": "Las referencias cruzadas obligatorias entre documentos permiten que el agente detecte specs desactualizadas y deriva entre charters por sí mismo. La disciplina cognitiva eleva el piso sin endurecer el prompt.",
+    "description": "Feature: emergent observation by design (body)"
   },
   "workflow.section.title": {
     "message": "Cinco flujos, un repositorio",

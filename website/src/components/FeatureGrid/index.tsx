@@ -18,7 +18,7 @@ const FEATURES: Feature[] = [
     bodyId: 'features.discipline.body',
     bodyDefault:
       'Charters define purpose and limits before code. AILOGs capture human/agent exchange. AIDECs record decisions and tradeoffs.',
-    to: '/docs/contributors/WHAT-IS-A-CHARTER',
+    to: '/features/cognitive-discipline',
   },
   {
     titleId: 'features.repo.title',
@@ -26,7 +26,7 @@ const FEATURES: Feature[] = [
     bodyId: 'features.repo.body',
     bodyDefault:
       'Everything lives in your git repo: artifacts, governance rules, agent directives. No external platform, no second source of truth.',
-    to: '/docs/adopters/ADOPTION-GUIDE',
+    to: '/features/repo-native',
   },
   {
     titleId: 'features.agents.title',
@@ -34,7 +34,7 @@ const FEATURES: Feature[] = [
     bodyId: 'features.agents.body',
     bodyDefault:
       'Versioned rules in STRAYMARK.md and AGENT-RULES bind agent behavior at the workflow level — not at runtime, not after the fact.',
-    to: '/docs/adopters/WORKFLOWS',
+    to: '/features/agent-governance',
   },
   {
     titleId: 'features.evidence.title',
@@ -42,7 +42,7 @@ const FEATURES: Feature[] = [
     bodyId: 'features.evidence.body',
     bodyDefault:
       'EU AI Act, ISO 42001, NIST AI RMF, and GDPR mappings emerge from the same artifacts the team already produces. No parallel paper trail.',
-    to: '/docs/adopters/CLI-REFERENCE',
+    to: '/features/evidence-byproduct',
   },
   {
     titleId: 'features.cli.title',
@@ -50,7 +50,7 @@ const FEATURES: Feature[] = [
     bodyId: 'features.cli.body',
     bodyDefault:
       'init, validate, audit, analyze, compliance, metrics — one binary, eleven commands, deterministic outputs you can grep and pipe.',
-    to: '/docs/adopters/CLI-REFERENCE',
+    to: '/features/cli',
   },
   {
     titleId: 'features.tde.title',
@@ -58,7 +58,31 @@ const FEATURES: Feature[] = [
     bodyId: 'features.tde.body',
     bodyDefault:
       'The Transversal Debt Engine surfaces hidden coupling between charters before it compounds into incidents.',
-    to: '/docs/contributors/DESIGN-PRINCIPLES',
+    to: '/features/tde',
+  },
+  {
+    titleId: 'features.skills.title',
+    titleDefault: 'Skills for AI agents',
+    bodyId: 'features.skills.body',
+    bodyDefault:
+      'Eleven slash-commands wrap the rituals: /straymark-charter-new, /straymark-ailog, /straymark-audit-prompt, /straymark-status. The agent drives the framework, not you.',
+    to: '/features/skills',
+  },
+  {
+    titleId: 'features.audit.title',
+    titleDefault: 'Multi-model external audit',
+    bodyId: 'features.audit.body',
+    bodyDefault:
+      'Three auditor CLIs (e.g. claude, copilot, gemini) read the same prompt and audit a closed Charter independently. A calibrator deduplicates, reclassifies severity, and merges signed evidence into telemetry.',
+    to: '/features/multi-model-audit',
+  },
+  {
+    titleId: 'features.eod.title',
+    titleDefault: 'Emergent observation by design',
+    bodyId: 'features.eod.body',
+    bodyDefault:
+      'Mandatory cross-references between documents let the agent spot stale specs and inter-charter drift on its own. Cognitive discipline raises the floor without tightening the prompt.',
+    to: '/features/emergent-observation',
   },
 ];
 
