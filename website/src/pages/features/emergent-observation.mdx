@@ -1,0 +1,29 @@
+---
+title: Emergent observation by design
+description: When documents reference each other formally, agents start spotting drift without being asked. The property has a name — Emergent Observation. It's Principle #8.
+---
+
+# Emergent observation by design
+
+On 2026-05-16, an agent flagged a stale spec before being asked to. Nobody had prompted it; it noticed the divergence on its own. The reconstruction of that morning surfaced a design property StrayMark had been building toward without naming: **Emergent Observation**. It became Principle #8.
+
+## Why this matters
+
+Most agent governance tries to make agents more restricted: tighter prompts, stricter personas, more guardrails. Emergent Observation goes the other way — when the documents are formally linked and the cultural permission is explicit, the agent gains enough context to *notice* problems and enough authorization to *flag* them.
+
+- **The floor rises without the prompt tightening.** You don't need a longer prompt; you need a denser semantic graph between artifacts. The agent's "ability to observe" is a function of how the documents reference each other, not how restrictive the prompt is.
+- **Findings the team would have missed get surfaced early.** Stale specs, inter-charter drift, MCARDs that no longer match the deployed model. The agent finds these because the graph makes the divergence visible — not because anyone asked.
+- **It's a property, not a feature.** Every StrayMark concept (Charter→AILOG, AILOG→Risk, MCARD→DPIA, TDE→origin Charter, ...) contributes to it. Removing any one of them weakens the agent's ability to observe.
+
+## What makes it work
+
+1. **Mandatory linkage.** Every Charter must declare its files and risks. Every AILOG must reference its Charter. Every TDE must trace its origin. The forward and back-references close a graph.
+2. **Stable IDs, canonical sections.** Documents have predictable headings (`## Scope`, `## Risks`, `## Verification`, `## Status`) and stable IDs in frontmatter. The agent can dereference quickly without prose-parsing every file.
+3. **Explicit permission.** `AGENT-RULES.md §6` ("Be Proactive — Identify potential risks, Suggest improvements when evident, Alert about technical debt") tells the agent that surfacing findings is part of the job, not stepping out of line.
+
+Remove any one of those three and the property collapses. That's why the design treats them as load-bearing, not optional.
+
+## Learn more
+
+- [Blog: The day the agent saw something nobody asked it to see](/blog/emergent-observation-design)
+- [Design Principles](/docs/contributors/DESIGN-PRINCIPLES)

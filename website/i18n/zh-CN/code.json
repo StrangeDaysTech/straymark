@@ -68,7 +68,7 @@
     "description": "Feature: multi-model external audit (title)"
   },
   "features.audit.body": {
-    "message": "三个审计方 CLI（gemini、claude、copilot）读取同一份提示，独立审计一个已关闭的 Charter。校准器去重、重新分级，并将签名后的证据合并入遥测数据。",
+    "message": "三个审计方 CLI（如 claude、copilot、gemini）读取同一份提示，独立审计一个已关闭的 Charter。校准器去重、重新分级，并将签名后的证据合并入遥测数据。",
     "description": "Feature: multi-model external audit (body)"
   },
   "features.eod.title": {

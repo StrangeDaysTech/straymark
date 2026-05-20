@@ -96,7 +96,7 @@
     "description": "Feature: multi-model external audit (title)"
   },
   "features.audit.body": {
-    "message": "Tres CLIs auditores (gemini, claude, copilot) leen el mismo prompt y auditan un Charter cerrado de forma independiente. Un calibrador deduplica, reclasifica severidad y fusiona evidencia firmada en la telemetría.",
+    "message": "Tres CLIs auditores (ej. claude, copilot, gemini) leen el mismo prompt y auditan un Charter cerrado de forma independiente. Un calibrador deduplica, reclasifica severidad y fusiona evidencia firmada en la telemetría.",
     "description": "Feature: multi-model external audit (body)"
   },
   "features.eod.title": {

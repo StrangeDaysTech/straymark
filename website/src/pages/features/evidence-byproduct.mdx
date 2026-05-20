@@ -1,0 +1,39 @@
+---
+title: Evidence as a byproduct
+description: Regulatory compliance evidence emerges from the same artifacts the team already produces. No parallel paper trail.
+---
+
+# Evidence as a byproduct
+
+Compliance shouldn't be a separate pile of documents your team maintains after the fact. StrayMark maps your existing artifacts — Charters, AILOGs, AIDECs, ETH, DPIA, MCARDs — directly to EU AI Act, ISO 42001, NIST AI RMF, GDPR, and China-region (TC260, PIPL, GB45438, CAC, CSL) controls. The artifacts *are* the evidence.
+
+## Why this matters
+
+- **You're already writing the inputs.** Auditors ask for risk registers, decision logs, model cards, incident response plans. Those map onto Charter `Risks` sections, AILOGs, AIDECs, MCARDs, SEC documents — artifacts the team produces during normal work, not in a compliance sprint at year-end.
+- **Gap reports in seconds.** `straymark compliance --standard EuAiAct` walks the repo, parses frontmatter (tags, risk_level, regional_scope), and produces a gap report. No spreadsheet, no Confluence space, no external GRC tool.
+- **Standards evolve; the engine ships with releases.** When a regulator publishes a clarification, the mapping engine updates in the next framework release. You don't re-train your team — you `straymark update-framework`.
+
+## What gets scanned
+
+```bash
+$ straymark compliance --standard EuAiAct
+[OK]   Risk management   8/8   covered by R1-R8 across 12 Charters
+[OK]   Data governance   4/4   covered by 3 DPIA documents
+[GAP]  Model cards       0/2   high-risk models in scope are missing MCARD
+[GAP]  Incident response 0/1   ETH-RESPONSE not declared
+```
+
+Supported standards out of the box:
+
+| Region | Standards |
+|---|---|
+| EU | EU AI Act, GDPR |
+| International | ISO/IEC 42001, NIST AI RMF |
+| China | TC260, PIPL, GB45438, CAC, CSL |
+
+The `regional_scope` field in `.straymark/config.yml` determines which scans run by default.
+
+## Learn more
+
+- [CLI Reference: `compliance`](/docs/adopters/CLI-REFERENCE)
+- [Adoption Guide](/docs/adopters/ADOPTION-GUIDE)
