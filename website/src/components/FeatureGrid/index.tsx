@@ -60,6 +60,30 @@ const FEATURES: Feature[] = [
       'The Transversal Debt Engine surfaces hidden coupling between charters before it compounds into incidents.',
     to: '/docs/contributors/DESIGN-PRINCIPLES',
   },
+  {
+    titleId: 'features.skills.title',
+    titleDefault: 'Skills for AI agents',
+    bodyId: 'features.skills.body',
+    bodyDefault:
+      'Eleven slash-commands wrap the rituals: /straymark-charter-new, /straymark-ailog, /straymark-audit-prompt, /straymark-status. The agent drives the framework, not you.',
+    to: '/docs/adopters/WORKFLOWS',
+  },
+  {
+    titleId: 'features.audit.title',
+    titleDefault: 'Multi-model external audit',
+    bodyId: 'features.audit.body',
+    bodyDefault:
+      'Three auditor CLIs (gemini, claude, copilot) read the same prompt and audit a closed Charter independently. A calibrator deduplicates, reclassifies severity, and merges signed evidence into telemetry.',
+    to: '/docs/adopters/WORKFLOWS',
+  },
+  {
+    titleId: 'features.eod.title',
+    titleDefault: 'Emergent observation by design',
+    bodyId: 'features.eod.body',
+    bodyDefault:
+      'Mandatory cross-references between documents let the agent spot stale specs and inter-charter drift on its own. Cognitive discipline raises the floor without tightening the prompt.',
+    to: '/blog/emergent-observation-design',
+  },
 ];
 
 export default function FeatureGrid(): ReactNode {

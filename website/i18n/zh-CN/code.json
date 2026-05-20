@@ -55,6 +55,30 @@
     "message": "Transversal Debt Engine 让 Charters 之间隐藏的耦合在演化为事故前显形。",
     "description": "Feature: TDE drift detection (body)"
   },
+  "features.skills.title": {
+    "message": "面向 AI 智能体的 Skills",
+    "description": "Feature: skills for AI agents (title)"
+  },
+  "features.skills.body": {
+    "message": "十一个斜杠命令封装了仪式：/straymark-charter-new、/straymark-ailog、/straymark-audit-prompt、/straymark-status……由智能体驱动框架，而不是你。",
+    "description": "Feature: skills for AI agents (body)"
+  },
+  "features.audit.title": {
+    "message": "多模型外部审计",
+    "description": "Feature: multi-model external audit (title)"
+  },
+  "features.audit.body": {
+    "message": "三个审计方 CLI（gemini、claude、copilot）读取同一份提示，独立审计一个已关闭的 Charter。校准器去重、重新分级，并将签名后的证据合并入遥测数据。",
+    "description": "Feature: multi-model external audit (body)"
+  },
+  "features.eod.title": {
+    "message": "源自设计的涌现式观察",
+    "description": "Feature: emergent observation by design (title)"
+  },
+  "features.eod.body": {
+    "message": "文档之间强制的相互引用让智能体能够主动发现过时的规范和跨 Charter 的漂移。认知纪律提升基线，而无需收紧提示词。",
+    "description": "Feature: emergent observation by design (body)"
+  },
   "hero.pillar1": {
     "message": "记录每一个决策",
     "description": "First hero pillar"
