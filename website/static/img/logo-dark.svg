@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="StrayMark symbol (sm-inverse)">
+  <title>StrayMark</title>
+  <path d="M 12 4 L 88 4 A 8 8 0 0 1 96 12 L 96 96 L 50 70 L 4 96 L 4 12 A 8 8 0 0 1 12 4 Z" fill="#FFFFFF"/>
+  <path d="M 41 29 C 41 24 37 21 32 21 L 19 21 C 14 21 12 24 12 29 C 12 34 14 38 19 38 L 31 38 C 36 38 41 41 41 46 C 41 51 37 54 32 54 L 19 54 C 14 54 12 51 12 46" fill="none" stroke="#0E0E10" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 56 54 L 56 21 L 72 38 L 88 21 L 88 81" fill="none" stroke="#0E0E10" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

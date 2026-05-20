@@ -4,10 +4,21 @@
   border-bottom: 1px solid var(--ifm-color-emphasis-200);
 }
 
+[data-theme='dark'] .hero {
+  background: linear-gradient(180deg, #1e2326 0%, var(--ifm-background-surface-color) 100%);
+}
+
 .inner {
   max-width: 880px;
   margin: 0 auto;
   text-align: center;
+}
+
+.banner {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 auto 2rem;
 }
 
 .tagline {
