@@ -23,6 +23,26 @@
     "message": "Leer la bitácora",
     "description": "Hero CTA — read the blog"
   },
+  "hero.quickstartHint": {
+    "message": "…luego sigue nuestra breve {link} →",
+    "description": "Subtle link under the install command pointing to the quickstart guide"
+  },
+  "hero.quickstartHint.link": {
+    "message": "guía de primeros pasos",
+    "description": "Link text in the quickstart hint"
+  },
+  "gettingStarted.title": {
+    "message": "¿Listo para probarla?",
+    "description": "Bottom getting-started section title"
+  },
+  "gettingStarted.body": {
+    "message": "La guía de primeros pasos te lleva desde una terminal vacía hasta un Charter cerrado, con un ciclo de auditoría externa encima — seis secciones breves, comandos listos para copiar y pegar, unos diez minutos de lectura. Si llegaste hasta aquí, ese es el siguiente paso.",
+    "description": "Bottom getting-started section body paragraph"
+  },
+  "gettingStarted.cta": {
+    "message": "Leer los primeros pasos →",
+    "description": "Bottom getting-started CTA button"
+  },
   "why.eyebrow": {
     "message": "Por qué existe esto",
     "description": "Why this exists eyebrow"
