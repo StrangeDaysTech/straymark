@@ -2,18 +2,10 @@ import type {ReactNode} from 'react';
 import Link from '@docusaurus/Link';
 import {useLocation} from '@docusaurus/router';
 import {translate} from '@docusaurus/Translate';
-import TOC from '@theme/TOC';
 import styles from './styles.module.css';
-
-type TocItem = {
-  id: string;
-  level: number;
-  value: string;
-};
 
 type Props = {
   children: ReactNode;
-  toc?: TocItem[];
 };
 
 type FeatureLink = {
@@ -71,7 +63,7 @@ function isActive(pathname: string, slug: string): boolean {
   );
 }
 
-export default function FeaturesLayout({children, toc}: Props): ReactNode {
+export default function FeaturesLayout({children}: Props): ReactNode {
   const {pathname} = useLocation();
   const sidebarTitle = translate({
     id: 'features.sidebar.title',
@@ -103,11 +95,6 @@ export default function FeaturesLayout({children, toc}: Props): ReactNode {
       <main className={styles.content}>
         <article className={styles.article}>{children}</article>
       </main>
-      {toc && toc.length > 0 ? (
-        <aside className={styles.tocColumn} aria-label="On this page">
-          <TOC toc={toc} minHeadingLevel={2} maxHeadingLevel={3} className={styles.tocInner} />
-        </aside>
-      ) : null}
     </div>
   );
 }
