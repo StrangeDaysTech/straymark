@@ -75,6 +75,10 @@
     "message": "阅读编年史",
     "description": "Hero CTA — read the blog"
   },
+  "hero.installLabel": {
+    "message": "用一行命令安装 CLI",
+    "description": "Eyebrow label above the install command in the hero"
+  },
   "hero.quickstartHint": {
     "message": "……然后看看我们的简短{link} →",
     "description": "Subtle link under the install command pointing to the quickstart guide"

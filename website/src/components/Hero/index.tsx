@@ -42,6 +42,14 @@ export default function Hero(): ReactNode {
           </li>
         </ul>
         <div className={styles.cta}>
+          <p className={styles.installLabel}>
+            <Translate
+              id="hero.installLabel"
+              description="Eyebrow label above the install command in the hero"
+            >
+              Install the CLI in one line
+            </Translate>
+          </p>
           <CodeBlock language="bash" className={styles.install}>
             {INSTALL}
           </CodeBlock>

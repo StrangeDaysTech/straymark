@@ -23,6 +23,10 @@
     "message": "Leer la bitácora",
     "description": "Hero CTA — read the blog"
   },
+  "hero.installLabel": {
+    "message": "Instala el CLI en una línea",
+    "description": "Eyebrow label above the install command in the hero"
+  },
   "hero.quickstartHint": {
     "message": "…luego sigue nuestra breve {link} →",
     "description": "Subtle link under the install command pointing to the quickstart guide"
