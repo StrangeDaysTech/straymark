@@ -8,7 +8,58 @@ const GITHUB_EDIT_BASE = `${GITHUB_REPO}/edit/main`;
 const config: Config = {
   title: 'StrayMark',
   tagline: 'Cognitive discipline for AI-assisted engineering',
-  favicon: 'img/favicon.ico',
+  favicon: 'favicon.ico',
+
+  headTags: [
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'icon',
+        type: 'image/svg+xml',
+        href: '/favicon.svg',
+      },
+    },
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '32x32',
+        href: '/favicon-32x32.png',
+      },
+    },
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '16x16',
+        href: '/favicon-16x16.png',
+      },
+    },
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'apple-touch-icon',
+        sizes: '180x180',
+        href: '/apple-touch-icon.png',
+      },
+    },
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'manifest',
+        href: '/site.webmanifest',
+      },
+    },
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'theme-color',
+        content: '#0E0E10',
+      },
+    },
+  ],
 
   future: {
     v4: true,
@@ -98,6 +149,7 @@ const config: Config = {
       logo: {
         alt: 'StrayMark',
         src: 'img/logo.svg',
+        srcDark: 'img/logo-dark.svg',
       },
       items: [
         {

@@ -1,5 +1,5 @@
 ---
-slug: 探索框架
+slug: exploring-the-framework
 title: 探索框架
 authors:
   - jose

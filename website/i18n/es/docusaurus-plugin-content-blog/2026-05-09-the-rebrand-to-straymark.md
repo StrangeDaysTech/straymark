@@ -1,5 +1,5 @@
 ---
-slug: el-rebrand-a-straymark
+slug: the-rebrand-to-straymark
 title: El rebrand a StrayMark
 authors:
   - jose

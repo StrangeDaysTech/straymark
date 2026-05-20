@@ -1,5 +1,5 @@
 ---
-slug: agents-md-作为通用标准
+slug: agents-md-as-a-universal-standard
 title: "AGENTS.md 作为通用标准"
 authors:
   - jose

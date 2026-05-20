@@ -1,5 +1,5 @@
 ---
-slug: 对智能体不可见的-charter
+slug: charters-invisible-to-agents
 title: 对智能体不可见的 Charter
 authors:
   - jose

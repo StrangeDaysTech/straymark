@@ -1,5 +1,5 @@
 ---
-slug: tde-与横向债务
+slug: tde-and-transversal-debt
 title: "TDE 与横向债务"
 authors:
   - jose

@@ -1,5 +1,5 @@
 ---
-slug: validate-y-los-schemas-como-capa-formal
+slug: validate-and-schemas-as-a-formal-layer
 title: Validate y los schemas como capa formal
 authors:
   - jose

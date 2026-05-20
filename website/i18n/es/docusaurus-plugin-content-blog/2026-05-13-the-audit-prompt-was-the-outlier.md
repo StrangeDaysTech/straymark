@@ -1,5 +1,5 @@
 ---
-slug: el-audit-prompt-era-el-outlier
+slug: the-audit-prompt-was-the-outlier
 title: El audit-prompt era el outlier
 authors:
   - jose

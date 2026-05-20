@@ -1,5 +1,5 @@
 ---
-slug: pattern-1-y-pattern-2-chain-evolution
+slug: pattern-1-and-pattern-2-chain-evolution
 title: Pattern 1 y Pattern 2 — chain evolution
 authors:
   - jose

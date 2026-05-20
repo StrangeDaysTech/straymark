@@ -1,5 +1,5 @@
 ---
-slug: 打开这个框架
+slug: opening-the-framework
 title: 打开这个框架
 authors:
   - jose
