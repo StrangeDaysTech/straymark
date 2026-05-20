@@ -3,6 +3,7 @@ import Layout from '@theme/Layout';
 import {translate} from '@docusaurus/Translate';
 import Hero from '@site/src/components/Hero';
 import WorkflowDiagram from '@site/src/components/WorkflowDiagram';
+import AsciinemaDemo from '@site/src/components/AsciinemaDemo';
 import WhyExists from '@site/src/components/WhyExists';
 import FeatureGrid from '@site/src/components/FeatureGrid';
 import GettingStarted from '@site/src/components/GettingStarted';
@@ -17,6 +18,7 @@ export default function Home(): ReactNode {
     <Layout description={description}>
       <Hero />
       <WorkflowDiagram />
+      <AsciinemaDemo />
       <WhyExists />
       <FeatureGrid />
       <GettingStarted />

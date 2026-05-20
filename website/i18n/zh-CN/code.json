@@ -127,6 +127,14 @@
     "message": "阅读快速上手指南 →",
     "description": "Bottom getting-started CTA button"
   },
+  "asciinema.title": {
+    "message": "从空白终端到你的第一个 Charter",
+    "description": "Asciinema section title"
+  },
+  "asciinema.caption": {
+    "message": "一段 15 秒的真实 CLI 录像。三条命令；没有剪辑，没有编排。",
+    "description": "Asciinema section caption"
+  },
   "why.eyebrow": {
     "message": "为什么需要 StrayMark",
     "description": "Why this exists eyebrow"

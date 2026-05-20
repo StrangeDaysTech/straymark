@@ -24,6 +24,7 @@
     "@docusaurus/preset-classic": "3.10.1",
     "@docusaurus/theme-mermaid": "3.10.1",
     "@mdx-js/react": "^3.0.0",
+    "asciinema-player": "^3.15.1",
     "clsx": "^2.0.0",
     "embla-carousel-react": "^8.6.0",
     "prism-react-renderer": "^2.3.0",
