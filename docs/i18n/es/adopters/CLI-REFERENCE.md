@@ -967,13 +967,3 @@ Adoptantes que usen StrayMark sin asistente IA en el loop pueden manejar el mism
 |--------|-------------|
 | `0` | Éxito |
 | `1` | Error (detalles impresos en stderr) |
-
----
-
-<div align="center">
-
-**StrayMark** — Porque cada cambio cuenta una historia.
-
-[Volver a docs](https://github.com/StrangeDaysTech/straymark/blob/main/docs/i18n/es/README.md) • [README](https://github.com/StrangeDaysTech/straymark/blob/main/README.md) • [Strange Days Tech](https://strangedays.tech)
-
-</div>

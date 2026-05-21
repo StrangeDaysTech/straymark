@@ -1246,13 +1246,3 @@ Adopters using StrayMark without an AI assistant in the loop can drive the same 
 |------|---------|
 | `0` | Success |
 | `1` | Error (details printed to stderr) |
-
----
-
-<div align="center">
-
-**StrayMark** — Because every change tells a story.
-
-[Back to docs](https://github.com/StrangeDaysTech/straymark/blob/main/docs/README.md) • [README](https://github.com/StrangeDaysTech/straymark/blob/main/README.md) • [Strange Days Tech](https://strangedays.tech)
-
-</div>

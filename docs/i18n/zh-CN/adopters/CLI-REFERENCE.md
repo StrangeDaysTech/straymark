@@ -1100,13 +1100,3 @@ StrayMark 提供一组 skills（slash 命令）供 AI 助手内使用（Claude C
 |------|------|
 | `0` | 成功 |
 | `1` | 错误（详情输出到 stderr） |
-
----
-
-<div align="center">
-
-**StrayMark** — 因为每一次变更都值得被记录。
-
-[返回文档](https://github.com/StrangeDaysTech/straymark/blob/main/docs/i18n/zh-CN/README.md) • [README](https://github.com/StrangeDaysTech/straymark/blob/main/README.md) • [Strange Days Tech](https://strangedays.tech)
-
-</div>
