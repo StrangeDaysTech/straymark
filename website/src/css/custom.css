@@ -28,3 +28,16 @@
   --ifm-color-primary-lightest: #4fddbf;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
+
+/* medium-zoom: medium-zoom's own stylesheet sets position:fixed on the overlay
+   and position:relative on the cloned image, but no z-index. Sticky sidebars
+   (e.g. the FeaturesLayout aside with `position: sticky; z-index: 1`) create
+   stacking contexts that end up rendering ABOVE the zoomed image. Lift both
+   layers well above the navbar (z-index ~200) to guarantee they win. */
+.medium-zoom-overlay {
+  z-index: 1000;
+}
+
+.medium-zoom-image--opened {
+  z-index: 1001;
+}

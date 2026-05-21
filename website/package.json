@@ -27,6 +27,7 @@
     "asciinema-player": "^3.15.1",
     "clsx": "^2.0.0",
     "embla-carousel-react": "^8.6.0",
+    "plugin-image-zoom": "^1.2.0",
     "prism-react-renderer": "^2.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

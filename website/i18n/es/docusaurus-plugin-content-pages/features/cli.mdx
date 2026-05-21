@@ -3,6 +3,7 @@ title: Un CLI que hace el trabajo
 description: Un único binario de Rust, once comandos. Determinista, scriptable, sin daemons.
 ---
 import FeaturesLayout from '@site/src/components/FeaturesLayout';
+import gallery from '@site/src/pages/features/explore-gallery.module.css';
 
 <FeaturesLayout>
 
@@ -35,6 +36,29 @@ import FeaturesLayout from '@site/src/components/FeaturesLayout';
 Todos los comandos respetan `--json` donde tiene sentido, así la salida es procesable por máquina.
 
 > **Impulsado por arborist-metrics:** `straymark analyze` calcula la complejidad cognitiva y ciclomática mediante [`arborist-metrics`](https://github.com/StrangeDaysTech/arborist-metrics/) — nuestra librería Rust open source para métricas de código multi-lenguaje, también desarrollada por StrangeDaysTech S.A.S. de C.V.
+
+## Navega por los docs con `straymark explore`
+
+`straymark explore` abre una interfaz de terminal interactiva sobre `.straymark/`: una TUI de tres paneles con el árbol de documentación, la metadata por documento y el markdown renderizado — controlada por teclado, sin daemon, sin dependencia extra. Las capturas debajo son de **Sentinel**, el proyecto que valida el framework empíricamente, con 131 documentos indexados.
+
+<div className={`${gallery.gallery} zoomable`}>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/01-initial.png" alt="straymark explore — pantalla inicial Quick start con el árbol de documentación a la izquierda agrupado por categoría." loading="lazy" />
+    <figcaption>El árbol agrupa los 131 documentos por categoría — Governance, Requirements, Charters, AILOGs, TDEs, Security…</figcaption>
+  </figure>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/02-ailog.png" alt="straymark explore mostrando un AILOG abierto con el panel de metadata poblado y markdown renderizado en el panel principal." loading="lazy" />
+    <figcaption>Un AILOG abierto: el panel de metadata muestra Status, Confidence, Risk, tags y referencias cruzadas; el markdown se renderiza en el panel principal.</figcaption>
+  </figure>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/03-tde.png" alt="straymark explore mostrando un documento TDE con su clasificación y Charter de origen." loading="lazy" />
+    <figcaption>Otro tipo de documento — un TDE con su clasificación y el Charter de origen. <code>explore</code> distingue los tipos automáticamente.</figcaption>
+  </figure>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/04-shortcuts.png" alt="straymark explore mostrando el overlay de ayuda con los atajos de teclado agrupados por panel." loading="lazy" />
+    <figcaption><code>?</code> muestra todos los atajos agrupados por panel — navigation, metadata, document, general.</figcaption>
+  </figure>
+</div>
 
 ## Hecho para pipear
 
