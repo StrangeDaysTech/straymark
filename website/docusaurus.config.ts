@@ -216,7 +216,13 @@ const config: Config = {
         scrollOffset: 0,
       },
     },
-    image: 'img/docusaurus-social-card.jpg',
+    // Sitewide Open Graph / Twitter Card image. 1200×630 PNG, dark theme,
+    // matches the brand and reads cleanly when embedded in Slack, Twitter/X,
+    // LinkedIn, GitHub previews, etc. SVG source kept next to the PNG so the
+    // card can be re-rendered when the brand evolves: see
+    // `static/img/og/straymark.svg` and run `inkscape straymark.svg
+    // --export-type=png --export-filename=straymark.png --export-width=1200`.
+    image: 'img/og/straymark.png',
     colorMode: {
       respectPrefersColorScheme: true,
     },
