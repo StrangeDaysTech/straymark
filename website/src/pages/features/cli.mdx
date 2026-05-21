@@ -3,6 +3,7 @@ title: A CLI that does the work
 description: One Rust binary, eleven commands. Deterministic, scriptable, no daemons.
 ---
 import FeaturesLayout from '@site/src/components/FeaturesLayout';
+import gallery from './explore-gallery.module.css';
 
 <FeaturesLayout>
 
@@ -35,6 +36,29 @@ import FeaturesLayout from '@site/src/components/FeaturesLayout';
 All commands respect `--json` where it makes sense, so output is machine-readable.
 
 > **Powered by arborist-metrics:** `straymark analyze` computes cognitive and cyclomatic complexity via [`arborist-metrics`](https://github.com/StrangeDaysTech/arborist-metrics/) — our open-source Rust library for multi-language code metrics, also developed by StrangeDaysTech S.A.S. de C.V.
+
+## Browse the docs with `straymark explore`
+
+`straymark explore` opens an interactive terminal UI over `.straymark/`: a three-pane TUI with the documentation tree, per-document metadata, and the rendered markdown — keyboard-driven, no daemon, no extra dependency. Screenshots below are from **Sentinel**, the project that empirically validates the framework, with 131 indexed documents.
+
+<div className={`${gallery.gallery} zoomable`}>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/01-initial.png" alt="straymark explore — initial Quick start screen with the documentation tree on the left grouped by category." loading="lazy" />
+    <figcaption>The tree groups the 131 documents by category — Governance, Requirements, Charters, AILOGs, TDEs, Security…</figcaption>
+  </figure>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/02-ailog.png" alt="straymark explore showing an open AILOG with the metadata sidebar populated and rendered markdown in the main pane." loading="lazy" />
+    <figcaption>An AILOG open: the metadata sidebar shows Status, Confidence, Risk, tags and cross-references; markdown is rendered in the main pane.</figcaption>
+  </figure>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/03-tde.png" alt="straymark explore displaying a TDE document with its classification and origin Charter." loading="lazy" />
+    <figcaption>A different document type — a TDE with its classification and origin Charter. <code>explore</code> distinguishes types automatically.</figcaption>
+  </figure>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/04-shortcuts.png" alt="straymark explore showing the keyboard shortcuts help overlay grouped by panel." loading="lazy" />
+    <figcaption><code>?</code> shows every shortcut grouped by panel — navigation, metadata, document, general.</figcaption>
+  </figure>
+</div>
 
 ## Built for piping
 

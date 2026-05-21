@@ -133,7 +133,17 @@ const config: Config = {
     ],
   ],
 
+  plugins: ['plugin-image-zoom'],
+
   themeConfig: {
+    imageZoom: {
+      selector: '.markdown img, .zoomable img',
+      options: {
+        margin: 24,
+        background: 'rgba(0, 0, 0, 0.85)',
+        scrollOffset: 0,
+      },
+    },
     image: 'img/docusaurus-social-card.jpg',
     colorMode: {
       respectPrefersColorScheme: true,
