@@ -1,3 +1,5 @@
+/* ---- Base (desktop-first) ---- */
+
 .container {
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
@@ -8,22 +10,6 @@
   align-items: start;
 }
 
-@media (max-width: 996px) {
-  .container {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-    padding: 1.5rem 1rem 3rem;
-  }
-  .sidebar {
-    position: static;
-    border-right: none;
-    border-bottom: 1px solid var(--ifm-color-emphasis-200);
-    padding-bottom: 1.5rem;
-    margin-bottom: 0.5rem;
-    max-height: none;
-  }
-}
-
 .sidebar {
   position: sticky;
   top: calc(var(--ifm-navbar-height, 60px) + 1rem);
@@ -32,6 +18,10 @@
   border-right: 1px solid var(--ifm-color-emphasis-200);
   max-height: calc(100vh - var(--ifm-navbar-height, 60px) - 2rem);
   overflow-y: auto;
+  /* Opaque background so a scrolling article doesn't bleed through when
+     the sidebar is sticky. */
+  background: var(--ifm-background-color);
+  z-index: 1;
 }
 
 .sidebarTitle {
@@ -63,7 +53,10 @@
   text-decoration: none;
   border-radius: 6px;
   border-left: 2px solid transparent;
-  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
 }
 
 .sidebarLink:hover {
@@ -114,3 +107,47 @@
   width: 100%;
 }
 
+/* ---- Tablet / compact desktop: stack sidebar above content ----
+   Must come AFTER the base rules so the overrides actually win on cascade.
+*/
+@media (max-width: 996px) {
+  .container {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .sidebar {
+    position: static;
+    top: auto;
+    max-height: none;
+    overflow-y: visible;
+    align-self: stretch;
+    padding-right: 0;
+    padding-bottom: 1.25rem;
+    margin-bottom: 0.25rem;
+    border-right: none;
+    border-bottom: 1px solid var(--ifm-color-emphasis-200);
+    /* No need for the z-index/background trick here — it's a normal block. */
+    z-index: auto;
+  }
+}
+
+/* ---- True mobile: drop the sidebar entirely.
+   At narrow widths the 9-entry list would push the article half a screen
+   down before the user sees any content; cleaner to send mobile visitors
+   straight to the article. They can return to /#features-grid (the home
+   grid) for navigation. */
+@media (max-width: 640px) {
+  .sidebar {
+    display: none;
+  }
+
+  .container {
+    padding: 1rem 0.85rem 2.5rem;
+  }
+
+  .article h1 {
+    font-size: 1.75rem;
+  }
+}
