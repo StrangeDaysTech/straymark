@@ -42,9 +42,34 @@ export default function Hero(): ReactNode {
           </li>
         </ul>
         <div className={styles.cta}>
+          <p className={styles.installLabel}>
+            <Translate
+              id="hero.installLabel"
+              description="Eyebrow label above the install command in the hero"
+            >
+              Install the CLI in one line
+            </Translate>
+          </p>
           <CodeBlock language="bash" className={styles.install}>
             {INSTALL}
           </CodeBlock>
+          <p className={styles.quickstartHint}>
+            <Translate
+              id="hero.quickstartHint"
+              description="Subtle link under the install command pointing to the quickstart guide"
+              values={{
+                link: (
+                  <Link to="/quickstart" className={styles.quickstartLink}>
+                    <Translate id="hero.quickstartHint.link" description="Link text in the quickstart hint">
+                      quickstart guide
+                    </Translate>
+                  </Link>
+                ),
+              }}
+            >
+              {'…then follow our short {link} →'}
+            </Translate>
+          </p>
           <div className={styles.buttons}>
             <Link className="button button--primary button--lg" to="/docs/">
               <Translate id="hero.cta.docs" description="Hero CTA — read the docs">

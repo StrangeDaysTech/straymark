@@ -103,6 +103,30 @@
     "message": "阅读编年史",
     "description": "Hero CTA — read the blog"
   },
+  "hero.installLabel": {
+    "message": "用一行命令安装 CLI",
+    "description": "Eyebrow label above the install command in the hero"
+  },
+  "hero.quickstartHint": {
+    "message": "……然后看看我们的简短{link} →",
+    "description": "Subtle link under the install command pointing to the quickstart guide"
+  },
+  "hero.quickstartHint.link": {
+    "message": "快速上手指南",
+    "description": "Link text in the quickstart hint"
+  },
+  "gettingStarted.title": {
+    "message": "准备好动手了吗？",
+    "description": "Bottom getting-started section title"
+  },
+  "gettingStarted.body": {
+    "message": "快速上手指南会带你从一个空终端走到一个已关闭的 Charter，外加一次外部审计循环——六个小节，可直接复制粘贴的命令，大约十分钟的阅读量。如果你已经读到这里，那就是下一站。",
+    "description": "Bottom getting-started section body paragraph"
+  },
+  "gettingStarted.cta": {
+    "message": "阅读快速上手指南 →",
+    "description": "Bottom getting-started CTA button"
+  },
   "why.eyebrow": {
     "message": "为什么需要 StrayMark",
     "description": "Why this exists eyebrow"
