@@ -15,7 +15,7 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
 Contributions to this project are accepted only from individuals or
 entities who have signed the Contributor License Agreement (CLA).
-A list of approved contributors is maintained in the CONTRIBUTORS file.
+A list of approved contributors is maintained in CONTRIBUTORS.md.
 
 For inquiries regarding licensing or intellectual property, contact:
 legal@strangedays.tech

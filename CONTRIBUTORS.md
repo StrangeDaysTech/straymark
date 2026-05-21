@@ -17,4 +17,4 @@ All contributions must follow the guidelines described in CONTRIBUTING.md
 and require a signed CLA before they can be merged.
 
 The project author and copyright holder is Strange Days Tech, S.A.S.
-See the AUTHOR file for details.
+See AUTHOR.md for details.
