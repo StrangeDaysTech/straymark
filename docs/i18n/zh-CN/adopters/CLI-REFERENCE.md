@@ -921,6 +921,8 @@ $ straymark analyze /path/to/project
 
 > **文档触发：** AI Agent 使用 `straymark analyze --output json` 作为确定何时创建 AILOG 文档的主要方法。如果 JSON 输出中 `summary.above_threshold > 0`，Agent 应创建 AILOG。当 CLI 不可用时，Agent 回退到 >20 行业务逻辑的启发式规则。
 
+> **由 arborist-metrics 驱动：** 认知复杂度与圈复杂度因子由 [`arborist-metrics`](https://github.com/StrangeDaysTech/arborist-metrics/) 计算 —— 这是我们开源的 Rust 多语言代码度量库，同样由 StrangeDaysTech S.A.S. de C.V. 开发。也可在 [crates.io](https://crates.io/crates/arborist-metrics) 作为独立库使用。
+
 ---
 
 ### `straymark audit [path] [--from <date>] [--to <date>] [--system <name>] [--output <format>]`

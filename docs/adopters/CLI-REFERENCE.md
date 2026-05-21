@@ -1066,6 +1066,8 @@ $ straymark analyze /path/to/project
 
 > **Documentation trigger:** AI agents use `straymark analyze --output json` as the primary method to determine when to create AILOG documents. If `summary.above_threshold > 0` in the JSON output, the agent should create an AILOG. When the CLI is not available, agents fall back to the >20 lines of business logic heuristic.
 
+> **Powered by arborist-metrics:** the cognitive and cyclomatic complexity factors are computed by [`arborist-metrics`](https://github.com/StrangeDaysTech/arborist-metrics/) — our open-source Rust library for multi-language code metrics, developed by StrangeDaysTech S.A.S. de C.V. Also available standalone on [crates.io](https://crates.io/crates/arborist-metrics).
+
 ---
 
 ### `straymark audit [path] [--from <date>] [--to <date>] [--system <name>] [--output <format>]`

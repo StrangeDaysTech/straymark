@@ -152,7 +152,7 @@ Built-in commands that turn the discipline into actionable feedback:
 - **`straymark approve <doc-id>`** — Record a formal human approval (writes `reviewed_by` / `reviewed_at` / `review_outcome` and the `## Approval` body section in one edit; closes the gap canonized in DOCUMENTATION-POLICY §3.5)
 - **`straymark validate`** — 25+ validation rules for document correctness (12 China-specific are scope-aware); `--include-charters` extends to `.straymark/charters/`; `--check-pending-reviews` lists approval backlog (warn-only)
 - **`straymark metrics`** — Governance KPIs, review rates, risk distribution, trends
-- **`straymark analyze`** — Code complexity analysis (cognitive + cyclomatic) powered by [arborist-metrics](https://github.com/StrangeDaysTech/arborist), our open-source Rust library for multi-language code metrics
+- **`straymark analyze`** — Code complexity analysis (cognitive + cyclomatic) powered by [arborist-metrics](https://github.com/StrangeDaysTech/arborist-metrics/), our open-source Rust library for multi-language code metrics, also developed by StrangeDaysTech S.A.S. de C.V.
 - **`straymark audit`** — Audit trail reports with timeline, traceability maps, and HTML export
 - **`straymark compliance`** — Regulatory compliance scoring as a side effect of the documented work (EU AI Act, ISO 42001, NIST AI RMF; six Chinese frameworks opt-in via `--region china`)
 - **`straymark explore`** — Interactive TUI for navigating the project's documentation graph, including a Charter view (lifecycle status, origin AILOG/spec, file location)
@@ -632,7 +632,7 @@ Our open-source ecosystem:
 | Project | Description |
 | --- | --- |
 | [**StrayMark**](https://github.com/StrangeDaysTech/straymark) | The cognitive discipline your AI-assisted projects need |
-| [**arborist-metrics**](https://github.com/StrangeDaysTech/arborist) | Multi-language code complexity analysis library for Rust — [crates.io](https://crates.io/crates/arborist-metrics) |
+| [**arborist-metrics**](https://github.com/StrangeDaysTech/arborist-metrics/) | Multi-language code complexity analysis library for Rust — [crates.io](https://crates.io/crates/arborist-metrics) |
 
 [Website](https://strangedays.tech) • [GitHub](https://github.com/StrangeDaysTech)
 
