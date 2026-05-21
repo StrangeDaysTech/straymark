@@ -22,8 +22,9 @@ OUT = pathlib.Path(__file__).resolve().parent.parent / "static" / "asciinema" / 
 TYPE_DELAY = 0.055        # seconds between keystrokes
 LINE_DELAY = 0.06         # between consecutive output lines
 COMMAND_PAUSE = 0.40      # between hitting Enter and first output
-THINK_PAUSE = 1.40        # after a command's output completes
-FINAL_PAUSE = 2.40        # before the loop restarts
+THINK_PAUSE = 1.40        # after each command's output completes
+END_HOLD = 3.50           # final prompt sits on screen this long before the cast loops
+IDLE_LIMIT = 4.0          # any idle > this gets clipped by the player; must exceed END_HOLD
 
 GREEN = "[32m"
 DIM = "[2m"
@@ -43,7 +44,7 @@ class Cast:
             "height": height,
             "timestamp": int(time.time()),
             "title": "StrayMark — 30-second demo",
-            "idle_time_limit": 1.5,
+            "idle_time_limit": IDLE_LIMIT,
             "env": {"SHELL": "/bin/zsh", "TERM": "xterm-256color"},
         }
 
@@ -134,11 +135,13 @@ def build() -> str:
         "",
         f"{DIM}> Status (mirrored from frontmatter): declared. Effort: S.{RESET}",
     ])
-    c.pause(FINAL_PAUSE)
 
-    # End on a clean prompt so the loop is graceful.
+    # Give the eye time to land on the last line, then drop back to a clean
+    # prompt. The trailing no-op event extends the cast timeline so the
+    # player holds the final frame for END_HOLD seconds before looping.
+    c.pause(1.8)
     c.prompt()
-    c.pause(0.20)
+    c.push("", END_HOLD)
 
     return c.serialize()
 

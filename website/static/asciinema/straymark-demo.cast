@@ -1,4 +1,4 @@
-{"version": 2, "width": 90, "height": 26, "timestamp": 1779317624, "title": "StrayMark — 30-second demo", "idle_time_limit": 1.5, "env": {"SHELL": "/bin/zsh", "TERM": "xterm-256color"}}
+{"version": 2, "width": 90, "height": 26, "timestamp": 1779323002, "title": "StrayMark — 30-second demo", "idle_time_limit": 4.0, "env": {"SHELL": "/bin/zsh", "TERM": "xterm-256color"}}
 [0.0, "o", "\u001b[32m~/demo $ \u001b[0m"]
 [0.405, "o", "s"]
 [0.46, "o", "t"]
@@ -150,4 +150,5 @@
 [12.735, "o", "\u001b[1m# Charter: Auth refactor\u001b[0m\r\n"]
 [12.795, "o", "\r\n"]
 [12.855, "o", "\u001b[2m> Status (mirrored from frontmatter): declared. Effort: S.\u001b[0m\r\n"]
-[15.255, "o", "\u001b[32m~/demo $ \u001b[0m"]
+[14.655, "o", "\u001b[32m~/demo $ \u001b[0m"]
+[18.155, "o", ""]

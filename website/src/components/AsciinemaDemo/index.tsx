@@ -21,7 +21,7 @@ function PlayerInner(): ReactNode {
         loop: true,
         preload: true,
         controls: 'auto',
-        idleTimeLimit: 1.5,
+        idleTimeLimit: 4,
         fit: 'width',
         terminalFontSize: 'small',
       });
