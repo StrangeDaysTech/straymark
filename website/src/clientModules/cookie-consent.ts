@@ -114,7 +114,7 @@ function updateGtagConsent(granted: boolean) {
   });
 }
 
-export default (async function cookieConsentClientModule() {
+async function initConsentUI() {
   if (typeof window === 'undefined') return;
 
   // vanilla-cookieconsent injects its own CSS; we import it explicitly so
@@ -216,4 +216,35 @@ export default (async function cookieConsentClientModule() {
       window.location.hash;
     window.history.replaceState({}, '', cleanUrl);
   }
-})();
+}
+
+// Fire-and-forget on module load. Docusaurus imports client modules during
+// hydration and we want the banner mounted as soon as possible.
+initConsentUI();
+
+type RouteUpdateArgs = {
+  location: {pathname: string};
+  previousLocation: {pathname: string} | null;
+};
+
+// Docusaurus calls this on every SPA route change. Replaces the page-view
+// tracking that the @docusaurus/plugin-google-gtag client module would do —
+// we removed the gtag preset option because its scripts injected before our
+// consent default, defeating Consent Mode v2. See docusaurus.config.ts.
+export default {
+  onRouteUpdate({location, previousLocation}: RouteUpdateArgs) {
+    if (typeof window === 'undefined') return;
+    if (!previousLocation || location.pathname === previousLocation.pathname) return;
+    if (typeof window.gtag !== 'function') return;
+    // gtag respects the current consent state — if analytics_storage is still
+    // 'denied', this becomes a no-op (or a cookieless ping under Consent Mode
+    // v2). When the user has accepted, a normal page_view event fires.
+    setTimeout(() => {
+      window.gtag!('event', 'page_view', {
+        page_title: document.title,
+        page_location: window.location.href,
+        page_path: location.pathname,
+      });
+    }, 50);
+  },
+};
