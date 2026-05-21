@@ -47,6 +47,10 @@
     "message": "Leer los primeros pasos →",
     "description": "Bottom getting-started CTA button"
   },
+  "gettingStarted.oss": {
+    "message": "Código abierto · licencia MIT · código en {github}",
+    "description": "OSS/MIT mention under the bottom CTA, with {github} interpolating to a link to the repo"
+  },
   "asciinema.title": {
     "message": "De una terminal vacía a tu primer Charter",
     "description": "Asciinema section title"
