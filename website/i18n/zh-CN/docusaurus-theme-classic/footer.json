@@ -43,6 +43,18 @@
     "message": "组织",
     "description": "The label of footer link with label=Organization linking to https://github.com/StrangeDaysTech"
   },
+  "link.title.Legal": {
+    "message": "法律",
+    "description": "The title of the footer links column with title=Legal in the footer"
+  },
+  "link.item.label.Privacy": {
+    "message": "隐私",
+    "description": "The label of footer link with label=Privacy linking to /privacy"
+  },
+  "link.item.label.Cookie preferences": {
+    "message": "Cookie 偏好",
+    "description": "The label of footer link that reopens the cookie consent panel (href=#cookie-preferences, intercepted by client module)"
+  },
   "copyright": {
     "message": "版权所有 © 2026 Strange Days Tech。基于 Docusaurus 构建。",
     "description": "The footer copyright"

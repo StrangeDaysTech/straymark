@@ -1,0 +1,48 @@
+---
+title: 隐私声明
+description: StrayMark.dev 收集什么、为什么、以及如何选择退出。
+---
+
+# 隐私声明
+
+StrayMark 是开源项目，项目网站（`straymark.dev`）是一个从 Git 仓库发布的静态站点 —— 没有应用后端、没有用户账号、也没有表单提交。本站点处理的唯一个人数据，是你的浏览器访问任何页面时发送的内容，加上一个 opt-in 分析工具在你允许时收集的内容。
+
+本声明覆盖 `https://straymark.dev` 及其本地化子路径（`/es/...`、`/zh-CN/...`）。
+
+## 我们收集什么
+
+当你访问站点并在 cookie 横幅中**接受分析**时，[Google Analytics 4](https://support.google.com/analytics/answer/10089681) 会记录：
+
+- **匿名化 IP** —— Google 在存储前会截断你 IP 的最后一段（`anonymizeIP: true`）。
+- **浏览的页面**、停留时间、滚动深度、宽泛地理位置（国家/地区）、设备、浏览器、语言。
+- **会话级 cookies**，前缀为 `_ga*`，GA 用来把请求分组为会话。
+
+我们**不**收集：
+
+- 你的姓名、邮箱、账号或任何登录凭证。
+- 表单数据 —— 没有表单。
+- 来自第三方追踪器或营销像素的个人标识符。
+
+## 我们为什么收集
+
+为了了解文档的哪些章节被阅读、哪些被忽略。这些反馈用于编辑决策（重写什么、弃用什么），并指引框架的路线图。我们不把这些数据用于营销、广告或任何向第三方的出售。
+
+## 你的控制
+
+- **首次访问时拒绝。** 如果你在横幅中选择**拒绝**，则不会设置分析 cookies，Google Analytics 也不会从你的会话收到任何事件。
+- **之后改变主意。** 点击页脚的 **Cookie 偏好** 随时重新打开面板。
+- **浏览器级别的控制。** 浏览器设置、`Do Not Track` 以及 uBlock Origin 等扩展都独立于我们的横幅工作。
+
+## 法律依据与数据存放位置
+
+- 分析同意以欧盟 GDPR 的"同意"基础收集（第 6(1)(a) 条）。在你明确 opt-in 之前，Google Analytics 通过 Google 的 [Consent Mode v2](https://developers.google.com/tag-platform/security/guides/consent) 保持 default-deny 模式。
+- 由 Google Analytics 处理的数据存储在 Google 的基础设施上，保留 **14 个月**（GA4 默认）。详见 [Google 的隐私政策](https://policies.google.com/privacy)。
+- 站点本身由 GitHub Pages 提供服务，它在 CDN 层记录请求元数据（标准 Web 服务器访问日志）。
+
+## 本声明的变更
+
+对于我们收集什么或如何处理的实质变更，会作为对 [StrayMark 仓库](https://github.com/StrangeDaysTech/straymark/blob/main/website/i18n/zh-CN/docusaurus-plugin-content-pages/privacy.mdx) 中本文件的一次 commit 发布。Git 历史是规范记录。
+
+## 联系
+
+关于本声明的问题或请求，请在 [GitHub](https://github.com/StrangeDaysTech/straymark/issues) 上开 issue。对需要邮件的事项，请写信到 `legal@strangedays.tech`。
