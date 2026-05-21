@@ -1,0 +1,48 @@
+---
+title: Aviso de privacidad
+description: Qué recopila StrayMark.dev, por qué, y cómo optar por no participar.
+---
+
+# Aviso de privacidad
+
+StrayMark es código abierto y el sitio del proyecto (`straymark.dev`) es un sitio estático publicado desde un repositorio Git — no hay backend de aplicación, no hay cuentas de usuario, y no hay envíos de formularios. Los únicos datos personales que el sitio procesa son los que tu navegador envía al visitar cualquier página, más lo que una herramienta de analíticas opt-in recopila cuando la autorizas.
+
+Este aviso cubre `https://straymark.dev` y sus subpaths localizados (`/es/...`, `/zh-CN/...`).
+
+## Qué recopilamos
+
+Cuando visitas el sitio y **aceptas analíticas** en el banner de cookies, [Google Analytics 4](https://support.google.com/analytics/answer/10089681) registra:
+
+- **IP anonimizada** — Google trunca el último octeto de tu IP antes de almacenarla (`anonymizeIP: true`).
+- **Páginas vistas**, tiempo en página, profundidad de scroll, geografía amplia (país/región), dispositivo, navegador, idioma.
+- **Cookies de sesión** con prefijo `_ga*`, que GA usa para agrupar requests en sesiones.
+
+Lo que **no** recopilamos:
+
+- Tu nombre, email, cuenta, ni ninguna credencial de inicio de sesión.
+- Datos de formularios — no hay formularios.
+- Identificadores personales de trackers de terceros o pixeles de marketing.
+
+## Por qué lo recopilamos
+
+Para aprender qué secciones de la documentación se leen y cuáles se ignoran. Esa retroalimentación informa decisiones editoriales (qué reescribir, qué deprecar) y orienta el roadmap del framework. No usamos los datos para marketing, publicidad, ni venta a terceros.
+
+## Tu control
+
+- **Rechaza en la primera visita.** Si eliges **Rechazar** en el banner, no se establecen cookies de analíticas y Google Analytics no recibe eventos de tu sesión.
+- **Cambia de opinión después.** Haz clic en **Preferencias de cookies** en el pie de página para reabrir el panel en cualquier momento.
+- **Controles a nivel de navegador.** Las configuraciones del navegador, `Do Not Track`, y extensiones como uBlock Origin funcionan independientemente de nuestro banner.
+
+## Base legal y dónde viven los datos
+
+- El consentimiento de analíticas se recopila bajo la base de "consentimiento" del GDPR de la UE (Art. 6(1)(a)). Sin tu opt-in explícito, Google Analytics permanece en modo default-deny vía [Consent Mode v2](https://developers.google.com/tag-platform/security/guides/consent) de Google.
+- Los datos procesados por Google Analytics se almacenan en la infraestructura de Google y se retienen por **14 meses** (default de GA4). Ver la [política de privacidad de Google](https://policies.google.com/privacy) para sus prácticas globales.
+- El sitio mismo se sirve desde GitHub Pages, que registra metadata de requests a nivel de CDN (logs de acceso web estándar).
+
+## Cambios a este aviso
+
+Cambios materiales en lo que recopilamos o cómo se procesa se publican como un commit en este archivo en [el repositorio de StrayMark](https://github.com/StrangeDaysTech/straymark/blob/main/website/i18n/es/docusaurus-plugin-content-pages/privacy.mdx). La historia de Git es el registro canónico.
+
+## Contacto
+
+Para preguntas o solicitudes sobre este aviso, abre un issue en [GitHub](https://github.com/StrangeDaysTech/straymark/issues). Para asuntos que requieran email, escribe a `legal@strangedays.tech`.

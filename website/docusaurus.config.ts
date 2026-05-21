@@ -59,6 +59,28 @@ const config: Config = {
         content: '#0E0E10',
       },
     },
+    // Google Consent Mode v2 defaults — MUST run before gtag.js loads so the
+    // first measurement event arrives already gated. Tracking stays denied
+    // until the user accepts in the cookie banner (vanilla-cookieconsent
+    // calls gtag('consent', 'update', ...) on acceptance). See
+    // src/clientModules/cookie-consent.ts for the runtime side.
+    {
+      tagName: 'script',
+      attributes: {},
+      innerHTML: `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('consent', 'default', {
+          ad_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied',
+          analytics_storage: 'denied',
+          functionality_storage: 'granted',
+          security_storage: 'granted',
+          wait_for_update: 500
+        });
+      `.trim(),
+    },
   ],
 
   future: {
@@ -83,6 +105,8 @@ const config: Config = {
   },
 
   themes: ['@docusaurus/theme-mermaid'],
+
+  clientModules: ['./src/clientModules/cookie-consent.ts'],
 
   i18n: {
     defaultLocale: 'en',
@@ -128,6 +152,10 @@ const config: Config = {
         },
         theme: {
           customCss: './src/css/custom.css',
+        },
+        gtag: {
+          trackingID: 'G-M8NW21WY2M',
+          anonymizeIP: true,
         },
       } satisfies Preset.Options,
     ],
@@ -198,6 +226,18 @@ const config: Config = {
           title: 'Strange Days Tech',
           items: [
             {label: 'Organization', href: 'https://github.com/StrangeDaysTech'},
+          ],
+        },
+        {
+          title: 'Legal',
+          items: [
+            {label: 'Privacy', to: '/privacy'},
+            // Intercepted by the cookie-consent client module
+            // (src/clientModules/cookie-consent.ts) — it reads the
+            // ?cookies=open query param on mount AND on click, opening the
+            // preferences panel. Without JS, the user simply lands on
+            // /privacy, which already explains how to opt out.
+            {label: 'Cookie preferences', to: '/privacy?cookies=open'},
           ],
         },
       ],
