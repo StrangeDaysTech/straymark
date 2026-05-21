@@ -1,0 +1,34 @@
+---
+title: 涌现式观察，源于设计
+description: 当文档之间正式相互引用时，Agent 开始在没人要求的情况下察觉 drift。这一性质有名字 —— 涌现式观察。它是原则 #8。
+---
+import FeaturesLayout from '@site/src/components/FeaturesLayout';
+
+<FeaturesLayout>
+
+# 涌现式观察，源于设计
+
+2026-05-16，一个 Agent 在没人要求的情况下标记了一份过期的 spec。没人给过它 prompt；它自己注意到了那处分歧。对那个早晨的复盘浮现出一个 StrayMark 一直在朝其建设却尚未命名的设计性质：**涌现式观察（Emergent Observation）**。它成为了原则 #8。
+
+## 为什么这很重要
+
+大多数 Agent 治理在试图让 Agent 更受限：更紧的 prompt、更严格的角色、更多护栏。涌现式观察走的是反方向 —— 当文档之间正式相连、并且文化授权也明确时，Agent 就获得足够的语境去*察觉*问题，并获得足够的授权去*标记*它们。
+
+- **底线上升，而 prompt 不必收紧。** 你不需要更长的 prompt；你需要工件之间更密的语义图。Agent 的"观察能力"是文档之间相互引用方式的函数，而不是 prompt 限制度的函数。
+- **团队本会漏掉的发现被及早浮现。** 过期的 spec、Charter 间的 drift、已不再匹配已部署模型的 MCARDs。Agent 之所以能发现它们，是因为这张图让分歧可见 —— 不是因为有人要求。
+- **它是一种性质，不是一项功能。** 每一个 StrayMark 概念（Charter→AILOG、AILOG→Risk、MCARD→DPIA、TDE→源 Charter、……）都对它有贡献。移除其中任何一个都会削弱 Agent 的观察能力。
+
+## 让它工作起来的要素
+
+1. **强制连接。** 每个 Charter 必须声明它的文件与风险。每个 AILOG 必须引用它的 Charter。每个 TDE 必须追溯其来源。正向与反向引用闭合成图。
+2. **稳定的 ID，规范的章节。** 文档有可预测的标题（`## Scope`、`## Risks`、`## Verification`、`## Status`）和 frontmatter 中的稳定 ID。Agent 可以快速 dereference，无需逐文件去解析散文。
+3. **明确的授权。** `AGENT-RULES.md §6`（"Be Proactive —— 识别潜在风险、在显而易见时建议改进、对技术债务发出告警"）告诉 Agent，浮现发现是工作的一部分，而不是越界。
+
+去掉这三者中的任何一个，这一性质就会崩塌。这就是为什么设计把它们当作承重的，而不是可选的。
+
+## 了解更多
+
+- [Blog：Agent 看见了没人让它看的东西的那一天](/blog/emergent-observation-design)
+- [设计原则](/docs/contributors/DESIGN-PRINCIPLES)
+
+</FeaturesLayout>
