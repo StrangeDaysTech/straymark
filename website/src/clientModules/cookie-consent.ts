@@ -114,8 +114,48 @@ function updateGtagConsent(granted: boolean) {
   });
 }
 
+/**
+ * Wait for Docusaurus's React hydration to finish before mounting the consent
+ * UI. vanilla-cookieconsent v3 adds visibility classes (e.g. `show--consent`)
+ * directly to <html> to show the banner, but Docusaurus uses React Helmet to
+ * reconcile <html>'s className during hydration — which wipes anything an
+ * external library added before hydration completes. The visible symptom is
+ * the banner flashing for a frame and then vanishing.
+ *
+ * Docusaurus flips data-has-hydrated="true" on <html> after hydration. We
+ * watch for that attribute and resolve once it lands. If it's already true
+ * (e.g. on slow client-side navigation that re-evaluates the module), we
+ * resolve immediately.
+ */
+function whenHydrated(): Promise<void> {
+  return new Promise((resolve) => {
+    const html = document.documentElement;
+    if (html.getAttribute('data-has-hydrated') === 'true') {
+      resolve();
+      return;
+    }
+    const observer = new MutationObserver(() => {
+      if (html.getAttribute('data-has-hydrated') === 'true') {
+        observer.disconnect();
+        resolve();
+      }
+    });
+    observer.observe(html, {
+      attributes: true,
+      attributeFilter: ['data-has-hydrated'],
+    });
+    // Safety net: resolve after 3s no matter what, so a regression in
+    // Docusaurus's hydration signal doesn't permanently hide the banner.
+    setTimeout(() => {
+      observer.disconnect();
+      resolve();
+    }, 3000);
+  });
+}
+
 async function initConsentUI() {
   if (typeof window === 'undefined') return;
+  await whenHydrated();
 
   // vanilla-cookieconsent injects its own CSS; we import it explicitly so
   // webpack bundles it. The CSS file path is stable since v3.
