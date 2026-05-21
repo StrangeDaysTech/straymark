@@ -25,6 +25,21 @@ export default function GettingStarted(): ReactNode {
             Read the quickstart →
           </Translate>
         </Link>
+        <p className={styles.meta}>
+          <Translate
+            id="gettingStarted.oss"
+            description="OSS/MIT mention under the bottom CTA, with {github} interpolating to a link to the repo"
+            values={{
+              github: (
+                <Link to="https://github.com/StrangeDaysTech/straymark">
+                  GitHub →
+                </Link>
+              ),
+            }}
+          >
+            {'Open source · MIT-licensed · source on {github}'}
+          </Translate>
+        </p>
       </div>
     </section>
   );

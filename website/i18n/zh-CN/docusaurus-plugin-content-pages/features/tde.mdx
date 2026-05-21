@@ -1,0 +1,48 @@
+---
+title: TDE —— 横向债务条目
+description: 当技术债务超出单个 Charter 的范围 —— 来自历史、跨越多个模块、需要自己的修复路径 —— 它就成为一个被追踪、被评分的 TDE。
+---
+import FeaturesLayout from '@site/src/components/FeaturesLayout';
+
+<FeaturesLayout>
+
+# TDE —— 在 Charter 之后仍然存活的 drift 检测
+
+每个 Charter 都有一个 `Risks` 部分，用来列出可能在其范围内出错的事情。但有些债务比任何单个 Charter 都大：来自前一个决策的遗留、跨模块的传播、需要专门 Charter 才能修复的债务。那就是 **TDE（Transversal Debt Entry / 横向债务条目）**。
+
+## 为什么这很重要
+
+- **"什么都是风险"会击败风险清单本身。** 没有一个更高阶的类别时，重要的横向问题就会被淹没在每个 Charter 的 `R<N>` 噪声里。TDE 用明确的资格标准把它们救出来。
+- **债务必须活得比发现它的 Charter 更久。** Charter 关闭时，它的风险清单也随之关闭。遗留债务需要自己的文档，跨越多个 Charter 存活，并能与其他被追踪的债务相互优先级排序。
+- **评分胜过感觉。** TDE 带有 `impact × effort` 矩阵和 `status: identified | prioritized | resolved`。框架帮助团队决定下一步修哪个；已解决的 TDE 留在仓库里作为审计历史。
+
+## 资格 —— 四条标准
+
+如果**任一**条件成立，债务条目就升级为 TDE：
+
+1. **遗留** —— 从前一个 Charter 传播而来（严格模式或隐式模式复用）。
+2. **跨模块** —— 跨越代码模块，或跨越 Charter 的执行边界。
+3. **需要自己的 Charter** —— 修复足够非平凡，需要专门的未来 Charter。
+4. **需要人类优先级判断** —— 团队必须决定是否/何时修；Agent 不应单方面决定。
+
+如果都不成立，它就停留在 Charter 内部作为 `R<N>` 风险。`/straymark-new TDE` skill 会引导这次检查。
+
+## 它如何工作
+
+```
+.straymark/06-evolution/technical-debt/
+├── TDE-001-config-loader-coupling.md     status: prioritized
+├── TDE-002-i18n-fallback-incoherence.md  status: identified
+└── TDE-003-stale-validators.md           status: resolved (2026-04-30)
+```
+
+每个文档有 frontmatter（`tde_id`、`status`、`impact`、`effort`、`created_at`、`resolved_at`）、债务描述、所符合的标准，以及 —— 一旦被优先级化 —— 计划的 Charter 或修复路径。
+
+`straymark metrics` 按影响和年龄浮现打开的 TDE。CI 可以在某个高影响 TDE 处于 `identified` 状态超过 N 天而未被优先级化时失败。
+
+## 了解更多
+
+- [设计原则](/docs/contributors/DESIGN-PRINCIPLES)
+- [Blog：TDE 与横向债务](/blog/tde-and-transversal-debt)
+
+</FeaturesLayout>

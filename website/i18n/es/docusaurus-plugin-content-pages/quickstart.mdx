@@ -1,0 +1,202 @@
+---
+title: Primeros pasos
+description: De la instalación a un Charter cerrado en 10–15 minutos. El camino más corto a través de StrayMark, de punta a punta.
+---
+
+# Primeros pasos
+
+Esta guía te lleva desde una terminal vacía hasta un Charter cerrado con un ciclo de auditoría externa encima. **Reserva 10–15 minutos** para leer y copiar comandos. Si solo quieres tomarle el pulso a la herramienta, haz las tres primeras secciones; el resto está ahí cuando estés listo para cablearlo en un proyecto real.
+
+El framework es opinionado pero pequeño. Cada paso de abajo produce un archivo versionado que puedes `git blame` después — no hay nada que deshacer si cambias de opinión.
+
+## 1. Instalar y verificar
+
+Un solo comando. Soportado en Linux y macOS (Intel + Apple Silicon); Windows funciona vía WSL.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/StrangeDaysTech/straymark/main/install.sh | sh
+```
+
+El instalador deja un único binario de Rust en tu `$PATH`. Confirma que esté ahí:
+
+```bash
+straymark --version
+# straymark 3.2.2
+
+straymark about
+# StrayMark — cognitive discipline for AI-assisted engineering
+# CLI:        3.2.2
+# Framework:  4.2.0 (last update from main)
+# License:    MIT
+```
+
+Cuando se publica una nueva release, `straymark update-cli` actualiza el binario in-place; `straymark update-framework` actualiza las reglas y plantillas dentro de un proyecto. Ambos son reversibles y preguntan antes de tocar nada.
+
+## 2. Inicializa tu repo
+
+Elige un proyecto (greenfield o existente — da igual) y corre:
+
+```bash
+cd path/to/your/repo
+straymark init
+```
+
+Deberías ver algo como:
+
+```
+✓ Created STRAYMARK.md at repo root
+✓ Created .straymark/ with 7 subdirectories
+✓ Linked default AGENT-RULES.md
+✓ Wrote .straymark/config.yml
+```
+
+Lo que obtuviste:
+
+```
+your-repo/
+├── STRAYMARK.md                  ← reglas unificadas; los agentes leen esto primero
+├── .straymark/
+│   ├── 00-governance/            AGENT-RULES, políticas de doc, quick reference
+│   ├── 01-charters/              CHARTER-NN-slug.md (tus unidades acotadas de trabajo)
+│   ├── 02-ailogs/                AILOG-YYYYMMDD-NN-slug.md (uno por commit)
+│   ├── 03-decisions/             AIDEC, ADR (decisiones independientes)
+│   ├── 04-models/                MCARD (model & system cards)
+│   ├── 05-security/              SEC, ETH, DPIA
+│   ├── 06-evolution/             TDE (deuda técnica transversal)
+│   ├── audits/                   reportes de auditoría externa multi-modelo
+│   └── config.yml                regional_scope, framework pin, defaults
+└── (tu código, sin tocar)
+```
+
+No necesitas memorizar el árbol — `straymark status` te mostrará qué falta a medida que avances.
+
+## 3. Tu primer Charter
+
+Un **Charter** es una unidad acotada de trabajo declarada *antes* de empezar: el alcance, los archivos que piensas tocar, los riesgos que ves y el comando de verificación que prueba que funciona. Cerrar un Charter exige que la realidad coincida con la declaración — el drift se reconcilia en el mismo PR o el Charter no cierra.
+
+Scaffoldea uno con el CLI:
+
+```bash
+straymark new -t charter --title "Refactor auth middleware"
+```
+
+O, equivalentemente, desde dentro de una CLI de agente (Claude Code, Gemini CLI, Copilot CLI, …):
+
+```
+/straymark-charter-new Refactor auth middleware
+```
+
+Ambos producen el mismo archivo en `.straymark/01-charters/CHARTER-001-refactor-auth-middleware.md`. Ábrelo; la plantilla te guía por cuatro secciones:
+
+- **Scope** — qué entra, qué queda *explícitamente fuera*. Sé específico. "Mejorar auth" es demasiado vago; "Reemplazar sesiones basadas en cookies por JWT en `auth.rs` y actualizar tests en `auth_test.rs`" es lo correcto.
+- **Files** — las rutas que esperas tocar. El Charter no cerrará si una ruta que no declaraste terminó en el diff y no actualizaste esta lista.
+- **Risks (R1…Rn)** — cosas concretas que podrían salir mal, acotadas a *este* Charter. La deuda heredada o los problemas cross-módulo van en un TDE.
+- **Verification** — el o los comandos que prueban que el trabajo está hecho. `cargo test --package auth`, `npm run e2e -- --grep auth`, lo que sea. Reproducible.
+
+Deja `status: in-progress` mientras trabajas. Lo cerrarás después de los pasos de AILOG y auditoría.
+
+## 4. AILOG cuando commiteas
+
+Un **AILOG (AI Action Log)** es el ledger de ejecución para un commit relevante: qué se hizo, por qué, qué se descubrió en vuelo, qué se pospuso. Uno por commit, numerados por día (`AILOG-20260520-01`, `-02`, …).
+
+La ruta más rápida es la skill:
+
+```
+/straymark-ailog
+```
+
+La skill lee el `git diff` actual, infiere el número del AILOG, carga la plantilla y te pide rellenar:
+
+- Qué cambió y por qué
+- Riesgos descubiertos que no estaban en el Charter (márcalos como `R<N+1> (new, not in Charter)`)
+- Alternativas consideradas y descartadas
+- `risk_level` y `confidence`
+
+Commitea con una referencia al nombre del AILOG para que la arqueología futura aterrice en el documento correcto:
+
+```bash
+git commit -m "feat(auth): swap session cookies for JWT (AILOG-20260520-01)"
+```
+
+Regla del equipo: **cada commit que toca archivos declarados en el Charter recibe un AILOG**. Refactors, bug fixes, commits solo-de-docs no lo necesitan — `straymark validate` conoce la diferencia y no se queja.
+
+## 5. Status y validate
+
+Dos comandos mantienen al repo honesto.
+
+`straymark status` es el dashboard. Córrelo cuando quieras un vistazo rápido del estado del proyecto:
+
+```bash
+straymark status
+# StrayMark v4.2.0 · Healthy
+#  1 active charter   (CHARTER-001-refactor-auth-middleware · in-progress)
+#  1 AILOG today      (AILOG-20260520-01)
+#  0 open TDEs
+#  100% framework version match
+#  Compliance: EU AI Act 8/8 covered · ISO 42001 4/4 covered
+```
+
+`straymark validate` es la capa de enforcement. Revisa frontmatter, schema, AILOGs faltantes, drift entre archivos declarados y reales, y referencias cruzadas rotas. Usa el flag `--staged` en un hook de pre-commit para atrapar problemas antes de que aterricen:
+
+```bash
+straymark validate --staged
+```
+
+Un `.git/hooks/pre-commit` de dos líneas suele bastar:
+
+```bash
+#!/bin/sh
+straymark validate --staged || exit 1
+```
+
+CI hace lo mismo en cada PR; el binario retorna no-cero, así un `straymark validate` que falla rompe el build sin pegamento adicional.
+
+## 6. Corre tu primera auditoría externa
+
+Cuando la verificación del Charter pasa y el drift check está limpio — pero **antes** de invocar `charter close` — puedes comisionar opcionalmente una **auditoría externa**. Tres CLIs auditoras independientes revisan el mismo Charter en paralelo, y un calibrador consolida sus hallazgos en evidencia firmada dentro de la telemetría del Charter. Es un ritual de 3 fases y 3 skills. La auditoría es completamente opcional — declínala con libertad cuando el costo (2-3 auditores LLM) no se ajuste al valor de tu caso.
+
+### Fase 1 — Generar el prompt
+
+Desde tu agente principal:
+
+```
+/straymark-audit-prompt CHARTER-001
+```
+
+Esto escribe un prompt unificado en `.straymark/audits/CHARTER-001/audit-prompt.md` que contiene el alcance del Charter, los AILOGs, el git diff de los commits del Charter y las reglas de disciplina que todo auditor debe seguir (citar `path:línea`, calibrar severidad, mantenerse en alcance).
+
+### Fase 2 — Correr N auditores en paralelo
+
+Abre CLIs auditoras (Claude Code, Copilot CLI, Gemini CLI, Codex CLI — elige cualquier combinación). En cada una, corre:
+
+```
+/straymark-audit-execute CHARTER-001
+```
+
+Cada auditor lee el mismo prompt, audita el Charter de forma independiente y escribe su reporte en `.straymark/audits/CHARTER-001/report-<model-slug>.md`. No se comparten API keys con StrayMark — el framework no es un LLM gateway.
+
+### Fase 3 — Calibrar y mergear
+
+De regreso en tu agente principal:
+
+```
+/straymark-audit-review CHARTER-001
+```
+
+Esto consolida todos los reportes en `.straymark/audits/CHARTER-001/review.md` con:
+
+- Veredictos por hallazgo: `VALID`, `PARTIALLY_VALID`, `MISATTRIBUTED`, `FALSE_POSITIVE`, `DUPLICATE`
+- Reclasificación de severidad cuando los auditores inflaron o desinflaron frente a la configuración real
+- Scorecard de auditores (precisión de alcance, tasa de detección de bugs, tasa de falsos positivos)
+- Un plan de remediación ordenado `P0 Seguridad → P4 Documentación`
+
+La evidencia revisada se mergea en el bloque YAML `external_audit:` del Charter como telemetría. Cierra el Charter con `status: closed` y la auditoría viaja con el repo de aquí en adelante.
+
+## Qué sigue
+
+- Las [páginas de features](/features/cognitive-discipline) cubren los conceptos subyacentes a un ritmo más pausado.
+- La [documentación completa](/docs) es la referencia una vez que pasaste los primeros pasos.
+- [La crónica](/blog) explica por qué cada decisión de diseño aterrizó donde lo hizo — útil para adopters que quieren conocer el *razonamiento* detrás del framework, no solo las reglas.
+- Abre un issue o manda un PR en [GitHub](https://github.com/StrangeDaysTech/straymark). El proyecto es MIT y el framework vive en `dist/` si quieres forkear reglas.
+
+Si llegaste hasta aquí, tienes el loop: **declarar → ejecutar → registrar → validar → auditar**. Todo lo demás en StrayMark es un refinamiento de esos cinco verbos.

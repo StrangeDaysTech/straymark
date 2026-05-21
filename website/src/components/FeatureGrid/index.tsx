@@ -73,7 +73,7 @@ const FEATURES: Feature[] = [
     titleDefault: 'Multi-model external audit',
     bodyId: 'features.audit.body',
     bodyDefault:
-      'Three auditor CLIs (e.g. claude, copilot, gemini) read the same prompt and audit a closed Charter independently. A calibrator deduplicates, reclassifies severity, and merges signed evidence into telemetry.',
+      'Three auditor CLIs (e.g. claude, copilot, gemini) read the same prompt and audit the Charter independently at the closure gate — before it ships. A calibrator deduplicates, reclassifies severity, and merges signed evidence into telemetry.',
     to: '/features/multi-model-audit',
   },
   {

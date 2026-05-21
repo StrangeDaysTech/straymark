@@ -367,9 +367,3 @@ To contribute a new translation:
 4. Include the language code in PR title: `i18n(XX): Add [Language] translation`
 
 See [CONTRIBUTING.md](https://github.com/StrangeDaysTech/straymark/blob/main/CONTRIBUTING.md) for general contribution guidelines.
-
----
-
-*StrayMark — Because every change tells a story.*
-
-[Strange Days Tech](https://strangedays.tech)

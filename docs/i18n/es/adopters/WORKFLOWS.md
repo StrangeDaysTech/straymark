@@ -249,13 +249,3 @@ straymark status    # Reporte completo de salud incluyendo versiones
 ```
 
 Para información detallada del CLI, consulta la [Referencia CLI](CLI-REFERENCE.md#versionado).
-
----
-
-<div align="center">
-
-**StrayMark** — Porque cada cambio cuenta una historia.
-
-[Volver a docs](https://github.com/StrangeDaysTech/straymark/blob/main/docs/i18n/es/README.md) • [README](https://github.com/StrangeDaysTech/straymark/blob/main/README.md) • [Strange Days Tech](https://strangedays.tech)
-
-</div>

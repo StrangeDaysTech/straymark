@@ -1,0 +1,32 @@
+---
+title: 声明式 Agent 治理
+description: 在 STRAYMARK.md 与 AGENT-RULES 中的版本化规则，把 Agent 行为约束在工作流层面 —— 不在 runtime，不在事后。
+---
+import FeaturesLayout from '@site/src/components/FeaturesLayout';
+
+<FeaturesLayout>
+
+# 声明式 Agent 治理
+
+Runtime 的护栏来得太晚。等到 Agent 已经敲下破坏性命令时，prompt 已经结束，你只剩下处理善后。StrayMark 把 Agent 治理推向上游：规则在版本化文件中声明，Agent 在开始*之前*就读到它们，对规则的更新在 `git log` 中清晰可见。
+
+## 为什么这很重要
+
+- **Runtime ≠ workflow。** 大多数 LLM 护栏是 prompt-injection 防御或输出过滤 —— 重要，但它们决定不了 Agent *是否*应该首先去写那个数据库迁移。工作流层面的治理才能。
+- **版本化的规则是可评审的规则。** `STRAYMARK.md` 是一个有 PR diff 的文件。收紧或放宽一条规则会出现在 `git log` 中，带作者、日期与讨论线索。这是 runtime 配置无法做到的可审计性。
+- **跨 CLI 的同一份契约。** 同一份 `STRAYMARK.md` 指导 Claude Code、Gemini CLI、Copilot CLI、Codex CLI。一个真相来源，N 个 Agent。切换模型并不意味着重写运营契约。
+
+## 契约的各个层级
+
+1. **`STRAYMARK.md`** 位于仓库根（~600 行，~12 节）。统一规则：层级关系、禁止操作、文档政策、安全立场、什么时候在动作前先问。Agent 在任何非平凡动作前必须读取它。
+2. **`AGENT-RULES.md`** 位于 `.straymark/00-governance/`：更严格的运营规则 —— 何时标记 drift、何时建议创建 TDE、"Be Proactive" 条款（授权 Agent 主动浮现发现）。
+3. **Skill 的 frontmatter** 在全局规则之上为特定仪式增补。每个 `/straymark-*` skill 都有自己的前置条件、输出契约和后置条件。
+
+当框架版本提升，契约也随之提升。`straymark update-framework` 在应用前会展示 diff。
+
+## 了解更多
+
+- [Workflows](/docs/adopters/WORKFLOWS)
+- [STRAYMARK.md on GitHub](https://github.com/StrangeDaysTech/straymark/blob/main/dist/STRAYMARK.md)
+
+</FeaturesLayout>

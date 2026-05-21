@@ -153,7 +153,7 @@ CI does the same on every PR; the binary returns non-zero so a failing `straymar
 
 ## 6. Run your first external audit
 
-Once the Charter's verification passes and you're ready to close it, you can commission an **external audit** — three independent auditor CLIs review the same closed Charter in parallel, and a calibrator consolidates their findings into signed evidence in the Charter's telemetry. It's a 3-phase, 3-skill ritual.
+Once the Charter's verification passes and the drift check is clean — but **before** you invoke `charter close` — you can optionally commission an **external audit**. Three independent auditor CLIs review the same Charter in parallel, and a calibrator consolidates their findings into signed evidence in the Charter's telemetry. It's a 3-phase, 3-skill ritual. The audit is fully optional — decline freely when the cost (2-3 LLM auditors) doesn't match the value for your case.
 
 ### Phase 1 — Generate the prompt
 
@@ -195,7 +195,7 @@ The reviewed evidence merges into the Charter's `external_audit:` YAML block as 
 ## What's next
 
 - The [feature pages](/features/cognitive-discipline) cover the underlying concepts at a slower pace.
-- The [full docs](/docs/intro) are the reference once you're past the quickstart.
+- The [full docs](/docs) are the reference once you're past the quickstart.
 - [The chronicle](/blog) explains why each design choice landed where it did — useful for adopters who want to know the *reasoning* behind the framework, not just the rules.
 - File an issue or send a PR on [GitHub](https://github.com/StrangeDaysTech/straymark). The project is MIT-licensed and the framework lives in `dist/` if you want to fork rules.
 

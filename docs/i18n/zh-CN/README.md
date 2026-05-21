@@ -146,7 +146,7 @@ StrayMark 的产品决策基于十二条明确的原则。它们按层级排序�
 - **`straymark approve <doc-id>`** — 记录一次正式的人工审批（一次性写入 `reviewed_by` / `reviewed_at` / `review_outcome` 与 `## Approval` body 章节；闭合 DOCUMENTATION-POLICY §3.5 中规范化的缺口）
 - **`straymark validate`** — 25+ 条文档正确性验证规则（其中 12 条针对中国法规、按 scope 启用）；`--include-charters` 可同时检查 `.straymark/charters/`；`--check-pending-reviews` 列出审批积压（仅警告）
 - **`straymark metrics`** — 治理 KPI、审查率、风险分布、趋势
-- **`straymark analyze`** — 代码复杂度分析（认知复杂度 + 圈复杂度），由 [arborist-metrics](https://github.com/StrangeDaysTech/arborist) 驱动——我们的开源 Rust 多语言代码度量库
+- **`straymark analyze`** — 代码复杂度分析（认知复杂度 + 圈复杂度），由 [arborist-metrics](https://github.com/StrangeDaysTech/arborist-metrics/) 驱动——我们开源的 Rust 多语言代码度量库，同样由 StrangeDaysTech S.A.S. de C.V. 开发
 - **`straymark audit`** — 审计跟踪报告，含时间线、可追溯性映射和 HTML 导出
 - **`straymark compliance`** — 作为已记录工作的副作用产出法规合规评分（EU AI Act、ISO 42001、NIST AI RMF；六项中国框架通过 `--region china` 按选项启用）
 - **`straymark explore`** — 用于浏览项目文档图谱的交互式 TUI，包含章程视图（生命周期状态、来源 AILOG/spec、文件位置）
@@ -608,7 +608,7 @@ your-project/
 | 项目 | 描述 |
 |------|------|
 | **[StrayMark](https://github.com/StrangeDaysTech/straymark)** | 你的 AI 辅助项目所需的认知纪律 |
-| **[arborist-metrics](https://github.com/StrangeDaysTech/arborist)** | Rust 多语言代码复杂度分析库 — [crates.io](https://crates.io/crates/arborist-metrics) |
+| **[arborist-metrics](https://github.com/StrangeDaysTech/arborist-metrics/)** | Rust 多语言代码复杂度分析库 — [crates.io](https://crates.io/crates/arborist-metrics) |
 
 [网站](https://strangedays.tech) • [GitHub](https://github.com/StrangeDaysTech)
 

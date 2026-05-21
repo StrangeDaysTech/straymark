@@ -127,6 +127,10 @@
     "message": "阅读快速上手指南 →",
     "description": "Bottom getting-started CTA button"
   },
+  "gettingStarted.oss": {
+    "message": "开源 · MIT 许可 · 源代码在 {github}",
+    "description": "OSS/MIT mention under the bottom CTA, with {github} interpolating to a link to the repo"
+  },
   "asciinema.title": {
     "message": "从空白终端到你的第一个 Charter",
     "description": "Asciinema section title"

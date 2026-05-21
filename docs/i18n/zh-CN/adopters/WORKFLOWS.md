@@ -249,13 +249,3 @@ straymark status    # 完整的健康报告，包含版本信息
 ```
 
 详细的 CLI 信息参见 [CLI 参考手册](CLI-REFERENCE.md#版本管理)。
-
----
-
-<div align="center">
-
-**StrayMark** — 因为每一次变更都值得被记录。
-
-[返回文档](https://github.com/StrangeDaysTech/straymark/blob/main/docs/i18n/zh-CN/README.md) • [README](https://github.com/StrangeDaysTech/straymark/blob/main/README.md) • [Strange Days Tech](https://strangedays.tech)
-
-</div>

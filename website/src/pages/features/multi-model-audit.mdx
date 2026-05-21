@@ -1,6 +1,6 @@
 ---
 title: Multi-model external audit
-description: Three independent auditor CLIs review the same closed Charter; a calibrator consolidates findings into signed evidence in the Charter's telemetry.
+description: Three independent auditor CLIs review the same Charter at the closure gate — before `charter close` is invoked; a calibrator consolidates findings into signed evidence in the Charter's telemetry.
 ---
 import FeaturesLayout from '@site/src/components/FeaturesLayout';
 
@@ -8,7 +8,7 @@ import FeaturesLayout from '@site/src/components/FeaturesLayout';
 
 # Multi-model external audit
 
-Once a Charter closes, StrayMark can commission an external audit — not from one agent, but from several, in parallel. Three independent auditor CLIs (for example: Claude, Copilot, Gemini) read the same prompt and audit the Charter independently. A **calibrator** then consolidates findings into a single signed evidence block in the Charter's telemetry.
+When a Charter's implementation is done and the drift check is clean — but **before** `charter close` is invoked — StrayMark can optionally commission an external audit. Not from one agent, but from several, in parallel. Three independent auditor CLIs (for example: Claude, Copilot, Gemini) read the same prompt and audit the Charter independently. A **calibrator** then consolidates findings into a single signed evidence block in the Charter's telemetry, which travels with the Charter when it's closed. The audit is **never enforced** — decline freely when the cost (2-3 LLM auditors) doesn't match the value for your case.
 
 ## Why this matters
 

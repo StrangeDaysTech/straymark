@@ -1,0 +1,202 @@
+---
+title: 快速上手
+description: 从安装到关闭一个 Charter，10–15 分钟。穿过 StrayMark 的最短路径，端到端。
+---
+
+# 快速上手
+
+本指南带你从一个空终端走到一个已关闭的 Charter，外加一次外部审计周期。**预留 10–15 分钟**来阅读和复制命令。如果你只想感受一下这个工具，做前三节就好；其余的内容会在你准备把它接入真实项目时等你。
+
+框架观点鲜明但很小。下面的每一步都会产出一个版本化文件，你之后可以 `git blame` —— 如果改变主意，没有什么需要撤销的。
+
+## 1. 安装并验证
+
+一条命令。支持 Linux 和 macOS（Intel + Apple Silicon）；Windows 通过 WSL 运行。
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/StrangeDaysTech/straymark/main/install.sh | sh
+```
+
+安装器把一个 Rust 二进制放进你的 `$PATH`。确认一下它在那里：
+
+```bash
+straymark --version
+# straymark 3.2.2
+
+straymark about
+# StrayMark — cognitive discipline for AI-assisted engineering
+# CLI:        3.2.2
+# Framework:  4.2.0 (last update from main)
+# License:    MIT
+```
+
+当有新版本发布时，`straymark update-cli` 就地升级二进制；`straymark update-framework` 升级项目内部的规则和模板。两者都可逆，并在动手前先询问。
+
+## 2. 初始化你的仓库
+
+挑一个项目（greenfield 或既有都可以——无所谓）并运行：
+
+```bash
+cd path/to/your/repo
+straymark init
+```
+
+你大致会看到：
+
+```
+✓ Created STRAYMARK.md at repo root
+✓ Created .straymark/ with 7 subdirectories
+✓ Linked default AGENT-RULES.md
+✓ Wrote .straymark/config.yml
+```
+
+你得到的：
+
+```
+your-repo/
+├── STRAYMARK.md                  ← 统一规则；Agent 最先读它
+├── .straymark/
+│   ├── 00-governance/            AGENT-RULES、文档政策、quick reference
+│   ├── 01-charters/              CHARTER-NN-slug.md（你的有边界工作单元）
+│   ├── 02-ailogs/                AILOG-YYYYMMDD-NN-slug.md（每 commit 一条）
+│   ├── 03-decisions/             AIDEC、ADR（独立决策）
+│   ├── 04-models/                MCARD（model & system cards）
+│   ├── 05-security/              SEC、ETH、DPIA
+│   ├── 06-evolution/             TDE（横向技术债务）
+│   ├── audits/                   外部多模型审计报告
+│   └── config.yml                regional_scope、framework pin、默认值
+└── （你的代码，原封不动）
+```
+
+你不需要背下这棵树 —— `straymark status` 会在过程中告诉你缺什么。
+
+## 3. 你的第一个 Charter
+
+**Charter** 是在你开始*之前*声明的有边界工作单元：范围、你打算修改的文件、你能看到的风险，以及证明它工作正常的验证命令。关闭一个 Charter 要求现实与声明相符 —— drift 在同一 PR 内对账，否则 Charter 无法关闭。
+
+用 CLI 搭起一个：
+
+```bash
+straymark new -t charter --title "Refactor auth middleware"
+```
+
+或者等价地，从 Agent CLI（Claude Code、Gemini CLI、Copilot CLI、……）内部：
+
+```
+/straymark-charter-new Refactor auth middleware
+```
+
+两者都会在 `.straymark/01-charters/CHARTER-001-refactor-auth-middleware.md` 产出同一份文件。打开它；模板会引导你填四节：
+
+- **Scope** —— 什么纳入、什么*明确排除*。要具体。"改进 auth"太模糊；"在 `auth.rs` 中把基于 cookie 的会话替换为 JWT，并更新 `auth_test.rs` 中的测试"才对。
+- **Files** —— 你预计会修改的路径。如果你没声明的某条路径出现在 diff 中而你没更新这份清单，Charter 就无法关闭。
+- **Risks (R1…Rn)** —— 可能出错的具体事项，限定在*这个* Charter 内。遗留债务或跨模块问题改放到 TDE。
+- **Verification** —— 证明工作完成的命令。`cargo test --package auth`、`npm run e2e -- --grep auth`，随你。可复现的。
+
+工作期间保持 `status: in-progress`。你将在下面的 AILOG 与审计步骤之后关闭它。
+
+## 4. 提交时写 AILOG
+
+**AILOG（AI Action Log）** 是一次有意义 commit 的执行账本：做了什么、为什么、飞行中发现了什么、推迟了什么。每 commit 一条，按天编号（`AILOG-20260520-01`、`-02`、……）。
+
+最快的路径是 skill：
+
+```
+/straymark-ailog
+```
+
+Skill 会读取当前 `git diff`，推断 AILOG 编号，载入模板，并请你填写：
+
+- 改了什么以及为什么
+- 在 Charter 之外发现的风险（标为 `R<N+1> (new, not in Charter)`）
+- 考虑过又被否的备选
+- `risk_level` 与 `confidence`
+
+提交时引用 AILOG 文件名，让未来的考古落到正确的文档：
+
+```bash
+git commit -m "feat(auth): swap session cookies for JWT (AILOG-20260520-01)"
+```
+
+团队的经验法则：**每个修改 Charter 声明文件的 commit 都获得一条 AILOG**。重构、bug fix、仅文档 commit 不需要 —— `straymark validate` 知道差别，不会唠叨。
+
+## 5. Status 与 validate
+
+两条命令让仓库保持诚实。
+
+`straymark status` 是仪表盘。任何时候想快速读一下项目状态都可以运行：
+
+```bash
+straymark status
+# StrayMark v4.2.0 · Healthy
+#  1 active charter   (CHARTER-001-refactor-auth-middleware · in-progress)
+#  1 AILOG today      (AILOG-20260520-01)
+#  0 open TDEs
+#  100% framework version match
+#  Compliance: EU AI Act 8/8 covered · ISO 42001 4/4 covered
+```
+
+`straymark validate` 是执行层。它检查 frontmatter、schema、缺失的 AILOG、声明文件与实际文件之间的 drift，以及断裂的交叉引用。在 pre-commit 钩子里用 `--staged` 标志，在问题落地之前抓住它们：
+
+```bash
+straymark validate --staged
+```
+
+两行的 `.git/hooks/pre-commit` 通常足够：
+
+```bash
+#!/bin/sh
+straymark validate --staged || exit 1
+```
+
+CI 在每个 PR 上做同样的事；二进制返回非零，所以一次失败的 `straymark validate` 会让构建失败，无需额外胶水。
+
+## 6. 跑你的第一次外部审计
+
+当 Charter 的验证通过、drift 检查干净时 —— 但**在**你调用 `charter close` **之前** —— 你可以可选地委托一次**外部审计**。三个独立的审计方 CLI 并行审同一个 Charter，一个校准器把他们的发现整合为 Charter 遥测中的签名证据。这是一个 3 阶段、3 个 skill 的仪式。审计完全可选 —— 当成本（2-3 个 LLM 审计员）与你的情形不匹配时可自由拒绝。
+
+### 阶段 1 —— 生成 prompt
+
+在你的主 Agent 中：
+
+```
+/straymark-audit-prompt CHARTER-001
+```
+
+这会在 `.straymark/audits/CHARTER-001/audit-prompt.md` 写出一份统一 prompt，包含 Charter 范围、AILOGs、Charter 提交的 git diff，以及每位审计员必须遵守的纪律规则（引用 `path:行号`、校准严重度、保持在范围内）。
+
+### 阶段 2 —— 并行运行 N 个审计员
+
+打开审计方 CLI（Claude Code、Copilot CLI、Gemini CLI、Codex CLI —— 任意组合）。在每个里运行：
+
+```
+/straymark-audit-execute CHARTER-001
+```
+
+每个审计员读取同一份 prompt，独立审计 Charter，并在 `.straymark/audits/CHARTER-001/report-<model-slug>.md` 写出报告。不与 StrayMark 自身共享任何 API key —— 框架不是 LLM gateway。
+
+### 阶段 3 —— 校准并合并
+
+回到你的主 Agent：
+
+```
+/straymark-audit-review CHARTER-001
+```
+
+这会把所有报告整合到 `.straymark/audits/CHARTER-001/review.md`，包含：
+
+- 每个发现的裁决：`VALID`、`PARTIALLY_VALID`、`MISATTRIBUTED`、`FALSE_POSITIVE`、`DUPLICATE`
+- 当审计员相对实际配置过度抬高/压低时的严重度重分类
+- 审计员打分（范围精度、bug 检出率、误报率）
+- 按 `P0 安全 → P4 文档` 排序的修复计划
+
+经过 review 的证据合并到 Charter 的 `external_audit:` YAML 块作为遥测。把 Charter 标为 `status: closed`，从此审计与仓库一同流转。
+
+## 接下来
+
+- [Feature 页面](/features/cognitive-discipline) 以更慢的节奏讲解底层概念。
+- [完整文档](/docs) 是你迈过快速上手之后的参考。
+- [编年史](/blog) 解释每个设计决策为什么落在那里 —— 对想了解框架*推理过程*而非只想了解规则的采用者很有用。
+- 在 [GitHub](https://github.com/StrangeDaysTech/straymark) 上开 issue 或发 PR。项目是 MIT 协议，framework 在 `dist/`，如果你想 fork 规则。
+
+如果你看到这里，你已经掌握了这个循环：**declare → execute → log → validate → audit**。StrayMark 的其余一切都是对这五个动词的细化。

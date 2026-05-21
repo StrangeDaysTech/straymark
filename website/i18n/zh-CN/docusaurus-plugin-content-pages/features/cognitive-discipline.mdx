@@ -1,0 +1,32 @@
+---
+title: 结构化的认知纪律
+description: 三种小型工件类型，把模糊的"AI 辅助工作"转化为可追溯的思考单元 —— Charters、AILOGs、AIDECs。
+---
+import FeaturesLayout from '@site/src/components/FeaturesLayout';
+
+<FeaturesLayout>
+
+# 结构化的认知纪律
+
+大多数 AI 辅助工作在 diff 落地的那一刻就丢失了它的推理过程。StrayMark 用三种小型工件类型修复了这一点 —— **Charters**、**AILOGs**、**AIDECs** —— 它们与代码并列存在，记录每一次变更背后的意图、动作与取舍。
+
+## 为什么这很重要
+
+当 Agent 交付一个 feature 时，你通常拿到的是结果，却丢失了通往结果的一切：考虑过的备选方案、明确排除的范围、在飞行中发现的风险。半年后，代码成了无法挽回的考古工作。当你有模板时，认知纪律的代价很低；当你没有时，它就是一切。
+
+*不*具备它的代价稍后会显现为：没人能在评审中辩护的未记录决策、悄无声息偏离规范的 Agent，以及向你索取根本不存在的证据的合规审计员。
+
+## 你能得到什么
+
+- **Charters** 在你开始*之前*声明一个有边界的工作单元：范围（in / out）、提前声明的文件、风险（`R1...Rn`）、验证命令。如果现实偏离了声明且 drift 没有在同一 PR 内被对账，Charter 就无法关闭。
+- **AILOGs** 记录实际执行过程：做了什么、为什么、飞行中发现了什么、推迟了什么。每个 commit 一条，按天编号，带 `risk_level` 与 `confidence` 字段。
+- **AIDECs** 捕获独立决策：考虑过的备选、取舍、选定的方案及理由。即使原 Charter 已关闭，决策仍然存活。
+
+三者都是带 YAML frontmatter 的纯 Markdown。它们存放在 `.straymark/` 内，并附带模板。CLI 负责脚手架；Agent 通过 skills 调用它们。
+
+## 了解更多
+
+- [什么是 Charter](/docs/contributors/WHAT-IS-A-CHARTER)
+- [采用指南](/docs/adopters/ADOPTION-GUIDE)
+
+</FeaturesLayout>
