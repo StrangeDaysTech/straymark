@@ -333,16 +333,29 @@
   cursor: not-allowed;
 }
 
+/* Dots are only navigation on mobile; on desktop the named tablist
+   (Charter / AILOG / TDE / …) handles selection, so the dots are redundant
+   and hidden. Avoids visual noise + duplicate `role="tablist"` controls. */
 .dots {
-  display: inline-flex;
+  display: none;
   gap: 0.2rem;
 }
 
-/* WCAG 2.2 minimum touch target is 24×24px. We keep the visible dot at 8px
-   for design density but expand the clickable hit area to 24×24 via padding
-   and box-sizing tricks: the button itself is 24×24, its content (the dot)
-   is rendered via box-shadow so visual size stays compact. */
+@media (max-width: 767px) {
+  .dots {
+    display: inline-flex;
+  }
+}
+
+/* WCAG 2.2 minimum touch target is 24×24px. The button itself is 24×24
+   (the full hit area) and the visible 8px circle is drawn as a centered
+   pseudo-element. `display: inline-flex` + `appearance: none` are
+   essential — Chromium needs both for `::before` to render reliably on
+   `<button>`. */
 .dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 24px;
   height: 24px;
   border: none;
@@ -350,20 +363,19 @@
   background: transparent;
   padding: 0;
   cursor: pointer;
-  position: relative;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .dot::before {
   content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
+  display: block;
   width: 8px;
   height: 8px;
   border-radius: 50%;
   border: 1px solid var(--ifm-color-emphasis-400);
   background: transparent;
-  transform: translate(-50%, -50%);
+  box-sizing: border-box;
   transition: background 0.12s ease, border-color 0.12s ease;
 }
 
