@@ -30,12 +30,18 @@ export default function Home(): ReactNode {
   });
   return (
     <Layout title={metaTitle} description={metaDescription}>
-      <Hero />
-      <WorkflowDiagram />
-      <AsciinemaDemo />
-      <WhyExists />
-      <FeatureGrid />
-      <GettingStarted />
+      {/* Lighthouse flagged the homepage as missing a <main> landmark — the
+          Docusaurus Layout wraps children in a generic <div>. Wrap our
+          sections in <main> so screen readers and search engines can locate
+          primary content. */}
+      <main>
+        <Hero />
+        <WorkflowDiagram />
+        <AsciinemaDemo />
+        <WhyExists />
+        <FeatureGrid />
+        <GettingStarted />
+      </main>
     </Layout>
   );
 }

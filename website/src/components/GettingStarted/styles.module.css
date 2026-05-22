@@ -32,7 +32,9 @@
 .meta {
   margin: 1.5rem 0 0;
   font-size: 0.9rem;
-  color: var(--ifm-color-emphasis-600);
+  /* emphasis-600 (#8d949e on white) is 3.06:1 — below WCAG AA. emphasis-700
+     (~#606770) clears 4.5:1 for normal text. */
+  color: var(--ifm-color-emphasis-700);
 }
 
 .meta a {
