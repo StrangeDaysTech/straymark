@@ -51,6 +51,14 @@
     "message": "Código abierto · licencia MIT · código en {github}",
     "description": "OSS/MIT mention under the bottom CTA, with {github} interpolating to a link to the repo"
   },
+  "meta.landing.title": {
+    "message": "Disciplina cognitiva para ingeniería asistida por IA",
+    "description": "OG/Twitter title and browser tab for the landing page (the \" | StrayMark\" suffix is appended by Docusaurus automatically)"
+  },
+  "meta.landing.description": {
+    "message": "Framework open source + CLI en Rust para externalizar alcance, decisiones y riesgos, manteniendo a los agentes de IA coherentes entre turnos. Mapea a ISO 42001, EU AI Act, NIST AI RMF.",
+    "description": "OG/Twitter description and meta description for the landing page"
+  },
   "asciinema.title": {
     "message": "De una terminal vacía a tu primer Charter",
     "description": "Asciinema section title"
