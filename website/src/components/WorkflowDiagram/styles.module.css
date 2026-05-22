@@ -227,6 +227,10 @@
   display: block;
   width: 100%;
   height: auto;
+  /* viewBox is 900×380 — reserve the layout space up-front so the section
+     doesn't grow as the SVG renders (Lighthouse `cumulative-layout-shift`
+     was 0.087, almost entirely from this section). */
+  aspect-ratio: 900 / 380;
 }
 
 .node {
@@ -331,20 +335,39 @@
 
 .dots {
   display: inline-flex;
-  gap: 0.4rem;
+  gap: 0.2rem;
 }
 
+/* WCAG 2.2 minimum touch target is 24×24px. We keep the visible dot at 8px
+   for design density but expand the clickable hit area to 24×24 via padding
+   and box-sizing tricks: the button itself is 24×24, its content (the dot)
+   is rendered via box-shadow so visual size stays compact. */
 .dot {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+}
+
+.dot::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: 8px;
   height: 8px;
   border-radius: 50%;
   border: 1px solid var(--ifm-color-emphasis-400);
   background: transparent;
-  padding: 0;
-  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition: background 0.12s ease, border-color 0.12s ease;
 }
 
-.dot[aria-selected='true'] {
+.dot[aria-selected='true']::before {
   background: var(--bp-accent);
   border-color: var(--bp-accent);
 }

@@ -14,6 +14,8 @@ export default function Hero(): ReactNode {
         <ThemedImage
           className={styles.banner}
           alt="StrayMark — by Strange Days Tech"
+          width={600}
+          height={140}
           sources={{
             light: '/img/straymark-banner-light.svg',
             dark: '/img/straymark-banner-dark.svg',

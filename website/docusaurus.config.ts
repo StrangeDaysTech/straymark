@@ -232,6 +232,10 @@ const config: Config = {
         alt: 'StrayMark',
         src: 'img/logo.svg',
         srcDark: 'img/logo-dark.svg',
+        // Explicit dimensions prevent a navbar reflow before the SVG loads
+        // (Lighthouse `unsized-images`).
+        width: 32,
+        height: 32,
       },
       items: [
         {
