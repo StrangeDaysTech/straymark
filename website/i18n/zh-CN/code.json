@@ -131,6 +131,14 @@
     "message": "开源 · MIT 许可 · 源代码在 {github}",
     "description": "OSS/MIT mention under the bottom CTA, with {github} interpolating to a link to the repo"
   },
+  "meta.landing.title": {
+    "message": "面向 AI 辅助工程的认知纪律",
+    "description": "OG/Twitter title and browser tab for the landing page (the \" | StrayMark\" suffix is appended by Docusaurus automatically)"
+  },
+  "meta.landing.description": {
+    "message": "开源框架 + Rust CLI，将范围、决策与风险外部化，让 AI Agent 在多轮对话中保持连贯。原生映射 ISO 42001、EU AI Act、NIST AI RMF。",
+    "description": "OG/Twitter description and meta description for the landing page"
+  },
   "asciinema.title": {
     "message": "从空白终端到你的第一个 Charter",
     "description": "Asciinema section title"
