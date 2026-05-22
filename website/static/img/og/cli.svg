@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="StrayMark social card">
+  <title>StrayMark — A CLI that does the work: one Rust binary, eleven commands</title>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0E0E10"/>
+
+  <!-- Subtle grid (very faint, just for texture) -->
+  <defs>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#1A1A1F" stroke-width="1"/>
+    </pattern>
+    <linearGradient id="fadeRight" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0E0E10" stop-opacity="0"/>
+      <stop offset="80%" stop-color="#0E0E10" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <rect width="1200" height="630" fill="url(#fadeRight)"/>
+
+  <!-- Logo (StrayMark marker) -->
+  <g transform="translate(80 96) scale(1.2)">
+    <path d="M 12 4 L 88 4 A 8 8 0 0 1 96 12 L 96 96 L 50 70 L 4 96 L 4 12 A 8 8 0 0 1 12 4 Z" fill="#FFFFFF"/>
+    <path d="M 41 29 C 41 24 37 21 32 21 L 19 21 C 14 21 12 24 12 29 C 12 34 14 38 19 38 L 31 38 C 36 38 41 41 41 46 C 41 51 37 54 32 54 L 19 54 C 14 54 12 51 12 46" fill="none" stroke="#0E0E10" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 56 54 L 56 21 L 72 38 L 88 21 L 88 81" fill="none" stroke="#0E0E10" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Wordmark "StrayMark" -->
+  <text x="225" y="207"
+        font-family="Inter, 'Helvetica Neue', Helvetica, system-ui, -apple-system, sans-serif"
+        font-size="108" font-weight="700" letter-spacing="-4"
+        fill="#FFFFFF">StrayMark</text>
+
+  <!-- Tagline -->
+  <text x="82" y="320"
+        font-family="Inter, 'Helvetica Neue', Helvetica, system-ui, -apple-system, sans-serif"
+        font-size="48" font-weight="400"
+        fill="#E5E7EB">One Rust binary. Eleven commands. No daemons.</text>
+
+  <!-- Teal accent line -->
+  <rect x="82" y="358" width="120" height="4" fill="#25C2A0"/>
+
+  <!-- Sub-tagline / pillars -->
+  <text x="82" y="425"
+        font-family="Inter, 'Helvetica Neue', Helvetica, system-ui, -apple-system, sans-serif"
+        font-size="30" font-weight="400" letter-spacing="0.5"
+        fill="#9CA3AF">init <tspan fill="#25C2A0">·</tspan> validate <tspan fill="#25C2A0">·</tspan> audit <tspan fill="#25C2A0">·</tspan> analyze <tspan fill="#25C2A0">·</tspan> compliance <tspan fill="#25C2A0">·</tspan> metrics <tspan fill="#25C2A0">·</tspan> explore</text>
+
+  <text x="82" y="470"
+        font-family="Inter, 'Helvetica Neue', Helvetica, system-ui, -apple-system, sans-serif"
+        font-size="30" font-weight="400" letter-spacing="0.5"
+        fill="#9CA3AF">Deterministic outputs you can <tspan fill="#FFFFFF">grep</tspan>, <tspan fill="#FFFFFF">jq</tspan>, pipe to CI.</text>
+
+  <!-- Footer-left URL -->
+  <text x="82" y="565"
+        font-family="'JetBrains Mono', 'Courier New', monospace"
+        font-size="26" font-weight="500" letter-spacing="0.5"
+        fill="#25C2A0">straymark.dev/features/cli</text>
+
+  <!-- Footer-right attribution -->
+  <text x="1118" y="540"
+        font-family="Inter, system-ui, sans-serif"
+        font-size="22" font-weight="500"
+        fill="#9CA3AF" text-anchor="end">MIT · Open source</text>
+  <text x="1118" y="572"
+        font-family="Inter, system-ui, sans-serif"
+        font-size="20" font-weight="400"
+        fill="#6B7280" text-anchor="end">by Strange Days Tech, S.A.S. de C.V.</text>
+</svg>
