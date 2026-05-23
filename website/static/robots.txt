@@ -1,0 +1,9 @@
+# StrayMark robots.txt
+# Crawl policy: open. The site is public marketing + docs + blog.
+# Sitemap directive points crawlers at the locale-aware index, which
+# in turn references the three per-locale sitemaps (en, es, zh-CN).
+
+User-agent: *
+Allow: /
+
+Sitemap: https://straymark.dev/sitemap-index.xml

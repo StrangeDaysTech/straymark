@@ -83,6 +83,30 @@
     "message": "Qué trae StrayMark",
     "description": "Title for the left sidebar shared across feature pages"
   },
+  "features.sidebar.overview": {
+    "message": "Resumen",
+    "description": "Sidebar link back to the /features index page from any feature subpage"
+  },
+  "features.index.eyebrow": {
+    "message": "Características",
+    "description": "Small eyebrow label above the /features H1"
+  },
+  "features.index.title": {
+    "message": "Qué trae StrayMark",
+    "description": "H1 of the /features index page"
+  },
+  "features.index.intro": {
+    "message": "Nueve capacidades que componen StrayMark — desde la disciplina cognitiva y la gobernanza repo-native hasta la auditoría multi-modelo y la observación emergente. Elegí la que mapea al problema que estás resolviendo; cada una enlaza a una página dedicada.",
+    "description": "Intro paragraph above the FeatureGrid on the /features index page"
+  },
+  "meta.features.title": {
+    "message": "Qué trae StrayMark — todas las características",
+    "description": "OG/Twitter title and browser tab for the /features index (the \" | StrayMark\" suffix is appended by Docusaurus automatically)"
+  },
+  "meta.features.description": {
+    "message": "Todas las capacidades de StrayMark en una página: charters, gobernanza, auditoría multi-modelo, detección de drift TDE, el CLI, skills para agentes y observación emergente.",
+    "description": "OG/Twitter description and meta description for the /features index"
+  },
   "features.discipline.title": {
     "message": "Disciplina cognitiva estructurada",
     "description": "Feature: structured cognitive discipline (title)"

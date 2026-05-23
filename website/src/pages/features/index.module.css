@@ -1,0 +1,33 @@
+.header {
+  padding: 4rem 0 2rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.headerInner {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ifm-color-primary);
+}
+
+.title {
+  margin: 0 0 1rem;
+  font-size: clamp(2rem, 4vw + 1rem, 3rem);
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.intro {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--ifm-color-emphasis-700);
+}
