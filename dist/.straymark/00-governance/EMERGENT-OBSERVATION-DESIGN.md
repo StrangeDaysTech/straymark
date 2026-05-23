@@ -172,4 +172,4 @@ This document itself instantiates step 3.b for the meta — the upstream-accepta
 
 ---
 
-*StrayMark fw-4.17.0 | [GitHub](https://github.com/StrangeDaysTech/straymark) | Issue [#150](https://github.com/StrangeDaysTech/straymark/issues/150) · [#156](https://github.com/StrangeDaysTech/straymark/issues/156)*
+*StrayMark fw-4.18.0 | [GitHub](https://github.com/StrangeDaysTech/straymark) | Issue [#150](https://github.com/StrangeDaysTech/straymark/issues/150) · [#156](https://github.com/StrangeDaysTech/straymark/issues/156)*

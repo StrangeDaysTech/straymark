@@ -238,7 +238,8 @@ Mark `review_required: true` when:
 | Pattern | Document |
 |---------|----------|
 | Follow-ups backlog (central registry + drift detection) *(fw-4.10.0+)* | [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) |
+| Polish Charter as debt-detection ("surface declaration without wiring" anti-pattern) *(fw-4.18.0+)* | [POLISH-CHARTER-PATTERN.md](POLISH-CHARTER-PATTERN.md) |
 
 ---
 
-*StrayMark fw-4.17.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.18.0 | [Strange Days Tech](https://strangedays.tech)*

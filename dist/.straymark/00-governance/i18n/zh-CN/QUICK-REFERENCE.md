@@ -213,7 +213,8 @@ risk_level: low | medium | high | critical
 | 模式 | 文档 |
 |------|------|
 | Follow-ups backlog(中央注册表 + drift 检测) *(fw-4.10.0+)* | [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) |
+| Polish Charter 作为债务检测("声明了表层但未接线"反模式) *(fw-4.18.0+)* | [POLISH-CHARTER-PATTERN.md](POLISH-CHARTER-PATTERN.md) |
 
 ---
 
-*StrayMark fw-4.17.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.18.0 | [Strange Days Tech](https://strangedays.tech)*

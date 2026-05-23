@@ -88,4 +88,4 @@ Ver [`EMERGENT-OBSERVATION-DESIGN.md`](EMERGENT-OBSERVATION-DESIGN.md) para el m
 
 ---
 
-*StrayMark fw-4.17.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.18.0 | [Strange Days Tech](https://strangedays.tech)*

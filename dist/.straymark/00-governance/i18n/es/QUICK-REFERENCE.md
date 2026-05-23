@@ -213,7 +213,8 @@ Marcar `review_required: true` cuando:
 | Patrón | Documento |
 |--------|-----------|
 | Backlog de follow-ups (registro central + detección de drift) *(fw-4.10.0+)* | [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) |
+| Polish Charter como detección de deuda (anti-patrón "declaración de superficie sin cableado") *(fw-4.18.0+)* | [POLISH-CHARTER-PATTERN.md](POLISH-CHARTER-PATTERN.md) |
 
 ---
 
-*StrayMark fw-4.17.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.18.0 | [Strange Days Tech](https://strangedays.tech)*
