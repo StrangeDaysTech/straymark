@@ -7,6 +7,22 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.18.0 — Polish Charter as debt-detection pattern + "surface declaration without wiring" anti-pattern
+
+Names a recurring anti-pattern surfaced empirically across a polish Charter session in the Sentinel adopter (`StrangeDaysTech/sentinel` CHARTER-19 → CHARTER-27, May 2026): **"Surface declaration without wiring"** — an artifact (env var documented in a runbook, metric instrument declared in a metrics package, URL referenced from an embedded HTML template, route marked public-by-contract) gets declared in one place while the implementation wiring lives in another place, with neither tooling nor review process correlating the two. Integration tests with mock adapters (`humatest`, in-memory event buses) systematically bypass the composed-app boot path where the gap would surface. The polish Charter — the closing Charter of an Etapa / SpecKit `Polish` Phase — is the load-bearing discovery vehicle because it exercises the documented operator runbook end-to-end against the real binary. New pattern doc + small charter-template addition formalize the convention so adopters treat the polish Charter as a debt-detection gate, not as cosmetic cleanup. Originated in [issue #199](https://github.com/StrangeDaysTech/straymark/issues/199). No CLI bump.
+
+### Added (Framework)
+
+- **`dist/.straymark/00-governance/POLISH-CHARTER-PATTERN.md`** (EN, ES, zh-CN) — new canonical pattern doc naming the anti-pattern and the four generalized sub-classes (env var ↔ consumer; metric instrument ↔ record-call site; HTML body URL ↔ registered route; public-by-contract route ↔ public-prefix entry). v0 status (proven in N=1 domain — Sentinel). Sections: Status, When this pattern applies, Shape (named anti-pattern + four sub-classes + why integration tests miss them), Adoption walkthrough, Reference implementation (Sentinel CHARTER-19 → CHARTER-27 chain + AIDEC-2026-05-22-001), Open questions, Credits, Related. Structure mirrors `FOLLOW-UPS-BACKLOG-PATTERN.md` for cross-doc consistency. Same N=1 → N=2 graduation gate for CLI crystallization (`straymark analyze declared-vs-wired` is listed in Open questions but not implemented).
+- **`dist/.straymark/templates/charter/charter-template.md` — seventh `Format conventions` bullet** — surgical addition to the comment block pointing Charter authors at `POLISH-CHARTER-PATTERN.md` when the Charter closes an Etapa or SpecKit `Polish` Phase. Calls out the L effort budget and the emergent follow-on Charter expectation surfaced by the reference implementation. No new frontmatter field; no schema change.
+- **`dist/.straymark/00-governance/QUICK-REFERENCE.md` `## Patterns` table** (EN, ES, zh-CN) — new row referencing the pattern doc with the `*(fw-4.18.0+)*` badge.
+
+### Adopter guidance
+
+Adopters running `straymark update-framework` after `fw-4.18.0` lands get the new pattern doc, the updated charter template, and the QUICK-REFERENCE row. No structural migration is required. Adopters closing an Etapa with ≥3 mock-adapter integration tests, ≥1 cross-module declaration/wiring artifact, or a runbook that has never been exercised end-to-end against the binary should read the pattern doc before scoping the polish Charter (budget L, not XS/S/M) and plan for emergent follow-on Charters.
+
+---
+
 ## CLI 3.15.0 — Idempotent injection + host marker-health validation
 
 Fixes a long-standing bug in `cli/src/inject.rs::replace_between_markers` that left a duplicated `<!-- straymark:end -->` in host files such as `.cursorrules`, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/straymark.md`, and `.github/copilot-instructions.md` after every `straymark update-framework`. The root cause was two-fold: (1) the old code called `content.find(MARKER_BEGIN)` and `content.find(MARKER_END)` independently and never verified `start < end`; (2) more critically, `.cursorrules` and `.cursor/rules/straymark.md` embed `STRAYMARK.md`, whose own documentation contains the literal strings `<!-- straymark:begin -->` and `<!-- straymark:end -->` inside a fenced code block that describes the marker convention. `find(MARKER_END)` stopped at the in-docs literal instead of the trailing real END, so every update truncated the canonical block mid-embed and dropped the real END outside it as an orphan — accumulating one extra `<!-- straymark:end -->` per update. The fix makes injection idempotent and auto-repairing, and adds a diagnostic signal to `straymark validate`.

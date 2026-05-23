@@ -172,4 +172,4 @@ Este propio documento instancia el paso 3.b para el meta — el output de acepta
 
 ---
 
-*StrayMark fw-4.17.0 | [GitHub](https://github.com/StrangeDaysTech/straymark) | Issue [#150](https://github.com/StrangeDaysTech/straymark/issues/150) · [#156](https://github.com/StrangeDaysTech/straymark/issues/156)*
+*StrayMark fw-4.18.0 | [GitHub](https://github.com/StrangeDaysTech/straymark) | Issue [#150](https://github.com/StrangeDaysTech/straymark/issues/150) · [#156](https://github.com/StrangeDaysTech/straymark/issues/156)*

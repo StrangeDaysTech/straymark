@@ -229,4 +229,14 @@ v3 addition" — the partition was Sentinel's iteration log, not structural).
    in their AILOG. The script catches the same drifts BEFORE commit, separating
    "known and documented" from "forgotten". Zero false positives on 2/2 empirical
    tests against the canonical Sentinel Plans.
+
+7. When a Charter closes an Etapa or SpecKit `Polish` Phase, the polish Charter
+   doubles as a debt-detection mechanism — its load-bearing job is to exercise the
+   documented operator runbook end-to-end against the real binary (not a test
+   harness with mock adapters). See
+   `.straymark/00-governance/POLISH-CHARTER-PATTERN.md` for the named anti-pattern
+   ("Surface declaration without wiring") it surfaces and the four mechanical
+   sub-class checks that cover the common cases. Empirical signal from the
+   reference implementation: budget the polish Charter as L (not XS/S/M) and
+   expect emergent follow-on Charters, not residual cleanup scope creep.
 -->

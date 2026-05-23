@@ -168,4 +168,4 @@ Mark `review_required: true` when:
 
 ---
 
-*StrayMark fw-4.17.0 | [GitHub](https://github.com/StrangeDaysTech/straymark) | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.18.0 | [GitHub](https://github.com/StrangeDaysTech/straymark) | [Strange Days Tech](https://strangedays.tech)*
