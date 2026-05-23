@@ -1,5 +1,5 @@
 import {themes as prismThemes} from 'prism-react-renderer';
-import type {Config} from '@docusaurus/types';
+import type {Config, I18n} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const GITHUB_REPO = 'https://github.com/StrangeDaysTech/straymark';
@@ -126,6 +126,12 @@ const config: Config = {
 
   future: {
     v4: true,
+    // Required for sitemap <lastmod> to be populated from git: the sitemap
+    // plugin reads each route's last update timestamp via this VCS layer.
+    // 'git-eager' pre-reads the whole repo once at build start, then answers
+    // per-file queries in memory — faster than 'git-ad-hoc' for a build that
+    // covers ~80 routes × 3 locales. See VcsPreset in @docusaurus/types.
+    experimental_vcs: 'git-eager',
   },
 
   url: 'https://straymark.dev',
@@ -169,6 +175,9 @@ const config: Config = {
           sidebarPath: './sidebars.ts',
           include: ['intro.md', 'adopters/**', 'contributors/**'],
           exclude: ['**/i18n/**', '**/proposals/**', '**/decisions/**'],
+          // Populates each route's metadata.lastUpdatedAt from git so the
+          // sitemap plugin can emit <lastmod> per doc URL.
+          showLastUpdateTime: true,
         },
         blog: {
           path: 'blog',
@@ -178,6 +187,10 @@ const config: Config = {
           blogSidebarCount: 'ALL',
           blogSidebarTitle: 'All posts',
           showReadingTime: true,
+          // Populates metadata.lastUpdatedAt from git for every post so the
+          // sitemap plugin can emit <lastmod> per post URL. Same lever the
+          // docs plugin uses above.
+          showLastUpdateTime: true,
           feedOptions: {
             type: ['rss', 'atom'],
             title: 'StrayMark Blog',
@@ -193,6 +206,79 @@ const config: Config = {
         },
         theme: {
           customCss: './src/css/custom.css',
+        },
+        // Sitemap config. The classic preset bundles @docusaurus/plugin-sitemap;
+        // by default it emits one sitemap.xml per locale build (en at root,
+        // /es/sitemap.xml, /zh-CN/sitemap.xml) with no lastmod and no
+        // hreflang alternates — meaning search engines treat each locale's
+        // copy of the same content as unrelated documents.
+        //
+        // We enrich the default emitter via createSitemapItems:
+        //   - `lastmod: 'date'` makes the plugin attach <lastmod> per URL,
+        //     pulled from git for files with a known sourceFilePath.
+        //   - createSitemapItems wraps defaultCreateSitemapItems and adds an
+        //     `xhtml:link rel="alternate" hreflang="..."` entry per item for
+        //     every locale we ship, plus an x-default pointing at the EN
+        //     canonical. Google uses this to cluster the per-locale URLs as
+        //     translations of the same page rather than as duplicates.
+        //
+        // The static counterparts (/sitemap-index.xml that aggregates the
+        // three per-locale sitemaps, and /robots.txt that points crawlers at
+        // the index) live under website/static/ — Docusaurus copies them
+        // verbatim to the build root.
+        sitemap: {
+          lastmod: 'date',
+          createSitemapItems: async (params) => {
+            const {defaultCreateSitemapItems, ...rest} = params;
+            const items = await defaultCreateSitemapItems(rest);
+            const {siteConfig} = params;
+            const siteUrl = siteConfig.url;
+            // Docusaurus types `siteConfig.i18n` as I18nConfig (the input
+            // shape), but at build time the loader hydrates it into the full
+            // I18n shape, which carries `currentLocale`. Cast accordingly.
+            const i18n = siteConfig.i18n as unknown as I18n;
+            const {defaultLocale, locales, currentLocale} = i18n;
+
+            // URL prefix for the current build. Default locale has no prefix
+            // (URLs live at root); other locales are namespaced as
+            // /<locale>/... — matches Docusaurus's i18n routing.
+            const prefixFor = (locale: string): string =>
+              locale === defaultLocale ? '' : `/${locale}`;
+            const currentPrefix = prefixFor(currentLocale);
+
+            // Strip the current-locale prefix from a path to recover the
+            // locale-agnostic canonical path. Used to build the per-locale
+            // alternate URLs below.
+            const stripCurrentPrefix = (path: string): string => {
+              if (!currentPrefix) return path;
+              if (path === currentPrefix) return '/';
+              if (path.startsWith(`${currentPrefix}/`)) {
+                return path.slice(currentPrefix.length);
+              }
+              return path;
+            };
+
+            return items.map((item) => {
+              const path = item.url.replace(siteUrl, '');
+              const canonicalPath = stripCurrentPrefix(path) || '/';
+
+              // One hreflang entry per shipped locale + x-default. The lib
+              // (sitemap@7.x) emits each as
+              //   <xhtml:link rel="alternate" hreflang="<lang>" href="<url>" />
+              const links = [
+                ...locales.map((locale) => ({
+                  lang: locale,
+                  url: `${siteUrl}${prefixFor(locale)}${canonicalPath}`,
+                })),
+                {
+                  lang: 'x-default',
+                  url: `${siteUrl}${canonicalPath}`,
+                },
+              ];
+
+              return {...item, links};
+            });
+          },
         },
         // Note: we do NOT use the preset's `gtag` option. The plugin injects
         // gtag.js + `gtag('config', ...)` BEFORE user-config headTags render,

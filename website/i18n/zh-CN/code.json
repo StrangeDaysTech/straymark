@@ -11,6 +11,30 @@
     "message": "StrayMark 提供什么",
     "description": "Title for the left sidebar shared across feature pages"
   },
+  "features.sidebar.overview": {
+    "message": "概览",
+    "description": "Sidebar link back to the /features index page from any feature subpage"
+  },
+  "features.index.eyebrow": {
+    "message": "功能",
+    "description": "Small eyebrow label above the /features H1"
+  },
+  "features.index.title": {
+    "message": "StrayMark 提供什么",
+    "description": "H1 of the /features index page"
+  },
+  "features.index.intro": {
+    "message": "构成 StrayMark 的九项能力 —— 从认知纪律与原生于仓库的治理，到多模型审计与涌现观察。选择映射到你正在解决的问题的那一项；每一项都链接到一个专门的页面。",
+    "description": "Intro paragraph above the FeatureGrid on the /features index page"
+  },
+  "meta.features.title": {
+    "message": "StrayMark 提供什么 —— 全部功能一览",
+    "description": "OG/Twitter title and browser tab for the /features index (the \" | StrayMark\" suffix is appended by Docusaurus automatically)"
+  },
+  "meta.features.description": {
+    "message": "StrayMark 的所有能力汇集在一页：charters、治理、多模型审计、TDE 漂移检测、CLI、智能体 skills 与涌现观察。",
+    "description": "OG/Twitter description and meta description for the /features index"
+  },
   "features.discipline.title": {
     "message": "结构化的认知纪律",
     "description": "Feature: structured cognitive discipline (title)"

@@ -63,6 +63,11 @@ function isActive(pathname: string, slug: string): boolean {
   );
 }
 
+function isOverviewActive(pathname: string): boolean {
+  // True only on the /features index — must NOT match /features/<slug>.
+  return /\/features\/?$/.test(pathname);
+}
+
 export default function FeaturesLayout({children}: Props): ReactNode {
   const {pathname} = useLocation();
   const sidebarTitle = translate({
@@ -70,12 +75,27 @@ export default function FeaturesLayout({children}: Props): ReactNode {
     message: "What's in the box",
     description: 'Title for the left sidebar shared across feature pages',
   });
+  const overviewLabel = translate({
+    id: 'features.sidebar.overview',
+    message: 'Overview',
+    description: 'Sidebar link back to the /features index page from any feature subpage',
+  });
+  const overviewActive = isOverviewActive(pathname);
 
   return (
     <div className={styles.container}>
       <aside className={styles.sidebar} aria-label={sidebarTitle}>
         <h3 className={styles.sidebarTitle}>{sidebarTitle}</h3>
         <ul className={styles.sidebarList}>
+          <li>
+            <Link
+              to="/features"
+              className={`${styles.sidebarLink} ${overviewActive ? styles.sidebarLinkActive : ''}`}
+              aria-current={overviewActive ? 'page' : undefined}
+            >
+              {overviewLabel}
+            </Link>
+          </li>
           {FEATURES.map((f) => {
             const active = isActive(pathname, f.slug);
             return (
