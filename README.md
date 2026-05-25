@@ -276,8 +276,8 @@ StrayMark uses independent version tags for each component:
 
 | Component | Tag prefix | Example | Includes |
 | --- | --- | --- | --- |
-| Framework | `fw-` | `fw-4.18.0` | Templates (12 types), governance, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.15.0` | The `straymark` binary |
+| Framework | `fw-` | `fw-4.19.0` | Templates (12 types), governance, directives, Charter template + schema |
+| CLI | `cli-` | `cli-3.16.0` | The `straymark` binary |
 
 Check installed versions with `straymark status` or `straymark about`.
 
@@ -309,7 +309,7 @@ See [CLI Reference](https://github.com/StrangeDaysTech/straymark/blob/main/docs/
 ```bash
 # Download the latest framework release ZIP from GitHub
 # Go to https://github.com/StrangeDaysTech/straymark/releases
-# and download the latest fw-* release (e.g., fw-4.18.0)
+# and download the latest fw-* release (e.g., fw-4.19.0)
 
 # Extract and copy to your project
 unzip straymark-fw-*.zip -d your-project/
@@ -486,15 +486,17 @@ StrayMark includes skills for AI agents that enable **active documentation creat
 
 ### Available Skills
 
-| Skill | Purpose | Claude | Gemini |
-| --- | --- | --- | --- |
-| `/straymark-status` | Check documentation compliance | ✅ | ✅ |
-| `/straymark-new` | Create any document type (unified) | ✅ | ✅ |
-| `/straymark-ailog` | Quick AILOG creation | ✅ | ✅ |
-| `/straymark-aidec` | Quick AIDEC creation | ✅ | ✅ |
-| `/straymark-adr` | Quick ADR creation | ✅ | ✅ |
-| `/straymark-sec` | Security Assessment creation | ✅ | ✅ |
-| `/straymark-mcard` | Model/System Card creation | ✅ | ✅ |
+| Skill | Purpose | Claude | Gemini | Codex |
+| --- | --- | --- | --- | --- |
+| `/straymark-status` | Check documentation compliance | ✅ | ✅ | ✅ |
+| `/straymark-new` | Create any document type (unified) | ✅ | ✅ | ✅ |
+| `/straymark-ailog` | Quick AILOG creation | ✅ | ✅ | ✅ |
+| `/straymark-aidec` | Quick AIDEC creation | ✅ | ✅ | ✅ |
+| `/straymark-adr` | Quick ADR creation | ✅ | ✅ | ✅ |
+| `/straymark-sec` | Security Assessment creation | ✅ | ✅ | ✅ |
+| `/straymark-mcard` | Model/System Card creation | ✅ | ✅ | ✅ |
+
+> **Codex CLI users** *(fw-4.19.0+)*: Codex reads skills from `~/.codex/skills/` (user-level), not from the project tree. After `straymark init` (or any subsequent `straymark update`), run `straymark install-skills --agent codex` once to populate it from the project's `.codex/skills/`.
 
 ### Usage Examples
 
@@ -552,7 +554,10 @@ your-project/
 ├── .gemini/skills/         # 🔵 Gemini CLI (Google)
 │   ├── straymark-new/SKILL.md
 │   └── ...
-└── .claude/skills/         # 🟣 Claude Code (Anthropic)
+├── .claude/skills/         # 🟣 Claude Code (Anthropic)
+│   ├── straymark-new/SKILL.md
+│   └── ...
+└── .codex/skills/          # 🟢 Codex CLI (OpenAI) — installed to ~/.codex/skills/
     ├── straymark-new/SKILL.md
     └── ...
 ```
@@ -562,6 +567,7 @@ your-project/
 | `.agent/workflows/` | Antigravity, generic | VS Code/Cursor extensions | `skill-name.md` with YAML frontmatter |
 | `.gemini/skills/` | Gemini CLI | Google's terminal CLI | `skill-name/SKILL.md` |
 | `.claude/skills/` | Claude Code | Anthropic's coding agent | `skill-name/SKILL.md` |
+| `.codex/skills/` *(fw-4.19.0+)* | Codex CLI | OpenAI's coding agent | `skill-name/SKILL.md` (minimal frontmatter) — installed to `~/.codex/skills/` via `straymark install-skills --agent codex` |
 
 > **Note**: `.agent/` is the **vendor-agnostic** standard. Agent-specific directories (`.gemini/`, `.claude/`) provide compatibility for those platforms while following their native conventions.
 
@@ -580,6 +586,7 @@ All skill implementations are **functionally identical**—only the format diffe
 | Cursor | `.cursorrules` | ✅ Full support |
 | GitHub Copilot CLI | `.github/copilot-instructions.md` | ✅ Full support |
 | Gemini CLI | `GEMINI.md` | ✅ Full support |
+| Codex CLI (OpenAI) *(fw-4.19.0+)* | `AGENTS.md` + `~/.codex/skills/` | ✅ Full support (run `straymark install-skills --agent codex`) |
 
 ### Operating Systems
 

@@ -257,8 +257,8 @@ StrayMark 为每个组件使用独立的版本标签：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.18.0` | 模板（12 种类型）、治理文档、指令、Charter 模板 + schema |
-| CLI | `cli-` | `cli-3.15.0` | `straymark` 二进制文件 |
+| Framework | `fw-` | `fw-4.19.0` | 模板（12 种类型）、治理文档、指令、Charter 模板 + schema |
+| CLI | `cli-` | `cli-3.16.0` | `straymark` 二进制文件 |
 
 使用 `straymark status` 或 `straymark about` 查看已安装的版本。
 
@@ -290,7 +290,7 @@ StrayMark 为每个组件使用独立的版本标签：
 ```bash
 # 从 GitHub 下载最新的框架发布 ZIP
 # 前往 https://github.com/StrangeDaysTech/straymark/releases
-# 下载最新的 fw-* 发布（例如 fw-4.18.0）
+# 下载最新的 fw-* 发布（例如 fw-4.19.0）
 
 # 解压并复制到你的项目
 unzip straymark-fw-*.zip -d your-project/
@@ -462,15 +462,17 @@ StrayMark 包含面向 AI Agent 的 Skills，支持**主动创建文档**。
 
 ### 可用 Skills
 
-| Skill | 用途 | Claude | Gemini |
-|-------|------|--------|--------|
-| `/straymark-status` | 检查文档合规状态 | ✅ | ✅ |
-| `/straymark-new` | 创建任意类型的文档（统一入口） | ✅ | ✅ |
-| `/straymark-ailog` | 快速创建 AILOG | ✅ | ✅ |
-| `/straymark-aidec` | 快速创建 AIDEC | ✅ | ✅ |
-| `/straymark-adr` | 快速创建 ADR | ✅ | ✅ |
-| `/straymark-sec` | 创建安全评估 | ✅ | ✅ |
-| `/straymark-mcard` | 创建模型/系统卡片 | ✅ | ✅ |
+| Skill | 用途 | Claude | Gemini | Codex |
+|-------|------|--------|--------|-------|
+| `/straymark-status` | 检查文档合规状态 | ✅ | ✅ | ✅ |
+| `/straymark-new` | 创建任意类型的文档（统一入口） | ✅ | ✅ | ✅ |
+| `/straymark-ailog` | 快速创建 AILOG | ✅ | ✅ | ✅ |
+| `/straymark-aidec` | 快速创建 AIDEC | ✅ | ✅ | ✅ |
+| `/straymark-adr` | 快速创建 ADR | ✅ | ✅ | ✅ |
+| `/straymark-sec` | 创建安全评估 | ✅ | ✅ | ✅ |
+| `/straymark-mcard` | 创建模型/系统卡片 | ✅ | ✅ | ✅ |
+
+> **Codex CLI 用户** *(fw-4.19.0+)*：Codex 从 `~/.codex/skills/`（用户级）读取 skills，而不是从项目树读取。`straymark init` 之后（以及后续每次 `straymark update` 之后），运行一次 `straymark install-skills --agent codex` 从项目的 `.codex/skills/` 填充该目录。
 
 ### 使用示例
 
@@ -528,7 +530,10 @@ your-project/
 ├── .gemini/skills/         # 🔵 Gemini CLI (Google)
 │   ├── straymark-new/SKILL.md
 │   └── ...
-└── .claude/skills/         # 🟣 Claude Code (Anthropic)
+├── .claude/skills/         # 🟣 Claude Code (Anthropic)
+│   ├── straymark-new/SKILL.md
+│   └── ...
+└── .codex/skills/          # 🟢 Codex CLI (OpenAI) — 安装到 ~/.codex/skills/
     ├── straymark-new/SKILL.md
     └── ...
 ```
@@ -538,6 +543,7 @@ your-project/
 | `.agent/workflows/` | Antigravity, 通用 | VS Code/Cursor 扩展 | 带 YAML frontmatter 的 `skill-name.md` |
 | `.gemini/skills/` | Gemini CLI | Google 终端 CLI | `skill-name/SKILL.md` |
 | `.claude/skills/` | Claude Code | Anthropic 编码 Agent | `skill-name/SKILL.md` |
+| `.codex/skills/` *(fw-4.19.0+)* | Codex CLI | OpenAI 编码 Agent | `skill-name/SKILL.md`（最小 frontmatter）— 通过 `straymark install-skills --agent codex` 安装到 `~/.codex/skills/` |
 
 > **注意**：`.agent/` 是**厂商中立**的标准。Agent 特定目录（`.gemini/`、`.claude/`）为这些平台提供兼容性，同时遵循其原生规范。
 
@@ -556,6 +562,7 @@ your-project/
 | Cursor | `.cursorrules` | ✅ 完整支持 |
 | GitHub Copilot CLI | `.github/copilot-instructions.md` | ✅ 完整支持 |
 | Gemini CLI | `GEMINI.md` | ✅ 完整支持 |
+| Codex CLI (OpenAI) *(fw-4.19.0+)* | `AGENTS.md` + `~/.codex/skills/` | ✅ 完整支持（运行 `straymark install-skills --agent codex`） |
 
 ### 操作系统
 

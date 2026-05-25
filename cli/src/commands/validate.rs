@@ -12,10 +12,20 @@ pub fn run(
     path: &str,
     fix: bool,
     staged: bool,
+    agent: Option<&str>,
     include_charters: bool,
     check_pending_reviews: bool,
     max_pending_days: i64,
 ) -> Result<()> {
+    // Agent-targeted validation is a separate code path: it inspects an
+    // external skills directory (e.g. ~/.codex/skills/), not StrayMark docs.
+    if let Some(agent) = agent {
+        return match agent {
+            "codex" => validate_codex_skills(),
+            other => bail!("unknown --agent: {other} (supported: codex)"),
+        };
+    }
+
     let resolved = match utils::resolve_project_root(path) {
         Some(r) => r,
         None => {
@@ -266,6 +276,196 @@ fn exit_with_code(result: &validation::ValidationResult) -> Result<()> {
         Ok(())
     } else {
         std::process::exit(1);
+    }
+}
+
+/// Validate the user-level Codex skills installation at `$CODEX_HOME/skills/`
+/// (or `$HOME/.codex/skills/`). Checks every `straymark-*` skill for:
+/// presence of `SKILL.md`, parseable YAML frontmatter, required `name` and
+/// `description`, and absence of Claude-only keys like `allowed-tools` (whose
+/// presence indicates someone copied skills from `.claude/` by mistake).
+fn validate_codex_skills() -> Result<()> {
+    let codex_home = if let Ok(v) = std::env::var("CODEX_HOME") {
+        if v.is_empty() {
+            std::path::PathBuf::from(std::env::var("HOME").unwrap_or_default()).join(".codex")
+        } else {
+            std::path::PathBuf::from(v)
+        }
+    } else {
+        std::path::PathBuf::from(std::env::var("HOME").unwrap_or_default()).join(".codex")
+    };
+    let skills_dir = codex_home.join("skills");
+
+    println!();
+    println!("  {}", "StrayMark Validate (codex)".bold().cyan());
+    println!("  {}", skills_dir.display().to_string().dimmed());
+    println!();
+
+    if !skills_dir.is_dir() {
+        utils::warn(&format!(
+            "Codex skills directory not found: {}",
+            skills_dir.display()
+        ));
+        println!(
+            "  {} Run {} to populate it.",
+            "→".blue().bold(),
+            "straymark install-skills --agent codex".cyan()
+        );
+        println!();
+        std::process::exit(1);
+    }
+
+    let mut entries: Vec<_> = std::fs::read_dir(&skills_dir)
+        .map_err(|e| anyhow::anyhow!("read_dir {}: {e}", skills_dir.display()))?
+        .filter_map(Result::ok)
+        .filter(|e| {
+            e.path().is_dir()
+                && e.file_name()
+                    .to_string_lossy()
+                    .starts_with("straymark-")
+        })
+        .collect();
+    entries.sort_by_key(|e| e.file_name());
+
+    if entries.is_empty() {
+        utils::warn(&format!(
+            "No straymark-* skills found under {}",
+            skills_dir.display()
+        ));
+        println!(
+            "  {} Run {} to install them.",
+            "→".blue().bold(),
+            "straymark install-skills --agent codex".cyan()
+        );
+        println!();
+        std::process::exit(1);
+    }
+
+    let mut errors = 0usize;
+    let mut warnings = 0usize;
+    for entry in &entries {
+        let name = entry.file_name().to_string_lossy().into_owned();
+        let skill_md = entry.path().join("SKILL.md");
+        if !skill_md.exists() {
+            println!("  {}", name.bold());
+            println!("    {} [missing-skill-md] SKILL.md not found", "error".red().bold());
+            println!();
+            errors += 1;
+            continue;
+        }
+        let content = std::fs::read_to_string(&skill_md).unwrap_or_default();
+        let (fm, parse_err) = parse_frontmatter(&content);
+        let mut file_issues: Vec<(bool, String, String)> = Vec::new();
+        if let Some(err) = parse_err {
+            file_issues.push((true, "frontmatter-invalid".into(), err));
+        } else {
+            let has_name = fm
+                .as_ref()
+                .and_then(|m| m.get("name"))
+                .map(|s| !s.is_empty())
+                .unwrap_or(false);
+            let has_desc = fm
+                .as_ref()
+                .and_then(|m| m.get("description"))
+                .map(|s| !s.is_empty())
+                .unwrap_or(false);
+            if !has_name {
+                file_issues.push((true, "missing-name".into(), "frontmatter missing `name`".into()));
+            }
+            if !has_desc {
+                file_issues.push((
+                    true,
+                    "missing-description".into(),
+                    "frontmatter missing `description`".into(),
+                ));
+            }
+            if let Some(map) = &fm {
+                for forbidden in &["allowed-tools", "argument-hint", "model"] {
+                    if map.contains_key(*forbidden) {
+                        file_issues.push((
+                            false,
+                            "claude-only-key".into(),
+                            format!(
+                                "frontmatter contains `{forbidden}` — Codex skills should keep only `name` and `description`"
+                            ),
+                        ));
+                    }
+                }
+            }
+        }
+        if file_issues.is_empty() {
+            continue;
+        }
+        println!("  {}", name.bold());
+        for (is_error, rule, msg) in file_issues {
+            let label = if is_error {
+                "error".red().bold()
+            } else {
+                "warn".yellow().bold()
+            };
+            println!("    {} [{}] {}", label, rule, msg);
+            if is_error {
+                errors += 1;
+            } else {
+                warnings += 1;
+            }
+        }
+        println!();
+    }
+
+    if errors == 0 && warnings == 0 {
+        println!(
+            "  {} All {} Codex skill(s) passed validation",
+            "✓".green().bold(),
+            entries.len()
+        );
+        println!();
+        return Ok(());
+    }
+
+    let summary = format!(
+        "  {} error(s), {} warning(s) across {} skill(s)",
+        errors, warnings, entries.len()
+    );
+    if errors > 0 {
+        println!("{}", summary.red().bold());
+        println!();
+        std::process::exit(1);
+    } else {
+        println!("{}", summary.yellow());
+        println!();
+        Ok(())
+    }
+}
+
+/// Tiny frontmatter parser for SKILL.md files. Returns the key→value map (or
+/// None if no frontmatter) and an optional parse error string.
+fn parse_frontmatter(content: &str) -> (Option<BTreeMap<String, String>>, Option<String>) {
+    let lines: Vec<&str> = content.lines().collect();
+    if lines.first().map(|l| l.trim()) != Some("---") {
+        return (None, Some("no opening `---` fence".into()));
+    }
+    let close = match lines.iter().enumerate().skip(1).find(|(_, l)| l.trim() == "---") {
+        Some((i, _)) => i,
+        None => return (None, Some("no closing `---` fence".into())),
+    };
+    let body = lines[1..close].join("\n");
+    match serde_yaml::from_str::<serde_yaml::Value>(&body) {
+        Ok(serde_yaml::Value::Mapping(m)) => {
+            let mut out = BTreeMap::new();
+            for (k, v) in m {
+                if let Some(ks) = k.as_str() {
+                    let vs = match v {
+                        serde_yaml::Value::String(s) => s,
+                        other => serde_yaml::to_string(&other).unwrap_or_default().trim().to_string(),
+                    };
+                    out.insert(ks.to_string(), vs);
+                }
+            }
+            (Some(out), None)
+        }
+        Ok(_) => (None, Some("frontmatter is not a mapping".into())),
+        Err(e) => (None, Some(format!("YAML parse error: {e}"))),
     }
 }
 

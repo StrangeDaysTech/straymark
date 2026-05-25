@@ -8,6 +8,7 @@ pub mod compliance;
 #[cfg(feature = "tui")]
 pub mod explore;
 pub mod init;
+pub mod install_skills;
 pub mod metrics;
 pub mod new;
 pub mod remove;
