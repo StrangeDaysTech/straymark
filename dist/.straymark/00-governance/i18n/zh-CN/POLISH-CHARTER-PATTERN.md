@@ -121,4 +121,4 @@ polish Charter 的手动 smoke(`./binary && curl <已记录的-recipe>`)重新�
 
 ---
 
-*StrayMark fw-4.18.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.19.0 | [Strange Days Tech](https://strangedays.tech)*

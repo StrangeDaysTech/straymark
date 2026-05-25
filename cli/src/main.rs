@@ -80,6 +80,28 @@ enum Commands {
         #[arg(default_value = ".")]
         path: String,
     },
+    /// Install StrayMark skills into an AI agent's user-level skills directory
+    /// (currently only `--agent codex`, which targets `$CODEX_HOME/skills/` or
+    /// `$HOME/.codex/skills/`). Claude and Gemini read skills directly from the
+    /// project tree (`.claude/skills/`, `.gemini/skills/`) and do not require
+    /// this command.
+    InstallSkills {
+        /// AI agent whose user-level skills directory we should populate.
+        #[arg(long, value_parser = ["codex", "claude", "gemini"])]
+        agent: String,
+        /// Project directory (default: current directory). The source of the
+        /// skills is `<path>/.codex/skills/` (materialized by `straymark init`
+        /// or `straymark update`).
+        #[arg(long = "path", default_value = ".")]
+        path: String,
+        /// Print what would be installed without writing anything.
+        #[arg(long)]
+        dry_run: bool,
+        /// Symlink each skill instead of copying it. Unix-only; useful for
+        /// framework devs working on skill content.
+        #[arg(long)]
+        symlink: bool,
+    },
     /// Validate StrayMark documents for compliance and correctness
     Validate {
         /// Target directory (default: current directory)
@@ -91,6 +113,12 @@ enum Commands {
         /// Validate only git-staged files (for pre-commit hooks)
         #[arg(long)]
         staged: bool,
+        /// Inspect an AI agent's user-level skills installation instead of
+        /// validating documents. Currently supports `codex` — checks
+        /// `~/.codex/skills/straymark-*` for presence, parseable frontmatter,
+        /// required `name`/`description`, and absence of Claude-only keys.
+        #[arg(long, value_parser = ["codex"])]
+        agent: Option<String>,
         /// Also validate Charters in .straymark/charters/ against the Charter schema
         /// and referential integrity (originating_ailogs IDs exist;
         /// originating_spec path exists). Default: false, to avoid breaking
@@ -463,10 +491,17 @@ fn main() {
         Commands::UpdateFramework => commands::update_framework::run(),
         Commands::UpdateCli { method } => commands::update_cli::run(&method),
         Commands::Remove { full } => commands::remove::run(full),
+        Commands::InstallSkills {
+            agent,
+            path,
+            dry_run,
+            symlink,
+        } => commands::install_skills::run(&agent, &path, dry_run, symlink),
         Commands::Validate {
             path,
             fix,
             staged,
+            agent,
             include_charters,
             check_pending_reviews,
             max_pending_days,
@@ -474,6 +509,7 @@ fn main() {
             &path,
             fix,
             staged,
+            agent.as_deref(),
             include_charters,
             check_pending_reviews,
             max_pending_days,

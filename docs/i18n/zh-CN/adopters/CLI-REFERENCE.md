@@ -47,8 +47,8 @@ StrayMark 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.18.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.15.0` | `straymark` 二进制文件 |
+| Framework | `fw-` | `fw-4.19.0` | 模板（12 种类型）、治理文档、指令 |
+| CLI | `cli-` | `cli-3.16.0` | `straymark` 二进制文件 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
 
@@ -276,7 +276,26 @@ Repairing StrayMark in /home/user/my-project
 
 ---
 
-### `straymark validate [path] [--fix] [--staged] [--include-charters] [--check-pending-reviews [--max-pending-days N]]`
+### `straymark install-skills --agent <codex|claude|gemini> [--path .] [--dry-run] [--symlink]` *(cli-3.16.0+)*
+
+将 StrayMark skills 安装到 AI 代理的**用户级**skills 目录。目前仅 `--agent codex` 执行实际工作：将 `<path>/.codex/skills/` 中的每个 `straymark-*` skill（由 `straymark init` 或 `straymark update` 生成）复制到 `$CODEX_HOME/skills/`（若未设置 `CODEX_HOME` 则使用 `$HOME/.codex/skills/`）。
+
+对于 `--agent claude` 和 `--agent gemini`，命令会带说明错误退出：这些代理直接从项目树读取 skills（`.claude/skills/`、`.gemini/skills/`），因此无需用户级安装。
+
+**参数和标志：**
+
+| 参数/标志 | 默认值 | 描述 |
+|---|---|---|
+| `--agent` | 必填 | `codex`、`claude` 或 `gemini` 之一。仅 `codex` 执行工作；其他选项打印说明后退出。 |
+| `--path` | `.` | 源 `.codex/skills/` 所在的项目目录。 |
+| `--dry-run` | off | 只打印将要安装的内容，不写入任何文件。 |
+| `--symlink` | off | 对每个 skill 使用符号链接代替复制（仅 Unix；适合迭代 skill 内容的框架开发者）。 |
+
+重新运行该命令会替换目标位置已有的 `straymark-*` 目录；非 `straymark-*` 的 skill（例如 Codex 的 `.system/` 包）不会被触动。
+
+---
+
+### `straymark validate [path] [--fix] [--staged] [--agent <codex>] [--include-charters] [--check-pending-reviews [--max-pending-days N]]`
 
 验证 StrayMark 文档的合规性和正确性。
 
@@ -287,6 +306,7 @@ Repairing StrayMark in /home/user/my-project
 | `path` | `.`（当前目录） | 目标项目目录 |
 | `--fix` | — | 自动修复简单问题（例如为高风险文档添加缺失的 `review_required: true`） |
 | `--staged` | — | 仅验证已暂存（git add）的文件。适合 pre-commit 钩子。 |
+| `--agent` *(cli-3.16.0+)* | — | 切换到代理模式，检查用户级 skills 安装而非项目文档。目前仅支持 `codex` —— 校验 `~/.codex/skills/straymark-*` 是否存在、frontmatter YAML 可解析、`name`/`description` 必填、以及不含 `allowed-tools` 等 Claude 专用键（出现这些键意味着有人误从 `.claude/` 复制了 skill）。 |
 | `--include-charters` | — | 同时根据章程 JSON Schema 和引用完整性（`originating_ailogs` 中的 ID 解析；`originating_spec` 路径存在）验证 `.straymark/charters/` 中的章程。Opt-in，默认 `false`，确保未使用章程模式的项目不受影响。目前仅在非 `--staged` 模式下生效；staged 模式的章程验证将在 cli-3.10.0 中加入。 |
 | `--check-pending-reviews` *(cli-3.7.0+)* | off | 列出所有 `review_required: true` 且没有 `review_outcome`、年龄超过 `--max-pending-days` 的文档。**仅警告** — 永不影响 validate 的退出码；适合用于 CI 仪表板上的审批积压视图。 |
 | `--max-pending-days` *(cli-3.7.0+)* | `14` | `--check-pending-reviews` 的天数阈值。 |
@@ -1055,11 +1075,14 @@ StrayMark CLI
 
 ## Skills
 
-StrayMark 提供一组 skills（slash 命令）供 AI 助手内使用（Claude Code、Gemini Code、Cursor、通用 Agent 运行时）。每个 skill 在 `straymark init` 时以 3 种平行形式安装：
+StrayMark 提供一组 skills（slash 命令）供 AI 助手内使用（Claude Code、Gemini Code、Codex CLI、Cursor、通用 Agent 运行时）。每个 skill 在 `straymark init` 时以 4 种平行形式安装：
 
-- `dist/.claude/skills/<skill>/SKILL.md`（Claude — frontmatter 含 `allowed-tools`）
-- `dist/.gemini/skills/<skill>/SKILL.md`（Gemini — frontmatter 不含 `allowed-tools`）
-- `dist/.agent/workflows/<skill>.md`（通用 Agent — 仅 `description` frontmatter）
+- `.claude/skills/<skill>/SKILL.md`（Claude — frontmatter 含 `allowed-tools`）
+- `.gemini/skills/<skill>/SKILL.md`（Gemini — frontmatter 不含 `allowed-tools`）
+- `.codex/skills/<skill>/SKILL.md` *(fw-4.19.0+)*（Codex — 最小 frontmatter，仅 `name`+`description`；由 Claude 变体生成）
+- `.agent/workflows/<skill>.md`（通用 Agent — 仅 `description` frontmatter）
+
+Claude 和 Gemini 直接从项目树发现 skills。**Codex 从 `~/.codex/skills/`（用户级）读取 skills，而不是从项目树读取** —— 在 `straymark init` 之后（以及每次框架更新之后）运行一次 `straymark install-skills --agent codex`，从 `.codex/skills/` 填充该目录。
 
 | Skill | 用途 | 产生的文件 |
 |---|---|---|

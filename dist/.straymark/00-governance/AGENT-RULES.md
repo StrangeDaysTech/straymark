@@ -11,7 +11,7 @@
 ### When Starting a Session
 
 Every agent must identify themselves with:
-- Agent name (e.g.: `claude-code-v1.0`, `cursor-v1.0`, `gemini-cli-v1.0`)
+- Agent name (e.g.: `claude-code-v1.0`, `cursor-v1.0`, `gemini-cli-v1.0`, `codex-cli-v1.0`)
 - Agent version if available
 
 ### In Every Document
@@ -387,4 +387,4 @@ When a project accumulates a high volume of AILOGs across multiple Charters and 
 
 ---
 
-*StrayMark fw-4.18.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.19.0 | [Strange Days Tech](https://strangedays.tech)*

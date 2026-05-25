@@ -194,4 +194,4 @@ Sentinel CHARTER-18 在 2026-05-15 关闭，带 `external-audit-pending.yaml`。
 
 ---
 
-*StrayMark fw-4.18.0 | [GitHub](https://github.com/StrangeDaysTech/straymark) | Issue [#156](https://github.com/StrangeDaysTech/straymark/issues/156)*
+*StrayMark fw-4.19.0 | [GitHub](https://github.com/StrangeDaysTech/straymark) | Issue [#156](https://github.com/StrangeDaysTech/straymark/issues/156)*

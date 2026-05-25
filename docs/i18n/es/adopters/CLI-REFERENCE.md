@@ -47,8 +47,8 @@ StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.18.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.15.0` | El binario `straymark` |
+| Framework | `fw-` | `fw-4.19.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| CLI | `cli-` | `cli-3.16.0` | El binario `straymark` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
 
@@ -257,7 +257,26 @@ Repairing StrayMark in /home/user/mi-proyecto
 
 ---
 
-### `straymark validate [path] [--fix] [--staged] [--include-charters] [--check-pending-reviews [--max-pending-days N]]`
+### `straymark install-skills --agent <codex|claude|gemini> [--path .] [--dry-run] [--symlink]` *(cli-3.16.0+)*
+
+Instala skills de StrayMark en el directorio **a nivel de usuario** de skills del agente IA. Actualmente solo `--agent codex` realiza trabajo: copia cada skill `straymark-*` desde `<path>/.codex/skills/` (materializado por `straymark init` o `straymark update`) hacia `$CODEX_HOME/skills/` (o `$HOME/.codex/skills/` si `CODEX_HOME` no está definida).
+
+Para `--agent claude` y `--agent gemini` el comando termina con un error explicativo: esos agentes leen los skills directamente del árbol del proyecto (`.claude/skills/`, `.gemini/skills/`), por lo que no requieren instalación a nivel de usuario.
+
+**Argumentos y flags:**
+
+| Argumento/Flag | Default | Descripción |
+|---|---|---|
+| `--agent` | requerido | Uno de `codex`, `claude`, `gemini`. Solo `codex` ejecuta trabajo; los demás muestran guía y salen. |
+| `--path` | `.` | Directorio del proyecto cuyo `.codex/skills/` es el origen. |
+| `--dry-run` | off | Imprime qué se instalaría sin escribir nada. |
+| `--symlink` | off | Enlaza simbólicamente cada skill en lugar de copiarlo (solo Unix; útil para devs del framework iterando sobre los skills). |
+
+Re-ejecutar el comando reemplaza cualquier directorio `straymark-*` existente en el destino; skills que no comienzan con `straymark-` (por ejemplo el bundle `.system/` de Codex) no se tocan.
+
+---
+
+### `straymark validate [path] [--fix] [--staged] [--agent <codex>] [--include-charters] [--check-pending-reviews [--max-pending-days N]]`
 
 Valida documentos StrayMark verificando cumplimiento y corrección.
 
@@ -268,6 +287,7 @@ Valida documentos StrayMark verificando cumplimiento y corrección.
 | `path` | `.` (directorio actual) | Directorio del proyecto |
 | `--fix` | — | Corregir automáticamente problemas simples |
 | `--staged` | — | Validar solo archivos staged en Git (ideal para hooks pre-commit) |
+| `--agent` *(cli-3.16.0+)* | — | Cambia a modo agente y revisa una instalación a nivel de usuario de skills en lugar de documentos del proyecto. Actualmente solo `codex` — verifica `~/.codex/skills/straymark-*` para presencia, frontmatter YAML parseable, `name`/`description` requeridos, y ausencia de claves Claude-only como `allowed-tools` (cuya presencia indica que alguien copió skills desde `.claude/` por error). |
 | `--include-charters` | — | Validar también los Charters en `.straymark/charters/` contra el JSON Schema y la integridad referencial (los IDs en `originating_ailogs` resuelven; el path en `originating_spec` existe). Opt-in, default `false` para no afectar a proyectos que no usan el patrón. Por ahora solo se honra fuera de `--staged`; la validación de Charters en modo staged llega en cli-3.10.0. |
 | `--check-pending-reviews` *(cli-3.7.0+)* | off | Lista documentos con `review_required: true` y sin `review_outcome` cuya antigüedad supere `--max-pending-days`. **Solo warn** — nunca falla el exit code de validate; útil para dashboards de CI sobre el backlog de aprobaciones. |
 | `--max-pending-days` *(cli-3.7.0+)* | `14` | Umbral en días para `--check-pending-reviews`. |
@@ -922,11 +942,14 @@ StrayMark CLI
 
 ## Skills
 
-StrayMark incluye un conjunto de skills (slash commands) para usar dentro de un asistente IA (Claude Code, Gemini Code, Cursor, runtimes de agente genérico). Cada skill se instala en 3 formas paralelas durante `straymark init`:
+StrayMark incluye un conjunto de skills (slash commands) para usar dentro de un asistente IA (Claude Code, Gemini Code, Codex CLI, Cursor, runtimes de agente genérico). Cada skill se instala en 4 formas paralelas durante `straymark init`:
 
-- `dist/.claude/skills/<skill>/SKILL.md` (Claude — frontmatter con `allowed-tools`)
-- `dist/.gemini/skills/<skill>/SKILL.md` (Gemini — frontmatter sin `allowed-tools`)
-- `dist/.agent/workflows/<skill>.md` (agente genérico — frontmatter solo `description`)
+- `.claude/skills/<skill>/SKILL.md` (Claude — frontmatter con `allowed-tools`)
+- `.gemini/skills/<skill>/SKILL.md` (Gemini — frontmatter sin `allowed-tools`)
+- `.codex/skills/<skill>/SKILL.md` *(fw-4.19.0+)* (Codex — frontmatter mínimo, solo `name`+`description`; generado desde la variante Claude)
+- `.agent/workflows/<skill>.md` (agente genérico — frontmatter solo `description`)
+
+Claude y Gemini descubren los skills directamente del árbol del proyecto. **Codex lee los skills desde `~/.codex/skills/` (a nivel de usuario), no desde el árbol del proyecto** — ejecuta `straymark install-skills --agent codex` una vez después de `straymark init` (o después de cada actualización del framework) para poblar ese directorio desde `.codex/skills/`.
 
 | Skill | Propósito | Archivos producidos |
 |---|---|---|

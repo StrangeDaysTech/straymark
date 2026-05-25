@@ -11,7 +11,7 @@
 ### 会话开始时
 
 每个代理必须以以下信息进行自我识别：
-- 代理名称（例如：`claude-code-v1.0`、`cursor-v1.0`、`gemini-cli-v1.0`）
+- 代理名称（例如：`claude-code-v1.0`、`cursor-v1.0`、`gemini-cli-v1.0`、`codex-cli-v1.0`）
 - 代理版本（如可用）
 
 ### 在每份文档中
@@ -382,4 +382,4 @@ confidence: high | medium | low
 
 ---
 
-*StrayMark fw-4.18.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.19.0 | [Strange Days Tech](https://strangedays.tech)*
