@@ -577,6 +577,11 @@ A: StrayMark rules are instructions, not enforcement. If an AI assistant creates
 
 - **CLI Reference**: [CLI-REFERENCE.md](CLI-REFERENCE.md) — detailed command reference
 - **Workflows**: [WORKFLOWS.md](WORKFLOWS.md) — recommended daily usage patterns
+- **Adopter Feedback**: [ADOPTER-FEEDBACK.md](ADOPTER-FEEDBACK.md) — how to announce your adoption and send telemetry/findings upstream
 - **Issues**: [GitHub Issues](https://github.com/StrangeDaysTech/straymark/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/StrangeDaysTech/straymark/discussions)
 - **Contributing**: See [CONTRIBUTING.md](https://github.com/StrangeDaysTech/straymark/blob/main/CONTRIBUTING.md)
+
+> **Using StrayMark in a real project?** Consider becoming a registered adopter — see
+> [`ADOPTERS.md`](https://github.com/StrangeDaysTech/straymark/blob/main/ADOPTERS.md). Adopters who
+> feed telemetry and findings back are how the framework evolves on real evidence.
