@@ -12,6 +12,7 @@ project feeds real evidence back into the framework's evolution.
 | Project | Org | Domain / Stack | Since | Telemetry shared | Adoption discussion | N-status |
 |---------|-----|----------------|-------|------------------|---------------------|----------|
 | [Sentinel](https://github.com/StrangeDaysTech/sentinel) | Strange Days Tech | Go backend service | fw-2.x | Charter telemetry, dual external audits, pattern candidates | — (pre-dates this registry) | **N=1** — reference adopter |
+| [LNXDrive](https://github.com/StrangeDaysTech/lnxdrive) | Strange Days Tech | Rust — Linux cloud-sync daemon + desktop (FUSE / D-Bus / systemd) | fw-4.19.0 | Charter telemetry, dual external audits, pattern candidates | [#205](https://github.com/StrangeDaysTech/straymark/discussions/205) | **N=2** — second domain (vs Sentinel's Go backend) |
 
 *Want to be listed? See [How to get listed](#how-to-get-listed).*
 
