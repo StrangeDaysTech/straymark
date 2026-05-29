@@ -339,6 +339,14 @@ If you have questions about contributing:
 3. Open a new Discussion for general questions
 4. Open an Issue for specific bugs or features
 
+### Adopting StrayMark?
+
+If you're using StrayMark on a real project and want to send telemetry and findings upstream:
+
+1. **Announce it** in the [Adopters discussion category](https://github.com/StrangeDaysTech/straymark/discussions/new?category=adopters) — this records your adoption and what you commit to share.
+2. **File findings** as Issues using the *Adopter feedback / upstream finding* template, cross-linked to your adoption discussion.
+3. See the [Adopter Feedback guide](docs/adopters/ADOPTER-FEEDBACK.md) for the full flow and the [adopters registry](ADOPTERS.md).
+
 ---
 
 ## Recognition

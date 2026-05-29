@@ -1,0 +1,127 @@
+title: "[Adopter] <project name>"
+labels: ["adopter"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## You're adopting StrayMark — welcome.
+
+        This category is for **adoption announcements with a feedback commitment**, not casual
+        hellos. Posting here means your project intends to send **telemetry and findings** upstream
+        (the way [Sentinel](https://github.com/StrangeDaysTech/sentinel) has), so the framework can
+        evolve on real evidence instead of one maintainer's intuition.
+
+        **Why this matters:** StrayMark crystallizes patterns by adopter count. A pattern observed in
+        one project/domain (N=1) is documented but stays manual; a second independent validation
+        (N=2) is the gate that justifies automating it in the CLI. Your announcement is how we know an
+        N=2 signal is coming — and from which domain.
+
+        Before filling this out, skim the
+        [Adoption Guide](https://straymark.dev/docs/adopters/adoption-guide) and the
+        [Adopter Feedback guide](https://straymark.dev/docs/adopters/adopter-feedback).
+
+  - type: input
+    id: project
+    attributes:
+      label: Project name & repository
+      description: The project adopting StrayMark, with a link if public.
+      placeholder: "lnxdrive — https://github.com/owner/lnxdrive"
+    validations:
+      required: true
+
+  - type: input
+    id: maintainer
+    attributes:
+      label: Organization / responsible maintainer
+      description: Who owns the adoption and will be the contact for upstream feedback.
+      placeholder: "Strange Days Tech / @handle"
+    validations:
+      required: true
+
+  - type: textarea
+    id: stack
+    attributes:
+      label: Stack & domain
+      description: >
+        Language(s), runtime, and what the project actually is (CLI, backend service, desktop app,
+        library…). Be specific about the domain — crystallization needs a *second domain*, not just a
+        second repo, so a Rust desktop sync tool validating a pattern first seen in a Go backend is
+        a much stronger N=2 than another Go backend.
+      placeholder: "Rust + GTK desktop app; cloud-drive sync client for Linux."
+    validations:
+      required: true
+
+  - type: input
+    id: versions
+    attributes:
+      label: Versions adopted
+      description: Framework and CLI versions you're starting from.
+      placeholder: "fw-4.19.0 / cli-3.16.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: adoption-path
+    attributes:
+      label: Adoption path
+      description: See the Adoption Guide for what A vs B means.
+      options:
+        - "Path A — new project (StrayMark from day one)"
+        - "Path B — existing project (retrofitting StrayMark)"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: commitment
+    attributes:
+      label: What feedback do you commit to send?
+      description: Check everything you realistically plan to contribute. Honesty beats ambition here.
+      options:
+        - label: "Charter telemetry (`.straymark/charters/CHARTER-NN.telemetry.yaml` at close)"
+        - label: "External audit results (the `external_audit` array — dual/multi-model calibration)"
+        - label: "Pattern candidates (anti-patterns or disciplines you discover during execution)"
+        - label: "Format friction (where the Charter / document templates got in your way)"
+        - label: "CLI bugs and documentation gaps"
+
+  - type: textarea
+    id: n-context
+    attributes:
+      label: N-context — are you validating an existing pattern?
+      description: >
+        If your adoption is, in part, a second validation of a pattern already documented at N=1
+        (e.g. the Polish Charter debt-detection pattern, the Charter-chain evolution patterns), name
+        it here and note whether your domain differs from the original. This is the field that turns
+        an announcement into a crystallization signal. Leave blank if you're starting fresh.
+      placeholder: "Likely N=2 for the Polish Charter pattern (Sentinel was N=1, Go backend; we're a Rust desktop app)."
+    validations:
+      required: false
+
+  - type: input
+    id: cadence
+    attributes:
+      label: Expected feedback cadence
+      description: Roughly how often you'll surface findings — per Charter close, monthly, ad-hoc.
+      placeholder: "Per Charter close (~every 1–2 weeks)."
+    validations:
+      required: false
+
+  - type: textarea
+    id: cross-link
+    attributes:
+      label: How you'll cross-link findings
+      description: >
+        Actionable findings belong in **Issues** (use the *Adopter feedback / upstream finding*
+        template), each linking back to this discussion. Note here how you'll keep that thread.
+      placeholder: "I'll reference this discussion # in every adopter-feedback Issue."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: Acknowledgements
+      options:
+        - label: "I've read the Adoption Guide and the Adopter Feedback guide."
+          required: true
+        - label: "I understand telemetry stays in my repo by default — sharing is manual, and I'll anonymize anything sensitive before posting it upstream."
+          required: true

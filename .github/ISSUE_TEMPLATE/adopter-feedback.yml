@@ -1,0 +1,94 @@
+name: "Adopter feedback / upstream finding"
+description: "Report a finding from a real StrayMark adoption — telemetry-backed friction, gap, or pattern candidate."
+title: "[adopter] <short finding summary>"
+labels: ["adopter-feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For findings that come out of **using StrayMark on a real project** — not generic bug reports
+        (use a blank issue for those). If you haven't announced your adoption yet, please open an
+        [Adopters discussion](https://github.com/StrangeDaysTech/straymark/discussions) first and link
+        it below.
+
+  - type: input
+    id: adopter
+    attributes:
+      label: Adopter project
+      description: The project this finding comes from.
+      placeholder: "lnxdrive"
+    validations:
+      required: true
+
+  - type: input
+    id: discussion
+    attributes:
+      label: Adoption discussion link
+      description: The Adopters discussion that announced this project. This cross-link is what ties findings to a known adopter.
+      placeholder: "https://github.com/StrangeDaysTech/straymark/discussions/NNN"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: finding-type
+    attributes:
+      label: Finding type
+      description: >
+        Vocabulary aligned with the Charter telemetry schema (IG = implementation gap,
+        FP = false positive).
+      options:
+        - "Implementation gap (IG) — declared but not wired"
+        - "False positive (FP) — flagged but not a real problem"
+        - "Format friction — a template/workflow got in the way"
+        - "Pattern candidate — recurring anti-pattern or discipline worth documenting"
+        - "CLI bug"
+        - "Documentation gap"
+    validations:
+      required: true
+
+  - type: input
+    id: charter-ref
+    attributes:
+      label: Charter / telemetry reference
+      description: The Charter this surfaced from, if any.
+      placeholder: "CHARTER-04"
+    validations:
+      required: false
+
+  - type: input
+    id: n-context
+    attributes:
+      label: N-context
+      description: >
+        Is this the second independent validation (N=2) of a pattern already documented at N=1? If so,
+        name the pattern — that's the signal that justifies crystallizing it into the CLI.
+      placeholder: "N=2 for the Polish Charter pattern (Sentinel = N=1)."
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened, what you expected, and what you actually got.
+    validations:
+      required: true
+
+  - type: textarea
+    id: telemetry
+    attributes:
+      label: Telemetry excerpt (optional)
+      description: >
+        The relevant block from your `charter_telemetry:` YAML, if it supports the finding. Schema:
+        `dist/.straymark/schemas/charter-telemetry.schema.v0.json`. Anonymize anything sensitive.
+      render: yaml
+    validations:
+      required: false
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed upstream change
+      description: What you think StrayMark should do about it — even a rough direction helps.
+    validations:
+      required: false

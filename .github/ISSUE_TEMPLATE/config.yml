@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 📣 Announce an adoption
+    url: https://github.com/StrangeDaysTech/straymark/discussions/new?category=adopters
+    about: Adopting StrayMark and committing to send telemetry/feedback? Announce it in the Adopters category first, then file findings as issues.
+  - name: 💬 Questions & general discussion
+    url: https://github.com/StrangeDaysTech/straymark/discussions
+    about: For questions, ideas, and anything that isn't a specific bug or feature.
