@@ -7,6 +7,25 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.18.0 — `analyze declared-vs-wired` subcommand (LNXDrive #209, Release B)
+
+Ships the mechanical check the N=2 crossing unlocked: a config-driven set-difference that catches the *surface-declaration-without-wiring* anti-pattern's sub-class 5 — a declared client-side IPC/RPC proxy method with no implemented server-interface counterpart (the LNXDrive D-Bus/GOA regression). Follows the framework crystallization shipped in fw-4.20.0.
+
+### Added (CLI)
+
+- **`straymark analyze declared-vs-wired [path]`** *(new subcommand)* — reports symbols **declared but not wired** (`D \ W`) and, with `--show-orphans`, **wired but not declared** (`W \ D`). Language/IPC-agnostic by construction: the operator supplies a *declared* and a *wired* side as `(glob, regex)` pairs (capture group 1 = symbol name), either inline (`--declared-glob`/`--wired-glob`/`--declared-pattern`/`--wired-pattern`) or via a named `--profile` committed to `.straymark/config.yml`. Output `text`/`json`/`markdown`. Exit `1` when a declared symbol has no wiring counterpart — usable as a CI gate.
+- **`declared_vs_wired.profiles` config block** in `.straymark/config.yml` — named profiles so a stack's regexes are committed once.
+
+### Changed (CLI)
+
+- **`straymark analyze` becomes a subcommand group.** The bare `straymark analyze [path]` is unchanged (still runs complexity analysis); `declared-vs-wired` is the first sub-analysis. Backward-compatible — guarded by a regression test.
+
+### Scope
+
+v0 covers sub-class 5 only (IPC proxy vs interface), the mechanically-tractable cross-stack check. The AST-based variants of sub-classes 1–4 and the dynamic runtime checks remain project-local — see `POLISH-CHARTER-PATTERN.md` Open questions.
+
+---
+
 ## Framework 4.20.0 / CLI 3.17.0 — "declared but not wired" reaches N=2 (LNXDrive findings #209/#210)
 
 Crystallizes the *surface-declaration-without-wiring* pattern to **v1** on the strength of a second independent domain (LNXDrive, a Rust Linux daemon + GTK desktop) validating what Sentinel's Go backend first surfaced, and ships the cheap mechanical backstops the two findings asked for. Two axes are reported separately and deliberately: **2 independent domains / 3 occurrences** — the third being a qualitatively new sub-class, a cross-component regression of an already-shipped mitigation.

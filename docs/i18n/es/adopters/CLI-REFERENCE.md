@@ -48,7 +48,7 @@ StrayMark usa **tags de versión independientes** para cada componente:
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
 | Framework | `fw-` | `fw-4.20.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.17.0` | El binario `straymark` |
+| CLI | `cli-` | `cli-3.18.0` | El binario `straymark` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
 
@@ -827,6 +827,57 @@ $ straymark analyze /ruta/al/proyecto
 > **Trigger de documentación:** Los agentes de IA usan `straymark analyze --output json` como método primario para determinar cuándo crear documentos AILOG. Si `summary.above_threshold > 0` en la salida JSON, el agente debe crear un AILOG. Cuando el CLI no está disponible, los agentes usan la heurística de >20 líneas de lógica de negocio como alternativa.
 
 > **Impulsado por arborist-metrics:** el cálculo del factor de complejidad cognitiva y ciclomática se realiza mediante [`arborist-metrics`](https://github.com/StrangeDaysTech/arborist-metrics/) — nuestra librería Rust open source para métricas de código multi-lenguaje, desarrollada también por StrangeDaysTech S.A.S. de C.V. Disponible también de forma standalone en [crates.io](https://crates.io/crates/arborist-metrics).
+
+---
+
+### `straymark analyze declared-vs-wired [path] [--profile <nombre> | --declared-glob … --wired-glob … --declared-pattern … --wired-pattern …] [--show-orphans] [--output <formato>]` *(cli-3.18.0+)*
+
+Marca símbolos declarados que **no tienen contraparte de cableado** del lado de la implementación — el anti-patrón *"declaración de superficie sin cableado"*, subclase 5 (método proxy IPC/RPC client-side vs interfaz del servidor). Cristalizado a partir de la validación N=2 de LNXDrive (hallazgos [#209](https://github.com/StrangeDaysTech/straymark/issues/209)/[#210](https://github.com/StrangeDaysTech/straymark/issues/210)); ver `.straymark/00-governance/POLISH-CHARTER-PATTERN.md`.
+
+Es un **set-difference dirigido por config**, agnóstico de lenguaje/IPC por construcción: provees un lado *declarado* y un lado *cableado* como pares `(glob, regex)`; el **grupo de captura 1** de cada regex es el nombre del símbolo. El comando reporta **D \ W** (declarado pero no cableado) y, con `--show-orphans`, **W \ D** (cableado pero nunca declarado).
+
+**Argumentos y flags:**
+
+| Argumento/Flag | Default | Descripción |
+|---------------|---------|-------------|
+| `path` | `.` | Directorio objetivo |
+| `--profile` | — | Perfil con nombre desde `.straymark/config.yml` (`declared_vs_wired.profiles`). Alternativa a los cuatro flags inline. |
+| `--declared-glob` | — | Glob (relativo a `path`) de archivos con declaraciones (proxy/stub/cliente). |
+| `--wired-glob` | — | Glob (relativo a `path`) de archivos con implementaciones (interfaz del daemon/servidor). |
+| `--declared-pattern` | — | Regex sobre archivos declarados; **grupo de captura 1** = nombre del símbolo. |
+| `--wired-pattern` | — | Regex sobre archivos cableados; **grupo de captura 1** = nombre del símbolo. |
+| `--show-orphans` | off | Reporta también símbolos cableados pero nunca declarados (`W \ D`). |
+| `--output` | `text` | `text`, `json`, o `markdown`. |
+
+Debes pasar **o** `--profile` **o** los cuatro globs/patterns inline.
+
+**Códigos de salida:** `0` limpio (cada símbolo declarado está cableado); `1` al menos un símbolo declarado sin contraparte de cableado (un hallazgo) — apto como compuerta de CI.
+
+**Configuración** (opcional, en `.straymark/config.yml`):
+
+```yaml
+declared_vs_wired:
+  profiles:
+    - name: dbus
+      declared_glob: "client/**/*.rs"     # el proxy D-Bus del cliente GTK
+      declared_pattern: "fn (\\w+)"
+      wired_glob: "daemon/src/interface.rs" # la interfaz implementada del daemon
+      wired_pattern: "fn (\\w+)"
+```
+
+**Ejemplos:**
+
+```bash
+# Inline (puntual)
+$ straymark analyze declared-vs-wired \
+    --declared-glob "client/**/*.rs" --declared-pattern 'fn (\w+)' \
+    --wired-glob "daemon/**/*.rs"    --wired-pattern 'fn (\w+)'
+
+# Perfil con nombre (commiteado una vez), JSON para CI
+$ straymark analyze declared-vs-wired --profile dbus --output json
+```
+
+> **Alcance v0:** esta es la verificación cross-stack mecánicamente tratable (subclase 5). Las variantes basadas en AST de las subclases 1–4 (docs de env-var, instrumentos métricos, embeds HTML, marcadores de ruta pública) y las verificaciones runtime dinámicas siguen siendo project-local — ver las Preguntas abiertas del doc del patrón.
 
 ---
 

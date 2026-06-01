@@ -235,6 +235,7 @@ Users can now run `straymark update-framework` to get the new version.
 | `straymark compliance [path]` | Check regulatory compliance (EU AI Act, ISO 42001, NIST) |
 | `straymark metrics [path]` | Show governance metrics and documentation statistics |
 | `straymark analyze [path]` | Analyze code complexity (cognitive + cyclomatic metrics) |
+| `straymark analyze declared-vs-wired [path]` | Flag declared symbols (IPC/RPC proxy methods) with no implemented wiring counterpart — config-driven set-difference (POLISH-CHARTER-PATTERN sub-class 5) |
 | `straymark audit [path]` | Generate audit trail reports with timeline and traceability |
 | `straymark explore [path]` | Interactive TUI documentation browser |
 | `straymark about` | Show version and license info |

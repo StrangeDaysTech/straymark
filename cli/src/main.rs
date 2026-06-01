@@ -238,9 +238,13 @@ enum Commands {
         #[arg(long = "path", default_value = ".")]
         path: String,
     },
-    /// Analyze code complexity using cognitive and cyclomatic metrics
+    /// Analyze code: complexity metrics (default) or declared-vs-wired contract checks
     #[cfg(feature = "analyze")]
+    #[command(args_conflicts_with_subcommands = true)]
     Analyze {
+        /// Sub-analysis to run. Omit for the default complexity analysis.
+        #[command(subcommand)]
+        command: Option<AnalyzeCommands>,
         /// Target directory or file (default: current directory)
         #[arg(default_value = ".")]
         path: String,
@@ -269,6 +273,43 @@ enum Commands {
     Charter {
         #[command(subcommand)]
         command: CharterCommands,
+    },
+}
+
+/// Sub-analyses under `straymark analyze`.
+#[cfg(feature = "analyze")]
+#[derive(Subcommand)]
+enum AnalyzeCommands {
+    /// Flag declared symbols (e.g. client IPC/RPC proxy methods) that have no
+    /// wiring counterpart on the implementation side — the "surface declaration
+    /// without wiring" anti-pattern (POLISH-CHARTER-PATTERN.md sub-class 5).
+    /// Config-driven: supply --profile (from .straymark/config.yml) or the four
+    /// inline globs/patterns. Capture group 1 of each pattern is the symbol name.
+    DeclaredVsWired {
+        /// Target directory (default: current directory)
+        #[arg(default_value = ".")]
+        path: String,
+        /// Named profile from `.straymark/config.yml` (`declared_vs_wired.profiles`)
+        #[arg(long)]
+        profile: Option<String>,
+        /// Glob (relative to path) for files holding declarations
+        #[arg(long)]
+        declared_glob: Option<String>,
+        /// Glob (relative to path) for files holding implementations
+        #[arg(long)]
+        wired_glob: Option<String>,
+        /// Regex over declared files; capture group 1 = symbol name
+        #[arg(long)]
+        declared_pattern: Option<String>,
+        /// Regex over wired files; capture group 1 = symbol name
+        #[arg(long)]
+        wired_pattern: Option<String>,
+        /// Also report symbols wired but never declared (W \ D)
+        #[arg(long)]
+        show_orphans: bool,
+        /// Output format
+        #[arg(long, default_value = "text", value_parser = ["text", "json", "markdown"])]
+        output: String,
     },
 }
 
@@ -563,11 +604,35 @@ fn main() {
         ),
         #[cfg(feature = "analyze")]
         Commands::Analyze {
+            command,
             path,
             threshold,
             output,
             top,
-        } => commands::analyze::run(&path, threshold, &output, top),
+        } => match command {
+            Some(AnalyzeCommands::DeclaredVsWired {
+                path,
+                profile,
+                declared_glob,
+                wired_glob,
+                declared_pattern,
+                wired_pattern,
+                show_orphans,
+                output,
+            }) => commands::analyze_declared_vs_wired::run(
+                commands::analyze_declared_vs_wired::Args {
+                    path,
+                    profile,
+                    declared_glob,
+                    wired_glob,
+                    declared_pattern,
+                    wired_pattern,
+                    show_orphans,
+                    output,
+                },
+            ),
+            None => commands::analyze::run(&path, threshold, &output, top),
+        },
         #[cfg(feature = "tui")]
         Commands::Explore { path, lang } => commands::explore::run(&path, lang.as_deref()),
         Commands::Charter { command } => match command {

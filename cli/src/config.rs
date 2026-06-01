@@ -16,6 +16,36 @@ pub struct StrayMarkConfig {
     /// Default `["global", "eu"]` preserves backward compatibility.
     #[serde(default = "default_regional_scope")]
     pub regional_scope: Vec<String>,
+    /// Named profiles for `straymark analyze declared-vs-wired`. Empty by default.
+    #[serde(default)]
+    pub declared_vs_wired: DeclaredVsWiredConfig,
+}
+
+/// Configuration for `straymark analyze declared-vs-wired` — a set of named
+/// profiles, each pairing a declared-side and a wired-side (glob + capture
+/// regex). Lets adopters commit their stack's regexes once instead of passing
+/// four flags every run.
+#[derive(Debug, Deserialize, Serialize, Default)]
+pub struct DeclaredVsWiredConfig {
+    #[serde(default)]
+    pub profiles: Vec<DeclaredVsWiredProfile>,
+}
+
+/// One declared-vs-wired profile. The capture patterns must each expose a
+/// capture group 1 whose value is the symbol name to compare across sides.
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct DeclaredVsWiredProfile {
+    pub name: String,
+    /// Glob (relative to the analyzed path) for files holding declarations
+    /// (e.g. a D-Bus proxy, a gRPC stub, a REST client).
+    pub declared_glob: String,
+    /// Regex matched against declared files; capture group 1 = symbol name.
+    pub declared_pattern: String,
+    /// Glob (relative to the analyzed path) for files holding implementations
+    /// (e.g. the daemon/server interface).
+    pub wired_glob: String,
+    /// Regex matched against wired files; capture group 1 = symbol name.
+    pub wired_pattern: String,
 }
 
 /// Configuration for the `straymark analyze` command
@@ -52,6 +82,7 @@ impl Default for StrayMarkConfig {
             language: default_language(),
             complexity: ComplexityConfig::default(),
             regional_scope: default_regional_scope(),
+            declared_vs_wired: DeclaredVsWiredConfig::default(),
         }
     }
 }
