@@ -153,6 +153,10 @@ pub fn run(
 /// AILOG-2026-05-02-028 in Sentinel).
 fn next_steps(from_ailog: Option<&str>, from_spec: Option<&str>) -> Vec<String> {
     let mut steps: Vec<&str> = vec![
+        "Reconnaissance first: READ every file before you list it in `## Files to modify` — \
+         confirm the path exists (or tag it 'New' in the Change column). Charters authored \
+         against assumed, un-read code are a known failure mode (#210); `straymark validate \
+         --include-charters` flags declared paths that do not exist (CHARTER-FILES-EXIST).",
         "Edit the Charter to fill in Context, Scope, Files to modify, Verification, Risks, Tasks.",
         "Set the trigger field in frontmatter to a concrete observable signal.",
     ];
@@ -796,57 +800,64 @@ ignored.
         assert_eq!(truncate_slug_at_word_boundary("supercalifragilistic", 10), "supercalif");
     }
 
+    /// Assert the steps are numbered 1..=len with no gaps (the cli-3.6.0 F1
+    /// regression was a gap: 2 → 4 when the conditional origin step was
+    /// suppressed without renumbering).
+    fn assert_sequential(steps: &[String]) {
+        for (i, s) in steps.iter().enumerate() {
+            assert!(
+                s.starts_with(&format!("{}. ", i + 1)),
+                "step {} should start with `{}. `; got {:?}",
+                i,
+                i + 1,
+                s
+            );
+        }
+    }
+
     #[test]
-    fn next_steps_no_origin_has_4_sequential_numbered_lines() {
+    fn next_steps_no_origin_has_5_sequential_numbered_lines() {
+        // recon + edit + trigger + origin + in-progress.
         let steps = next_steps(None, None);
-        assert_eq!(steps.len(), 4);
-        assert!(steps[0].starts_with("1. "));
-        assert!(steps[1].starts_with("2. "));
-        assert!(steps[2].starts_with("3. "));
-        assert!(steps[3].starts_with("4. "));
+        assert_eq!(steps.len(), 5);
+        assert_sequential(&steps);
+        // The recon nudge (finding #210) is step 1.
+        assert!(steps[0].contains("Reconnaissance"));
     }
 
     #[test]
     fn next_steps_with_from_ailog_re_sequences_without_gap() {
         // Regression test for cli-3.6.0 F1: when --from-ailog is passed, the
-        // origin-step is suppressed and the remaining steps must renumber to
-        // 1/2/3, NOT skip from 2 to 4 leaving a gap.
+        // origin-step is suppressed and the remaining steps must renumber
+        // sequentially, NOT leave a gap.
         let steps = next_steps(Some("AILOG-2026-04-28-021"), None);
-        assert_eq!(steps.len(), 3);
-        assert!(steps[0].starts_with("1. "));
-        assert!(steps[1].starts_with("2. "));
-        assert!(steps[2].starts_with("3. "));
-        // Verify step 2 is the trigger (not the suppressed origin step) and
-        // step 3 is the in-progress one (not stuck at "4.").
-        assert!(steps[1].contains("trigger"));
-        assert!(steps[2].contains("in-progress"));
+        assert_eq!(steps.len(), 4); // recon + edit + trigger + in-progress
+        assert_sequential(&steps);
+        assert!(steps[0].contains("Reconnaissance"));
+        assert!(steps[2].contains("trigger"));
+        assert!(steps[3].contains("in-progress"));
     }
 
     #[test]
     fn next_steps_with_from_spec_re_sequences_without_gap() {
         let steps = next_steps(None, Some("specs/001-test/spec.md"));
-        assert_eq!(steps.len(), 3);
-        assert!(steps[0].starts_with("1. "));
-        assert!(steps[2].starts_with("3. "));
-        assert!(steps[2].contains("in-progress"));
+        assert_eq!(steps.len(), 4);
+        assert_sequential(&steps);
+        assert!(steps[3].contains("in-progress"));
     }
 
     #[test]
-    fn next_steps_no_step_starts_with_4_when_origin_is_set() {
-        // Defensive: even if the steps grow, when an origin is set, no line
-        // should ever emit a "4. " prefix (because the conditional step is
-        // suppressed and renumbering applies). This guards against regressions
-        // that re-introduce hardcoded numbers.
+    fn next_steps_numbering_has_no_gaps_when_origin_is_set() {
+        // Defensive: when an origin is set the conditional step is suppressed;
+        // the remaining steps must stay sequential (no gap), regardless of how
+        // many fixed steps exist. Guards against regressions that re-introduce
+        // hardcoded numbers.
         for (ailog, spec) in [
             (Some("AILOG-2026-04-28-021"), None),
             (None, Some("specs/x/spec.md")),
         ] {
             let steps = next_steps(ailog, spec);
-            assert!(
-                !steps.iter().any(|s| s.starts_with("4. ")),
-                "no step should be numbered 4 when origin is set; got {:?}",
-                steps
-            );
+            assert_sequential(&steps);
         }
     }
 }

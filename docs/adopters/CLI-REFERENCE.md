@@ -47,8 +47,8 @@ StrayMark uses **independent version tags** for each component:
 
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
-| Framework | `fw-` | `fw-4.19.0` | Templates (12 types), governance docs, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.16.0` | The `straymark` binary |
+| Framework | `fw-` | `fw-4.20.0` | Templates (12 types), governance docs, directives, Charter template + schema |
+| CLI | `cli-` | `cli-3.17.0` | The `straymark` binary |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
 
@@ -324,7 +324,7 @@ Validate StrayMark documents for compliance and correctness.
 | `--fix` | — | Automatically fix simple issues (e.g., missing `review_required: true` for high-risk docs) |
 | `--staged` | — | Validate only staged (git-added) files. Ideal for pre-commit hooks. |
 | `--agent` *(cli-3.16.0+)* | — | Switch to agent-targeted mode and inspect a user-level skills installation instead of project documents. Currently only `codex` — verifies `~/.codex/skills/straymark-*` for presence, parseable YAML frontmatter, required `name`/`description`, and absence of Claude-only keys like `allowed-tools` (whose presence indicates someone copied skills from `.claude/` by mistake). |
-| `--include-charters` | — | Also validate Charters in `.straymark/charters/` against the Charter JSON Schema and referential integrity (originating AILOG IDs resolve, originating spec paths exist). Opt-in so projects that don't yet use the Charter pattern are unaffected. |
+| `--include-charters` | — | Also validate Charters in `.straymark/charters/` against the Charter JSON Schema and referential integrity (originating AILOG IDs resolve, originating spec paths exist). Includes **`CHARTER-FILES-EXIST`** *(cli-3.17.0+)*: warns when a `## Files to modify` row names a path that does not exist on disk and is not tagged "New" — catching Charters authored against assumed, un-read code (finding #210). Warn-only; distinct from `charter drift` (which compares declared vs git-modified files). Opt-in so projects that don't yet use the Charter pattern are unaffected. |
 | `--check-pending-reviews` *(cli-3.7.0+)* | off | List documents with `review_required: true` and no `review_outcome` older than `--max-pending-days`. **Warn-only** — never fails the validate exit code; useful for CI dashboards of the approval backlog. |
 | `--max-pending-days` *(cli-3.7.0+)* | `14` | Threshold in days for `--check-pending-reviews` |
 

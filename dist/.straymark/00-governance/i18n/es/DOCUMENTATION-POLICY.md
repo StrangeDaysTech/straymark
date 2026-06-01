@@ -311,4 +311,4 @@ Ver también [ADR-2025-01-20-001] para contexto arquitectónico.
 
 ---
 
-*StrayMark fw-4.19.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.20.0 | [Strange Days Tech](https://strangedays.tech)*

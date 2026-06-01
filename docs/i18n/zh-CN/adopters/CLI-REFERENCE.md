@@ -47,8 +47,8 @@ StrayMark 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.19.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.16.0` | `straymark` 二进制文件 |
+| Framework | `fw-` | `fw-4.20.0` | 模板（12 种类型）、治理文档、指令 |
+| CLI | `cli-` | `cli-3.17.0` | `straymark` 二进制文件 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
 
@@ -307,7 +307,7 @@ Repairing StrayMark in /home/user/my-project
 | `--fix` | — | 自动修复简单问题（例如为高风险文档添加缺失的 `review_required: true`） |
 | `--staged` | — | 仅验证已暂存（git add）的文件。适合 pre-commit 钩子。 |
 | `--agent` *(cli-3.16.0+)* | — | 切换到代理模式，检查用户级 skills 安装而非项目文档。目前仅支持 `codex` —— 校验 `~/.codex/skills/straymark-*` 是否存在、frontmatter YAML 可解析、`name`/`description` 必填、以及不含 `allowed-tools` 等 Claude 专用键（出现这些键意味着有人误从 `.claude/` 复制了 skill）。 |
-| `--include-charters` | — | 同时根据章程 JSON Schema 和引用完整性（`originating_ailogs` 中的 ID 解析；`originating_spec` 路径存在）验证 `.straymark/charters/` 中的章程。Opt-in，默认 `false`，确保未使用章程模式的项目不受影响。目前仅在非 `--staged` 模式下生效；staged 模式的章程验证将在 cli-3.10.0 中加入。 |
+| `--include-charters` | — | 同时根据章程 JSON Schema 和引用完整性（`originating_ailogs` 中的 ID 解析；`originating_spec` 路径存在）验证 `.straymark/charters/` 中的章程。包含 **`CHARTER-FILES-EXIST`** *(cli-3.17.0+)*：当 `## 要修改的文件` 中某行所指路径在磁盘上不存在且未标记为"新建"时发出警告 — 捕获基于假设的、未读代码所撰写的章程（发现 #210）。仅警告;不同于 `charter drift`（后者比较声明的文件与 git 修改的文件）。Opt-in，默认 `false`，确保未使用章程模式的项目不受影响。目前仅在非 `--staged` 模式下生效；staged 模式的章程验证将在 cli-3.10.0 中加入。 |
 | `--check-pending-reviews` *(cli-3.7.0+)* | off | 列出所有 `review_required: true` 且没有 `review_outcome`、年龄超过 `--max-pending-days` 的文档。**仅警告** — 永不影响 validate 的退出码；适合用于 CI 仪表板上的审批积压视图。 |
 | `--max-pending-days` *(cli-3.7.0+)* | `14` | `--check-pending-reviews` 的天数阈值。 |
 

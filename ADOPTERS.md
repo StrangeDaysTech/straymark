@@ -31,6 +31,14 @@ StrayMark crystallizes patterns by **independent validation count**, not by intu
 This is why the registry tracks domain and N-status: an adopter announcing they'll validate an
 existing N=1 pattern in a new domain is the most valuable signal the project receives.
 
+**First N=2 crossing (2026-05):** LNXDrive's findings [#209](https://github.com/StrangeDaysTech/straymark/issues/209)
+and [#210](https://github.com/StrangeDaysTech/straymark/issues/210) validated the
+*surface-declaration-without-wiring* pattern in a second domain (Rust desktop vs Sentinel's Go backend),
+graduating [`POLISH-CHARTER-PATTERN.md`](dist/.straymark/00-governance/POLISH-CHARTER-PATTERN.md) from
+v0/N=1 to **v1/N=2**. That crossing seeded the `straymark analyze declared-vs-wired` subcommand and the
+`CHARTER-FILES-EXIST` validate rule — the canonical example of N=2 turning a manual convention into CLI
+automation.
+
 ## How to get listed
 
 1. **Announce** — open a discussion in the **Adopters** category

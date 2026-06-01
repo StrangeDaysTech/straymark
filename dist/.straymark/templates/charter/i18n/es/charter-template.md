@@ -51,10 +51,26 @@ donde sí van.]
 
 ## Archivos a modificar
 
+<!-- Reconocimiento primero (#210): LEE cada archivo antes de listarlo aquí —
+     confirma que la ruta existe en el árbol. Los Charters redactados contra
+     código asumido, no leído, derivan antes incluso de empezar la ejecución.
+     `straymark validate --include-charters` marca cualquier ruta declarada que
+     no exista (CHARTER-FILES-EXIST). Para un archivo que este Charter CREA,
+     comienza su columna Cambio con "Nuevo" (el validador omite verificar la
+     existencia de esos).
+
+     APIs cross-component (#209): si este Charter modifica un contrato que otros
+     componentes consumen — una interfaz D-Bus/gRPC/REST, un trait compartido, un
+     método IPC — lista TODOS los consumidores de esa API como filas separadas, no
+     solo el productor. Una mitigación que actualiza el productor pero deja a un
+     consumidor llamando al contrato viejo es el anti-patrón de "regresión de
+     mitigación entregada" (POLISH-CHARTER-PATTERN.md subclase 5). -->
+
 | Archivo | Cambio |
 |---|---|
 | `path/al/archivo.ext` | [Descripción concreta del cambio] |
-| `...` | `...` |
+| `path/al/api-productor.ext` | [Cambio en la API cross-component] |
+| `path/al/api-consumidor.ext` | [Actualiza el consumidor al nuevo contrato — no lo huérfanes] |
 | `.straymark/07-ai-audit/agent-logs/AILOG-...md` | Nuevo, `risk_level: [low|medium|high]` |
 
 ## Verification
@@ -230,4 +246,14 @@ Sentinel, no estructural).
    en su AILOG. El script atrapa los mismos drifts ANTES del commit, separando
    "conocidos y documentados" de "olvidados". Cero falsos positivos en 2/2 tests
    empíricos contra los Plans canónicos de Sentinel.
+
+7. `## Archivos a modificar` se redacta desde código LEÍDO, no asumido (hallazgos
+   StrayMark #209/#210, LNXDrive N=2). Dos disciplinas: (a) cada ruta declarada
+   existe en el árbol, o está marcada "Nuevo" en su columna Cambio — la regla de
+   validación `CHARTER-FILES-EXIST` (cli-3.17.0+) marca violaciones, separando
+   "Charter mal declarado" (bug de autoría) del drift "declarado pero no
+   modificado" de `charter drift` (drift de implementación); (b) un cambio a una
+   API cross-component lista TODOS los consumidores, no solo el productor — ver
+   `.straymark/00-governance/POLISH-CHARTER-PATTERN.md` subclase 5
+   ("regresión de mitigación entregada vía un consumidor downstream no actualizado").
 -->

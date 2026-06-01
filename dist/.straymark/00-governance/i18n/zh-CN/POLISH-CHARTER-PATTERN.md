@@ -8,9 +8,12 @@
 
 ## 状态
 
-**v0 — 在 N=1 域中已验证**(`StrangeDaysTech/sentinel` CHARTER-19 → CHARTER-27,2026-05-22)。
+**v1 — 在 N=2 个独立域中已验证。** 两个轴,有意分开报告以免混淆:
 
-这是一个**约定 + 命名反模式**,不是 CLI 功能。Adopter 使用专门的 polish Charter 与(可选的)项目本地 CI 守卫在本地复制此模式。在第二个 adopter 验证后,该模式可能演变为 `straymark analyze declared-vs-wired` 子命令(参见[未决问题](#未决问题))。该结晶门反映了 [`FOLLOW-UPS-BACKLOG-PATTERN.md`](FOLLOW-UPS-BACKLOG-PATTERN.md) 所用的门:v0 → v1 升级要求 N=2。
+- **独立域:2 个。** `StrangeDaysTech/sentinel`(Go 后端,CHARTER-19 → CHARTER-27,2026-05-22)与 `StrangeDaysTech/lnxdrive`(Rust Linux 云同步守护进程 + GTK 桌面,2026-05,[发现 #209](https://github.com/StrangeDaysTech/straymark/issues/209))。一个 Rust 桌面应用验证首先在 Go 后端中看到的模式,正是 [N-status 门](../../../ADOPTERS.md)所要求的强 cross-domain 信号。
+- **出现次数:3 次。** Sentinel 浮现了原始子类(1–4);LNXDrive 浮现了一个性质上全新的出现 — 一次*已交付缓解措施的 cross-component 回归*(下方子类 5)。
+
+CLI 结晶的 N=2 门(反映自 [`FOLLOW-UPS-BACKLOG-PATTERN.md`](FOLLOW-UPS-BACKLOG-PATTERN.md))**现已跨越**。约定 + 命名反模式仍是可移植的核心;机械化检查升级为 `straymark analyze declared-vs-wired` 子命令(由配置驱动的 set-difference,v0 范围在 cli-3.17.x+ 中交付 — 见[未决问题](#未决问题))。Adopter 仍可使用专门的 polish Charter 与(可选的)项目本地 CI 守卫在本地复制此发现。
 
 ---
 
@@ -49,12 +52,24 @@ polish Charter 是**发现载体**:它是浮现此类回归的最廉价方法,�
 | 2 | metrics 包中声明的 metric instrument / 可观测性符号 | handler 或 worker 代码中的记录 / 递增调用位置 | 每个声明的 instrument 都至少有一个记录调用位置 |
 | 3 | 从渲染的 HTML 或嵌入模板中引用的 URL(`<script src="/...">`、`<link href="/...">`) | 注册到同一 API 表面的路由 | 已服务 HTML 中的每个 `src=`/`href=` 都解析到一个已注册的路由 |
 | 4 | 标记为公共-按-合约的路由(handler 文档注释、专用标记) | auth middleware 的公共前缀 / 公共路径列表中的条目 | 每个公共-按-合约的 handler 都有匹配的前缀条目 |
+| 5 | 客户端声明的 IPC/RPC proxy 方法(D-Bus proxy、gRPC stub、REST 客户端)— **尤其是在缓解措施移除了服务端方法之后被重新引入的那种** | 真正实现该方法的服务端 / 守护进程接口 | 每个声明的 proxy 方法都解析到一个已实现的接口方法;cross-component 的 API 变更必须更新**所有**消费者 |
 
-跨四个子类的统一一句话是:
+跨子类的统一一句话是:
 
 > **每个声明的表层制品都至少有一个可从真实请求触达的接线位置。**
 
 扩展该列表的 adopter(参考实现尚未浮现的新声明↔接线对)欢迎通过 issue 或 PR 贡献额外子类。
+
+### 子类 5 命名:已交付缓解措施经由未更新的下游消费者发生回归
+
+LNXDrive 将子类 5 浮现为一次*已交付缓解措施的回归,跨越了组件边界* — 比一个全新 gap 更尖锐的数据点。生产者(一个 D-Bus 守护进程)通过移除一个携带 token 的方法并交付一个 token-safe 替代,关闭了一个安全风险。一个独立的组件(一个 GTK 偏好设置客户端,经由不同构建系统编译)**仍在调用已移除的方法**并在客户端获取 token — 正是缓解措施已经消除的行为。
+
+两个叠加因素使其对每一个现有 backstop 都不可见:
+
+- **跨边界盲区。** 生产者与消费者位于不同的 crate,由不同的工具链(Cargo vs Meson)构建,仅在运行时经由总线连接。zbus/D-Bus proxy 在*运行时*而非编译时被验证 — 因此守护进程自己的测试通过,客户端干净编译,没有任何单一测试套件跨越该合约。
+- **feature-gate 后的死代码。** 这个陈旧调用位于一个 `#[cfg(feature = "goa")]` 之后,而 `Cargo.toml` 从未定义该 feature。它被完全编译*掉* — 死代码既击败了 CI 也击败了代码 review,因为两者都不会执行一个未定义的 feature。首次激活该 feature 甚至浮现了一个从未编译过的潜伏类型错误:该路径从未接线的确凿证据。
+
+捕获它的可读信号是 polish/审核的**ex-ante 合约检查** — 客户端声明的 proxy 方法与守护进程已实现接口的 diff。这将"每个声明的表层制品都有一个接线位置"的机械化检查推广到其 cross-component 推论:**生产者侧的 API 变更必须更新、或至少考虑该 API 的每一个声明消费者。** 将其操作化的 Charter 纪律存在于[模板指南](#相关)(#209.c):一个触及 cross-component API 的缓解措施在 `## 要修改的文件` 中列出*所有*消费者,使生产者的变更无法静默地孤立一个消费者。
 
 ### 为什么集成测试会遗漏这些
 
@@ -96,7 +111,7 @@ polish Charter 的手动 smoke(`./binary && curl <已记录的-recipe>`)重新�
 
 这些问题在 v0 中未解决。该模式的未来修订,或 CLI helper,可能解决它们:
 
-- **结晶为 `straymark analyze declared-vs-wired` CLI 子命令**。今天四个子类检查为 project-local(参考实现中的一个 Go analyzer)。一旦第二个 adopter 验证该模式,框架可以发布一个 cross-project 子命令,由以下参数化:哪些包含声明制品(metric instrument 类型、env-var 文档格式、HTML embed 路径、公共路由标记约定);哪些位置算作接线(记录调用、env-var 读取器、路由注册器、prefix 列表)。门:N=2 adopters。
+- **结晶为 `straymark analyze declared-vs-wired` CLI 子命令** — *N=2 门已跨越;v0 范围已确定。* 随着 LNXDrive 在第二个域中验证该模式,框架交付一个**由配置驱动的 set-difference** v0:操作员提供声明侧的 glob+regex 与接线侧的 glob+regex(regex 捕获组即符号名),命令报告声明了但未接线的符号(`D \ W`)。这在*任何* stack 上都是机械化可处理的,正因为 stack 特定知识存在于 adopter 的 regex 中而非 CLI 中 — 并且它直接捕获子类 5(客户端 D-Bus proxy 方法名 vs 服务端接口方法名)。**推迟到后续修订:** 子类 1–4 的基于 AST 的变体(env-var 文档、metric instrument、HTML embed、公共路由标记),它们需要按 stack 的解析器;以及 runtime/动态检查(full-chain boot、路由解析),它们本质上是 project-local。
 - **子类枚举的完整性**。四个子类是参考实现所浮现的。额外候选:在迁移中声明但从未被应用代码读/写的数据库列;声明但从未被检查的 feature flag;定义但从未被序列化的 protobuf 字段。每个额外子类至少需要一次 adopter 的经验浮现才能进入正典。
 - **与 `straymark charter close --polish-checklist` 的集成**。一个 polish 专用子命令可以浮现规范化清单(end-to-end 执行 runbook;验证每个声明制品都有接线位置;验证 env-var 清单匹配二进制的实际需求;验证 runbook 中引用的 CLI 工具都存在)。门:在 `declared-vs-wired` CLI 子命令落地之后,因为清单的最后一项将调用它。
 - **按 stack 的实例化指南**。四个子类与语言无关;具体检查形态(Go 的 `analysis.Pass`、TypeScript 的 AST walker、Python 的 `ast` 模块等)与语言相关。该模式的未来修订可能将按 stack 的参考实现作为兄弟文档托管。
@@ -106,7 +121,9 @@ polish Charter 的手动 smoke(`./binary && curl <已记录的-recipe>`)重新�
 
 ## 致谢
 
-由 Sentinel adopter 通过 [issue #199](https://github.com/StrangeDaysTech/straymark/issues/199) 贡献。经验基础:`StrangeDaysTech/sentinel` 中的 CHARTER-19 → CHARTER-27 链,回顾 [AIDEC-2026-05-22-001](https://github.com/StrangeDaysTech/sentinel/pull/93)。作者:José Villaseñor Montfort。
+由 Sentinel adopter(N=1)通过 [issue #199](https://github.com/StrangeDaysTech/straymark/issues/199) 发起。经验基础:`StrangeDaysTech/sentinel` 中的 CHARTER-19 → CHARTER-27 链,回顾 [AIDEC-2026-05-22-001](https://github.com/StrangeDaysTech/sentinel/pull/93)。
+
+经由 LNXDrive adopter(Rust 桌面,第二个独立域)的[发现 #209](https://github.com/StrangeDaysTech/straymark/issues/209)结晶为 **v1(N=2)**,它贡献了子类 5(已交付缓解措施经由未更新的下游消费者发生回归)并触发了 `analyze declared-vs-wired` 子命令。配套的[发现 #210](https://github.com/StrangeDaysTech/straymark/issues/210)增加了 `charter new` 的侦察纪律与 `CHARTER-FILES-EXIST` 验证规则。作者:José Villaseñor Montfort。
 
 *本文档在生成式 AI 工具(Claude 4.7)的协助下产生;所有内容责任由人类作者承担。*
 
@@ -121,4 +138,4 @@ polish Charter 的手动 smoke(`./binary && curl <已记录的-recipe>`)重新�
 
 ---
 
-*StrayMark fw-4.19.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.20.0 | [Strange Days Tech](https://strangedays.tech)*
