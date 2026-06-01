@@ -49,10 +49,25 @@ do not classify them as gaps. Ideally cite the Charter or initiative where they 
 
 ## Files to modify
 
+<!-- Reconnaissance first (#210): READ every file before you list it here —
+     confirm the path exists in the tree. Charters authored against assumed,
+     un-read code drift before execution even begins. `straymark validate
+     --include-charters` flags any declared path that does not exist
+     (CHARTER-FILES-EXIST). For a file this Charter CREATES, start its Change
+     column with "New" (the validator skips existence-checking those).
+
+     Cross-component APIs (#209): if this Charter modifies a contract that other
+     components consume — a D-Bus/gRPC/REST interface, a shared trait, an IPC
+     method — list ALL consumers of that API as separate rows, not just the
+     producer. A mitigation that updates the producer but leaves a consumer
+     calling the old contract is the "shipped-mitigation regression" anti-pattern
+     (POLISH-CHARTER-PATTERN.md sub-class 5). -->
+
 | File | Change |
 |---|---|
 | `path/to/file.ext` | [Concrete description of the change] |
-| `...` | `...` |
+| `path/to/api-producer.ext` | [Change to the cross-component API] |
+| `path/to/api-consumer.ext` | [Update consumer to the new contract — do not orphan it] |
 | `.straymark/07-ai-audit/agent-logs/AILOG-...md` | New, `risk_level: [low|medium|high]` |
 
 ## Verification
@@ -239,4 +254,14 @@ v3 addition" — the partition was Sentinel's iteration log, not structural).
    sub-class checks that cover the common cases. Empirical signal from the
    reference implementation: budget the polish Charter as L (not XS/S/M) and
    expect emergent follow-on Charters, not residual cleanup scope creep.
+
+8. `## Files to modify` is authored from READ code, not assumed code (StrayMark
+   findings #209/#210, LNXDrive N=2). Two disciplines: (a) every declared path
+   exists in the tree, or is marked "New" in its Change column — the
+   `CHARTER-FILES-EXIST` validate rule (cli-3.17.0+) flags violations, separating
+   "Charter mis-declared" (authoring bug) from `charter drift`'s "declared but
+   not modified" (implementation drift); (b) a change to a cross-component API
+   lists ALL consumers, not just the producer — see
+   `.straymark/00-governance/POLISH-CHARTER-PATTERN.md` sub-class 5
+   ("shipped-mitigation regression via an un-updated downstream consumer").
 -->

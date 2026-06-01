@@ -8,9 +8,12 @@
 
 ## Estado
 
-**v0 — validado en N=1 dominio** (`StrangeDaysTech/sentinel` CHARTER-19 → CHARTER-27, 2026-05-22).
+**v1 — validado en N=2 dominios independientes.** Dos ejes, reportados por separado a propósito para no confundirlos:
 
-Esto es una **convención + anti-patrón nombrado**, no una funcionalidad del CLI. Los adopters la reproducen localmente con un Charter polish dedicado y (opcionalmente) guards de CI local al proyecto. El patrón puede evolucionar a un subcomando `straymark analyze declared-vs-wired` una vez que un segundo adopter lo valide (ver [Preguntas abiertas](#preguntas-abiertas)). La compuerta para esa cristalización refleja la usada por [`FOLLOW-UPS-BACKLOG-PATTERN.md`](FOLLOW-UPS-BACKLOG-PATTERN.md): la graduación v0 → v1 requiere N=2.
+- **Dominios independientes: 2.** `StrangeDaysTech/sentinel` (backend Go, CHARTER-19 → CHARTER-27, 2026-05-22) y `StrangeDaysTech/lnxdrive` (daemon Rust de sincronización en Linux + escritorio GTK, 2026-05, [hallazgo #209](https://github.com/StrangeDaysTech/straymark/issues/209)). Una app de escritorio en Rust validando un patrón visto primero en un backend Go es la señal cross-domain fuerte que exige la [compuerta de N-status](../../../ADOPTERS.md).
+- **Ocurrencias: 3.** Sentinel afloró las subclases originales (1–4); LNXDrive afloró una ocurrencia cualitativamente nueva — una *regresión cross-component de una mitigación ya entregada* (subclase 5, abajo).
+
+La compuerta N=2 para la cristalización en el CLI (reflejada de [`FOLLOW-UPS-BACKLOG-PATTERN.md`](FOLLOW-UPS-BACKLOG-PATTERN.md)) **ya está cruzada**. La convención + anti-patrón nombrado siguen siendo el núcleo portable; la verificación mecánica gradúa a un subcomando `straymark analyze declared-vs-wired` (set-difference dirigido por config, alcance v0 entregado en cli-3.17.x+ — ver [Preguntas abiertas](#preguntas-abiertas)). Los adopters aún pueden reproducir el descubrimiento localmente con un Charter polish dedicado y (opcionalmente) guards de CI local al proyecto.
 
 ---
 
@@ -49,12 +52,24 @@ El anti-patrón se presenta en al menos cuatro subclases. Cada una mapea a una v
 | 2 | Instrumento métrico / símbolo de observabilidad declarado en un paquete de métricas | Sitio de llamada de registro / incremento en código de handler o worker | Cada instrumento declarado tiene al menos un sitio de llamada de registro |
 | 3 | URL referenciada desde HTML renderizado o plantilla embebida (`<script src="/...">`, `<link href="/...">`) | Ruta registrada con la misma superficie de API | Cada `src=`/`href=` en HTML servido resuelve a una ruta registrada |
 | 4 | Ruta marcada pública-por-contrato (doc-comment del handler, marcador dedicado) | Entrada en la lista de prefijos públicos / paths públicos del middleware de auth | Cada handler público-por-contrato tiene una entrada de prefijo equivalente |
+| 5 | Método proxy IPC/RPC declarado client-side (proxy D-Bus, stub gRPC, cliente REST) — **especialmente uno reintroducido tras una mitigación que eliminó el método del servidor** | Interfaz del servidor / daemon que realmente implementa el método | Cada método proxy declarado resuelve a un método de interfaz implementado; un cambio de API cross-component debe actualizar **todos** los consumidores |
 
-El one-liner unificador a través de las cuatro subclases es:
+El one-liner unificador a través de las subclases es:
 
 > **Cada artefacto de superficie declarado tiene al menos un sitio de cableado alcanzable desde un request real.**
 
 Los adopters que extiendan la lista (nuevos pares declaración↔cableado que la implementación de referencia aún no haya aflorado) están invitados a contribuir subclases adicionales vía issue o PR.
+
+### Subclase 5 nombrada: regresión de mitigación entregada vía un consumidor downstream no actualizado
+
+LNXDrive afloró la subclase 5 como una *regresión de una mitigación ya entregada, a través de una frontera de componentes* — un datapoint más afilado que un gap nuevo. El productor (un daemon D-Bus) había cerrado un riesgo de seguridad eliminando un método portador de tokens y entregando un reemplazo token-safe. Un componente separado (un cliente GTK de preferencias, compilado vía un build system distinto) **seguía llamando al método eliminado** y obteniendo tokens client-side — exactamente el comportamiento que la mitigación había eliminado.
+
+Dos factores que se componen lo hicieron invisible a cada backstop existente:
+
+- **Ceguera cross-frontera.** Productor y consumidor viven en crates distintas, construidas por toolchains distintas (Cargo vs Meson), unidas solo en runtime sobre el bus. Los proxies zbus/D-Bus se validan en *runtime*, no en tiempo de compilación — así que los propios tests del daemon pasaron, el cliente compiló limpio, y ninguna suite de tests abarcaba el contrato.
+- **Código muerto tras feature-gate.** La llamada obsoleta vivía tras un `#[cfg(feature = "goa")]` cuya feature `Cargo.toml` nunca definió. Compilaba *fuera* por completo — código muerto que derrota tanto a CI como a la revisión, ya que ninguno ejerce una feature indefinida. Activar la feature por primera vez incluso afloró un error de tipo latente que nunca había compilado: prueba concreta de que el camino nunca estuvo cableado.
+
+La señal legible que lo atrapó fue la **verificación de contrato ex-ante** del polish/auditoría — un diff de los métodos proxy declarados del cliente contra la interfaz implementada del daemon. Esto generaliza la verificación mecánica de "cada artefacto de superficie declarado tiene un sitio de cableado" a su corolario cross-component: **un cambio de API del lado productor debe actualizar, o al menos contemplar, cada consumidor declarado de esa API.** La disciplina de Charter que operacionaliza esto vive en [la guía de la plantilla](#relacionado) (#209.c): una mitigación que toca una API cross-component lista *todos* los consumidores en `## Archivos a modificar`, para que un cambio del productor no pueda huérfanar silenciosamente a un consumidor.
 
 ### Por qué los tests de integración las omiten
 
@@ -96,7 +111,7 @@ La discusión RFC originante es [straymark#199](https://github.com/StrangeDaysTe
 
 Estas no están resueltas en v0. Revisiones futuras de este patrón, o un helper CLI, pueden abordarlas:
 
-- **Cristalización como subcomando CLI `straymark analyze declared-vs-wired`**. Hoy las verificaciones de las cuatro subclases son project-local (un analizador en Go en la implementación de referencia). Una vez que un segundo adopter valide el patrón, el framework puede entregar un subcomando cross-proyecto parametrizado por: qué paquetes contienen artefactos declarados (tipos de instrumento métrico, formato de docs de env-var, paths de embed HTML, convención de marcador de ruta pública); qué sitios cuentan como cableado (llamada de registro, lector de env-var, registrador de ruta, lista de prefijos). Compuerta: N=2 adopters.
+- **Cristalización como subcomando CLI `straymark analyze declared-vs-wired`** — *compuerta N=2 cruzada; alcance v0 resuelto.* Con LNXDrive validando el patrón en un segundo dominio, el framework entrega un v0 de **set-difference dirigido por config**: el operador provee un glob+regex del lado declarado y un glob+regex del lado cableado (el grupo de captura del regex es el nombre del símbolo), y el comando reporta los símbolos declarados-pero-no-cableados (`D \ W`). Esto es mecánicamente tratable en *cualquier* stack precisamente porque el conocimiento específico del stack vive en los regexes del adopter, no en el CLI — y atrapa directamente la subclase 5 (nombres de método del proxy D-Bus client-side vs nombres de método de interfaz server-side). **Diferido a una revisión posterior:** variantes basadas en AST de las subclases 1–4 (docs de env-var, instrumentos métricos, embeds HTML, marcadores de ruta pública), que necesitan parsers por stack; y las verificaciones runtime/dinámicas (boot de cadena completa, resolución de rutas), que son inherentemente project-local.
 - **Completitud de enumeración de subclases**. Las cuatro subclases fueron las que la implementación de referencia afloró. Candidatas adicionales: columna de base de datos declarada en una migración pero nunca leída/escrita por código de aplicación; feature flag declarado pero nunca verificado; campo protobuf definido pero nunca serializado. Cada subclase adicional necesita al menos un afloramiento empírico de un adopter para entrar al canon.
 - **Integración con `straymark charter close --polish-checklist`**. Un subcomando polish-específico podría aflorar el checklist canónico (ejecuta runbook end-to-end; verifica que cada artefacto declarado tenga un sitio de cableado; verifica que el inventario de env-var coincida con los requisitos reales del binario; verifica que las herramientas CLI referenciadas en el runbook existan). Compuerta: después de que el subcomando CLI `declared-vs-wired` aterrice, ya que el último ítem del checklist lo invocaría.
 - **Guías de instanciación por stack**. Las cuatro subclases son agnósticas de lenguaje; la forma concreta de verificación (`analysis.Pass` de Go, walker de AST de TypeScript, módulo `ast` de Python, etc.) no lo es. Una revisión futura del patrón puede alojar implementaciones de referencia por stack como docs hermanas.
@@ -106,7 +121,9 @@ Estas no están resueltas en v0. Revisiones futuras de este patrón, o un helper
 
 ## Créditos
 
-Contribuido vía [issue #199](https://github.com/StrangeDaysTech/straymark/issues/199) por el adopter Sentinel. Base empírica: cadena CHARTER-19 → CHARTER-27 en `StrangeDaysTech/sentinel`, retrospectiva [AIDEC-2026-05-22-001](https://github.com/StrangeDaysTech/sentinel/pull/93). Autor: José Villaseñor Montfort.
+Originado vía [issue #199](https://github.com/StrangeDaysTech/straymark/issues/199) por el adopter Sentinel (N=1). Base empírica: cadena CHARTER-19 → CHARTER-27 en `StrangeDaysTech/sentinel`, retrospectiva [AIDEC-2026-05-22-001](https://github.com/StrangeDaysTech/sentinel/pull/93).
+
+Cristalizado a **v1 (N=2)** vía [hallazgo #209](https://github.com/StrangeDaysTech/straymark/issues/209) por el adopter LNXDrive (escritorio Rust, segundo dominio independiente), que contribuyó la subclase 5 (regresión de mitigación entregada vía un consumidor downstream no actualizado) y disparó el subcomando `analyze declared-vs-wired`. El hallazgo compañero [#210](https://github.com/StrangeDaysTech/straymark/issues/210) agregó la disciplina de reconocimiento en `charter new` y la regla de validación `CHARTER-FILES-EXIST`. Autor: José Villaseñor Montfort.
 
 *Este documento fue producido con asistencia de herramientas de IA generativa (Claude 4.7); toda responsabilidad por el contenido recae en el autor humano.*
 
@@ -121,4 +138,4 @@ Contribuido vía [issue #199](https://github.com/StrangeDaysTech/straymark/issue
 
 ---
 
-*StrayMark fw-4.19.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.20.0 | [Strange Days Tech](https://strangedays.tech)*

@@ -107,6 +107,9 @@ fn china_in_scope(straymark_dir: &Path) -> bool {
 /// - `originating_ailogs` IDs resolve to real AILOG files under
 ///   `.straymark/07-ai-audit/agent-logs/`.
 /// - `originating_spec` path exists relative to the project root.
+/// - `CHARTER-FILES-EXIST`: every non-`new` path declared in `## Files to
+///   modify` exists on disk (finding #210 — Charter authored against assumed
+///   code). Warning-only; separate from `charter drift`'s OMISSION check.
 ///
 /// Returns the result + number of Charters considered (parsed + parse-failed).
 /// If the schema file itself cannot be loaded, emits a single warning and
@@ -218,6 +221,42 @@ pub fn validate_charters(project_root: &Path, straymark_dir: &Path) -> (Validati
                             .to_string(),
                     ),
                 });
+            }
+        }
+
+        // CHARTER-FILES-EXIST (finding #210): every path declared in the
+        // `## Files to modify` section that is NOT tagged "new" must exist on
+        // disk. A declared path that never existed is a *Charter authoring bug*
+        // (the Charter was written against assumed, un-read code) — distinct
+        // from the *implementation drift* the `charter drift` command catches
+        // (declared but not modified in a git range). Keeping the two checks in
+        // different commands with different rule codes is the separation #210.3
+        // asks for. Emitted as a Warning (not Error): adopters mid-migration may
+        // legitimately list not-yet-tagged new files, and warn-only matches the
+        // REF-001 / REVIEW-PENDING precedent.
+        if let Ok(charter) = crate::charter::parse_charter(path) {
+            for declared in crate::charter_files::parse_files_to_modify(&charter.body) {
+                if declared.is_new || crate::charter_files::is_wildcard(&declared.path) {
+                    continue;
+                }
+                if !project_root.join(&declared.path).exists() {
+                    result.add(ValidationIssue {
+                        file: path.clone(),
+                        rule: "CHARTER-FILES-EXIST".to_string(),
+                        message: format!(
+                            "`## Files to modify` declares a path that does not exist on disk: {} \
+                             (Charter mis-declared — authored against assumed code).",
+                            declared.path
+                        ),
+                        severity: Severity::Warning,
+                        fix_hint: Some(
+                            "Read the path before declaring it. If this Charter creates the file, \
+                             mark its Change column 'New' (or tag the path '(new)') — the validator \
+                             skips existence-checking new files."
+                                .to_string(),
+                        ),
+                    });
+                }
             }
         }
     }

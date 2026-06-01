@@ -47,10 +47,23 @@ trigger: "[一行：哪个具体信号 — 可观察的事件、声明的决策�
 
 ## 要修改的文件
 
+<!-- 先侦察(#210):在此处列出每个文件之前先 READ 它 — 确认该路径在
+     树中存在。基于假设的、未读的代码所撰写的 Charter 在执行开始之前就会漂移。
+     `straymark validate --include-charters` 会标记任何不存在的已声明路径
+     (CHARTER-FILES-EXIST)。对于此 Charter 所创建的文件,其"变更"列以"新建"
+     开头(验证器会跳过对这些文件的存在性检查)。
+
+     Cross-component API(#209):如果此 Charter 修改了一个其他组件所消费的合约
+     — 一个 D-Bus/gRPC/REST 接口、一个共享 trait、一个 IPC 方法 — 将该 API 的
+     所有消费者作为独立行列出,而不仅是生产者。一个更新了生产者却让某个消费者
+     仍调用旧合约的缓解措施,正是"已交付缓解措施回归"反模式
+     (POLISH-CHARTER-PATTERN.md 子类 5)。 -->
+
 | 文件 | 变更 |
 |---|---|
 | `path/to/file.ext` | [变更的具体描述] |
-| `...` | `...` |
+| `path/to/api-producer.ext` | [对 cross-component API 的变更] |
+| `path/to/api-consumer.ext` | [将消费者更新到新合约 — 不要孤立它] |
 | `.straymark/07-ai-audit/agent-logs/AILOG-...md` | 新建, `risk_level: [low|medium|high]` |
 
 ## 验证
@@ -214,4 +227,12 @@ curl -X PUT "https://${SERVICE_HOST}/api/v1/.../..." \
    未在其 AILOG 中记录的 implementation-gap 和 hallucination 漂移。
    该脚本在提交**之前**捕获相同的漂移，将"已知且已记录"与"已忘记"分开。
    在针对规范 Sentinel 计划的 2/2 经验测试中零误报。
+
+7. `## 要修改的文件` 从 READ 过的代码撰写,而非假设的代码(StrayMark 发现
+   #209/#210,LNXDrive N=2)。两条纪律:(a) 每个已声明路径都存在于树中,或在
+   其"变更"列标记为"新建" — `CHARTER-FILES-EXIST` 验证规则(cli-3.17.0+)会
+   标记违规,将"Charter 误声明"(撰写 bug)与 `charter drift` 的"已声明但未
+   修改"(实现漂移)分开;(b) 对 cross-component API 的变更列出所有消费者,
+   而不仅是生产者 — 见 `.straymark/00-governance/POLISH-CHARTER-PATTERN.md`
+   子类 5("已交付缓解措施经由未更新的下游消费者发生回归")。
 -->

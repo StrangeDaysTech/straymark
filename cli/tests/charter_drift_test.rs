@@ -150,6 +150,41 @@ fn charter_drift_detects_declared_but_not_modified() {
         .stdout(predicate::str::contains("src/bar.rs"));
 }
 
+/// Separation guard for finding #210.3: `charter drift` reports OMISSION
+/// (declared-but-not-modified) and must NOT emit the `CHARTER-FILES-EXIST`
+/// rule — that authoring check lives in `validate`, a different command. The
+/// two concerns ("Charter mis-declared" vs "implementation drifted") stay in
+/// separate commands with separate rule codes.
+#[test]
+fn charter_drift_does_not_emit_charter_files_exist_rule() {
+    if !bash_available() {
+        eprintln!("skipping: bash not available");
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    // Declare a path that never exists on disk — drift's concern is the git
+    // range, not disk existence, so it must NOT borrow validate's rule.
+    write_charter_with_files(dir.path(), &["src/never-existed.rs"], None);
+    std::fs::create_dir_all(dir.path().join("src")).unwrap();
+    std::fs::write(dir.path().join("src/other.rs"), "// x\n").unwrap();
+
+    git(dir.path(), &["init", "-q", "-b", "main"]);
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-q", "-m", "initial"]);
+    std::fs::write(dir.path().join("src/other.rs"), "// edited\n").unwrap();
+    git(dir.path(), &["add", "."]);
+    git(dir.path(), &["commit", "-q", "-m", "edit"]);
+
+    Command::cargo_bin("straymark")
+        .unwrap()
+        .args(["charter", "drift", "CHARTER-01", "--path"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("CHARTER-FILES-EXIST").not());
+}
+
 #[test]
 fn charter_drift_ailog_suppression_clears_documented_paths() {
     if !bash_available() {

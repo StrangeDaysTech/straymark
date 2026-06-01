@@ -89,6 +89,8 @@ If the title would derive a poor slug, pass `--slug <slug>` explicitly.
 
 After the file is created, the CLI's "Next steps" output already lists what to fill. Surface it verbatim, then add:
 
+> **Reconnaissance before declaration** (#210): when filling `## Files to modify`, `Read`/`ls` every path before you list it — do not declare a path you have not opened. Charters authored against assumed, un-read code drift before execution even begins (the LNXDrive findings showed declared paths like `lnxdrive-config/src/parser.rs` that never existed). Tag genuinely-new files "New" in the Change column. If the Charter modifies a cross-component API (D-Bus/gRPC/REST contract, shared trait, IPC method), list **all** consumers, not just the producer. `straymark validate --include-charters` flags declared paths that don't exist (`CHARTER-FILES-EXIST`).
+>
 > **Reminder**: Charter status starts at `declared`. Flip to `in-progress` only when execution actually begins. Run `straymark charter drift CHARTER-NN` before `straymark charter close` to catch declared-but-not-modified files (or modified-but-not-declared ones).
 
 ### 6. Report result

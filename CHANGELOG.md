@@ -7,6 +7,34 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.20.0 / CLI 3.17.0 — "declared but not wired" reaches N=2 (LNXDrive findings #209/#210)
+
+Crystallizes the *surface-declaration-without-wiring* pattern to **v1** on the strength of a second independent domain (LNXDrive, a Rust Linux daemon + GTK desktop) validating what Sentinel's Go backend first surfaced, and ships the cheap mechanical backstops the two findings asked for. Two axes are reported separately and deliberately: **2 independent domains / 3 occurrences** — the third being a qualitatively new sub-class, a cross-component regression of an already-shipped mitigation.
+
+### Added (Framework)
+
+- **`POLISH-CHARTER-PATTERN.md` graduates v0/N=1 → v1/N=2** (EN + ES + zh-CN). Adds **sub-class 5** — *client-side IPC/RPC proxy method declared vs server interface implemented*, with the named variant "shipped-mitigation regression via an un-updated downstream consumer" (the LNXDrive D-Bus/GOA case: a GTK client kept calling a daemon method the daemon had removed, hidden behind an undefined `#[cfg(feature)]` so it compiled out and evaded both CI and review). Resolves the `analyze declared-vs-wired` open question now that the N=2 automation gate is crossed.
+- **Charter template reconnaissance + cross-component guidance** (`charter-template.md` EN + ES + zh-CN). A comment above `## Files to modify` instructs authors to READ each path before declaring it (or tag created files "New"), and to list **all** consumers when a Charter touches a cross-component API — so a producer-side change can't silently orphan a consumer (#209.c). New format convention added to the closing notes.
+- **`ADOPTERS.md`** records the first N=2 crossing and how it seeded CLI automation.
+
+### Added (CLI)
+
+- **`CHARTER-FILES-EXIST` validate rule** *(`straymark validate --include-charters`)* — warns when a `## Files to modify` row names a path that does not exist on disk and is not tagged "New" (Change column starting with New/Nuevo/新建, or a `(new)` path tag). Catches Charters authored against assumed, un-read code (finding #210). **Warn-only** (never fails the exit code); pure-Rust so it works on Windows-native without bash. Deliberately separate from `straymark charter drift` (which compares declared vs git-modified files) — "Charter mis-declared" (authoring bug) and "implementation drifted" stay in different commands with different rule codes (#210.3).
+- **`charter new` reconnaissance nudge** — the printed "Next steps" now lead with a reconnaissance step: read every file before listing it in `## Files to modify`. The `straymark-charter-new` skill (Claude/Gemini/Codex variants) gains the matching instruction.
+- **`charter_files` module** — shared Rust parser for the `## Files to modify` table (col-1 backtick paths, EN/ES/zh-CN headings, `(new)` exemption, wildcard pass-through), ported from the drift script's awk so the validate rule and the drift check agree on what counts as a declared file.
+
+### Adopter guidance
+
+Run `straymark update` (CLI → `cli-3.17.0`, framework → `fw-4.20.0`). To exercise the new check on existing Charters:
+
+```bash
+straymark validate --include-charters
+```
+
+The `analyze declared-vs-wired` subcommand (the IPC proxy-vs-interface check) ships in a follow-up CLI release; this release lands the pattern crystallization, the path-existence backstop, and the authoring discipline.
+
+---
+
 ## Framework 4.19.0 / CLI 3.16.0 — Codex CLI (OpenAI) skill support
 
 Adds first-class distribution of StrayMark skills for the **Codex CLI** (OpenAI), motivated by an adopter using Codex for external Charter audits in the Sentinel project. Codex's skill loader rejects the Claude-only `allowed-tools` frontmatter key and discovers skills only at the **user level** (`~/.codex/skills/`), not from the project tree like Claude and Gemini do. The release ships a fourth parallel skill variant generated from the Claude source, plus a new CLI command to install them.

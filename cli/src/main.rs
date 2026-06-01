@@ -7,6 +7,7 @@ mod ailog;
 mod audit_engine;
 mod audit_schema;
 mod charter;
+mod charter_files;
 mod charter_schema;
 mod commands;
 mod compliance;

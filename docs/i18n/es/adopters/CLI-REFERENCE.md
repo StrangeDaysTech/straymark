@@ -47,8 +47,8 @@ StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.19.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.16.0` | El binario `straymark` |
+| Framework | `fw-` | `fw-4.20.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| CLI | `cli-` | `cli-3.17.0` | El binario `straymark` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
 
@@ -288,7 +288,7 @@ Valida documentos StrayMark verificando cumplimiento y corrección.
 | `--fix` | — | Corregir automáticamente problemas simples |
 | `--staged` | — | Validar solo archivos staged en Git (ideal para hooks pre-commit) |
 | `--agent` *(cli-3.16.0+)* | — | Cambia a modo agente y revisa una instalación a nivel de usuario de skills en lugar de documentos del proyecto. Actualmente solo `codex` — verifica `~/.codex/skills/straymark-*` para presencia, frontmatter YAML parseable, `name`/`description` requeridos, y ausencia de claves Claude-only como `allowed-tools` (cuya presencia indica que alguien copió skills desde `.claude/` por error). |
-| `--include-charters` | — | Validar también los Charters en `.straymark/charters/` contra el JSON Schema y la integridad referencial (los IDs en `originating_ailogs` resuelven; el path en `originating_spec` existe). Opt-in, default `false` para no afectar a proyectos que no usan el patrón. Por ahora solo se honra fuera de `--staged`; la validación de Charters en modo staged llega en cli-3.10.0. |
+| `--include-charters` | — | Validar también los Charters en `.straymark/charters/` contra el JSON Schema y la integridad referencial (los IDs en `originating_ailogs` resuelven; el path en `originating_spec` existe). Incluye **`CHARTER-FILES-EXIST`** *(cli-3.17.0+)*: avisa cuando una fila de `## Archivos a modificar` nombra una ruta que no existe en disco y no está marcada como "Nuevo" — atrapa Charters redactados contra código asumido, no leído (hallazgo #210). Solo-aviso; distinto de `charter drift` (que compara lo declarado contra los archivos modificados en git). Opt-in, default `false` para no afectar a proyectos que no usan el patrón. Por ahora solo se honra fuera de `--staged`; la validación de Charters en modo staged llega en cli-3.10.0. |
 | `--check-pending-reviews` *(cli-3.7.0+)* | off | Lista documentos con `review_required: true` y sin `review_outcome` cuya antigüedad supere `--max-pending-days`. **Solo warn** — nunca falla el exit code de validate; útil para dashboards de CI sobre el backlog de aprobaciones. |
 | `--max-pending-days` *(cli-3.7.0+)* | `14` | Umbral en días para `--check-pending-reviews`. |
 

@@ -8,9 +8,13 @@
 
 ## Status
 
-**v0 — proven in N=1 domain** (`StrangeDaysTech/sentinel` CHARTER-19 → CHARTER-27, 2026-05-22).
+**v1 — validated in N=2 independent domains.** Two axes, deliberately reported
+separately so they are not conflated:
 
-This is a **convention + named anti-pattern**, not a CLI feature. Adopters reproduce it locally with a dedicated polish Charter and (optionally) project-local CI guards. The pattern may evolve into a `straymark analyze declared-vs-wired` subcommand once a second adopter validates it (see [Open questions](#open-questions)). The gate for that cristallization mirrors the one used by [`FOLLOW-UPS-BACKLOG-PATTERN.md`](FOLLOW-UPS-BACKLOG-PATTERN.md): v0 → v1 graduation requires N=2.
+- **Independent domains: 2.** `StrangeDaysTech/sentinel` (Go backend, CHARTER-19 → CHARTER-27, 2026-05-22) and `StrangeDaysTech/lnxdrive` (Rust Linux cloud-sync daemon + GTK desktop, 2026-05, [finding #209](https://github.com/StrangeDaysTech/straymark/issues/209)). A Rust desktop app validating a pattern first seen in a Go backend is the strong cross-domain signal the [N-status gate](../../../ADOPTERS.md) requires.
+- **Occurrences: 3.** Sentinel surfaced the original sub-classes (1–4); LNXDrive surfaced a qualitatively new occurrence — a *cross-component regression of a shipped mitigation* (sub-class 5 below).
+
+The N=2 gate for CLI crystallization (mirrored from [`FOLLOW-UPS-BACKLOG-PATTERN.md`](FOLLOW-UPS-BACKLOG-PATTERN.md)) is **now crossed**. The convention + named anti-pattern remains the portable core; the mechanical check graduates to a `straymark analyze declared-vs-wired` subcommand (config-driven set-difference, v0 scope ships in cli-3.17.x+ — see [Open questions](#open-questions)). Adopters can still reproduce the discovery locally with a dedicated polish Charter and (optionally) project-local CI guards.
 
 ---
 
@@ -49,12 +53,24 @@ The anti-pattern presents in at least four sub-classes. Each maps to a mechanica
 | 2 | Metric instrument / observability symbol declared in a metrics package | Record / increment call site in handler or worker code | Each declared instrument has at least one record-call site |
 | 3 | URL referenced from rendered HTML or embedded template (`<script src="/...">`, `<link href="/...">`) | Route registered with the same API surface | Each `src=`/`href=` in served HTML resolves to a registered route |
 | 4 | Route marked public-by-contract (handler doc-comment, dedicated marker) | Entry in the auth middleware's public-prefix / public-paths list | Each public-by-contract handler has a matching prefix entry |
+| 5 | Client-side IPC/RPC proxy method declared (D-Bus proxy, gRPC stub, REST client) — **especially one re-introduced after a shipped mitigation removed the server method** | Server / daemon interface that actually implements the method | Each declared proxy method resolves to an implemented interface method; a cross-component API change must update **all** consumers |
 
-The unifying one-liner across the four sub-classes is:
+The unifying one-liner across the sub-classes is:
 
 > **Every declared surface artifact has at least one wiring site reachable from a real request.**
 
 Adopters extending the list (new declaration↔wiring pairs the reference implementation has not yet surfaced) are welcome to contribute additional sub-classes via issue or PR.
+
+### Sub-class 5 named: shipped-mitigation regression via an un-updated downstream consumer
+
+LNXDrive surfaced sub-class 5 as a *regression of an already-shipped mitigation, across a component boundary* — a sharper data point than a fresh gap. The producer (a D-Bus daemon) had closed a security risk by removing a token-bearing method and shipping a token-safe replacement. A separate component (a GTK preferences client, compiled via a different build system) **kept calling the removed method** and fetching tokens client-side — the exact behavior the mitigation had eliminated.
+
+Two compounding factors made it invisible to every existing backstop:
+
+- **Cross-boundary blindness.** Producer and consumer live in different crates, built by different toolchains (Cargo vs Meson), joined only at runtime over the bus. zbus/D-Bus proxies are validated at *runtime*, not compile time — so the daemon's own tests passed, the client compiled clean, and no single test suite spanned the contract.
+- **Feature-gated dead code.** The stale call sat behind a `#[cfg(feature = "goa")]` whose feature `Cargo.toml` never defined. It compiled *out* entirely — dead code that defeats both CI and code review, since neither exercises an undefined feature. Activating the feature for the first time even surfaced a latent type error that had never compiled: concrete proof the path was never wired.
+
+The legible signal that caught it was the polish/audit's **ex-ante contract check** — a diff of the client's declared proxy methods against the daemon's implemented interface. This generalizes the mechanical check from "every declared surface artifact has a wiring site" to its cross-component corollary: **a producer-side API change must update, or at least account for, every declared consumer of that API.** The Charter discipline that operationalizes this lives in [the template guidance](#related) (#209.c): a mitigation touching a cross-component API lists *all* consumers in `## Files to modify`, so a producer change can't silently orphan a consumer.
 
 ### Why integration tests miss these
 
@@ -96,7 +112,7 @@ The originating RFC discussion is [straymark#199](https://github.com/StrangeDays
 
 These are not resolved in v0. Future revisions of this pattern, or a CLI helper, may address them:
 
-- **Crystallization as `straymark analyze declared-vs-wired` CLI subcommand**. Today the four sub-class checks are project-local (one Go analyzer in the reference implementation). Once a second adopter validates the pattern, the framework may ship a cross-project subcommand parameterized by: which packages contain declared artifacts (metric instrument types, env-var docs format, HTML embed paths, public-route marker convention); which sites count as wiring (record call, env-var reader, route registrar, prefix list). Gate: N=2 adopters.
+- **Crystallization as `straymark analyze declared-vs-wired` CLI subcommand** — *N=2 gate crossed; v0 scope resolved.* With LNXDrive validating the pattern in a second domain, the framework ships a **config-driven set-difference** v0: the operator supplies a declared-side glob+regex and a wired-side glob+regex (the regex capture group is the symbol name), and the command reports symbols declared-but-not-wired (`D \ W`). This is mechanically tractable on *any* stack precisely because the stack-specific knowledge lives in the adopter's regexes, not in the CLI — and it directly catches sub-class 5 (D-Bus proxy method names client-side vs interface method names server-side). **Deferred to a later revision:** AST-based variants of sub-classes 1–4 (env-var docs, metric instruments, HTML embeds, public-route markers), which need per-stack parsers; and the runtime/dynamic checks (full-chain boot, route resolution), which are inherently project-local.
 - **Sub-class enumeration completeness**. The four sub-classes were the ones the reference implementation surfaced. Additional candidates: database column declared in a migration but never read/written by application code; feature flag declared but never checked; protobuf field defined but never serialized. Each additional sub-class needs at least one adopter empirical surfacing to enter the canon.
 - **Integration with `straymark charter close --polish-checklist`**. A polish-specific subcommand could surface the canonical checklist (run runbook end-to-end; verify each declared artifact has a wiring site; verify env-var inventory matches the binary's actual requirements; verify CLI tooling referenced in the runbook exists). Gate: after the `declared-vs-wired` CLI subcommand lands, since the checklist's last item would invoke it.
 - **Per-stack instantiation guides**. The four sub-classes are language-agnostic; the concrete check shape (Go `analysis.Pass`, TypeScript AST walker, Python `ast` module, etc.) is not. A future pattern revision may host per-stack reference implementations as sibling docs.
@@ -106,7 +122,9 @@ These are not resolved in v0. Future revisions of this pattern, or a CLI helper,
 
 ## Credits
 
-Contributed via [issue #199](https://github.com/StrangeDaysTech/straymark/issues/199) by the Sentinel adopter. Empirical foundation: CHARTER-19 → CHARTER-27 chain in `StrangeDaysTech/sentinel`, retrospective [AIDEC-2026-05-22-001](https://github.com/StrangeDaysTech/sentinel/pull/93). Author: José Villaseñor Montfort.
+Originated via [issue #199](https://github.com/StrangeDaysTech/straymark/issues/199) by the Sentinel adopter (N=1). Empirical foundation: CHARTER-19 → CHARTER-27 chain in `StrangeDaysTech/sentinel`, retrospective [AIDEC-2026-05-22-001](https://github.com/StrangeDaysTech/sentinel/pull/93).
+
+Crystallized to **v1 (N=2)** via [finding #209](https://github.com/StrangeDaysTech/straymark/issues/209) by the LNXDrive adopter (Rust desktop, second independent domain), which contributed sub-class 5 (shipped-mitigation regression via an un-updated downstream consumer) and triggered the `analyze declared-vs-wired` subcommand. The companion [finding #210](https://github.com/StrangeDaysTech/straymark/issues/210) added the `charter new` reconnaissance discipline and the `CHARTER-FILES-EXIST` validate rule. Author: José Villaseñor Montfort.
 
 *This document was produced with assistance from generative AI tools (Claude 4.7); all responsibility for the content rests with the human author.*
 
@@ -121,4 +139,4 @@ Contributed via [issue #199](https://github.com/StrangeDaysTech/straymark/issues
 
 ---
 
-*StrayMark fw-4.19.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.20.0 | [Strange Days Tech](https://strangedays.tech)*

@@ -710,3 +710,104 @@ fn test_validate_staged_no_staged_docs() {
         .success()
         .stdout(predicates::str::contains("No staged documentation"));
 }
+
+// --- CHARTER-FILES-EXIST (finding #210) ---------------------------------
+
+/// Write a Charter with the given `## Files to modify` body block. `heading`
+/// lets a test exercise the locale variants; `rows` is the raw table body.
+fn create_charter(dir: &std::path::Path, heading: &str, rows: &str) {
+    let charters = dir.join(".straymark").join("charters");
+    std::fs::create_dir_all(&charters).unwrap();
+    let content = format!(
+        "---\ncharter_id: CHARTER-01\nstatus: declared\neffort_estimate: M\ntrigger: \"test trigger\"\n---\n\n# Charter: Files Exist Test\n\n## {}\n\n| File | Change |\n|---|---|\n{}\n## Tasks\n\n1. Run.\n",
+        heading, rows
+    );
+    std::fs::write(charters.join("01-files-exist.md"), content).unwrap();
+}
+
+#[test]
+fn test_charter_files_exist_flags_missing_path() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    create_charter(dir.path(), "Files to modify", "| `src/does-not-exist.rs` | edit |\n");
+
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    cmd.arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .arg("--include-charters")
+        .assert()
+        .success() // warning-only: must NOT fail the exit code
+        .stdout(predicate::str::contains("CHARTER-FILES-EXIST"))
+        .stdout(predicate::str::contains("src/does-not-exist.rs"));
+}
+
+#[test]
+fn test_charter_files_exist_skips_new_tagged_row() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    create_charter(
+        dir.path(),
+        "Files to modify",
+        "| `src/brand-new.rs` | New, `risk_level: low` |\n",
+    );
+
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    cmd.arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .arg("--include-charters")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("CHARTER-FILES-EXIST").not());
+}
+
+#[test]
+fn test_charter_files_exist_passes_when_path_present() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    std::fs::create_dir_all(dir.path().join("src")).unwrap();
+    std::fs::write(dir.path().join("src/real.rs"), "// real\n").unwrap();
+    create_charter(dir.path(), "Files to modify", "| `src/real.rs` | edit |\n");
+
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    cmd.arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .arg("--include-charters")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("CHARTER-FILES-EXIST").not());
+}
+
+#[test]
+fn test_charter_files_exist_skips_wildcards() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    create_charter(
+        dir.path(),
+        "Files to modify",
+        "| `.straymark/07-ai-audit/agent-logs/AILOG-*.md` | logs |\n",
+    );
+
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    cmd.arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .arg("--include-charters")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("CHARTER-FILES-EXIST").not());
+}
+
+#[test]
+fn test_charter_files_exist_detects_spanish_heading() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    create_charter(dir.path(), "Archivos a modificar", "| `src/no-existe.rs` | editar |\n");
+
+    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    cmd.arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .arg("--include-charters")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("CHARTER-FILES-EXIST"))
+        .stdout(predicate::str::contains("src/no-existe.rs"));
+}
