@@ -856,6 +856,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "glob"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0cc23270f6e1808e30a928bdc84dea0b9b4136a8bc82338574f23baf47bbd280"
+
+[[package]]
 name = "h2"
 version = "0.4.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2318,7 +2324,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "straymark-cli"
-version = "3.17.0"
+version = "3.18.0"
 dependencies = [
  "anyhow",
  "arborist-metrics",
@@ -2329,11 +2335,13 @@ dependencies = [
  "crossterm",
  "dialoguer",
  "flate2",
+ "glob",
  "indicatif",
  "jsonschema",
  "predicates",
  "pulldown-cmark",
  "ratatui",
+ "regex",
  "reqwest",
  "semver",
  "serde",

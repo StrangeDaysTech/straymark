@@ -48,7 +48,7 @@ StrayMark 为每个组件使用**独立的版本标签**：
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
 | Framework | `fw-` | `fw-4.20.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.17.0` | `straymark` 二进制文件 |
+| CLI | `cli-` | `cli-3.18.0` | `straymark` 二进制文件 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
 
@@ -942,6 +942,57 @@ $ straymark analyze /path/to/project
 > **文档触发：** AI Agent 使用 `straymark analyze --output json` 作为确定何时创建 AILOG 文档的主要方法。如果 JSON 输出中 `summary.above_threshold > 0`，Agent 应创建 AILOG。当 CLI 不可用时，Agent 回退到 >20 行业务逻辑的启发式规则。
 
 > **由 arborist-metrics 驱动：** 认知复杂度与圈复杂度因子由 [`arborist-metrics`](https://github.com/StrangeDaysTech/arborist-metrics/) 计算 —— 这是我们开源的 Rust 多语言代码度量库，同样由 StrangeDaysTech S.A.S. de C.V. 开发。也可在 [crates.io](https://crates.io/crates/arborist-metrics) 作为独立库使用。
+
+---
+
+### `straymark analyze declared-vs-wired [path] [--profile <名称> | --declared-glob … --wired-glob … --declared-pattern … --wired-pattern …] [--show-orphans] [--output <格式>]` *(cli-3.18.0+)*
+
+标记在实现侧**没有接线对应物**的已声明符号 —— 即"声明了表层但未接线"反模式的子类 5（客户端 IPC/RPC proxy 方法 vs 服务端接口）。由 LNXDrive 的 N=2 验证（发现 [#209](https://github.com/StrangeDaysTech/straymark/issues/209)/[#210](https://github.com/StrangeDaysTech/straymark/issues/210)）结晶而来；见 `.straymark/00-governance/POLISH-CHARTER-PATTERN.md`。
+
+它是一个**由配置驱动的 set-difference**，本质上与语言/IPC 无关：你提供一个*声明*侧和一个*接线*侧，各为 `(glob, regex)` 对；每个 regex 的**捕获组 1** 即符号名。命令报告 **D \ W**（已声明但未接线），以及在 `--show-orphans` 下报告 **W \ D**（已接线但从未声明）。
+
+**参数与标志：**
+
+| 参数/标志 | 默认 | 说明 |
+|---------------|---------|-------------|
+| `path` | `.` | 目标目录 |
+| `--profile` | — | 来自 `.straymark/config.yml` 的命名 profile（`declared_vs_wired.profiles`）。可替代四个内联标志。 |
+| `--declared-glob` | — | 声明文件的 glob（相对于 `path`，proxy/stub/客户端）。 |
+| `--wired-glob` | — | 实现文件的 glob（相对于 `path`，daemon/服务端接口）。 |
+| `--declared-pattern` | — | 对声明文件的 regex；**捕获组 1** = 符号名。 |
+| `--wired-pattern` | — | 对接线文件的 regex；**捕获组 1** = 符号名。 |
+| `--show-orphans` | off | 同时报告已接线但从未声明的符号（`W \ D`）。 |
+| `--output` | `text` | `text`、`json` 或 `markdown`。 |
+
+必须传入 `--profile` **或** 四个内联 glob/pattern 之一。
+
+**退出码：** `0` 干净（每个已声明符号都已接线）；`1` 至少一个已声明符号没有接线对应物（一个发现）—— 适合作为 CI 门。
+
+**配置**（可选，在 `.straymark/config.yml`）：
+
+```yaml
+declared_vs_wired:
+  profiles:
+    - name: dbus
+      declared_glob: "client/**/*.rs"     # GTK 客户端的 D-Bus proxy
+      declared_pattern: "fn (\\w+)"
+      wired_glob: "daemon/src/interface.rs" # daemon 已实现的接口
+      wired_pattern: "fn (\\w+)"
+```
+
+**示例：**
+
+```bash
+# 内联（一次性）
+$ straymark analyze declared-vs-wired \
+    --declared-glob "client/**/*.rs" --declared-pattern 'fn (\w+)' \
+    --wired-glob "daemon/**/*.rs"    --wired-pattern 'fn (\w+)'
+
+# 命名 profile（提交一次），JSON 供 CI 使用
+$ straymark analyze declared-vs-wired --profile dbus --output json
+```
+
+> **v0 范围：** 这是机械化可处理的 cross-stack 检查（子类 5）。子类 1–4 的基于 AST 的变体（env-var 文档、metric instrument、HTML embed、公共路由标记）以及动态 runtime 检查仍是 project-local —— 见模式文档的未决问题。
 
 ---
 

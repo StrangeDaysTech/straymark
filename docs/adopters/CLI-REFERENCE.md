@@ -48,7 +48,7 @@ StrayMark uses **independent version tags** for each component:
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
 | Framework | `fw-` | `fw-4.20.0` | Templates (12 types), governance docs, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.17.0` | The `straymark` binary |
+| CLI | `cli-` | `cli-3.18.0` | The `straymark` binary |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
 
@@ -1104,6 +1104,71 @@ $ straymark analyze /path/to/project
 > **Documentation trigger:** AI agents use `straymark analyze --output json` as the primary method to determine when to create AILOG documents. If `summary.above_threshold > 0` in the JSON output, the agent should create an AILOG. When the CLI is not available, agents fall back to the >20 lines of business logic heuristic.
 
 > **Powered by arborist-metrics:** the cognitive and cyclomatic complexity factors are computed by [`arborist-metrics`](https://github.com/StrangeDaysTech/arborist-metrics/) — our open-source Rust library for multi-language code metrics, developed by StrangeDaysTech S.A.S. de C.V. Also available standalone on [crates.io](https://crates.io/crates/arborist-metrics).
+
+---
+
+### `straymark analyze declared-vs-wired [path] [--profile <name> | --declared-glob … --wired-glob … --declared-pattern … --wired-pattern …] [--show-orphans] [--output <format>]` *(cli-3.18.0+)*
+
+Flag declared symbols that have **no wiring counterpart** on the implementation side — the *"surface declaration without wiring"* anti-pattern, sub-class 5 (client-side IPC/RPC proxy method vs server interface). Crystallized from the LNXDrive N=2 validation (findings [#209](https://github.com/StrangeDaysTech/straymark/issues/209)/[#210](https://github.com/StrangeDaysTech/straymark/issues/210)); see `.straymark/00-governance/POLISH-CHARTER-PATTERN.md`.
+
+It is a **config-driven set difference**, language/IPC-agnostic by construction: you supply a *declared* side and a *wired* side as `(glob, regex)` pairs; the **capture group 1** of each regex is the symbol name. The command reports **D \ W** (declared but not wired) and, with `--show-orphans`, **W \ D** (wired but never declared).
+
+**Arguments and flags:**
+
+| Argument/Flag | Default | Description |
+|---------------|---------|-------------|
+| `path` | `.` | Target directory |
+| `--profile` | — | Named profile from `.straymark/config.yml` (`declared_vs_wired.profiles`). Alternative to the four inline flags. |
+| `--declared-glob` | — | Glob (relative to `path`) for files holding declarations (proxy/stub/client). |
+| `--wired-glob` | — | Glob (relative to `path`) for files holding implementations (daemon/server interface). |
+| `--declared-pattern` | — | Regex over declared files; **capture group 1** = symbol name. |
+| `--wired-pattern` | — | Regex over wired files; **capture group 1** = symbol name. |
+| `--show-orphans` | off | Also report symbols wired but never declared (`W \ D`). |
+| `--output` | `text` | `text`, `json`, or `markdown`. |
+
+You must pass **either** `--profile` **or** all four inline globs/patterns.
+
+**Exit codes:** `0` clean (every declared symbol is wired); `1` at least one declared symbol has no wiring counterpart (a finding) — suitable as a CI gate.
+
+**Configuration** (optional, in `.straymark/config.yml`):
+
+```yaml
+declared_vs_wired:
+  profiles:
+    - name: dbus
+      declared_glob: "client/**/*.rs"     # the GTK client's D-Bus proxy
+      declared_pattern: "fn (\\w+)"
+      wired_glob: "daemon/src/interface.rs" # the daemon's implemented interface
+      wired_pattern: "fn (\\w+)"
+```
+
+**Examples:**
+
+```bash
+# Inline (one-off)
+$ straymark analyze declared-vs-wired \
+    --declared-glob "client/**/*.rs" --declared-pattern 'fn (\w+)' \
+    --wired-glob "daemon/**/*.rs"    --wired-pattern 'fn (\w+)'
+
+# Named profile (committed once), JSON for CI
+$ straymark analyze declared-vs-wired --profile dbus --output json
+```
+
+**Example output:**
+
+```
+  StrayMark Analyze — declared-vs-wired
+  /home/user/project
+  Profile: dbus   Symbols: 12 declared / 11 wired
+
+  ✗ 1 declared symbol(s) with NO wiring counterpart:
+    - complete_auth_with_tokens  (client/src/proxy.rs)
+
+  → a declared surface with no implementation is the "surface declaration
+    without wiring" anti-pattern (POLISH-CHARTER-PATTERN.md sub-class 5).
+```
+
+> **v0 scope:** this is the mechanically-tractable cross-stack check (sub-class 5). The AST-based variants of sub-classes 1–4 (env-var docs, metric instruments, HTML embeds, public-route markers) and the dynamic runtime checks remain project-local — see the pattern doc's Open questions.
 
 ---
 
