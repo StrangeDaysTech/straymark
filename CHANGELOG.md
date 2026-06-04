@@ -7,6 +7,21 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.23.1 — migration sweep warning from the reference adopter's update run
+
+Docs-only patch driven by the Sentinel update report ([#225](https://github.com/StrangeDaysTech/straymark/issues/225), cli-3.16.0 → 3.19.x / fw-4.20.0 → 4.22.0): the deprecated v0 bash script produced **silent false-negatives on drift detection itself** — its format-sensitive extractor (required both a `## Risk` heading and the exact `- **R<N> (new` bullet shape) never registered 8 AILOGs whose risks were written as bare paragraphs, reporting "in sync" while 29 entries sat unextracted. The native lenient parser caught them all on the first post-migration sweep.
+
+### Changed (Framework)
+
+- **`FOLLOW-UPS-BACKLOG-PATTERN.md` migration paragraph** (EN/ES/zh-CN): the migration command is now `drift --scan-all --apply`, with an explicit warning to run that first sweep with `--scan-all` *even if the legacy script reported "in sync"* — including the #225 data point (8 AILOGs / 29 entries silently missed).
+- **`CLI-REFERENCE.md` lenient-parsing note** (EN/ES/zh-CN): the v0 → v1 upgrade fires on *any* write command — `drift --apply` (even with nothing to extract, cli-3.20.0+), `recount`, or `promote`. #225 Finding 2 (upgrade not firing on a no-op `--apply`) was already resolved by cli-3.20.0; this aligns the prose.
+
+### Adopter guidance
+
+Nothing to re-run if you already migrated with `--scan-all` (Sentinel's case). If you migrated with a plain `drift --apply` and the legacy script was your only drift check, run `straymark followups drift --scan-all --apply` once — the v0 script may have been blind to format variants your AILOGs use.
+
+---
+
 ## Framework 4.23.0 / CLI 3.20.0 — N=2 feedback: `followups recount` + born-resolved closure idioms
 
 First fixes driven by **external adopter feedback**: the lnxdrive adoption run ([#222](https://github.com/StrangeDaysTech/straymark/issues/222), the first N=2 data point gating the v1 schema's hard stabilization per principle #12 / ADR-2026-06-03-001) surfaced two gaps in the follow-ups lane — both ergonomic/vocabulary, neither schema-level.

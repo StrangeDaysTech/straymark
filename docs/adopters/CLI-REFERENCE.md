@@ -47,7 +47,7 @@ StrayMark uses **independent version tags** for each component:
 
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
-| Framework | `fw-` | `fw-4.23.0` | Templates (12 types), governance docs, directives, Charter template + schema |
+| Framework | `fw-` | `fw-4.23.1` | Templates (12 types), governance docs, directives, Charter template + schema |
 | CLI | `cli-` | `cli-3.20.0` | The `straymark` binary |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
@@ -888,7 +888,7 @@ $ straymark charter amend CHARTER-18 \
 
 Manage the **follow-ups backlog registry** (`.straymark/follow-ups-backlog.md`) — the first-class artifact that aggregates `§Follow-ups` and `R<N> (new, not in Charter)` entries across AILOGs. Schema: `.straymark/schemas/follow-ups-backlog.schema.v1.json` (experimental v1). Convention: `FOLLOW-UPS-BACKLOG-PATTERN.md` and `STRAYMARK.md §16`; shipped agent directives in `AGENT-RULES.md §13`.
 
-Parsing is **lenient**: v0 registries (pre-fw-4.21.0) are read without errors; the first write command (`drift --apply` or `promote`) upgrades them to v1 in place, non-destructively. Frontmatter `total_*` counters are **CLI-owned** — recomputed on every write; never edit them by hand.
+Parsing is **lenient**: v0 registries (pre-fw-4.21.0) are read without errors; the first write command (`drift --apply` — even with nothing to extract, cli-3.20.0+ —, `recount`, or `promote`) upgrades them to v1 in place, non-destructively. Frontmatter `total_*` counters are **CLI-owned** — recomputed on every write; never edit them by hand.
 
 - `straymark followups list` — enumerate entries *(cli-3.19.0+)*
 - `straymark followups status` — registry pulse / entry detail *(cli-3.19.0+)*

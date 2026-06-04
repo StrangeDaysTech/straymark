@@ -47,7 +47,7 @@ StrayMark 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.23.0` | 模板（12 种类型）、治理文档、指令 |
+| Framework | `fw-` | `fw-4.23.1` | 模板（12 种类型）、治理文档、指令 |
 | CLI | `cli-` | `cli-3.20.0` | `straymark` 二进制文件 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
@@ -733,7 +733,7 @@ $ straymark charter audit CHARTER-05 --finalize
 
 管理**后续事项积压注册表**（`.straymark/follow-ups-backlog.md`）—— 这是跨 AILOG 聚合 `§Follow-ups` 与 `R<N> (new, not in Charter)` 条目的一等产物。Schema：`.straymark/schemas/follow-ups-backlog.schema.v1.json`（实验性 v1）。约定：`FOLLOW-UPS-BACKLOG-PATTERN.md` 与 `STRAYMARK.md §16`；随附的代理指令见 `AGENT-RULES.md §13`。
 
-解析是**宽容的**：v0 注册表（fw-4.21.0 之前）可被无误读取；首个写入命令（`drift --apply` 或 `promote`）会就地、非破坏性地将其升级为 v1。frontmatter 的 `total_*` 计数器由 **CLI 拥有** —— 每次写入时重新计算；切勿手工编辑。
+解析是**宽容的**：v0 注册表（fw-4.21.0 之前）可被无误读取；首个写入命令（`drift --apply` —— 即使没有可提取内容,cli-3.20.0+ ——、`recount` 或 `promote`）会就地、非破坏性地将其升级为 v1。frontmatter 的 `total_*` 计数器由 **CLI 拥有** —— 每次写入时重新计算；切勿手工编辑。
 
 - `straymark followups list` — 枚举条目 *(cli-3.19.0+)*
 - `straymark followups status` — 注册表概览 / 条目详情 *(cli-3.19.0+)*
