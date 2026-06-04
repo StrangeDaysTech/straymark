@@ -260,6 +260,7 @@ For documents that require multiple reviewers (e.g., ETH with both legal and eng
 │   └── ethical-reviews/    # ETH
 ├── 08-security/            # SEC — Security assessments
 ├── 09-ai-models/           # MCARD — Model/System cards
+├── follow-ups-backlog.md   # Follow-ups registry (first-class, CLI-owned counters — not a doc type; see FOLLOW-UPS-BACKLOG-PATTERN.md)
 └── templates/              # Templates
 ```
 
@@ -318,4 +319,4 @@ See also [ADR-2025-01-20-001] for architectural context.
 
 ---
 
-*StrayMark fw-4.20.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.21.0 | [Strange Days Tech](https://strangedays.tech)*

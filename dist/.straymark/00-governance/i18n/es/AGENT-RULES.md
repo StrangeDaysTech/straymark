@@ -381,10 +381,34 @@ Son heurísticas, no reglas rígidas — estás cerca del contexto, afínalas co
 
 ---
 
-## Patrones
+## 13. Follow-ups Backlog (mantenimiento del registry)
 
-Cuando un proyecto acumula un volumen alto de AILOGs a lo largo de múltiples Charters y los follow-ups se vuelven difíciles de rastrear, ver [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) para una convención reproducible (registro central + script de detección de drift + integración con agentes). Los adopters con ~20+ AILOGs se benefician; por debajo de ese umbral la convención per-AILOG `§Follow-ups` por sí sola es suficiente.
+Cuando el proyecto mantiene el registry central de follow-ups (`.straymark/follow-ups-backlog.md` — ver [`FOLLOW-UPS-BACKLOG-PATTERN.md`](FOLLOW-UPS-BACKLOG-PATTERN.md) y `STRAYMARK.md §16`), el agente es su **mantenedor primario**. Tres directivas:
+
+### Session start
+
+Echa un vistazo a `.straymark/follow-ups-backlog.md` (o ejecuta `straymark followups status`) para saber qué está pendiente en el proyecto. Cuando el operador pregunta *"¿qué está pendiente?"* / *"¿qué follow-ups tenemos?"*, **el registry es la fuente canónica** — responde desde él (`straymark followups list`), no reescaneando AILOGs. Recurre a un escaneo de AILOGs solo cuando el registry no exista o `followups drift` reporte AILOGs sin extraer.
+
+### Pre-commit
+
+¿Creaste o modificaste algún AILOG con entradas `## Follow-ups` o `R<N> (new, not in Charter)`? → ejecuta `straymark followups drift --apply` para que la extensión del registry viaje en **el mismo commit** que el AILOG. Las entradas que el texto del AILOG ya marca como resueltas in-Charter se extraen como `suspected-closed` automáticamente — no las elimines; el operador las confirma en el siguiente triage.
+
+### Post-Charter close
+
+Revisa las entradas del registry que el Charter recién cerrado resolvió:
+
+- Márcalas `closed` (con el id del Charter de cierre en `Notes`) o `superseded`.
+- Confirma o reabre cualquier entrada `suspected-closed` que produjeron los AILOGs del Charter.
+- Para entradas no resueltas que cumplen los criterios de TDE de §3 (herencia, transversal, Charter dedicado, priorización humana), propón la promoción vía `straymark followups promote FU-NNN` — la promoción misma es aprobada por el operador, según los límites de autonomía de §3.
+
+Los contadores en el frontmatter del registry (`total_open`, …) son **CLI-owned**: nunca los edites a mano; cada comando de escritura los recalcula.
 
 ---
 
-*StrayMark fw-4.20.0 | [Strange Days Tech](https://strangedays.tech)*
+## Patrones
+
+Cuando un proyecto acumula un volumen alto de AILOGs a lo largo de múltiples Charters y los follow-ups se vuelven difíciles de rastrear, ver [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) — un **registry de primera clase desde fw-4.21.0 / cli-3.19.0** (registry central + CLI nativo `straymark followups` + las directivas de §13 anteriores). Los adopters con ~20+ AILOGs se benefician; por debajo de ese umbral la convención per-AILOG `§Follow-ups` por sí sola es suficiente.
+
+---
+
+*StrayMark fw-4.21.0 | [Strange Days Tech](https://strangedays.tech)*

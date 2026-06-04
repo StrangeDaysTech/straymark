@@ -260,6 +260,7 @@ review_outcome: approved                # approved | revisions_requested | rejec
 │   └── ethical-reviews/    # ETH
 ├── 08-security/            # SEC — 安全评估
 ├── 09-ai-models/           # MCARD — 模型/系统卡
+├── follow-ups-backlog.md   # Follow-ups 注册表（一等公民,CLI-owned 计数器 —— 不是文档类型;见 FOLLOW-UPS-BACKLOG-PATTERN.md）
 └── templates/              # 模板
 ```
 
@@ -310,4 +311,4 @@ review_outcome: approved                # approved | revisions_requested | rejec
 
 ---
 
-*StrayMark fw-4.20.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.21.0 | [Strange Days Tech](https://strangedays.tech)*

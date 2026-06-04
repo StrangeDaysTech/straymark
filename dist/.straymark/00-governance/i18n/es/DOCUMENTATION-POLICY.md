@@ -261,6 +261,7 @@ Para documentos que requieren múltiples revisores (p. ej., ETH con sign-off de 
 │   └── ethical-reviews/    # ETH
 ├── 08-security/            # SEC — Evaluaciones de seguridad
 ├── 09-ai-models/           # MCARD — Tarjetas de modelo/sistema
+├── follow-ups-backlog.md   # Registro de follow-ups (primera clase, contadores CLI-owned — no es un tipo de documento; ver FOLLOW-UPS-BACKLOG-PATTERN.md)
 └── templates/              # Plantillas
 ```
 
@@ -311,4 +312,4 @@ Ver también [ADR-2025-01-20-001] para contexto arquitectónico.
 
 ---
 
-*StrayMark fw-4.20.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.21.0 | [Strange Days Tech](https://strangedays.tech)*

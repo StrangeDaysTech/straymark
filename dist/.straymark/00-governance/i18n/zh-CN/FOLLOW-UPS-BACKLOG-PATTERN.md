@@ -1,6 +1,6 @@
 # Follow-ups Backlog 模式 - StrayMark
 
-> 用于跨多个 AILOG 和 Charter 管理累积的 `§Follow-ups` 与 `R<N> (new, not in Charter)` 条目的可复制约定。
+> 用于跨多个 AILOG 和 Charter 管理累积的 `§Follow-ups` 与 `R<N> (new, not in Charter)` 条目的一等公民注册表。
 
 **语言**: [English](../../FOLLOW-UPS-BACKLOG-PATTERN.md) | [Español](../es/FOLLOW-UPS-BACKLOG-PATTERN.md) | 简体中文
 
@@ -8,15 +8,23 @@
 
 ## 状态
 
-**v0 — 在 N=1 域中已验证**（`StrangeDaysTech/sentinel` CHARTER-12,2026-05-06）。
+**v1 — 自 fw-4.21.0 / cli-3.19.0 起为一等公民实体**（实验性；硬性稳定化以第二个 adopter 为门槛，依据设计原则 #12 与 ADR-2026-06-03-001）。
 
-这是一个**约定**,不是 CLI 功能。Adopter 使用 markdown + 一个可移植的 bash 脚本在本地复制此模式。在第二个 adopter 验证后,该模式可能演变为 `straymark followups` 子命令(参见[未决问题](#未决问题))。
+成熟历程，与 Charter 通道相对应：
+
+| 阶段 | 发布版本 | 落地内容 |
+|------|---------|---------|
+| 约定 (v0) | fw-4.10.0 | 模式文档 + adopter 端 bash 脚本（Sentinel CHARTER-12,N=47） |
+| 精化 (v0.1) | fw-4.13.1 | FU → TDE 提升路径（2 种形态）、`total_promoted` 计数器 |
+| **一等公民 (v1)** | **fw-4.21.0 / cli-3.19.0** | JSON schema、原生 `straymark followups` CLI、`explore`/`status` 集成、随 `AGENT-RULES.md §13` 发布的代理指令、注册表模板 |
+
+该注册表是一个**一等公民工件**,与 Charter 一样 —— 不属于 16 种文档类型之一。它有自己的规范路径、自己的 schema、自己的 CLI 命名空间,以及在 `explore` TUI 中自己的合成分组。
 
 ---
 
 ## 何时适用此模式
 
-StrayMark 的 per-AILOG `§Follow-ups` 约定在写入时有效 — 创建 AILOG 时,实施者记录推迟到后续 Charter 或操作触发器的内容。在累积列表超出操作员可凭记忆扫描范围之前,这种方式都能正常工作。
+StrayMark 的 per-AILOG `§Follow-ups` 约定在写入时有效 —— 创建 AILOG 时,实施者记录推迟到后续 Charter 或操作触发器的内容。在累积列表超出操作员可凭记忆扫描范围之前,这种方式都能正常工作。
 
 当满足**任一**以下条件时,采用此模式:
 
@@ -25,7 +33,11 @@ StrayMark 的 per-AILOG `§Follow-ups` 约定在写入时有效 — 创建 AILOG
 - 一个"当 X 到来时执行"的 follow-up 几乎丢失,因为在 X 到来后从未重读过原始 AILOG。
 - Charter 回顾揭示出本应在数周前被分类为 `closed`、但从未被索引的 follow-ups。
 
-低于此规模时,仅 per-AILOG 约定就足够了 — 过早采用此模式只会增加维护开销而无回报。
+低于此规模时,仅 per-AILOG 约定就足够了 —— 过早采用此模式只会增加维护开销而无回报。
+
+### 注册表作为规划输入
+
+来自参考 adopter 的经验教训（issue #214,N=91 个条目）:backlog 不仅仅是一份延期杂务清单。Follow-ups 不仅源自规划（ex-ante,事前）,也源自**执行现实** —— 测试运行、遥测读数、staging 事故、在真实（非模拟）环境中观察到的 bug —— 并且它们反过来反哺规划:它们变成杂务（chore）、迷你 Charter,甚至重塑已经规划好的 Charter。该注册表是 **SpecKit 的 ex-post（事后）对应物**:SpecKit 从意图反哺规划;backlog 从执行反哺规划。v1 维度（`Origin-class`、`Severity`、`Labels`、`Destination` 词汇表）的存在正是为了让这个规划闭环可被查询。
 
 ---
 
@@ -39,17 +51,20 @@ StrayMark 的 per-AILOG `§Follow-ups` 约定在写入时有效 — 创建 AILOG
 .straymark/follow-ups-backlog.md
 ```
 
+一个带有空 frontmatter 和五个 bucket 标题的模板随 `.straymark/templates/follow-ups-backlog.md` 一起发布。
+
 ### Frontmatter (YAML)
 
 ```yaml
 ---
-last_scan: 2026-05-06
+last_scan: 2026-06-03
 last_scan_range: AILOG-NNNN-NN-NN-NNN..AILOG-NNNN-NN-NN-NNN  # 可选 —— 涵盖的首个..末尾 AILOG
-schema_version: v0
-total_open: 0           # 当前为 `open` 状态的条目计数
-total_promoted: 0       # 当前为 `promoted` 状态的条目计数(schema v0.1 新增 —— 见"提升为 TDE")
-total_closed_in_session: 0   # 上次会话以来 `closed` 条目计数(可选,operator-maintained)
-total_phase_blocked: 0  # `phase-blocked` 条目计数(可选)
+schema_version: v1
+total_open: 0                # CLI-owned —— 每次写入时重新计算
+total_promoted: 0            # CLI-owned
+total_closed_in_session: 0   # CLI-owned
+total_phase_blocked: 0       # CLI-owned
+total_suspected_closed: 0    # CLI-owned（v1 新增）
 buckets:
   - ready
   - time-triggered
@@ -63,13 +78,15 @@ fully_extracted_ailogs:
 ---
 ```
 
-`total_*` 计数器是**operator-maintained 的元数据**。drift 脚本不会自动更新它们 —— 它们位于 header 之中,使会话开始时的扫视就能看到注册表的脉搏,无需在 bucket 中翻页。`total_promoted` 在 schema v0.1 中固化(Sentinel adopter 的经验信号,fw-4.13.1),与现有的 `total_open` / `total_closed_in_session` / `total_phase_blocked` 模式保持一致。
+**自 v1 起,`total_*` 计数器为 CLI-owned。** 每个写入命令（`straymark followups drift --apply`、`straymark followups promote`）都会根据实际条目状态重新计算它们。不要手工维护它们 —— 陈旧的手工编辑值会在下一次写入时被纠正。这关闭了在 N=91 处观察到的静默计数器漂移失败模式（声明 `total_open: 47`,而 4 周后实际为 65 —— issue #214 信号 2）。`straymark followups status` 始终显示即时重新计算的计数,因此即便文件陈旧,脉搏也是可信的。
 
-`fully_extracted_ailogs` 列表是 drift 检测的**承重元数据**。所有 `§Follow-ups` 和 `R<N>` 条目已被转移到注册表(或被显式分类为 superseded)的 AILOG 都属于此列表。Drift 检测将此列表与 repo 中具有 follow-up 内容的 AILOG 进行比对。
+`fully_extracted_ailogs` 列表是漂移检测的**承重元数据**。所有 `§Follow-ups` 和 `R<N>` 条目已被转移到注册表(或被显式分类为 superseded)的 AILOG 都属于此列表。漂移检测将此列表与 repo 中具有 follow-up 内容的 AILOG 进行比对。
+
+正式的 frontmatter schema 是 `.straymark/schemas/follow-ups-backlog.schema.v1.json`（实验性 v1 —— 见上方"状态"）。
 
 ### Buckets
 
-五个 bucket 按触发类型组织条目:
+五个 bucket 按触发类型组织条目 —— *何时可执行*:
 
 - `ready` — 现在可执行,无外部触发器依赖。
 - `time-triggered` — 基于日历的触发器(审计周期、周期性审查)。
@@ -77,27 +94,40 @@ fully_extracted_ailogs:
 - `phase-blocked` — 由尚不存在的未来组件或阶段阻塞。
 - `operational` — 操作员手动决策或外部系统操作。
 
-### 条目 schema
+在参考 adopter 的 N=91 个条目处,该词汇表是稳定的 —— 不需要第六个 bucket。Severity（*跳过它有多痛*）有意**不是**一个 bucket:它是一个正交的 per-entry 字段(见下文)。
 
-bucket 内的每个条目遵循以下形式:
+### 条目 schema (v1)
+
+bucket 内的每个条目遵循以下形式（标注了 v1 字段;所有这些字段都是可选的 —— v0 条目仍然有效）:
 
 ```markdown
 ### FU-NNN — <简短描述>
 - **Origin**: AILOG-NNNN-NN-NN-NNN <指向源部分的指针>
-- **Status**: open | in-progress | closed | superseded | promoted
+- **Origin-class**: ex-ante-planning | testing | telemetry | staging | real-env-bug   (v1, 可选)
+- **Status**: open | in-progress | suspected-closed | closed | superseded | promoted
+- **Severity**: normal | blocking                                                     (v1, 可选;默认 normal)
 - **Trigger**: ready | <日历日期> | when <X> | <其他>
-- **Destination**: <Charter id、"operations"、未来阶段,或 TDE-YYYY-MM-DD-NNN>
+- **Destination**: chore | mini-charter | charter-replanning | operations | <charter-id> | <TDE id>
 - **Cost**: <工作量估计>
+- **Labels**: <自由标签,逗号分隔>                                                     (v1, 可选)
 - **Notes**: <自由格式上下文>
 - **Promoted to**: <TDE id,当 Status: promoted 时 — 见下方"提升为 TDE">
 ```
 
 `FU-NNN` 在注册表整个生命周期内单调递增;条目关闭时不重新编号。
 
+**v1 维度**,每个都将一个经验观察到的需求规范化(issue #214):
+
+- **`Origin-class`** —— 条目的诞生地:规划工件（ex-ante,事前）vs 执行现实（testing、telemetry、staging、真实环境 bug）。使 ex-post 规划闭环可被查询。
+- **`Severity`** —— `blocking` 标记必须在生产切换之前落地的可靠性类问题。将参考 adopter 在 `Notes` 字段中浮现的 `PROD-BLOCKER` 散文约定规范化（信号 3）。与 bucket 正交:一个 `charter-triggered` 条目也可以是 `blocking`。
+- **`Labels`** —— 用于在 triage 期间将条目分组到已规划的 Charter / 迷你 Charter / 杂务中的自由标签。可通过 `straymark followups list --label <tag>` 查询。
+- **`Destination` 词汇表** —— 形式化触发后工作落地的去向:`chore`、`mini-charter`、`charter-replanning`（该条目重塑一个已规划的 Charter,而不是向其添加一个任务）、`operations`、某个具体的 Charter id,或某个 TDE id。仍接受自由格式的值（宽松解析）。
+
 ### Status 词汇表
 
 - `open` — 待处理,尚未采取行动。
 - `in-progress` — 已声明或正在执行的 Charter 处理此条目。
+- `suspected-closed` *(v1 新增)* —— 由 `drift --apply` 从其文本携带显式关闭标记（`closed in-Charter`、`fixed in batch N`、某个 commit 哈希）的 AILOG 中自动提取。操作员在下一次 triage 时确认（→ `closed`）或重新打开（→ `open`）。见下方"漂移检测"。
 - `closed` — 条目已解决(Charter 已合并、操作任务已完成、时间已过且已审查)。
 - `superseded` — 由其他工作处理,该工作未直接引用此条目。
 - `promoted` — 条目因满足横向债务标准而被提升为 TDE 文档(见下方"提升为 TDE")。`Promoted to:` 字段携带 TDE id。
@@ -117,9 +147,15 @@ closed、superseded 和 promoted 条目保留在文件中(可审计的历史)。
 
 当上述任一条件成立时,将该 FU 条目提升为 `.straymark/06-evolution/technical-debt/` 下的 TDE 文档:
 
-1. 通过 `/straymark-new tde`(或 `straymark new --type tde`)创建 TDE。从 FU 条目的上下文填入 `impact`、`effort`、`type` 与正文各节。
+```bash
+straymark followups promote FU-NNN
+```
+
+该命令将 v0 中需手动执行的三步流程自动化:
+
+1. 创建 TDE 文档(与 `straymark new --type tde` 相同的机制),从 FU 条目预填 `impact`、`effort`、`type` 与正文上下文。
 2. 在 TDE 的 frontmatter 中添加 `promoted_from_followup: FU-NNN` 以便溯源。
-3. 在 FU 条目中,设置 `Status: promoted`、`Destination: TDE-YYYY-MM-DD-NNN`,并添加 `Promoted to: TDE-YYYY-MM-DD-NNN`。如果你维护 `## Bucket: closed` 节,则将条目移过去;否则保持原位并更新状态。
+3. 在 FU 条目中,设置 `Status: promoted`、`Destination: TDE-YYYY-MM-DD-NNN`,以及 `Promoted to: TDE-YYYY-MM-DD-NNN`;并重新计算 frontmatter 计数器。
 
 FU 条目在提升后**不会被删除** —— 它在注册表中的存在就是显示 TDE 来源的审计轨迹。
 
@@ -127,10 +163,10 @@ FU 条目在提升后**不会被删除** —— 它在注册表中的存在就�
 
 上述工作流涵盖**标准情况**:`open` 状态的 FU 条目已存在于注册表中,并在周期性审查期间被提升为 TDE。还有一种同样有效的情况,源自 Sentinel CHARTER-13 回顾的经验:
 
-- **提升已存在条目** —— FU 数周或数个 Charter 之前已被(通常通过 `--apply`)登记为 `open`,经历过 ≥1 次 Charter 关闭仍未解决,并满足上述四项标准。标准流程。
+- **提升已存在条目** —— FU 数周或数个 Charter 之前已被(通常通过 `drift --apply`)登记为 `open`,经历过 ≥1 次 Charter 关闭仍未解决,并满足上述四项标准。标准流程。
 - **创建时即追溯提升** —— 在回顾(Charter 关闭仪式、审计周期、RFC 撰写)*期间* 该债务被识别为值得作为 TDE,且从未作为 `open` FU 存在。先创建 TDE;在注册表中以 *`Status: promoted`* 状态新增一个 FU 条目,提供从 TDE 回溯到原始上下文(AILOG 中的某个 `R<N>`、calibrator 的 finding、被延期的分类)的审计轨迹。
 
-两种形态在注册表中产生相同的终态:一个 `Status: promoted` 且具有 `Promoted to: TDE-YYYY-MM-DD-NNN` 指针的条目。区别在于条目是预先以 `open` 存在,还是天生即为 `promoted`。drift 脚本一视同仁(不按出生状态区分);统计 `total_promoted` 的 adopter 分析在两种情况下得到相同数字。
+两种形态在注册表中产生相同的终态:一个 `Status: promoted` 且具有 `Promoted to: TDE-YYYY-MM-DD-NNN` 指针的条目。区别在于条目是预先以 `open` 存在,还是天生即为 `promoted`。漂移检测一视同仁;统计 `total_promoted` 的分析在两种情况下得到相同数字。
 
 存疑时,优先创建 FU 条目 —— 即便是追溯创建 —— 因为它会把 TDE 交叉引用回触发该识别的 AILOG / R-号 / 源上下文。一个 `promoted_from_followup: FU-NNN` 指向 backlog 中实际存在的条目的 TDE,比指向一个虚构的 FU 更易导航。
 
@@ -140,52 +176,62 @@ FU 条目在提升后**不会被删除** —— 它在注册表中的存在就�
 - **Charter 关闭** —— 在审查刚关闭的 Charter 所解决的条目时,如果发现*未*被解决且符合上述标准的条目,则提升它们,而不是保留为 `open`。
 - **Charter 声明前** —— 如果你即将声明一个 Charter,并注意到注册表中包含此 Charter 仅会*部分*处理的条目,那么未处理的部分可能应作为 TDE,而不是作为另一个被延期的 FU。
 
-Drift 脚本(`scripts/check-followups-drift.sh`)在 v0 **不扩展**支持提升候选 —— 提升由操作员驱动。未来 v1 增强可标记符合"经历 ≥2 个 Charter"启发式的条目,但这等到第二个 adopter 验证模式后才会固化(与 v0 → v1 其余部分相同的门槛)。
-
 ---
 
-## Drift 检测
+## 漂移检测 —— 自 cli-3.19.0 起原生
 
-一个小的 bash 脚本是验证层,使注册表与新 AILOG 保持同步。该脚本位于 adopter 的 repo 中(建议路径:`scripts/check-followups-drift.sh`),有三种模式。
+漂移检测使注册表与新 AILOG 保持同步。自 cli-3.19.0 起,它是一个**原生 CLI 命令** —— 无需外部脚本:
 
-### 模式
+```bash
+straymark followups drift              # 扫描 git diff origin/main..HEAD（回退 HEAD~1..HEAD）中修改的 AILOG;drift 时退出 1
+straymark followups drift --apply      # 相同扫描 + 将新条目提取到注册表
+straymark followups drift --scan-all   # 对每个 AILOG 的周期性完整扫描
+```
 
-- **默认** — 扫描 `git diff origin/main..HEAD`(回退到 `HEAD~1..HEAD`)中修改的 AILOG。对任何具有 `§Follow-ups` / `R<N> (new)` 内容但不在 `fully_extracted_ailogs` 中的 AILOG 发出警告。drift 时退出 1。
-- **`--apply`** — 相同的扫描,但自动在 `## Bucket: ready` 下追加新条目,使用自动生成的 `FU-NNN` id,并将 AILOG id 追加到 `fully_extracted_ailogs`。操作员稍后将其重新分类到正确的 bucket。
-- **`--scan-all`** — 扫描项目中的每个 AILOG(周期性完整扫描)。
+### `--apply` 做什么
+
+1. 从尚未在 `fully_extracted_ailogs` 中的 AILOG 提取每个 `§Follow-ups` bullet 和 `R<N> (new, not in Charter)` 风险,在 `## Bucket: ready` 下以自动生成的 `FU-NNN` id 追加。操作员在下一次 triage 时重新分类 bucket/trigger/destination。
+2. **反噪声精化** *(v1 —— 解决 issue #214 信号 1)*:其 AILOG 文本携带显式关闭标记（`closed in-Charter`、`fixed in batch N`、某个 commit 哈希引用）的 bullet 会以 `Status: suspected-closed` 而非 `open` 提取,而不是作为 TBD 噪声污染 `ready` bucket。在参考 adopter 的两次有记录的发生中,每批自动追加的条目中有 20–75% 已在 Charter 内解决 —— 此精化消除了 v0 工作流唯一反复出现的成本。
+3. 将 AILOG id 追加到 `fully_extracted_ailogs`。
+4. **根据实际条目状态重新计算所有 `total_*` 计数器**(信号 2)。
+5. 如果注册表为 `schema_version: v0`,则就地将其升级到 `v1` —— 非破坏性且幂等地(所有 v1 字段都是可选的;除版本标记和计数器外什么都不重写)。
 
 ### Per-AILOG 与 per-bullet 粒度
 
-跟踪是 **per-AILOG**,而非 per-bullet。AILOG 要么被完全提取(其 id 在 `fully_extracted_ailogs` 中 — 信任注册表),要么未被提取(提取所有内容)。Per-bullet 匹配将需要指纹识别(文本哈希或模糊比较),每当注册表条目对 AILOG 的 bullet 进行改写时,这都会产生误报 — 而经过整理的条目总是会改写。
+跟踪是 **per-AILOG**,而非 per-bullet。AILOG 要么被完全提取(其 id 在 `fully_extracted_ailogs` 中 — 信任注册表),要么未被提取(提取所有内容)。Per-bullet 匹配将需要指纹识别(文本哈希或模糊比较),每当注册表条目对 AILOG 的 bullet 进行改写时,这都会产生误报 — 而经过整理的条目总是会改写。这个设计选择经过经验验证:在参考 adopter 中,**跨 76 个 AILOG 和约 10 次 apply 运行,0 个误报**。
 
-Per-AILOG 粒度的成本:当在 Charter 关闭后向已提取的 AILOG 添加 follow-up 时,drift 检测无法发现。修复由操作员驱动 — 手动从 `fully_extracted_ailogs` 中移除该 AILOG 并使用 `--apply` 重新运行。这种权衡对 v0 是有意为之,因为大多数 AILOG 在 Charter 关闭后是 write-once。
+Per-AILOG 粒度的成本:当在 Charter 关闭后向已提取的 AILOG 添加 follow-up 时,漂移检测无法发现。修复由操作员驱动 — 手动从 `fully_extracted_ailogs` 中移除该 AILOG 并使用 `--apply` 重新运行。这种权衡是有意为之,因为大多数 AILOG 在 Charter 关闭后是 write-once。
 
-### 脚本模板
+### 旧版 bash 脚本（已弃用）
 
-参考实现(约 290 行 POSIX bash)位于 `StrangeDaysTech/sentinel` 的 `scripts/check-followups-drift.sh`。将其复制到你的 repo 并调整顶部常量:
+v0 参考实现（`scripts/check-followups-drift.sh`,Sentinel adopter repo 中约 296 行 POSIX bash）**自 cli-3.19.0 起已弃用**。它对 v0 注册表仍可工作,但不再维护,且缺少反噪声精化和计数器重新计算。迁移路径:删除该脚本,运行一次 `straymark followups drift --apply`(这同时将注册表升级到 v1),并更新任何 pre-commit hook 改为调用 CLI。
+
+---
+
+## CLI 接口
 
 ```bash
-BACKLOG_FILE=".straymark/follow-ups-backlog.md"
-AILOG_DIR=".straymark/07-ai-audit/agent-logs"
+straymark followups list                  # 枚举条目:FU id、status、severity、bucket、destination
+straymark followups list --bucket ready --status open --severity blocking --label <tag>
+straymark followups status                # 注册表脉搏:计数器(即时重新计算)、按 bucket/severity 细分
+straymark followups status FU-NNN         # 单个条目的详情视图
+straymark followups drift [--apply|--scan-all]   # 漂移检测(见上文)
+straymark followups promote FU-NNN        # 自动化 FU → TDE 提升(见上文)
 ```
 
-脚本仅使用 `awk` 和 `grep` — 没有 jq、yq 或重型依赖。在 Linux 和 macOS 之间可移植。
+注册表也在 `straymark explore` TUI 中作为一个合成的 **Follow-ups** 分组出现(每个 bucket 一个子节点),并在 `straymark status` 中作为一个计数块出现。
 
 ---
 
 ## 代理集成
 
-代理(Claude / Gemini 等)成为注册表的主要维护者。添加到你的 `CLAUDE.md` / `AGENT.md`:
+自 fw-4.21.0 起,代理指令**随 framework 一起发布**,位于 [`AGENT-RULES.md §13`](AGENT-RULES.md) —— adopter 不再将一个块复制到自己的 `CLAUDE.md` / `AGENT.md`。摘要如下:
 
-```markdown
-## Follow-ups backlog
+- **会话开始**:扫视 `.straymark/follow-ups-backlog.md`(或运行 `straymark followups status`)以了解项目中所有待处理事项。
+- **Pre-commit**:创建或修改了任何带有 `## Follow-ups` 或 `R<N> (new, not in Charter)` 条目的 AILOG 吗? → 在同一个 commit 中运行 `straymark followups drift --apply`。
+- **Charter 关闭后**:审查 Charter 解决的条目;将其标记为 `closed`(在 `Notes` 中带有关闭 Charter id)或 `superseded`;确认或重新打开任何 `suspected-closed` 条目;通过 `straymark followups promote` 提升符合 TDE 标准的未解决条目。
 
-- **会话开始**: 浏览 `.straymark/follow-ups-backlog.md` 以了解项目中所有待处理事项。
-- **Pre-commit 检查**: 创建或修改了任何带有 `## Follow-ups` 或 `R<N> (new, not in Charter)` 条目的 AILOG 吗? → 在同一个 commit 中运行 `scripts/check-followups-drift.sh --apply` 以扩展 backlog。
-- **Charter 关闭后**: 审查 Charter 解决的条目;将其标记为 `closed`(在 `Notes` 中带有关闭 Charter id)或 `superseded`。对于未解决但符合 TDE 标准的条目(先前 Charter 的遗留、横向、需要专用 Charter、需要人工优先级),将其提升为 TDE 文档(见本模式的"提升为 TDE"以及 `AGENT-RULES.md §3`)。
-```
-
-这使代理成为维护者,脚本成为验证层,操作员成为周期性审查者(重新分类、标记 closed、修剪 superseded、在符合标准时提升为 TDE)。
+这使代理成为注册表的主要维护者,CLI 成为验证层,操作员成为周期性审查者(重新分类、确认 suspected-closed、修剪 superseded、在符合标准时提升为 TDE)。
 
 ---
 
@@ -193,54 +239,56 @@ AILOG_DIR=".straymark/07-ai-audit/agent-logs"
 
 对于从零开始的 adopter:
 
-1. 创建 `.straymark/follow-ups-backlog.md`,使用上述 frontmatter(初始 `fully_extracted_ailogs:` 列表为空)和五个 `## Bucket: <name>` 标题。
-2. 将参考脚本从 `StrangeDaysTech/sentinel` 复制到 `scripts/check-followups-drift.sh`。如果你的 AILOG 位于其他位置,调整 `AILOG_DIR`。
-3. 运行 `scripts/check-followups-drift.sh --scan-all --apply` 从现有 AILOG 播种注册表。
-4. 手动将自动生成的 `## Bucket: ready` 条目重新分类到正确的 bucket。这是一次性 triage,对于约 50 个条目的 backlog 通常需要 30-60 分钟。
-5. 将代理集成块添加到 `CLAUDE.md` / `AGENT.md`。
-6. 可选地将 `scripts/check-followups-drift.sh` 接入 pre-commit hook 以进行硬性 enforcement。
+1. 将 `.straymark/templates/follow-ups-backlog.md` 复制到 `.straymark/follow-ups-backlog.md`(空的 `fully_extracted_ailogs:` 列表、五个 `## Bucket:` 标题)。
+2. 运行 `straymark followups drift --scan-all --apply` 从现有 AILOG 播种注册表。
+3. 手动将自动生成的 `## Bucket: ready` 条目重新分类到正确的 bucket;在能增加信号之处填写 `Origin-class`/`Severity`/`Labels`。这是一次性 triage,对于约 50 个条目的 backlog 通常需要 30-60 分钟。
+4. 完成 —— `AGENT-RULES.md §13` 中的代理指令已经生效;无需编辑 `CLAUDE.md`。
 
-对于从临时跟踪迁移的 adopter:相同的流程,但步骤 4 可能需要决定哪些条目已经是 `closed` 或 `superseded` — 该分类是使注册表有用的关键。
+对于从 v0 约定迁移的 adopter:运行一次 `straymark followups drift --apply`(自动将注册表升级到 v1),删除本地 bash 脚本,并更新任何 pre-commit hook 改为调用 CLI。
 
 ---
 
 ## 参考实现
 
-`StrangeDaysTech/sentinel` CHARTER-12,于 2026-05-06 合并:
+`StrangeDaysTech/sentinel` —— 起源 adopter:
 
-- 实现 PR: [sentinel#53](https://github.com/StrangeDaysTech/sentinel/pull/53)(注册表 + 脚本 + CLAUDE.md 添加)。
-- 关闭 PR: [sentinel#54](https://github.com/StrangeDaysTech/sentinel/pull/54)(合并后验证 + Charter 关闭)。
-
-经验上下文: 47 个条目从 CHARTER-08 → CHARTER-11 回顾中播种(约 30 分钟的多代理 triage)。该链条展示了激发该模式的差距 — 没有注册表,操作员无法在不孤立地重新分类每个 Charter 的 follow-ups 的情况下查看"项目中所有待处理事项"。有了注册表,会话开始时的浏览就是一次文件读取。
+- v0 模式:CHARTER-12,于 2026-05-06 合并（[sentinel#53](https://github.com/StrangeDaysTech/sentinel/pull/53)、[sentinel#54](https://github.com/StrangeDaysTech/sentinel/pull/54)）。从 CHARTER-08 → CHARTER-11 回顾播种了 47 个条目。
+- 规模验证:Etapa-3 后 triage 处于 **N=91 个 FU / 提取了 76 个 AILOG / 65 个 open**（[issue #214](https://github.com/StrangeDaysTech/straymark/issues/214)）—— 驱动 v1 schema 和原生 CLI 的经验输入（ADR-2026-06-03-001）。
 
 ---
 
 ## 未决问题
 
-这些在 v0 中尚未解决。该模式的未来修订版本或 CLI helper 可能会处理它们:
+在 v1 中已解决:
 
-- **Bucket 分类启发式**。今天 `--apply` 将每个新条目转储到 `## Bucket: ready`;操作员手动重新分类。使用 AILOG `tags` 和 Charter `effort_estimate` 的启发式可以自动建议 bucket。
-- **Schema 验证**。注册表遵循一个隐式 schema;尚不存在 `.straymark/schemas/follow-ups-backlog.schema.v0.json`。今天的验证是人工审查。
+- ~~**Schema 验证。**~~ → `.straymark/schemas/follow-ups-backlog.schema.v1.json`（frontmatter）、CLI 解析器中的条目形式验证。
+- ~~**作为 `straymark followups` CLI 的结晶化。**~~ → 自 cli-3.19.0 起原生 `list / status / drift / promote`。
+- ~~**Bucket 分类启发式**（部分）。~~ → `suspected-closed` 移除了主导的噪声类;完整的 bucket 建议（使用 AILOG `tags` / Charter `effort_estimate`）仍未解决。
+
+仍为未来修订保留:
+
 - **与审计周期的集成**。当 `straymark charter audit --merge-reports` 产生未在关闭前原子修复的真实 debt findings 时,这些 findings 仅存在于 `.straymark/audits/<id>/review.md` 中。它们不会自动流入中央注册表。自动浮现它们将关闭一个已知差距。
 - **`closed` 与 `superseded` 语义**。今天的差异在于解决工作是否显式引用了该条目。可能会出现更严格的约定。
-- **作为 `straymark followups` CLI 的结晶化**。一旦第二个 adopter 验证了该模式,framework 可以发布一个子命令,镜像现有的 `straymark charter` 三件套:`list` / `close` / `drift`。处于 v0 的 adopter(此模式)通过删除其本地脚本并切换代理指令进行迁移。
+- **与 `charter close` 的软集成**（issue #135 Tier 3）:在 Charter 关闭后自动调用 `followups drift --apply`,并带有交互式提升提示。以来自第二个 adopter 的摩擦信号为门槛。
+- **硬 schema 稳定化 (v1.0)**。以另一个领域的第二个 adopter 的验证为门槛,依据设计原则 #12。
 
 ---
 
 ## 致谢
 
-通过 [issue #111](https://github.com/StrangeDaysTech/straymark/issues/111) 由 Sentinel adopter 贡献。经验基础:`StrangeDaysTech/sentinel` 中的 CHARTER-08 → CHARTER-11 链。作者：José Villaseñor Montfort。
+通过 [issue #111](https://github.com/StrangeDaysTech/straymark/issues/111) 由 Sentinel adopter 贡献;通过 [issue #214](https://github.com/StrangeDaysTech/straymark/issues/214) 和 ADR-2026-06-03-001 成熟为一等公民。经验基础:`StrangeDaysTech/sentinel` 中的 CHARTER-08 → CHARTER-11 链以及 Etapa-3 后 N=91 的 triage。作者:José Villaseñor Montfort。
 
-*本文档在生成式 AI 工具（Claude 4.7）的协助下撰写；内容的全部责任由人类作者承担。*
+*本文档在生成式 AI 工具（Claude 4.7 / Opus 4.8）的协助下撰写；内容的全部责任由人类作者承担。*
 
 ---
 
 ## 相关
 
-- [EMERGENT-OBSERVATION-DESIGN.md](EMERGENT-OBSERVATION-DESIGN.md) —— 元模式，此漂移检测约定在每 AILOG ↔ 注册表表面实例化了它。
+- [EMERGENT-OBSERVATION-DESIGN.md](EMERGENT-OBSERVATION-DESIGN.md) —— 此漂移检测约定在每 AILOG ↔ 注册表表面实例化的元模式。
 - [CHARTER-CHAIN-EVOLUTION.md](CHARTER-CHAIN-EVOLUTION.md) —— 在链级别（Pattern 1）和周期级别（Pattern 2）运作的姐妹模式。
-- [AGENT-RULES.md §3](AGENT-RULES.md) —— 可将 follow-ups 升级为专用债务条目的 TDE-vs-`R<N>` 升级标准。
+- [AGENT-RULES.md §3](AGENT-RULES.md) —— 可将 follow-ups 提升为专用债务条目的 TDE-vs-`R<N>` 升级标准;§13 —— 随框架发布的注册表维护代理指令。
+- `STRAYMARK.md §16` —— 注册表作为一等公民工件的入门级摘要。
 
 ---
 
-*StrayMark fw-4.19.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.21.0 | [Strange Days Tech](https://strangedays.tech)*
