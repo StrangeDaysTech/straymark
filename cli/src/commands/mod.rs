@@ -9,6 +9,7 @@ pub mod charter;
 pub mod compliance;
 #[cfg(feature = "tui")]
 pub mod explore;
+pub mod followups;
 pub mod init;
 pub mod install_skills;
 pub mod metrics;

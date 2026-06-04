@@ -143,6 +143,7 @@ StrayMark 的产品决策基于十二条明确的原则。它们按层级排序�
 将纪律转化为可执行反馈的内置命令：
 
 - **`straymark charter <new|list|status|close|drift|batch-complete|audit|refresh-suggest|amend>`** — 事前声明、事后审计的有界工作单元。`close` 记录执行后遥测；`drift` 以 AILOG-aware 抑制方式检测文件-与-commit 的偏差，并（cli-3.13.0+）对 AILOG `## Batch Ledger` 中的 `### Batch N (pending)` 条目进行门控；`batch-complete`（cli-3.13.0+）将批次标记为已在多批次章程（3+ 批次或 >1 天）的台账中完成；`audit` 编排多模型外部审查（三步骤 prepare/calibrate/finalize，仅编排——不调用 LLM API）；`refresh-suggest`（cli-3.14.0+）当多 Charter 模块的 `r_n_plus_one_emergent_count` 滚动均值超过阈值时，输出预声明 SpecKit 刷新的启发式建议；`amend`（cli-3.14.0+）为关闭后审计驱动的 Batch N.4 修订做脚手架，在原 execute 分支上落地而不开启新 Charter。对于 IDE 驱动的工作流，内联 skills `/straymark-audit-prompt` 和 `/straymark-audit-review` 封装 CLI，在对话中展示 prompts 并将 findings 合并到遥测中。
+- **`straymark followups <list|status|drift|promote>`** *(cli-3.19.0+)* — 一等的后续事项积压注册表（`.straymark/follow-ups-backlog.md`，schema v1 实验性）：`drift --apply` 按 AILOG 从 AILOG 中提取 `§Follow-ups` / `R<N> (new)` 条目（带闭合标记的 bullet 落为 `suspected-closed`），计数器由 CLI 拥有并在每次写入时重新计算，`promote` 将条目提升为带完整溯源的 TDE 文档。详见 `STRAYMARK.md §16` 与 `FOLLOW-UPS-BACKLOG-PATTERN.md`。
 - **`straymark approve <doc-id>`** — 记录一次正式的人工审批（一次性写入 `reviewed_by` / `reviewed_at` / `review_outcome` 与 `## Approval` body 章节；闭合 DOCUMENTATION-POLICY §3.5 中规范化的缺口）
 - **`straymark validate`** — 25+ 条文档正确性验证规则（其中 12 条针对中国法规、按 scope 启用）；`--include-charters` 可同时检查 `.straymark/charters/`；`--check-pending-reviews` 列出审批积压（仅警告）
 - **`straymark metrics`** — 治理 KPI、审查率、风险分布、趋势
@@ -258,7 +259,7 @@ StrayMark 为每个组件使用独立的版本标签：
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
 | Framework | `fw-` | `fw-4.21.0` | 模板（12 种类型）、治理文档、指令、Charter 模板 + schema |
-| CLI | `cli-` | `cli-3.18.0` | `straymark` 二进制文件 |
+| CLI | `cli-` | `cli-3.19.0` | `straymark` 二进制文件 |
 
 使用 `straymark status` 或 `straymark about` 查看已安装的版本。
 
@@ -275,6 +276,7 @@ StrayMark 为每个组件使用独立的版本标签：
 | `straymark repair [path]` | 恢复缺失的目录和框架文件 |
 | `straymark validate [path]` | 验证文档的合规性和正确性（`--include-charters` 同时校验 Charter；`--check-pending-reviews` 列出审批积压） |
 | `straymark charter <子命令>` | 管理章程：`new`、`list`、`status`、`close`（记录遥测）、`drift`（带 AILOG-awareness 的偏差检测） |
+| `straymark followups <子命令>` *(cli-3.19.0+)* | 管理后续事项积压注册表：`list`（可过滤的条目）、`status`（带 CLI 拥有、即时重新计算的计数器的概览）、`drift`（检测/提取未处理的 AILOG —— v0 bash 脚本的原生替代，带抗噪声的 `suspected-closed` 提取）、`promote`（FU → TDE，带 `promoted_from_followup` 溯源） |
 | `straymark approve <doc-id>` | 在 `review_required: true` 的文档上记录一次正式的人工审批（frontmatter + 规范的 body 章节） |
 | `straymark compliance [path]` | 检查法规合规（EU AI Act、ISO 42001、NIST） |
 | `straymark metrics [path]` | 显示治理指标和文档统计 |

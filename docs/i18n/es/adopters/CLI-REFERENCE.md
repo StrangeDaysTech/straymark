@@ -11,7 +11,7 @@
 
 1. [Instalación](#instalación)
 2. [Versionado](#versionado)
-3. [Comandos](#comandos) — init, update, remove, status, repair, validate, new, charter, compliance, metrics, analyze, audit, explore, about
+3. [Comandos](#comandos) — init, update, remove, status, repair, validate, new, charter, followups, compliance, metrics, analyze, audit, explore, about
 4. [Variables de Entorno](#variables-de-entorno)
 5. [Códigos de Salida](#códigos-de-salida)
 
@@ -48,7 +48,7 @@ StrayMark usa **tags de versión independientes** para cada componente:
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
 | Framework | `fw-` | `fw-4.21.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.18.0` | El binario `straymark` |
+| CLI | `cli-` | `cli-3.19.0` | El binario `straymark` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
 
@@ -683,6 +683,70 @@ Los adopters pueden `git add` el directorio entero `.straymark/audits/` para un 
 > **¿Por qué orchestration-only?** Implementar 3 HTTP clients (OpenAI / Google / Anthropic) son 1-2 semanas + mantenimiento perpetuo. v1 audit-skills extiende el orchestration-only a un segundo modo (CLI auditor-side con tool use enforcement) donde el operador corre sus propias CLIs auditoras y los prompts de StrayMark enforzan la disciplina (`citar path:línea de archivos efectivamente abiertos`). StrayMark no maneja API keys, no invoca APIs, no mantiene HTTP clients.
 
 > **Alternativa con skill *(fw-4.9.0+, expandida en fw-4.9.0)*.** Tres skills envuelven el CLI para flujos IDE-driven: `/straymark-audit-prompt CHARTER-ID` (llama a `--prepare`), `/straymark-audit-execute CHARTER-ID` (corre en CLIs auditoras para leer el prompt y escribir un report), y `/straymark-audit-review CHARTER-ID` (consolida N reports en `review.md` y mergea YAML). Con estas skills el operador nunca copia/pega prompts ni reports — el intercambio sucede vía paths canónicos del filesystem bajo `.straymark/audits/`. Ver la sección [Skills](#skills) más abajo. El CLI sigue siendo la fuente única de verdad — las skills solo añaden UX-inline.
+
+---
+
+### `straymark followups <subcommand>` *(cli-3.19.0+)*
+
+Gestiona el **registro del backlog de follow-ups** (`.straymark/follow-ups-backlog.md`) — el artefacto de primera clase que agrega las entradas `§Follow-ups` y `R<N> (new, not in Charter)` a través de los AILOGs. Schema: `.straymark/schemas/follow-ups-backlog.schema.v1.json` (v1 experimental). Convención: `FOLLOW-UPS-BACKLOG-PATTERN.md` y `STRAYMARK.md §16`; directivas de agente distribuidas en `AGENT-RULES.md §13`.
+
+El parsing es **tolerante**: los registros v0 (pre-fw-4.21.0) se leen sin errores; el primer comando de escritura (`drift --apply` o `promote`) los actualiza a v1 in place, de forma no destructiva. Los contadores `total_*` del frontmatter son **propiedad del CLI** — se recalculan en cada escritura; nunca los edites a mano.
+
+- `straymark followups list` — enumera las entradas *(cli-3.19.0+)*
+- `straymark followups status` — pulso del registro / detalle de una entrada *(cli-3.19.0+)*
+- `straymark followups drift` — sincroniza el registro con los AILOGs (reemplazo nativo del `check-followups-drift.sh` adopter-side, ya deprecado) *(cli-3.19.0+)*
+- `straymark followups promote` — eleva una entrada a un documento TDE *(cli-3.19.0+)*
+
+#### `straymark followups list [--bucket <name>] [--status <s>] [--severity <s>] [--label <tag>] [path]`
+
+Tabla de entradas: id FU, status, severidad, bucket, destino, descripción. Las advertencias de parsing (encabezados `### FU-` malformados) van a stderr sin hacer fallar el comando.
+
+| Flag | Default | Descripción |
+|------|---------|-------------|
+| `--bucket <name>` | — | Filtra por bucket: `ready`, `time-triggered`, `charter-triggered`, `phase-blocked`, `operational` |
+| `--status <s>` | — | Filtra por status: `open`, `in-progress`, `suspected-closed`, `closed`, `superseded`, `promoted` |
+| `--severity <s>` | — | Filtra por severidad: `normal`, `blocking` |
+| `--label <tag>` | — | Filtra por etiqueta (match exacto case-insensitive sobre una sola etiqueta) |
+
+```bash
+$ straymark followups list --severity blocking
+  FU      STATUS  SEV       BUCKET  DEST          DESCRIPTION
+  FU-010  open    blocking  ready   mini-charter  Harden staging probe
+```
+
+#### `straymark followups status [FU-NNN] [--path <dir>]`
+
+Sin un id: el pulso del registro — contadores **recalculados al vuelo** a partir de los status reales de las entradas (fiables incluso cuando el frontmatter del archivo está obsoleto; la divergencia se señala), desglose de entradas `open` por bucket, alertas de `blocking` y `suspected-closed`, validación de schema advisory. Con un id: el detalle completo de los campos de la entrada.
+
+#### `straymark followups drift [--apply] [--scan-all] [--range <REV..REV>] [--path <dir>]`
+
+Detecta los AILOGs cuyo contenido de follow-ups aún no se ha extraído al registro. La granularidad es **por-AILOG** (la lista `fully_extracted_ailogs` del frontmatter) — la decisión de diseño validada empíricamente (0 falsos positivos a través de 76 AILOGs en el adoptante de referencia).
+
+| Flag | Default | Descripción |
+|------|---------|-------------|
+| *(default)* | — | Escanea los AILOGs cambiados en `origin/main..HEAD` (fallback `origin/master..HEAD`, luego `HEAD~1..HEAD` con una advertencia). Avisa + **exit 1** ante drift. |
+| `--apply` | off | Extrae las entradas faltantes a `## Bucket: ready` con ids `FU-NNN` auto-numerados, añade los ids de los AILOGs a `fully_extracted_ailogs`, **recalcula los contadores**, y actualiza los registros v0 a v1 in place. Siembra el registro desde el template del framework cuando no existe. |
+| `--scan-all` | off | Barre cada AILOG del proyecto en lugar del rango de git. |
+| `--range <REV..REV>` | — | Rango de git explícito para el escaneo por defecto. |
+
+**Refinamiento anti-ruido** (issue #214 Signal 1): los bullets cuyo texto del AILOG lleva un marcador de cierre explícito — `closed in-Charter`, `fixed in batch N`, un commit hash entre backticks — se extraen como **`suspected-closed`** en lugar de `open`, así el trabajo ya resuelto deja de contaminar el bucket `ready` como ruido TBD. El operador confirma (→ `closed`) o reabre en el siguiente triage.
+
+```bash
+$ straymark followups drift --scan-all --apply
+✓ Extracted 4 entries from 1 AILOG(s) into `## Bucket: ready`.
+  ! 1 extracted as suspected-closed (closure marker in source AILOG) — confirm at the next triage.
+  Counters recomputed: 3 open / 1 suspected-closed / 0 promoted (total 4).
+```
+
+#### `straymark followups promote <FU-NNN> [--title <title>] [--path <dir>]`
+
+Automatiza la elevación FU → TDE (`FOLLOW-UPS-BACKLOG-PATTERN.md` §Promotion to TDE): crea el documento TDE desde el template del framework con trazabilidad `promoted_from_followup: FU-NNN`, cambia la entrada a `Status: promoted` con `Destination`/`Promoted to` apuntando al id del TDE, y recalcula los contadores. No interactivo (agent-friendly); la descripción del FU se vuelve el título del TDE salvo que `--title` lo sobreescriba. La priorización y la asignación siguen siendo humanas (`AGENT-RULES.md §3`).
+
+```bash
+$ straymark followups promote FU-010
+✓ FU-010 promoted → TDE-2026-06-04-001
+  TDE created: .straymark/06-evolution/technical-debt/TDE-2026-06-04-001-harden-staging-probe.md
+```
 
 ---
 

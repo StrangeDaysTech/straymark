@@ -14,6 +14,8 @@ mod compliance;
 mod config;
 mod document;
 mod download;
+mod followups;
+mod followups_schema;
 mod inject;
 mod manifest;
 mod metrics_engine;
@@ -273,6 +275,82 @@ enum Commands {
     Charter {
         #[command(subcommand)]
         command: CharterCommands,
+    },
+    /// Manage the follow-ups backlog registry (.straymark/follow-ups-backlog.md)
+    Followups {
+        #[command(subcommand)]
+        command: FollowupsCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum FollowupsCommands {
+    /// List registry entries with optional filters
+    List {
+        /// Filter by bucket (ready, time-triggered, charter-triggered,
+        /// phase-blocked, operational)
+        #[arg(long)]
+        bucket: Option<String>,
+        /// Filter by entry status (open, in-progress, suspected-closed,
+        /// closed, superseded, promoted)
+        #[arg(long)]
+        status: Option<String>,
+        /// Filter by severity (normal, blocking)
+        #[arg(long)]
+        severity: Option<String>,
+        /// Filter by label (case-insensitive exact match on one tag)
+        #[arg(long)]
+        label: Option<String>,
+        /// Project directory (default: current directory)
+        #[arg(default_value = ".")]
+        path: String,
+    },
+    /// Show the registry pulse (counters recomputed on the fly), or one
+    /// entry's detail when an FU id is given
+    Status {
+        /// Entry identifier (FU-NNN or just NNN)
+        fu_id: Option<String>,
+        /// Project directory (default: current directory).
+        /// A flag (rather than positional) so it cannot be confused with
+        /// the optional fu_id positional.
+        #[arg(long = "path", default_value = ".")]
+        path: String,
+    },
+    /// Detect AILOGs with follow-up content not yet extracted into the
+    /// registry. Native replacement (cli-3.19.0) for the deprecated
+    /// adopter-side check-followups-drift.sh. Exit 1 on drift unless --apply.
+    Drift {
+        /// Extract the missing entries into `## Bucket: ready`, append the
+        /// AILOG ids to fully_extracted_ailogs, recompute the CLI-owned
+        /// counters, and upgrade v0 registries to v1 in place. Entries whose
+        /// source AILOG carries a closure marker (`closed in-Charter`,
+        /// `fixed in batch N`, a commit hash) land as `suspected-closed`.
+        #[arg(long)]
+        apply: bool,
+        /// Sweep every AILOG in the project instead of the git range.
+        #[arg(long)]
+        scan_all: bool,
+        /// Git revision range for the default scan (default:
+        /// origin/main..HEAD, falling back to origin/master..HEAD, then
+        /// HEAD~1..HEAD).
+        #[arg(long, conflicts_with = "scan_all")]
+        range: Option<String>,
+        /// Project directory (default: current directory)
+        #[arg(long = "path", default_value = ".")]
+        path: String,
+    },
+    /// Promote an entry to a TDE document (creates the TDE with
+    /// promoted_from_followup traceability, marks the entry `promoted`,
+    /// recomputes counters). Non-interactive; prioritization stays human.
+    Promote {
+        /// Entry identifier (FU-NNN or just NNN)
+        fu_id: String,
+        /// TDE title override (default: the FU description)
+        #[arg(long)]
+        title: Option<String>,
+        /// Project directory (default: current directory)
+        #[arg(long = "path", default_value = ".")]
+        path: String,
     },
 }
 
@@ -730,6 +808,35 @@ fn main() {
                 &ailog_title,
                 merge_into.as_deref(),
             ),
+        },
+        Commands::Followups { command } => match command {
+            FollowupsCommands::List {
+                bucket,
+                status,
+                severity,
+                label,
+                path,
+            } => commands::followups::list::run(
+                &path,
+                &commands::followups::list::Filters {
+                    bucket: bucket.as_deref(),
+                    status: status.as_deref(),
+                    severity: severity.as_deref(),
+                    label: label.as_deref(),
+                },
+            ),
+            FollowupsCommands::Status { fu_id, path } => {
+                commands::followups::status::run(&path, fu_id.as_deref())
+            }
+            FollowupsCommands::Drift {
+                apply,
+                scan_all,
+                range,
+                path,
+            } => commands::followups::drift::run(&path, apply, scan_all, range.as_deref()),
+            FollowupsCommands::Promote { fu_id, title, path } => {
+                commands::followups::promote::run(&path, &fu_id, title.as_deref())
+            }
         },
     };
 

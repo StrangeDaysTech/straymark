@@ -45,6 +45,10 @@ pub fn t<'a>(en: &'a str, lang: &str) -> &'a str {
         // the rest of the bilingual technical vocabulary (Plan→Charter rename).
         ("Charters", "es") => "Charters",
         ("Charters", "zh-CN") => "章程",
+        // "Follow-ups" stays as a loanword in ES (same convention as Charters);
+        // the entry vocabulary inside the registry is canonical English.
+        ("Follow-ups", "es") => "Follow-ups",
+        ("Follow-ups", "zh-CN") => "跟进事项",
 
         // ── Subgroup labels ───────────────────────────────────────────
         ("Exceptions", "es") => "Excepciones",
