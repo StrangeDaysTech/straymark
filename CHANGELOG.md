@@ -7,6 +7,34 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.23.0 / CLI 3.20.0 — N=2 feedback: `followups recount` + born-resolved closure idioms
+
+First fixes driven by **external adopter feedback**: the lnxdrive adoption run ([#222](https://github.com/StrangeDaysTech/straymark/issues/222), the first N=2 data point gating the v1 schema's hard stabilization per principle #12 / ADR-2026-06-03-001) surfaced two gaps in the follow-ups lane — both ergonomic/vocabulary, neither schema-level.
+
+### Added (CLI)
+
+- **`straymark followups recount`** (#222 Finding 1) — recompute the CLI-owned `total_*` counters from actual entry statuses and rewrite the frontmatter, without scanning AILOGs or touching entries. Closes the loop between the sanctioned manual-triage workflow (Triage/Consumption = manual status edits) and the CLI-owned counter invariant: until now the only recomputing commands (`drift --apply`, `promote`) were no-ops after a pure-triage session, stranding the file with knowingly stale counters and no §13-compliant fix. Idempotent; upgrades v0 → v1 in place like every other write command.
+- **Born-resolved closure idioms** (#222 Finding 2) — the anti-noise vocabulary now recognizes a closure verb (`updated` / `corrected` / `remediated` / `resolved` / `fixed` / `closed`) followed by `in this PR` / `in this commit` (e.g. the lnxdrive phrasing `Charter row updated atomically in this PR`), extracting those bullets as `suspected-closed` instead of reintroducing the TBD noise that #214 Signal 1 removed.
+
+### Changed (CLI)
+
+- **`followups drift --apply` recomputes counters even with zero extractions** (#222 Finding 1) — a pre-commit `drift --apply` now also reconciles counters left stale by a manual-triage session, making the `status` warning's remediation claim actually true.
+- `followups status` stale-counter warning now points at `straymark followups recount`.
+
+### Added (Framework)
+
+- **Canonical closure-marker idioms** documented in `FOLLOW-UPS-BACKLOG-PATTERN.md` (EN/ES/zh-CN) — the fixed vocabulary the anti-noise refinement recognizes, so AILOG authors converge on recognizable phrasings at write time instead of discovering unrecognized idioms at extraction.
+
+### Changed (Framework)
+
+- **`AGENT-RULES.md §13` post-Charter-close directive** (EN/ES/zh-CN) gains the recount step: after flipping statuses by hand, run `straymark followups recount` so the CLI-owned counters ride the same commit as the triage. The `/straymark-followups` skill (4 surfaces), `STRAYMARK.md §16` lifecycle table, and `QUICK-REFERENCE.md` command line follow suit.
+
+### Adopter guidance
+
+Run `straymark update` (CLI → `cli-3.20.0`, framework → `fw-4.23.0`). If your registry carries stale counters from a manual triage (the lnxdrive case): `straymark followups recount` fixes it in one command.
+
+---
+
 ## Framework 4.22.0 — `/straymark-followups` skill ships the §13 directives as an invocable wrapper
 
 Closes the last gap in the follow-ups first-class lane (fw-4.21.0 / cli-3.19.0): the `AGENT-RULES.md §13` directives — session-start "what's pending?" answered from the canonical registry, pre-commit `followups drift --apply` riding the same commit as the AILOG, post-Charter-close triage and operator-gated `promote` — now ship as an invocable skill across all four agent surfaces, mirroring the `straymark-charter-new` lane. Driven by [#220](https://github.com/StrangeDaysTech/straymark/issues/220) (deferred from the cli-3.19.0 PR because skills ride framework releases and fw-4.21.0 was already tagged). The skill is a **thin wrapper**: parsing, schema validation, counter recomputation, and the FU → TDE elevation all stay in the CLI (`straymark followups list/status/drift/promote`, cli-3.19.0+); the skill only drives the discipline.

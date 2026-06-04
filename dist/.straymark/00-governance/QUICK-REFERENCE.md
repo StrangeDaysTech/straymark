@@ -85,7 +85,7 @@ The follow-ups backlog is **not** a doc type either — a single-file registry a
 | `Follow-ups registry` | `.straymark/follow-ups-backlog.md` (schema: `follow-ups-backlog.schema.v1.json`, experimental) | Agent extracts via `followups drift --apply` (pre-commit); operator owns triage and promotion approval |
 
 ```bash
-straymark followups list / status / drift [--apply] / promote FU-NNN
+straymark followups list / status / drift [--apply] / recount / promote FU-NNN
 ```
 
 > See section 16 of `STRAYMARK.md`, `FOLLOW-UPS-BACKLOG-PATTERN.md`, and AGENT-RULES.md §13 for the shipped agent directives.
@@ -259,4 +259,4 @@ Mark `review_required: true` when:
 
 ---
 
-*StrayMark fw-4.22.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.23.0 | [Strange Days Tech](https://strangedays.tech)*

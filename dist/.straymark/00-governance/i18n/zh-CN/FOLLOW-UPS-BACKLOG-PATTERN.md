@@ -127,7 +127,7 @@ bucket 内的每个条目遵循以下形式（标注了 v1 字段;所有这些�
 
 - `open` — 待处理,尚未采取行动。
 - `in-progress` — 已声明或正在执行的 Charter 处理此条目。
-- `suspected-closed` *(v1 新增)* —— 由 `drift --apply` 从其文本携带显式关闭标记（`closed in-Charter`、`fixed in batch N`、某个 commit 哈希）的 AILOG 中自动提取。操作员在下一次 triage 时确认（→ `closed`）或重新打开（→ `open`）。见下方"漂移检测"。
+- `suspected-closed` *(v1 新增)* —— 由 `drift --apply` 从其文本携带显式关闭标记（`closed in-Charter`、`fixed in batch N`、某个 commit 哈希，或诸如 `updated atomically in this PR` 的 born-resolved 习语 —— 见下方"规范关闭标记习语"）的 AILOG 中自动提取。操作员在下一次 triage 时确认（→ `closed`）或重新打开（→ `open`）。见下方"漂移检测"。
 - `closed` — 条目已解决(Charter 已合并、操作任务已完成、时间已过且已审查)。
 - `superseded` — 由其他工作处理,该工作未直接引用此条目。
 - `promoted` — 条目因满足横向债务标准而被提升为 TDE 文档(见下方"提升为 TDE")。`Promoted to:` 字段携带 TDE id。
@@ -196,6 +196,21 @@ straymark followups drift --scan-all   # 对每个 AILOG 的周期性完整扫�
 4. **根据实际条目状态重新计算所有 `total_*` 计数器**(信号 2)。
 5. 如果注册表为 `schema_version: v0`,则就地将其升级到 `v1` —— 非破坏性且幂等地(所有 v1 字段都是可选的;除版本标记和计数器外什么都不重写)。
 
+自 cli-3.20.0 起,`--apply` **即使没有可提取的内容也会重新计算计数器** —— 因此提交前的 `drift --apply` 也能修复手动分诊会话留下的过期计数器（首个外部 adopter 反馈,issue #222 Finding 1）。
+
+### 规范关闭标记习语
+
+反噪声精化识别一个固定词汇表（不区分大小写）。AILOG 作者应在写入时收敛到这些表述,使 born-resolved 条目以 `suspected-closed` 而非 TBD 噪声落地:
+
+| 习语族 | 示例 |
+|---|---|
+| In-Charter 关闭 | `closed in-Charter`、`closed in Charter`、`resolved in-Charter`、`resolved in Charter` |
+| 批次修复 | `fixed in batch 3`（需要数字） |
+| Commit 引用 | 反引号包裹的 commit 哈希:`` `ab12cd34ef` ``（7–40 个十六进制字符,至少一个数字） |
+| Born-resolved *(cli-3.20.0+,#222 Finding 2)* | 关闭动词 —— `updated` / `corrected` / `remediated` / `resolved` / `fixed` / `closed` —— 后跟 `in this PR` 或 `in this commit`,例如 `Charter row updated atomically in this PR` |
+
+词汇表之外的表述（如 `done earlier`、`no longer relevant`）会以 `open` 提取;操作员在分诊时翻转。当新的关闭习语在你的 AILOG 中反复出现时,请向上游提议,而不是手动编辑提取结果。
+
 ### Per-AILOG 与 per-bullet 粒度
 
 跟踪是 **per-AILOG**,而非 per-bullet。AILOG 要么被完全提取(其 id 在 `fully_extracted_ailogs` 中 — 信任注册表),要么未被提取(提取所有内容)。Per-bullet 匹配将需要指纹识别(文本哈希或模糊比较),每当注册表条目对 AILOG 的 bullet 进行改写时,这都会产生误报 — 而经过整理的条目总是会改写。这个设计选择经过经验验证:在参考 adopter 中,**跨 76 个 AILOG 和约 10 次 apply 运行,0 个误报**。
@@ -216,6 +231,7 @@ straymark followups list --bucket ready --status open --severity blocking --labe
 straymark followups status                # 注册表脉搏:计数器(即时重新计算)、按 bucket/severity 细分
 straymark followups status FU-NNN         # 单个条目的详情视图
 straymark followups drift [--apply|--scan-all]   # 漂移检测(见上文)
+straymark followups recount               # 手动分诊会话后重新计算 CLI 拥有的计数器(cli-3.20.0+)
 straymark followups promote FU-NNN        # 自动化 FU → TDE 提升(见上文)
 ```
 
@@ -229,7 +245,7 @@ straymark followups promote FU-NNN        # 自动化 FU → TDE 提升(见上�
 
 - **会话开始**:扫视 `.straymark/follow-ups-backlog.md`(或运行 `straymark followups status`)以了解项目中所有待处理事项。
 - **Pre-commit**:创建或修改了任何带有 `## Follow-ups` 或 `R<N> (new, not in Charter)` 条目的 AILOG 吗? → 在同一个 commit 中运行 `straymark followups drift --apply`。
-- **Charter 关闭后**:审查 Charter 解决的条目;将其标记为 `closed`(在 `Notes` 中带有关闭 Charter id)或 `superseded`;确认或重新打开任何 `suspected-closed` 条目;通过 `straymark followups promote` 提升符合 TDE 标准的未解决条目。
+- **Charter 关闭后**:审查 Charter 解决的条目;将其标记为 `closed`(在 `Notes` 中带有关闭 Charter id)或 `superseded`;确认或重新打开任何 `suspected-closed` 条目;然后运行 `straymark followups recount`,使 CLI 拥有的计数器与分诊在同一个 commit 中;通过 `straymark followups promote` 提升符合 TDE 标准的未解决条目。
 
 这使代理成为注册表的主要维护者,CLI 成为验证层,操作员成为周期性审查者(重新分类、确认 suspected-closed、修剪 superseded、在符合标准时提升为 TDE)。
 
@@ -291,4 +307,4 @@ straymark followups promote FU-NNN        # 自动化 FU → TDE 提升(见上�
 
 ---
 
-*StrayMark fw-4.22.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.23.0 | [Strange Days Tech](https://strangedays.tech)*

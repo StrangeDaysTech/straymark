@@ -394,9 +394,10 @@ confidence: high | medium | low
 
 - 将其标记为 `closed`（在 `Notes` 中带有关闭 Charter id）或 `superseded`。
 - 确认或重新打开该 Charter 的 AILOG 产生的任何 `suspected-closed` 条目。
+- 然后运行 `straymark followups recount` *(cli-3.20.0+)*,使 CLI 拥有的计数器与分诊在同一个 commit 中。
 - 对于符合 §3 TDE 标准（遗留、横向、专用 Charter、人工优先级）的未解决条目,通过 `straymark followups promote FU-NNN` 提议提升 —— 提升本身需操作员批准,依据 §3 的自主权限制。
 
-注册表 frontmatter 中的计数器（`total_open`、…）为 **CLI-owned**:绝不手工编辑;每个写入命令都会重新计算它们。
+注册表 frontmatter 中的计数器（`total_open`、…）为 **CLI-owned**:绝不手工编辑;`straymark followups recount`（或任何写入命令）会重新计算它们。
 
 ---
 
@@ -406,4 +407,4 @@ confidence: high | medium | low
 
 ---
 
-*StrayMark fw-4.22.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.23.0 | [Strange Days Tech](https://strangedays.tech)*

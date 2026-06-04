@@ -47,8 +47,8 @@ StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.22.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.19.1` | El binario `straymark` |
+| Framework | `fw-` | `fw-4.23.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| CLI | `cli-` | `cli-3.20.0` | El binario `straymark` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
 
@@ -695,6 +695,7 @@ El parsing es **tolerante**: los registros v0 (pre-fw-4.21.0) se leen sin errore
 - `straymark followups list` — enumera las entradas *(cli-3.19.0+)*
 - `straymark followups status` — pulso del registro / detalle de una entrada *(cli-3.19.0+)*
 - `straymark followups drift` — sincroniza el registro con los AILOGs (reemplazo nativo del `check-followups-drift.sh` adopter-side, ya deprecado) *(cli-3.19.0+)*
+- `straymark followups recount` — recalcula los contadores propiedad del CLI tras una sesión de triage manual *(cli-3.20.0+)*
 - `straymark followups promote` — eleva una entrada a un documento TDE *(cli-3.19.0+)*
 
 #### `straymark followups list [--bucket <name>] [--status <s>] [--severity <s>] [--label <tag>] [path]`
@@ -725,17 +726,26 @@ Detecta los AILOGs cuyo contenido de follow-ups aún no se ha extraído al regis
 | Flag | Default | Descripción |
 |------|---------|-------------|
 | *(default)* | — | Escanea los AILOGs cambiados en `origin/main..HEAD` (fallback `origin/master..HEAD`, luego `HEAD~1..HEAD` con una advertencia). Avisa + **exit 1** ante drift. |
-| `--apply` | off | Extrae las entradas faltantes a `## Bucket: ready` con ids `FU-NNN` auto-numerados, añade los ids de los AILOGs a `fully_extracted_ailogs`, **recalcula los contadores**, y actualiza los registros v0 a v1 in place. Siembra el registro desde el template del framework cuando no existe. |
+| `--apply` | off | Extrae las entradas faltantes a `## Bucket: ready` con ids `FU-NNN` auto-numerados, añade los ids de los AILOGs a `fully_extracted_ailogs`, **recalcula los contadores**, y actualiza los registros v0 a v1 in place. Siembra el registro desde el template del framework cuando no existe. Desde cli-3.20.0 los contadores se recalculan **incluso cuando no hay nada que extraer** (#222 Finding 1). |
 | `--scan-all` | off | Barre cada AILOG del proyecto en lugar del rango de git. |
 | `--range <REV..REV>` | — | Rango de git explícito para el escaneo por defecto. |
 
-**Refinamiento anti-ruido** (issue #214 Signal 1): los bullets cuyo texto del AILOG lleva un marcador de cierre explícito — `closed in-Charter`, `fixed in batch N`, un commit hash entre backticks — se extraen como **`suspected-closed`** en lugar de `open`, así el trabajo ya resuelto deja de contaminar el bucket `ready` como ruido TBD. El operador confirma (→ `closed`) o reabre en el siguiente triage.
+**Refinamiento anti-ruido** (issue #214 Signal 1): los bullets cuyo texto del AILOG lleva un marcador de cierre explícito — `closed in-Charter`, `fixed in batch N`, un commit hash entre backticks, o *(cli-3.20.0+, #222 Finding 2)* un modismo born-resolved (un verbo de cierre `updated`/`corrected`/`remediated`/`resolved`/`fixed`/`closed` seguido de `in this PR` / `in this commit`, p.ej. `updated atomically in this PR`) — se extraen como **`suspected-closed`** en lugar de `open`, así el trabajo ya resuelto deja de contaminar el bucket `ready` como ruido TBD. El operador confirma (→ `closed`) o reabre en el siguiente triage.
 
 ```bash
 $ straymark followups drift --scan-all --apply
 ✓ Extracted 4 entries from 1 AILOG(s) into `## Bucket: ready`.
   ! 1 extracted as suspected-closed (closure marker in source AILOG) — confirm at the next triage.
   Counters recomputed: 3 open / 1 suspected-closed / 0 promoted (total 4).
+```
+
+#### `straymark followups recount [--path <dir>]` *(cli-3.20.0+)*
+
+Recalcula los contadores `total_*` propiedad del CLI desde los estados reales de las entradas y reescribe el frontmatter — sin escanear AILOGs, sin extraer y sin tocar entradas. La vía conforme al §13 para reconciliar contadores tras una **sesión de triage manual** (estados cambiados a mano según el ciclo de vida sancionado de Triage/Consumo, sin nada que extraer ni promover — #222 Finding 1, primer adopter externo). Idempotente: una segunda corrida reporta los contadores ya en sync. Actualiza registros v0 a v1 in situ, como todo comando de escritura.
+
+```bash
+$ straymark followups recount
+✓ Counters recomputed: 0 open / 0 suspected-closed / 2 promoted (total 2).
 ```
 
 #### `straymark followups promote <FU-NNN> [--title <title>] [--path <dir>]`
