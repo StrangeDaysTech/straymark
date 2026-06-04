@@ -11,7 +11,7 @@
 
 1. [安装](#安装)
 2. [版本管理](#版本管理)
-3. [命令](#命令) — init, update, remove, status, repair, validate, new, charter, compliance, metrics, analyze, audit, explore, about
+3. [命令](#命令) — init, update, remove, status, repair, validate, new, charter, followups, compliance, metrics, analyze, audit, explore, about
 4. [环境变量](#环境变量)
 5. [退出码](#退出码)
 
@@ -48,7 +48,7 @@ StrayMark 为每个组件使用**独立的版本标签**：
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
 | Framework | `fw-` | `fw-4.21.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.18.0` | `straymark` 二进制文件 |
+| CLI | `cli-` | `cli-3.19.0` | `straymark` 二进制文件 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
 
@@ -726,6 +726,70 @@ $ straymark charter audit CHARTER-05 --finalize
 > **为什么仅编排？** 实现 3 个 HTTP 客户端（OpenAI / Google / Anthropic）需要 1-2 周 + 当 API 变化时的永久维护。Phase 3 v0 是实验性的 — CLI 的价值是 canon（prompt 形状 + output schema + 与遥测的集成），而非 API 调用本身。当 adopter 报告真实需求时，v1 可能加入 HTTP 客户端；在此之前，人在环模式与激发 Phase 3 的 Sentinel 实证 `/plan-audit` 模式相符。
 
 > **Skill 替代方案 *(fw-4.9.0+)*。** 当与 AI 助手在循环中协作时（Claude Code、Gemini Code、Cursor 等），skills `/straymark-audit-prompt CHARTER-ID` 和 `/straymark-audit-review CHARTER-ID` 封装此命令并在对话中内联展示 prompts。Skills 还处理校准器步骤（驱动对话的 Agent 运行校准器）并触发 `--finalize --merge-into`，使得 `external_audit:` 数组直接追加到遥测中无需手动复制粘贴。详见下方的 [Skills](#skills) 章节。CLI 仍是唯一真相来源 — skills 仅添加 UX-inline。
+
+---
+
+### `straymark followups <subcommand>` *(cli-3.19.0+)*
+
+管理**后续事项积压注册表**（`.straymark/follow-ups-backlog.md`）—— 这是跨 AILOG 聚合 `§Follow-ups` 与 `R<N> (new, not in Charter)` 条目的一等产物。Schema：`.straymark/schemas/follow-ups-backlog.schema.v1.json`（实验性 v1）。约定：`FOLLOW-UPS-BACKLOG-PATTERN.md` 与 `STRAYMARK.md §16`；随附的代理指令见 `AGENT-RULES.md §13`。
+
+解析是**宽容的**：v0 注册表（fw-4.21.0 之前）可被无误读取；首个写入命令（`drift --apply` 或 `promote`）会就地、非破坏性地将其升级为 v1。frontmatter 的 `total_*` 计数器由 **CLI 拥有** —— 每次写入时重新计算；切勿手工编辑。
+
+- `straymark followups list` — 枚举条目 *(cli-3.19.0+)*
+- `straymark followups status` — 注册表概览 / 条目详情 *(cli-3.19.0+)*
+- `straymark followups drift` — 将注册表与 AILOG 同步（已弃用的 adopter 侧 `check-followups-drift.sh` 的原生替代）*(cli-3.19.0+)*
+- `straymark followups promote` — 将条目提升为 TDE 文档 *(cli-3.19.0+)*
+
+#### `straymark followups list [--bucket <name>] [--status <s>] [--severity <s>] [--label <tag>] [path]`
+
+条目表格：FU id、status、severity、bucket、destination、description。解析告警（格式错误的 `### FU-` 标题）输出到 stderr 而不会使命令失败。
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--bucket <name>` | — | 按 bucket 过滤：`ready`、`time-triggered`、`charter-triggered`、`phase-blocked`、`operational` |
+| `--status <s>` | — | 按 status 过滤：`open`、`in-progress`、`suspected-closed`、`closed`、`superseded`、`promoted` |
+| `--severity <s>` | — | 按 severity 过滤：`normal`、`blocking` |
+| `--label <tag>` | — | 按 label 过滤（对单个 tag 的大小写不敏感精确匹配） |
+
+```bash
+$ straymark followups list --severity blocking
+  FU      STATUS  SEV       BUCKET  DEST          DESCRIPTION
+  FU-010  open    blocking  ready   mini-charter  Harden staging probe
+```
+
+#### `straymark followups status [FU-NNN] [--path <dir>]`
+
+不带 id：注册表概览 —— 计数器从实际条目状态**即时重新计算**（即使文件 frontmatter 已陈旧也可信；分歧会被标记）、按 bucket 的 open 明细、blocking 与 suspected-closed 告警、咨询性 schema 校验。带 id：该条目的完整字段详情。
+
+#### `straymark followups drift [--apply] [--scan-all] [--range <REV..REV>] [--path <dir>]`
+
+检测其后续事项内容尚未提取到注册表的 AILOG。粒度为**按 AILOG**（frontmatter 的 `fully_extracted_ailogs` 列表）—— 经实证验证的设计选择（在参考 adopter 的 76 个 AILOG 中 0 误报）。
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| *(default)* | — | 扫描在 `origin/main..HEAD` 中变更的 AILOG（回退到 `origin/master..HEAD`，再回退到带告警的 `HEAD~1..HEAD`）。有漂移时告警并 **exit 1**。 |
+| `--apply` | off | 将缺失的条目提取到 `## Bucket: ready`，使用自动编号的 `FU-NNN` id，把 AILOG id 追加到 `fully_extracted_ailogs`，**重新计算计数器**，并就地把 v0 注册表升级为 v1。注册表不存在时从框架模板播种。 |
+| `--scan-all` | off | 扫描项目中的每一个 AILOG，而非 git 范围。 |
+| `--range <REV..REV>` | — | 默认扫描的显式 git 范围。 |
+
+**抗噪声精炼**（issue #214 Signal 1）：其 AILOG 文本带有显式闭合标记的条目 —— `closed in-Charter`、`fixed in batch N`、反引号包裹的 commit hash —— 会被提取为 **`suspected-closed`** 而非 `open`，从而避免已解决的工作以 TBD 噪声污染 `ready` bucket。操作员在下次分诊时确认（→ `closed`）或重开。
+
+```bash
+$ straymark followups drift --scan-all --apply
+✓ Extracted 4 entries from 1 AILOG(s) into `## Bucket: ready`.
+  ! 1 extracted as suspected-closed (closure marker in source AILOG) — confirm at the next triage.
+  Counters recomputed: 3 open / 1 suspected-closed / 0 promoted (total 4).
+```
+
+#### `straymark followups promote <FU-NNN> [--title <title>] [--path <dir>]`
+
+自动化 FU → TDE 的提升（`FOLLOW-UPS-BACKLOG-PATTERN.md` §Promotion to TDE）：从框架模板创建带 `promoted_from_followup: FU-NNN` 溯源的 TDE 文档，将条目翻转为 `Status: promoted` 并使 `Destination`/`Promoted to` 指向该 TDE id，再重新计算计数器。非交互式（对 agent 友好）；除非 `--title` 覆盖，否则 FU 描述将成为 TDE 标题。优先级排序与分配仍由人工决定（`AGENT-RULES.md §3`）。
+
+```bash
+$ straymark followups promote FU-010
+✓ FU-010 promoted → TDE-2026-06-04-001
+  TDE created: .straymark/06-evolution/technical-debt/TDE-2026-06-04-001-harden-staging-probe.md
+```
 
 ---
 

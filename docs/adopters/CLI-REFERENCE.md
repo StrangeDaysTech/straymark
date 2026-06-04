@@ -11,7 +11,7 @@
 
 1. [Installation](#installation)
 2. [Versioning](#versioning)
-3. [Commands](#commands) — init, update, remove, status, repair, validate, new, charter, compliance, metrics, analyze, audit, explore, about
+3. [Commands](#commands) — init, update, remove, status, repair, validate, new, charter, followups, compliance, metrics, analyze, audit, explore, about
 4. [Environment Variables](#environment-variables)
 5. [Exit Codes](#exit-codes)
 
@@ -48,7 +48,7 @@ StrayMark uses **independent version tags** for each component:
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
 | Framework | `fw-` | `fw-4.21.0` | Templates (12 types), governance docs, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.18.0` | The `straymark` binary |
+| CLI | `cli-` | `cli-3.19.0` | The `straymark` binary |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
 
@@ -880,6 +880,70 @@ $ straymark charter amend CHARTER-18 \
 
   Next: review the new AILOG, edit it with concrete details, then commit
   on the original execute branch (do NOT branch off main).
+```
+
+---
+
+### `straymark followups <subcommand>` *(cli-3.19.0+)*
+
+Manage the **follow-ups backlog registry** (`.straymark/follow-ups-backlog.md`) — the first-class artifact that aggregates `§Follow-ups` and `R<N> (new, not in Charter)` entries across AILOGs. Schema: `.straymark/schemas/follow-ups-backlog.schema.v1.json` (experimental v1). Convention: `FOLLOW-UPS-BACKLOG-PATTERN.md` and `STRAYMARK.md §16`; shipped agent directives in `AGENT-RULES.md §13`.
+
+Parsing is **lenient**: v0 registries (pre-fw-4.21.0) are read without errors; the first write command (`drift --apply` or `promote`) upgrades them to v1 in place, non-destructively. Frontmatter `total_*` counters are **CLI-owned** — recomputed on every write; never edit them by hand.
+
+- `straymark followups list` — enumerate entries *(cli-3.19.0+)*
+- `straymark followups status` — registry pulse / entry detail *(cli-3.19.0+)*
+- `straymark followups drift` — sync the registry with AILOGs (native replacement for the deprecated adopter-side `check-followups-drift.sh`) *(cli-3.19.0+)*
+- `straymark followups promote` — elevate an entry to a TDE document *(cli-3.19.0+)*
+
+#### `straymark followups list [--bucket <name>] [--status <s>] [--severity <s>] [--label <tag>] [path]`
+
+Table of entries: FU id, status, severity, bucket, destination, description. Parse warnings (malformed `### FU-` headings) go to stderr without failing the command.
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--bucket <name>` | — | Filter by bucket: `ready`, `time-triggered`, `charter-triggered`, `phase-blocked`, `operational` |
+| `--status <s>` | — | Filter by status: `open`, `in-progress`, `suspected-closed`, `closed`, `superseded`, `promoted` |
+| `--severity <s>` | — | Filter by severity: `normal`, `blocking` |
+| `--label <tag>` | — | Filter by label (case-insensitive exact match on one tag) |
+
+```bash
+$ straymark followups list --severity blocking
+  FU      STATUS  SEV       BUCKET  DEST          DESCRIPTION
+  FU-010  open    blocking  ready   mini-charter  Harden staging probe
+```
+
+#### `straymark followups status [FU-NNN] [--path <dir>]`
+
+Without an id: the registry pulse — counters **recomputed on the fly** from actual entry statuses (trustworthy even when the file's frontmatter is stale; divergence is flagged), per-bucket open breakdown, blocking and suspected-closed alerts, advisory schema validation. With an id: the entry's full field detail.
+
+#### `straymark followups drift [--apply] [--scan-all] [--range <REV..REV>] [--path <dir>]`
+
+Detect AILOGs whose follow-up content is not yet extracted into the registry. Granularity is **per-AILOG** (the `fully_extracted_ailogs` frontmatter list) — the empirically validated design choice (0 false positives across 76 AILOGs in the reference adopter).
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| *(default)* | — | Scan AILOGs changed in `origin/main..HEAD` (fallback `origin/master..HEAD`, then `HEAD~1..HEAD` with a warning). Warn + **exit 1** on drift. |
+| `--apply` | off | Extract the missing entries into `## Bucket: ready` with auto-numbered `FU-NNN` ids, append the AILOG ids to `fully_extracted_ailogs`, **recompute the counters**, and upgrade v0 registries to v1 in place. Seeds the registry from the framework template when absent. |
+| `--scan-all` | off | Sweep every AILOG in the project instead of the git range. |
+| `--range <REV..REV>` | — | Explicit git range for the default scan. |
+
+**Anti-noise refinement** (issue #214 Signal 1): bullets whose AILOG text carries an explicit closure marker — `closed in-Charter`, `fixed in batch N`, a backtick-wrapped commit hash — are extracted as **`suspected-closed`** instead of `open`, so already-resolved work stops polluting the `ready` bucket as TBD noise. The operator confirms (→ `closed`) or reopens at the next triage.
+
+```bash
+$ straymark followups drift --scan-all --apply
+✓ Extracted 4 entries from 1 AILOG(s) into `## Bucket: ready`.
+  ! 1 extracted as suspected-closed (closure marker in source AILOG) — confirm at the next triage.
+  Counters recomputed: 3 open / 1 suspected-closed / 0 promoted (total 4).
+```
+
+#### `straymark followups promote <FU-NNN> [--title <title>] [--path <dir>]`
+
+Automate the FU → TDE elevation (`FOLLOW-UPS-BACKLOG-PATTERN.md` §Promotion to TDE): creates the TDE document from the framework template with `promoted_from_followup: FU-NNN` traceability, flips the entry to `Status: promoted` with `Destination`/`Promoted to` pointing at the TDE id, and recomputes the counters. Non-interactive (agent-friendly); the FU description becomes the TDE title unless `--title` overrides it. Prioritization and assignment stay human (`AGENT-RULES.md §3`).
+
+```bash
+$ straymark followups promote FU-010
+✓ FU-010 promoted → TDE-2026-06-04-001
+  TDE created: .straymark/06-evolution/technical-debt/TDE-2026-06-04-001-harden-staging-probe.md
 ```
 
 ---

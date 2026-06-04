@@ -228,6 +228,25 @@ impl DocIndex {
             });
         }
 
+        // Synthetic "Follow-ups" group (cli-3.19.0, ADR-2026-06-03-001).
+        // The registry is one file, but its FU-NNN entries are the units the
+        // operator navigates — so each entry becomes a DocEntry under a
+        // per-bucket subgroup. Selecting any entry opens the registry file.
+        // Added only when the registry exists; bucket names are canonical
+        // English vocabulary (machine-parsed), so they are not localized.
+        if let Some((registry_entry, bucket_subgroups, n_entries)) =
+            scan_followups(project_root, &mut relations)
+        {
+            total_docs += 1 + n_entries;
+            groups.push(DocGroup {
+                name: "_followups".to_string(),
+                label: t("Follow-ups", language).to_string(),
+                path: crate::followups::registry_path(project_root),
+                subgroups: bucket_subgroups,
+                files: vec![registry_entry],
+            });
+        }
+
         Self {
             groups,
             relations,
@@ -576,6 +595,70 @@ fn scan_charters(project_root: &Path, relations: &mut RelationIndex) -> Vec<DocE
         entries.push(entry);
     }
     entries
+}
+
+/// Build the synthetic Follow-ups group content: the registry file itself as
+/// a root entry plus one `DocSubgroup` per non-empty bucket, each holding one
+/// `DocEntry` per FU. Every entry's path points at the registry file (entries
+/// are blocks, not files). Returns `None` when the registry does not exist or
+/// cannot be parsed — the TUI shows no empty stub, mirroring `_charters`.
+fn scan_followups(
+    project_root: &Path,
+    relations: &mut RelationIndex,
+) -> Option<(DocEntry, Vec<DocSubgroup>, usize)> {
+    let registry_path = crate::followups::registry_path(project_root);
+    if !registry_path.exists() {
+        return None;
+    }
+    let registry = crate::followups::parse_registry(&registry_path).ok()?;
+
+    let registry_entry = DocEntry {
+        filename: "follow-ups-backlog.md".to_string(),
+        path: registry_path.clone(),
+        title: "Follow-ups Backlog (registry)".to_string(),
+        id: String::new(),
+        doc_type: "FU".to_string(),
+        tags: Vec::new(),
+        created: registry.frontmatter.last_scan.clone().unwrap_or_default(),
+        has_frontmatter: true,
+    };
+
+    let mut subgroups = Vec::new();
+    let mut n_entries = 0usize;
+    for section in registry.sections.iter().filter(|s| s.is_bucket) {
+        if section.entries.is_empty() {
+            continue;
+        }
+        let files: Vec<DocEntry> = section
+            .entries
+            .iter()
+            .map(|e| {
+                relations
+                    .id_to_path
+                    .insert(e.fu_id.clone(), registry_path.clone());
+                DocEntry {
+                    filename: "follow-ups-backlog.md".to_string(),
+                    path: registry_path.clone(),
+                    title: format!("{} — {}", e.fu_id, e.description),
+                    id: e.fu_id.clone(),
+                    doc_type: "FU".to_string(),
+                    tags: e.labels.clone(),
+                    created: String::new(),
+                    has_frontmatter: true,
+                }
+            })
+            .collect();
+        n_entries += files.len();
+        subgroups.push(DocSubgroup {
+            name: section.name.clone(),
+            label: section.name.clone(),
+            path: registry_path.clone(),
+            files,
+            user_dirs: Vec::new(),
+        });
+    }
+
+    Some((registry_entry, subgroups, n_entries))
 }
 
 fn quick_scan_frontmatter(path: &Path, relations: &mut RelationIndex) -> ScannedMeta {

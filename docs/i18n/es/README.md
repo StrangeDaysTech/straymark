@@ -143,6 +143,7 @@ Salvaguardas incorporadas que aseguran que los humanos mantengan el control:
 Comandos integrados que convierten la disciplina en feedback accionable:
 
 - **`straymark charter <new|list|status|close|drift|batch-complete|audit|refresh-suggest|amend>`** — Unidades acotadas declaradas ex-ante, auditadas ex-post. `close` registra telemetría; `drift` detecta drift archivos-vs-commits con supresión AILOG-aware y (cli-3.13.0+) hace gate sobre entradas `### Batch N (pending)` en `## Batch Ledger` del AILOG; `batch-complete` (cli-3.13.0+) marca un batch como completado en la ledger para Charters multi-batch (3+ lotes o >1 día); `audit` orquesta revisión externa multi-modelo (flujo de 3 pasos prepare/calibrate/finalize, orchestration-only — sin invocación de APIs de LLM); `refresh-suggest` (cli-3.14.0+) imprime una recomendación heurística para un refresh SpecKit pre-declare cuando la media móvil de `r_n_plus_one_emergent_count` de un módulo multi-Charter supera un umbral; `amend` (cli-3.14.0+) hace scaffolding de una enmienda post-close Batch N.4 (remediación dirigida por auditoría) sobre la misma rama de execute sin abrir un Charter nuevo. Para flujos IDE-driven, las skills inline `/straymark-audit-prompt` y `/straymark-audit-review` envuelven al CLI para mostrar prompts en la conversación y mergear findings en la telemetría.
+- **`straymark followups <list|status|drift|promote>`** *(cli-3.19.0+)* — Registro de backlog de follow-ups de primera clase (`.straymark/follow-ups-backlog.md`, schema v1 experimental): `drift --apply` extrae las entradas `§Follow-ups` / `R<N> (new)` de los AILOGs por-AILOG (los bullets con marcador de cierre aterrizan como `suspected-closed`), los contadores son propiedad del CLI y se recalculan en cada escritura, y `promote` eleva las entradas a documentos TDE con trazabilidad completa. Ver `STRAYMARK.md §16` y `FOLLOW-UPS-BACKLOG-PATTERN.md`.
 - **`straymark approve <doc-id>`** — Registra una aprobación humana formal (escribe `reviewed_by` / `reviewed_at` / `review_outcome` y la sección body `## Approval` en una sola edición; cierra el gap canonizado en DOCUMENTATION-POLICY §3.5)
 - **`straymark validate`** — 25+ reglas de validación para corrección documental (12 específicas de China son scope-aware); `--include-charters` extiende a `.straymark/charters/`; `--check-pending-reviews` lista el backlog de aprobaciones (warn-only)
 - **`straymark metrics`** — KPIs de gobernanza, tasas de revisión, distribución de riesgo, tendencias
@@ -240,7 +241,7 @@ StrayMark usa tags de versión independientes para cada componente:
 | Componente | Prefijo de tag | Ejemplo | Incluye |
 |------------|---------------|---------|---------|
 | Framework | `fw-` | `fw-4.21.0` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
-| CLI | `cli-` | `cli-3.18.0` | El binario `straymark` |
+| CLI | `cli-` | `cli-3.19.0` | El binario `straymark` |
 
 Verifica las versiones instaladas con `straymark status` o `straymark about`.
 
@@ -257,6 +258,7 @@ Verifica las versiones instaladas con `straymark status` o `straymark about`.
 | `straymark repair [path]` | Restaurar directorios y archivos del framework faltantes |
 | `straymark validate [path]` | Validar documentos por cumplimiento y corrección (use `--include-charters` para Charters, `--check-pending-reviews` para el backlog de aprobaciones) |
 | `straymark charter <subcomando>` | Gestionar Charters: `new`, `list`, `status`, `close` (registra telemetría), `drift` (drift archivos-vs-commit con AILOG-awareness) |
+| `straymark followups <subcomando>` *(cli-3.19.0+)* | Gestiona el registro del backlog de follow-ups: `list` (entradas filtrables), `status` (pulso con contadores propiedad del CLI recalculados al vuelo), `drift` (detecta/extrae AILOGs no procesados — reemplazo nativo del script bash v0, con extracción anti-ruido `suspected-closed`), `promote` (FU → TDE con trazabilidad `promoted_from_followup`) |
 | `straymark approve <doc-id>` | Registra una aprobación humana formal en un documento `review_required: true` (frontmatter + sección body canónica) |
 | `straymark compliance [path]` | Verificar cumplimiento regulatorio (EU AI Act, ISO 42001, NIST) |
 | `straymark metrics [path]` | Mostrar métricas de gobernanza y estadísticas |

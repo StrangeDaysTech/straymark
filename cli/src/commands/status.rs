@@ -231,6 +231,12 @@ pub fn run(path: &str) -> Result<()> {
     let charter_counts = count_charters(&target);
     print_charters_block(&charter_counts);
 
+    // ── Follow-ups ──
+    // The follow-ups backlog registry (first-class since fw-4.21.0 /
+    // cli-3.19.0). Counts are recomputed from actual entry statuses —
+    // never read from the (possibly stale) frontmatter counters.
+    print_followups_block(&target);
+
     // ── Hints ──
     if total_missing > 0 {
         println!(
@@ -413,6 +419,78 @@ fn print_charters_block(c: &CharterCounts) {
             "!".yellow().bold(),
             c.unparseable,
             if c.unparseable == 1 { "" } else { "s" },
+        );
+    }
+    println!();
+}
+
+fn print_followups_block(project_root: &Path) {
+    println!("  {}", "Follow-ups".bold());
+    let registry_path = crate::followups::registry_path(project_root);
+    if !registry_path.exists() {
+        println!(
+            "  {} {}",
+            "·".dimmed(),
+            "No follow-ups registry yet — adopt the pattern at ~20+ AILOGs (see STRAYMARK.md §16).".dimmed(),
+        );
+        println!();
+        return;
+    }
+    let registry = match crate::followups::parse_registry(&registry_path) {
+        Ok(r) => r,
+        Err(e) => {
+            println!("  {} registry unreadable: {}", "!".yellow().bold(), e);
+            println!();
+            return;
+        }
+    };
+    let c = crate::followups::compute_counters(&registry);
+
+    let rows: Vec<(&str, u32, colored::Color)> = vec![
+        ("open", c.open, colored::Color::White),
+        ("in-progress", c.in_progress, colored::Color::Yellow),
+        ("suspected-closed", c.suspected_closed, colored::Color::Magenta),
+        ("closed + superseded", c.closed_cumulative, colored::Color::Green),
+        ("promoted", c.promoted, colored::Color::Cyan),
+    ];
+    let label_w = rows
+        .iter()
+        .map(|(l, _, _)| visual_width(l))
+        .max()
+        .unwrap_or(11);
+    let count_w = 5;
+
+    println!();
+    println!(
+        "  {} {} {}",
+        pad_right_visual("Status", label_w).dimmed(),
+        "│".dimmed(),
+        pad_right_visual("Count", count_w).dimmed(),
+    );
+    println!(
+        "  {}",
+        format!("{}─┼─{}", "─".repeat(label_w), "─".repeat(count_w)).dimmed()
+    );
+    for (label, count, color) in &rows {
+        let count_str = format!("{count:>count_w$}");
+        let padded = pad_right_visual(label, label_w);
+        if *count > 0 {
+            println!("  {} │ {}", padded, count_str.color(*color).bold());
+        } else {
+            println!("  {} │ {}", padded.dimmed(), count_str.dimmed());
+        }
+    }
+    println!(
+        "  {} │ {}",
+        pad_right_visual("TOTAL", label_w).bold(),
+        format!("{:>count_w$}", c.total).cyan().bold(),
+    );
+    if c.blocking_open > 0 {
+        println!(
+            "  {} {} open blocking entr{} — `straymark followups list --severity blocking`.",
+            "!".red().bold(),
+            c.blocking_open,
+            if c.blocking_open == 1 { "y" } else { "ies" },
         );
     }
     println!();

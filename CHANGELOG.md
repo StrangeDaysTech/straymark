@@ -7,6 +7,30 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.19.0 — `straymark followups` namespace (companion to fw-4.21.0)
+
+Ships the native CLI surface for the follow-ups backlog registry crystallized in fw-4.21.0 ([`ADR-2026-06-03-001`](docs/decisions/ADR-2026-06-03-followups-first-class.md), driven by [#214](https://github.com/StrangeDaysTech/straymark/issues/214)). The registry stops being invisible to tooling: it gains a CLI namespace, a synthetic group in `explore`, and a block in `status`. Collapses Tiers 2 and 4 of [#135](https://github.com/StrangeDaysTech/straymark/issues/135) into one native implementation; Tier 3 (`charter close` soft-integration) remains gated.
+
+### Added (CLI)
+
+- **`straymark followups list [--bucket] [--status] [--severity] [--label]`** *(new subcommand group)* — filterable table of registry entries (FU id, status, severity, bucket, destination, description). Malformed `### FU-` headings warn without failing.
+- **`straymark followups status [FU-NNN]`** — registry pulse with counters **recomputed on the fly** from actual entry statuses (trustworthy even when the file frontmatter is stale — divergence is flagged), per-bucket breakdown, blocking/suspected-closed alerts, and advisory schema validation against `follow-ups-backlog.schema.v1.json`. With an id: entry field detail.
+- **`straymark followups drift [--apply] [--scan-all] [--range]`** — native replacement for the deprecated adopter-side `check-followups-drift.sh` (~296 lines of bash retired). Per-AILOG granularity via `fully_extracted_ailogs` (0 false positives across 76 AILOGs in the reference adopter). `--apply` extracts into `## Bucket: ready`, registers the AILOG, **recomputes the CLI-owned counters** (#214 Signal 2) and upgrades v0 registries to v1 in place — non-destructively (unknown frontmatter fields survive; writes are surgical text edits, never a re-serialization). **Anti-noise refinement** (#214 Signal 1): bullets carrying a closure marker (`closed in-Charter`, `fixed in batch N`, a backtick-wrapped commit hash) land as **`suspected-closed`** instead of `ready`/TBD noise — across both documented occurrences that noise was 20–75% per batch. Seeds the registry from the framework template on first `--apply`.
+- **`straymark followups promote FU-NNN [--title]`** — automates the FU → TDE elevation: creates the TDE from the framework template with `promoted_from_followup: FU-NNN`, flips the entry to `promoted` with `Destination`/`Promoted to` → TDE id, recomputes counters. Non-interactive by design (agent-friendly); prioritization stays human per `AGENT-RULES.md §3`.
+- **`explore` TUI: synthetic "Follow-ups" group** — the registry file plus one sub-node per non-empty bucket, one entry per FU (badge `FU`; labels surface as tags; `FU-NNN` ids resolve as references). Appears only when the registry exists, mirroring `_charters`.
+- **`status`: Follow-ups block** — status breakdown (open / in-progress / suspected-closed / closed+superseded / promoted) recomputed from entry statuses, with a blocking-severity alert; one-line adoption hint when no registry exists.
+- **`cli/src/followups.rs`** — lenient registry parser (pure functions, no CLI deps; doc-tagged as the straymark-core move target for Loom M0) + **42 new tests** (25 unit, 17 integration) covering v0 lenient parsing, the v1 dimensions, closure-marker detection, counter recompute, idempotent upgrade, and the promote round-trip.
+
+### Changed (CLI)
+
+- `split_frontmatter` moved from `charter.rs` to `utils.rs` — one shared definition for the Charter and registry parsers.
+
+### Adopter guidance
+
+Run `straymark update` (CLI → `cli-3.19.0`, framework → `fw-4.21.0`). If you maintain a v0 registry: `straymark followups drift --apply` migrates it in one command; then delete the local bash script and point any pre-commit hook at the CLI. The `/straymark-followups` skill ships in a follow-up framework release.
+
+---
+
 ## Framework 4.21.0 — Follow-ups backlog becomes a first-class entity (schema v1)
 
 Promotes the follow-ups backlog from documented convention (v0, adopter-side bash) to **first-class framework entity**, following the lane Charter used: canonical schema, shipped agent directives, onboarding-level visibility. Driven by [#214](https://github.com/StrangeDaysTech/straymark/issues/214) (Sentinel post-stage triage at N=91 FUs — extractor noise ×2, silent counter drift, ad-hoc severity) and recorded in [`ADR-2026-06-03-001`](docs/decisions/ADR-2026-06-03-followups-first-class.md), which documents the design-principle #12 reframe: the structural evidence (91 FUs, schema already iterated under empirical pressure, 0 extraction false positives across 76 AILOGs, stable bucket vocabulary, internal Loom roadmap demand) justifies crystallizing as **v1 experimental**; hard stabilization stays gated on a second adopter. The native CLI surface (`straymark followups list/status/drift/promote`) ships in the companion release cli-3.19.0.
