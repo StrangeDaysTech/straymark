@@ -219,7 +219,9 @@ El costo de la granularidad per-AILOG: cuando se agrega un follow-up a un AILOG 
 
 ### Script bash legacy (deprecado)
 
-La implementación de referencia v0 (`scripts/check-followups-drift.sh`, ~296 líneas de bash POSIX en el repo del adopter Sentinel) está **deprecada a partir de cli-3.19.0**. Sigue funcionando para registries v0 pero ya no se mantiene y carece del refinamiento anti-ruido y del recálculo de contadores. Ruta de migración: borra el script, ejecuta `straymark followups drift --apply` una vez (esto también actualiza el registry a v1), y actualiza cualquier pre-commit hook para que llame al CLI en su lugar.
+La implementación de referencia v0 (`scripts/check-followups-drift.sh`, ~296 líneas de bash POSIX en el repo del adopter Sentinel) está **deprecada a partir de cli-3.19.0**. Sigue funcionando para registries v0 pero ya no se mantiene y carece del refinamiento anti-ruido y del recálculo de contadores. Ruta de migración: borra el script, ejecuta `straymark followups drift --scan-all --apply` una vez (esto también actualiza el registry a v1), y actualiza cualquier pre-commit hook para que llame al CLI en su lugar.
+
+**Corre ese primer barrido post-migración con `--scan-all` aunque el script reportara "in sync"**: el extractor bash era sensible al formato (exigía un heading `## Risk` y la forma exacta de bullet `- **R<N> (new`) y producía **falsos negativos silenciosos** ante variantes de formato — los AILOGs que escribían riesgos como párrafos planos nunca registraban como portadores de follow-ups. En la migración del adopter de referencia ([issue #225](https://github.com/StrangeDaysTech/straymark/issues/225)), el parser nativo leniente capturó **8 AILOGs / 29 entradas** que el script había reportado como "in sync" el día anterior. Los falsos negativos silenciosos en la detección de drift son exactamente el modo de falla que la herramienta existe para prevenir — por eso el script está deprecado en vez de mantenido.
 
 ---
 
@@ -307,4 +309,4 @@ Contribuido vía [issue #111](https://github.com/StrangeDaysTech/straymark/issue
 
 ---
 
-*StrayMark fw-4.23.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.23.1 | [Strange Days Tech](https://strangedays.tech)*

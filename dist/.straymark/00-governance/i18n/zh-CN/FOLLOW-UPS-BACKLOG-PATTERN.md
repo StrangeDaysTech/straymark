@@ -219,7 +219,9 @@ Per-AILOG 粒度的成本:当在 Charter 关闭后向已提取的 AILOG 添加 f
 
 ### 旧版 bash 脚本（已弃用）
 
-v0 参考实现（`scripts/check-followups-drift.sh`,Sentinel adopter repo 中约 296 行 POSIX bash）**自 cli-3.19.0 起已弃用**。它对 v0 注册表仍可工作,但不再维护,且缺少反噪声精化和计数器重新计算。迁移路径:删除该脚本,运行一次 `straymark followups drift --apply`(这同时将注册表升级到 v1),并更新任何 pre-commit hook 改为调用 CLI。
+v0 参考实现（`scripts/check-followups-drift.sh`,Sentinel adopter repo 中约 296 行 POSIX bash）**自 cli-3.19.0 起已弃用**。它对 v0 注册表仍可工作,但不再维护,且缺少反噪声精化和计数器重新计算。迁移路径:删除该脚本,运行一次 `straymark followups drift --scan-all --apply`(这同时将注册表升级到 v1),并更新任何 pre-commit hook 改为调用 CLI。
+
+**即使脚本报告"in sync",首次迁移后扫描也要带上 `--scan-all`**:bash 提取器对格式敏感（同时要求 `## Risk` 标题和精确的 `- **R<N> (new` bullet 形态）,对格式变体产生**静默假阴性** —— 以纯段落书写风险的 AILOG 根本不会被识别为含有 follow-up 内容。在参考 adopter 的迁移中（[issue #225](https://github.com/StrangeDaysTech/straymark/issues/225)）,原生宽容解析器捕获了脚本前一天还报告为"in sync"的 **8 个 AILOG / 29 个条目**。漂移检测上的静默假阴性正是该工具旨在防止的失败模式 —— 这也是脚本被弃用而非继续维护的原因。
 
 ---
 
@@ -307,4 +309,4 @@ straymark followups promote FU-NNN        # 自动化 FU → TDE 提升(见上�
 
 ---
 
-*StrayMark fw-4.23.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.23.1 | [Strange Days Tech](https://strangedays.tech)*

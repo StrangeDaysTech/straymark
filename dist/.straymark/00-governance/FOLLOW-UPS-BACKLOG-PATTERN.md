@@ -219,7 +219,9 @@ The cost of per-AILOG granularity: when a follow-up is added to an already-extra
 
 ### Legacy bash script (deprecated)
 
-The v0 reference implementation (`scripts/check-followups-drift.sh`, ~296 lines of POSIX bash in the Sentinel adopter's repo) is **deprecated as of cli-3.19.0**. It keeps working for v0 registries but is no longer maintained and lacks the anti-noise refinement and counter recompute. Migration path: delete the script, run `straymark followups drift --apply` once (this also upgrades the registry to v1), and update any pre-commit hook to call the CLI instead.
+The v0 reference implementation (`scripts/check-followups-drift.sh`, ~296 lines of POSIX bash in the Sentinel adopter's repo) is **deprecated as of cli-3.19.0**. It keeps working for v0 registries but is no longer maintained and lacks the anti-noise refinement and counter recompute. Migration path: delete the script, run `straymark followups drift --scan-all --apply` once (this also upgrades the registry to v1), and update any pre-commit hook to call the CLI instead.
+
+**Run that first post-migration sweep with `--scan-all` even if the script reported "in sync"**: the bash extractor was format-sensitive (it required both a `## Risk` heading and the exact `- **R<N> (new` bullet shape) and produced **silent false-negatives** on format variants — AILOGs writing risks as bare paragraphs never registered as having follow-up content at all. In the reference adopter's migration ([issue #225](https://github.com/StrangeDaysTech/straymark/issues/225)), the native lenient parser caught **8 AILOGs / 29 entries** that the script had reported as "in sync" the day before. Silent false-negatives on drift detection are the exact failure mode the tool exists to prevent — which is why the script is deprecated rather than maintained.
 
 ---
 
@@ -307,4 +309,4 @@ Contributed via [issue #111](https://github.com/StrangeDaysTech/straymark/issues
 
 ---
 
-*StrayMark fw-4.23.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.23.1 | [Strange Days Tech](https://strangedays.tech)*

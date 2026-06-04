@@ -47,7 +47,7 @@ StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.23.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| Framework | `fw-` | `fw-4.23.1` | Plantillas (12 tipos), docs de gobernanza, directivas |
 | CLI | `cli-` | `cli-3.20.0` | El binario `straymark` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
@@ -690,7 +690,7 @@ Los adopters pueden `git add` el directorio entero `.straymark/audits/` para un 
 
 Gestiona el **registro del backlog de follow-ups** (`.straymark/follow-ups-backlog.md`) — el artefacto de primera clase que agrega las entradas `§Follow-ups` y `R<N> (new, not in Charter)` a través de los AILOGs. Schema: `.straymark/schemas/follow-ups-backlog.schema.v1.json` (v1 experimental). Convención: `FOLLOW-UPS-BACKLOG-PATTERN.md` y `STRAYMARK.md §16`; directivas de agente distribuidas en `AGENT-RULES.md §13`.
 
-El parsing es **tolerante**: los registros v0 (pre-fw-4.21.0) se leen sin errores; el primer comando de escritura (`drift --apply` o `promote`) los actualiza a v1 in place, de forma no destructiva. Los contadores `total_*` del frontmatter son **propiedad del CLI** — se recalculan en cada escritura; nunca los edites a mano.
+El parsing es **tolerante**: los registros v0 (pre-fw-4.21.0) se leen sin errores; el primer comando de escritura (`drift --apply` — incluso sin nada que extraer, cli-3.20.0+ —, `recount` o `promote`) los actualiza a v1 in place, de forma no destructiva. Los contadores `total_*` del frontmatter son **propiedad del CLI** — se recalculan en cada escritura; nunca los edites a mano.
 
 - `straymark followups list` — enumera las entradas *(cli-3.19.0+)*
 - `straymark followups status` — pulso del registro / detalle de una entrada *(cli-3.19.0+)*
