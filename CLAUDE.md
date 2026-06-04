@@ -29,7 +29,7 @@ straymark/
 │   ├── .straymark/          # Templates, governance, config
 │   ├── STRAYMARK.md         # Unified governance rules
 │   └── dist-manifest.yml   # What gets installed
-├── docs/                   # Project documentation (EN + ES)
+├── docs/                   # Project documentation (EN + ES + zh-CN)
 ├── .github/workflows/      # CI/CD
 │   ├── release-cli.yml     # Build + release CLI binaries
 │   └── release-framework.yml
@@ -326,10 +326,11 @@ Configured in `docusaurus.config.ts` under `i18n`:
 ```ts
 i18n: {
   defaultLocale: 'en',
-  locales: ['en', 'es'],
+  locales: ['en', 'es', 'zh-CN'],
   localeConfigs: {
     en: {label: 'English'},
     es: {label: 'Español'},
+    'zh-CN': {label: '简体中文'},
   },
 }
 ```
