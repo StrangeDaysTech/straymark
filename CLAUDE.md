@@ -238,7 +238,8 @@ Users can now run `straymark update-framework` to get the new version.
 | `straymark analyze declared-vs-wired [path]` | Flag declared symbols (IPC/RPC proxy methods) with no implemented wiring counterpart — config-driven set-difference (POLISH-CHARTER-PATTERN sub-class 5) |
 | `straymark followups list [--bucket] [--status] [--severity] [--label]` | List follow-ups registry entries with filters |
 | `straymark followups status [FU-NNN]` | Registry pulse (counters recomputed on the fly) or entry detail |
-| `straymark followups drift [--apply] [--scan-all]` | Detect/extract AILOGs with unextracted follow-up content (native, anti-noise `suspected-closed`, recomputes CLI-owned counters, upgrades v0→v1) |
+| `straymark followups drift [--apply] [--scan-all]` | Detect/extract AILOGs with unextracted follow-up content (native, anti-noise `suspected-closed`, recomputes CLI-owned counters even with zero extractions, upgrades v0→v1) |
+| `straymark followups recount` | Recompute the CLI-owned counters after a manual-triage session (no AILOG scan, idempotent) |
 | `straymark followups promote FU-NNN` | Elevate an entry to a TDE document with `promoted_from_followup` traceability |
 | `straymark audit [path]` | Generate audit trail reports with timeline and traceability |
 | `straymark explore [path]` | Interactive TUI documentation browser |
