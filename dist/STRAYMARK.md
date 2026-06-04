@@ -474,8 +474,8 @@ Follow-ups originate not only from planning (ex-ante) but from **execution reali
 | Stage | What happens | CLI |
 |-------|--------------|-----|
 | **Extraction** | New AILOG with `§Follow-ups` / `R<N> (new)` content → entries auto-extracted into `## Bucket: ready` (or `suspected-closed` when the AILOG text marks them resolved in-Charter). | `straymark followups drift --apply` |
-| **Triage** | Operator reclassifies bucket/trigger/destination, fills `Severity`/`Labels`, confirms or reopens `suspected-closed` entries. Typically once per stage close (~1h per 4-8 Charters at reference-adopter scale). | (manual edit + `followups list`) |
-| **Consumption** | Entries feed Charter planning; when a Charter addresses an entry, mark `in-progress` → `closed` with provenance in `Notes`. | (manual edit) |
+| **Triage** | Operator reclassifies bucket/trigger/destination, fills `Severity`/`Labels`, confirms or reopens `suspected-closed` entries. Typically once per stage close (~1h per 4-8 Charters at reference-adopter scale). | (manual edit + `followups list`; then `followups recount` to reconcile the CLI-owned counters) |
+| **Consumption** | Entries feed Charter planning; when a Charter addresses an entry, mark `in-progress` → `closed` with provenance in `Notes`. | (manual edit + `followups recount`) |
 | **Promotion** | Entries meeting the transversal-debt criteria (AGENT-RULES.md §3) are elevated to a TDE document with full traceability. | `straymark followups promote FU-NNN` |
 
 ### How it relates to existing artifacts
@@ -490,6 +490,7 @@ Follow-ups originate not only from planning (ex-ante) but from **execution reali
 straymark followups list                  # enumerate entries (filters: --bucket, --status, --severity, --label)
 straymark followups status [FU-NNN]       # registry pulse (counters recomputed on the fly) / entry detail
 straymark followups drift [--apply|--scan-all]   # detect/extract AILOGs not yet in the registry
+straymark followups recount               # recompute the CLI-owned counters after a manual-triage session (cli-3.20.0+)
 straymark followups promote FU-NNN        # automate FU → TDE promotion
 ```
 

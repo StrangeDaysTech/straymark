@@ -391,6 +391,99 @@ fn drift_apply_seeds_registry_from_template_when_absent() {
     assert!(created.contains("### FU-001 — do the thing"));
 }
 
+#[test]
+fn drift_apply_recomputes_counters_with_zero_extractions() {
+    // #222 Finding 1 (second half): after a manual-triage session there is
+    // nothing left to extract, but --apply must still reconcile the
+    // CLI-owned counters instead of early-returning with a stale file.
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V0_REGISTRY); // claims total_open: 47, real count 2
+    write_ailog(
+        &straymark,
+        "AILOG-2026-04-11-001-first.md",
+        "# AILOG\n\n## Follow-ups\n\n- already extracted\n",
+    );
+
+    cmd()
+        .args(["followups", "drift", "--scan-all", "--apply", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("registry in sync"))
+        .stdout(predicate::str::contains("Counters recomputed: 2 open"));
+
+    let updated = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    assert!(updated.contains("total_open: 2"));
+    assert!(updated.contains("schema_version: v1"));
+}
+
+#[test]
+fn drift_apply_extracts_born_resolved_idiom_as_suspected_closed() {
+    // #222 Finding 2: the exact lnxdrive phrasing ("updated atomically in
+    // this PR") must land as suspected-closed, not open/TBD noise.
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+    write_ailog(
+        &straymark,
+        "AILOG-2026-06-04-001-drift.md",
+        "# AILOG\n\n## Drift\n\n- R1 (new, not in Charter): probe path normalization — Charter `## Files to modify` row updated atomically in this PR.\n",
+    );
+
+    cmd()
+        .args(["followups", "drift", "--scan-all", "--apply", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("suspected-closed"));
+
+    let updated = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    let idx = updated.find("probe path normalization").unwrap();
+    let block = &updated[idx..(idx + 400).min(updated.len())];
+    assert!(block.contains("- **Status**: suspected-closed"));
+}
+
+// ───────────────────────────── recount (#222 Finding 1) ─────────────────────────────
+
+#[test]
+fn recount_reconciles_counters_after_manual_triage_and_is_idempotent() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V0_REGISTRY); // claims total_open: 47, real count 2
+
+    cmd()
+        .args(["followups", "recount", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Counters recomputed: 2 open"))
+        .stdout(predicate::str::contains("upgraded to schema v1"));
+
+    let updated = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    assert!(updated.contains("total_open: 2"));
+    assert!(updated.contains("schema_version: v1"));
+    // Entries and body untouched — counters only.
+    assert!(updated.contains("### FU-001 — Wire the retry budget into the sync loop"));
+    assert!(updated.contains("### FU-002 — Extend E2E coverage to the write paths"));
+
+    // Second run: nothing to do.
+    cmd()
+        .args(["followups", "recount", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("already in sync"));
+}
+
+#[test]
+fn recount_errors_when_no_registry() {
+    let tmp = TempDir::new().unwrap();
+    scaffold(tmp.path());
+
+    cmd()
+        .args(["followups", "recount", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("No follow-ups registry"));
+}
+
 // ───────────────────────────── promote ─────────────────────────────
 
 #[test]

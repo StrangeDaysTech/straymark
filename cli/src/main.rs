@@ -339,6 +339,16 @@ enum FollowupsCommands {
         #[arg(long = "path", default_value = ".")]
         path: String,
     },
+    /// Recompute the CLI-owned frontmatter counters from actual entry
+    /// statuses, without scanning AILOGs. The §13-compliant way to reconcile
+    /// counters after a manual-triage session (statuses flipped by hand,
+    /// nothing left to extract or promote). Idempotent; upgrades v0
+    /// registries to v1 in place like every other write command.
+    Recount {
+        /// Project directory (default: current directory)
+        #[arg(long = "path", default_value = ".")]
+        path: String,
+    },
     /// Promote an entry to a TDE document (creates the TDE with
     /// promoted_from_followup traceability, marks the entry `promoted`,
     /// recomputes counters). Non-interactive; prioritization stays human.
@@ -834,6 +844,7 @@ fn main() {
                 range,
                 path,
             } => commands::followups::drift::run(&path, apply, scan_all, range.as_deref()),
+            FollowupsCommands::Recount { path } => commands::followups::recount::run(&path),
             FollowupsCommands::Promote { fu_id, title, path } => {
                 commands::followups::promote::run(&path, &fu_id, title.as_deref())
             }

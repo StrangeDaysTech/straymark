@@ -55,11 +55,13 @@ Review the registry entries the just-closed Charter resolved:
 
 ```bash
 straymark followups list --status suspected-closed   # entries awaiting confirm-or-reopen
+straymark followups recount                          # reconcile the CLI-owned counters after manual status flips (cli-3.20.0+)
 straymark followups promote FU-NNN                   # FU → TDE elevation (operator-approved)
 ```
 
 - Mark resolved entries `closed` (with the closing Charter id in `Notes`) or `superseded`.
 - Confirm or reopen any `suspected-closed` entries that the Charter's AILOGs produced.
+- After flipping statuses by hand, run `straymark followups recount` so the CLI-owned counters ride the same commit as the triage.
 - For un-resolved entries that meet the TDE criteria of `AGENT-RULES.md §3` (heritage, transversal, dedicated Charter, human prioritization), **propose** promotion via `straymark followups promote FU-NNN` — promotion itself is operator-approved, per the autonomy limits of §3.
 
 ### 4. Report result
@@ -76,7 +78,7 @@ StrayMark: registry synced — commit it together with the AILOG.
 
 ## What this skill does NOT do
 
-- **It does not edit the frontmatter counters** (`total_open`, `total_promoted`, `total_suspected_closed`, …). They are CLI-owned: every write command recomputes them. Hand-editing them is a §13 violation.
+- **It does not edit the frontmatter counters** (`total_open`, `total_promoted`, `total_suspected_closed`, …). They are CLI-owned: `straymark followups recount` (or any write command) recomputes them. Hand-editing them is a §13 violation.
 - **It does not promote without the operator.** `straymark followups promote` is proposed, never auto-run — prioritization and assignment stay human (`AGENT-RULES.md §3`).
 - **It does not delete `suspected-closed` entries.** The operator confirms (→ `closed`) or reopens them at the next triage.
 - **It does not re-scan AILOGs to answer "what's pending?"** when the registry exists — the registry is canonical; `drift` tells you when it is not trustworthy.

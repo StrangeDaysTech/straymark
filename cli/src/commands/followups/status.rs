@@ -181,12 +181,12 @@ fn print_pulse(registry: &Registry) {
         println!();
     }
 
-    // Flag stale frontmatter counters (informational — the next write fixes them).
+    // Flag stale frontmatter counters (informational — `recount` fixes them).
     let declared_open = fm.total_open;
     if let Some(declared) = declared_open {
         if declared != counters.open {
             println!(
-                "  {} frontmatter says total_open: {} but the real count is {} — the next `followups drift --apply` or `promote` recomputes it.",
+                "  {} frontmatter says total_open: {} but the real count is {} — run `straymark followups recount` to reconcile (any write command also recomputes).",
                 "!".yellow().bold(),
                 declared,
                 counters.open

@@ -127,7 +127,7 @@ Each entry inside a bucket follows this shape (v1 fields marked; all of them opt
 
 - `open` — pending, not yet acted on.
 - `in-progress` — a Charter has been declared or is executing that addresses this entry.
-- `suspected-closed` *(new in v1)* — auto-extracted by `drift --apply` from an AILOG whose text carries an explicit closure marker (`closed in-Charter`, `fixed in batch N`, a commit hash). The operator confirms (→ `closed`) or reopens (→ `open`) at the next triage. See "Drift detection" below.
+- `suspected-closed` *(new in v1)* — auto-extracted by `drift --apply` from an AILOG whose text carries an explicit closure marker (`closed in-Charter`, `fixed in batch N`, a commit hash, or a born-resolved idiom like `updated atomically in this PR` — see "Canonical closure-marker idioms" below). The operator confirms (→ `closed`) or reopens (→ `open`) at the next triage. See "Drift detection" below.
 - `closed` — entry resolved (Charter merged, operational task done, time elapsed and reviewed).
 - `superseded` — addressed by other work that did not reference this entry directly.
 - `promoted` — the entry was elevated to a TDE document because it met the transversal-debt criteria (see "Promotion to TDE" below). The `Promoted to:` field carries the TDE id.
@@ -196,6 +196,21 @@ straymark followups drift --scan-all   # periodic full sweep over every AILOG
 4. **Recomputes all `total_*` counters** from actual entry statuses (Signal 2).
 5. If the registry is `schema_version: v0`, upgrades it to `v1` in place — non-destructively and idempotently (all v1 fields are optional; nothing is rewritten except the version marker and the counters).
 
+Since cli-3.20.0, `--apply` recomputes the counters **even when there is nothing to extract** — so a pre-commit `drift --apply` also reconciles counters left stale by a manual-triage session (first external adopter feedback, issue #222 Finding 1).
+
+### Canonical closure-marker idioms
+
+The anti-noise refinement recognizes a fixed vocabulary, case-insensitively. AILOG authors should converge on these phrasings at write time so born-resolved entries land as `suspected-closed` instead of TBD noise:
+
+| Idiom family | Examples |
+|---|---|
+| In-Charter closure | `closed in-Charter`, `closed in Charter`, `resolved in-Charter`, `resolved in Charter` |
+| Batch fix | `fixed in batch 3` (requires the number) |
+| Commit reference | a backtick-wrapped commit hash: `` `ab12cd34ef` `` (7–40 hex chars, at least one digit) |
+| Born-resolved *(cli-3.20.0+, #222 Finding 2)* | a closure verb — `updated` / `corrected` / `remediated` / `resolved` / `fixed` / `closed` — followed by `in this PR` or `in this commit`, e.g. `Charter row updated atomically in this PR` |
+
+Phrasings outside this vocabulary (e.g. `done earlier`, `no longer relevant`) extract as `open`; the operator flips them at triage. When a new closure idiom recurs in your AILOGs, propose it upstream rather than hand-editing extractions.
+
 ### Per-AILOG vs per-bullet granularity
 
 Tracking is **per-AILOG**, not per-bullet. An AILOG is either fully extracted (its id is in `fully_extracted_ailogs` — trust the registry) or it is not (extract everything). Per-bullet matching would require fingerprinting (text hashing or fuzzy comparison), which produces false positives whenever a registry entry paraphrases the AILOG bullet — and curated entries always paraphrase. This design choice is empirically validated: **0 false positives across 76 AILOGs and ~10 apply runs** in the reference adopter.
@@ -216,6 +231,7 @@ straymark followups list --bucket ready --status open --severity blocking --labe
 straymark followups status                # registry pulse: counters (recomputed on the fly), per-bucket/severity breakdown
 straymark followups status FU-NNN         # detail view of one entry
 straymark followups drift [--apply|--scan-all]   # drift detection (see above)
+straymark followups recount               # recompute the CLI-owned counters after a manual-triage session (cli-3.20.0+)
 straymark followups promote FU-NNN        # automate FU → TDE promotion (see above)
 ```
 
@@ -229,7 +245,7 @@ Since fw-4.21.0 the agent directives **ship with the framework** in [`AGENT-RULE
 
 - **Session start**: glance at `.straymark/follow-ups-backlog.md` (or run `straymark followups status`) to know what is pending across the project.
 - **Pre-commit**: created or modified any AILOG with `## Follow-ups` or `R<N> (new, not in Charter)` entries? → run `straymark followups drift --apply` in the same commit.
-- **Post-Charter close**: review entries the Charter resolved; mark them `closed` (with the closing Charter id in `Notes`) or `superseded`; confirm or reopen any `suspected-closed` entries; promote un-resolved entries that meet the TDE criteria via `straymark followups promote`.
+- **Post-Charter close**: review entries the Charter resolved; mark them `closed` (with the closing Charter id in `Notes`) or `superseded`; confirm or reopen any `suspected-closed` entries; then run `straymark followups recount` so the CLI-owned counters ride the same commit as the triage; promote un-resolved entries that meet the TDE criteria via `straymark followups promote`.
 
 This makes the agent the registry's primary maintainer, the CLI the verification layer, and the operator the periodic reviewer (re-bucketing, confirming suspected-closed, pruning superseded, promoting to TDE when criteria apply).
 
@@ -291,4 +307,4 @@ Contributed via [issue #111](https://github.com/StrangeDaysTech/straymark/issues
 
 ---
 
-*StrayMark fw-4.22.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.23.0 | [Strange Days Tech](https://strangedays.tech)*

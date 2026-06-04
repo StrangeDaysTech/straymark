@@ -399,9 +399,10 @@ Review the registry entries the just-closed Charter resolved:
 
 - Mark them `closed` (with the closing Charter id in `Notes`) or `superseded`.
 - Confirm or reopen any `suspected-closed` entries that the Charter's AILOGs produced.
+- Then run `straymark followups recount` *(cli-3.20.0+)* so the CLI-owned counters ride the same commit as the triage.
 - For un-resolved entries that meet the TDE criteria of §3 (heritage, transversal, dedicated Charter, human prioritization), propose promotion via `straymark followups promote FU-NNN` — promotion itself is operator-approved, per the autonomy limits of §3.
 
-Counters in the registry frontmatter (`total_open`, …) are **CLI-owned**: never edit them by hand; every write command recomputes them.
+Counters in the registry frontmatter (`total_open`, …) are **CLI-owned**: never edit them by hand; `straymark followups recount` (or any write command) recomputes them.
 
 ---
 
@@ -411,4 +412,4 @@ When a project accumulates a high volume of AILOGs across multiple Charters and 
 
 ---
 
-*StrayMark fw-4.22.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.23.0 | [Strange Days Tech](https://strangedays.tech)*

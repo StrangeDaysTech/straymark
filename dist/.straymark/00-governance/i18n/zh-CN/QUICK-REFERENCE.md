@@ -76,7 +76,7 @@ follow-ups backlog 同样**不是**文档类型 —— 它是一个单文件注�
 | `Follow-ups registry` | `.straymark/follow-ups-backlog.md`（schema: `follow-ups-backlog.schema.v1.json`,实验性） | 代理通过 `followups drift --apply` 提取（pre-commit）;操作者拥有 triage 与提升批准 |
 
 ```bash
-straymark followups list / status / drift [--apply] / promote FU-NNN
+straymark followups list / status / drift [--apply] / recount / promote FU-NNN
 ```
 
 > 参见 `STRAYMARK.md` 第 16 节、`FOLLOW-UPS-BACKLOG-PATTERN.md` 及 AGENT-RULES.md §13,了解随框架发布的代理指令。
@@ -234,4 +234,4 @@ risk_level: low | medium | high | critical
 
 ---
 
-*StrayMark fw-4.22.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.23.0 | [Strange Days Tech](https://strangedays.tech)*

@@ -127,7 +127,7 @@ Cada entrada dentro de un bucket sigue esta forma (campos v1 marcados; todos opc
 
 - `open` — pendiente, sin acción aún.
 - `in-progress` — un Charter ha sido declarado o está en ejecución para atender esta entrada.
-- `suspected-closed` *(nuevo en v1)* — auto-extraído por `drift --apply` desde un AILOG cuyo texto carga un marcador de cierre explícito (`closed in-Charter`, `fixed in batch N`, un hash de commit). El operador confirma (→ `closed`) o reabre (→ `open`) en el siguiente triage. Ver "Detección de drift" abajo.
+- `suspected-closed` *(nuevo en v1)* — auto-extraído por `drift --apply` desde un AILOG cuyo texto carga un marcador de cierre explícito (`closed in-Charter`, `fixed in batch N`, un hash de commit, o un modismo born-resolved como `updated atomically in this PR` — ver "Modismos canónicos de marcador de cierre" abajo). El operador confirma (→ `closed`) o reabre (→ `open`) en el siguiente triage. Ver "Detección de drift" abajo.
 - `closed` — entrada resuelta (Charter mergeado, tarea operativa hecha, tiempo transcurrido y revisado).
 - `superseded` — atendida por otro trabajo que no referenció esta entrada directamente.
 - `promoted` — la entrada fue elevada a un documento TDE porque cumple los criterios de deuda transversal (ver "Promoción a TDE" abajo). El campo `Promoted to:` carga el id del TDE.
@@ -196,6 +196,21 @@ straymark followups drift --scan-all   # barrido completo periódico sobre cada 
 4. **Recalcula todos los contadores `total_*`** desde los estados reales de las entradas (Señal 2).
 5. Si el registry es `schema_version: v0`, lo actualiza a `v1` in situ — de forma no destructiva e idempotente (todos los campos v1 son opcionales; no se reescribe nada excepto el marcador de versión y los contadores).
 
+Desde cli-3.20.0, `--apply` recalcula los contadores **incluso cuando no hay nada que extraer** — así un `drift --apply` pre-commit también reconcilia contadores que una sesión de triage manual dejó obsoletos (feedback del primer adopter externo, issue #222 Finding 1).
+
+### Modismos canónicos de marcador de cierre
+
+El refinamiento anti-ruido reconoce un vocabulario fijo, sin distinguir mayúsculas. Los autores de AILOGs deben converger en estas fórmulas al escribir, para que las entradas born-resolved aterricen como `suspected-closed` en vez de ruido TBD:
+
+| Familia de modismo | Ejemplos |
+|---|---|
+| Cierre in-Charter | `closed in-Charter`, `closed in Charter`, `resolved in-Charter`, `resolved in Charter` |
+| Fix por batch | `fixed in batch 3` (requiere el número) |
+| Referencia a commit | un hash de commit entre backticks: `` `ab12cd34ef` `` (7–40 chars hex, al menos un dígito) |
+| Born-resolved *(cli-3.20.0+, #222 Finding 2)* | un verbo de cierre — `updated` / `corrected` / `remediated` / `resolved` / `fixed` / `closed` — seguido de `in this PR` o `in this commit`, p.ej. `Charter row updated atomically in this PR` |
+
+Las fórmulas fuera de este vocabulario (p.ej. `done earlier`, `no longer relevant`) se extraen como `open`; el operador las cambia en el triage. Cuando un nuevo modismo de cierre se repita en tus AILOGs, proponlo upstream en vez de editar extracciones a mano.
+
 ### Granularidad per-AILOG vs per-bullet
 
 El tracking es **per-AILOG**, no per-bullet. Un AILOG está totalmente extraído (su id está en `fully_extracted_ailogs` — confiar en el registry) o no lo está (extraer todo). El matching per-bullet requeriría fingerprinting (hashing de texto o comparación fuzzy), que produce falsos positivos cada vez que una entrada del registry parafrasea el bullet del AILOG — y las entradas curadas siempre parafrasean. Esta decisión de diseño está validada empíricamente: **0 falsos positivos a lo largo de 76 AILOGs y ~10 corridas de apply** en el adopter de referencia.
@@ -216,6 +231,7 @@ straymark followups list --bucket ready --status open --severity blocking --labe
 straymark followups status                # pulso del registry: contadores (recalculados al vuelo), desglose por bucket/severity
 straymark followups status FU-NNN         # vista de detalle de una entrada
 straymark followups drift [--apply|--scan-all]   # detección de drift (ver arriba)
+straymark followups recount               # recalcula los contadores CLI-owned tras una sesión de triage manual (cli-3.20.0+)
 straymark followups promote FU-NNN        # automatiza la promoción FU → TDE (ver arriba)
 ```
 
@@ -229,7 +245,7 @@ Desde fw-4.21.0 las directivas de agente **se shippean con el framework** en [`A
 
 - **Session start**: echa un vistazo a `.straymark/follow-ups-backlog.md` (o ejecuta `straymark followups status`) para saber qué está pendiente en el proyecto.
 - **Pre-commit**: ¿creaste o modificaste algún AILOG con entradas `## Follow-ups` o `R<N> (new, not in Charter)`? → ejecuta `straymark followups drift --apply` en el mismo commit.
-- **Post-Charter close**: revisa las entradas que el Charter resolvió; márcalas `closed` (con el id del Charter de cierre en `Notes`) o `superseded`; confirma o reabre cualquier entrada `suspected-closed`; promueve las entradas no resueltas que cumplen los criterios de TDE vía `straymark followups promote`.
+- **Post-Charter close**: revisa las entradas que el Charter resolvió; márcalas `closed` (con el id del Charter de cierre en `Notes`) o `superseded`; confirma o reabre cualquier entrada `suspected-closed`; luego corre `straymark followups recount` para que los contadores CLI-owned viajen en el mismo commit que el triage; promueve las entradas no resueltas que cumplen los criterios de TDE vía `straymark followups promote`.
 
 Esto hace al agente el mantenedor primario del registry, al CLI la capa de verificación, y al operador el revisor periódico (re-bucketing, confirmar suspected-closed, podar superseded, promover a TDE cuando los criterios aplican).
 
@@ -291,4 +307,4 @@ Contribuido vía [issue #111](https://github.com/StrangeDaysTech/straymark/issue
 
 ---
 
-*StrayMark fw-4.22.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.23.0 | [Strange Days Tech](https://strangedays.tech)*

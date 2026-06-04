@@ -47,8 +47,8 @@ StrayMark 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.22.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.19.1` | `straymark` 二进制文件 |
+| Framework | `fw-` | `fw-4.23.0` | 模板（12 种类型）、治理文档、指令 |
+| CLI | `cli-` | `cli-3.20.0` | `straymark` 二进制文件 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
 
@@ -738,6 +738,7 @@ $ straymark charter audit CHARTER-05 --finalize
 - `straymark followups list` — 枚举条目 *(cli-3.19.0+)*
 - `straymark followups status` — 注册表概览 / 条目详情 *(cli-3.19.0+)*
 - `straymark followups drift` — 将注册表与 AILOG 同步（已弃用的 adopter 侧 `check-followups-drift.sh` 的原生替代）*(cli-3.19.0+)*
+- `straymark followups recount` — 手动分诊会话后重新计算 CLI 拥有的计数器 *(cli-3.20.0+)*
 - `straymark followups promote` — 将条目提升为 TDE 文档 *(cli-3.19.0+)*
 
 #### `straymark followups list [--bucket <name>] [--status <s>] [--severity <s>] [--label <tag>] [path]`
@@ -768,17 +769,26 @@ $ straymark followups list --severity blocking
 | Flag | Default | Description |
 |------|---------|-------------|
 | *(default)* | — | 扫描在 `origin/main..HEAD` 中变更的 AILOG（回退到 `origin/master..HEAD`，再回退到带告警的 `HEAD~1..HEAD`）。有漂移时告警并 **exit 1**。 |
-| `--apply` | off | 将缺失的条目提取到 `## Bucket: ready`，使用自动编号的 `FU-NNN` id，把 AILOG id 追加到 `fully_extracted_ailogs`，**重新计算计数器**，并就地把 v0 注册表升级为 v1。注册表不存在时从框架模板播种。 |
+| `--apply` | off | 将缺失的条目提取到 `## Bucket: ready`，使用自动编号的 `FU-NNN` id，把 AILOG id 追加到 `fully_extracted_ailogs`，**重新计算计数器**，并就地把 v0 注册表升级为 v1。注册表不存在时从框架模板播种。自 cli-3.20.0 起,**即使没有可提取的内容也会重新计算计数器**(#222 Finding 1)。 |
 | `--scan-all` | off | 扫描项目中的每一个 AILOG，而非 git 范围。 |
 | `--range <REV..REV>` | — | 默认扫描的显式 git 范围。 |
 
-**抗噪声精炼**（issue #214 Signal 1）：其 AILOG 文本带有显式闭合标记的条目 —— `closed in-Charter`、`fixed in batch N`、反引号包裹的 commit hash —— 会被提取为 **`suspected-closed`** 而非 `open`，从而避免已解决的工作以 TBD 噪声污染 `ready` bucket。操作员在下次分诊时确认（→ `closed`）或重开。
+**抗噪声精炼**（issue #214 Signal 1）：其 AILOG 文本带有显式闭合标记的条目 —— `closed in-Charter`、`fixed in batch N`、反引号包裹的 commit hash，或 *(cli-3.20.0+,#222 Finding 2)* born-resolved 习语（关闭动词 `updated`/`corrected`/`remediated`/`resolved`/`fixed`/`closed` 后跟 `in this PR` / `in this commit`,如 `updated atomically in this PR`）—— 会被提取为 **`suspected-closed`** 而非 `open`，从而避免已解决的工作以 TBD 噪声污染 `ready` bucket。操作员在下次分诊时确认（→ `closed`）或重开。
 
 ```bash
 $ straymark followups drift --scan-all --apply
 ✓ Extracted 4 entries from 1 AILOG(s) into `## Bucket: ready`.
   ! 1 extracted as suspected-closed (closure marker in source AILOG) — confirm at the next triage.
   Counters recomputed: 3 open / 1 suspected-closed / 0 promoted (total 4).
+```
+
+#### `straymark followups recount [--path <dir>]` *(cli-3.20.0+)*
+
+根据实际条目状态重新计算 CLI 拥有的 `total_*` 计数器并重写 frontmatter —— 不扫描 AILOG、不提取、不触碰条目。这是在**手动分诊会话**之后（按照被认可的分诊/消费生命周期手动翻转状态,没有可提取或可提升的内容 —— #222 Finding 1,首个外部 adopter）符合 §13 地调和计数器的方式。幂等:第二次运行会报告计数器已同步。像其他写入命令一样,就地将 v0 注册表升级到 v1。
+
+```bash
+$ straymark followups recount
+✓ Counters recomputed: 0 open / 0 suspected-closed / 2 promoted (total 2).
 ```
 
 #### `straymark followups promote <FU-NNN> [--title <title>] [--path <dir>]`

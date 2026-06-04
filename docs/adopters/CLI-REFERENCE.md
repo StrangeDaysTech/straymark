@@ -47,8 +47,8 @@ StrayMark uses **independent version tags** for each component:
 
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
-| Framework | `fw-` | `fw-4.22.0` | Templates (12 types), governance docs, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.19.1` | The `straymark` binary |
+| Framework | `fw-` | `fw-4.23.0` | Templates (12 types), governance docs, directives, Charter template + schema |
+| CLI | `cli-` | `cli-3.20.0` | The `straymark` binary |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
 
@@ -893,6 +893,7 @@ Parsing is **lenient**: v0 registries (pre-fw-4.21.0) are read without errors; t
 - `straymark followups list` — enumerate entries *(cli-3.19.0+)*
 - `straymark followups status` — registry pulse / entry detail *(cli-3.19.0+)*
 - `straymark followups drift` — sync the registry with AILOGs (native replacement for the deprecated adopter-side `check-followups-drift.sh`) *(cli-3.19.0+)*
+- `straymark followups recount` — recompute the CLI-owned counters after a manual-triage session *(cli-3.20.0+)*
 - `straymark followups promote` — elevate an entry to a TDE document *(cli-3.19.0+)*
 
 #### `straymark followups list [--bucket <name>] [--status <s>] [--severity <s>] [--label <tag>] [path]`
@@ -923,17 +924,26 @@ Detect AILOGs whose follow-up content is not yet extracted into the registry. Gr
 | Flag | Default | Description |
 |------|---------|-------------|
 | *(default)* | — | Scan AILOGs changed in `origin/main..HEAD` (fallback `origin/master..HEAD`, then `HEAD~1..HEAD` with a warning). Warn + **exit 1** on drift. |
-| `--apply` | off | Extract the missing entries into `## Bucket: ready` with auto-numbered `FU-NNN` ids, append the AILOG ids to `fully_extracted_ailogs`, **recompute the counters**, and upgrade v0 registries to v1 in place. Seeds the registry from the framework template when absent. |
+| `--apply` | off | Extract the missing entries into `## Bucket: ready` with auto-numbered `FU-NNN` ids, append the AILOG ids to `fully_extracted_ailogs`, **recompute the counters**, and upgrade v0 registries to v1 in place. Seeds the registry from the framework template when absent. Since cli-3.20.0 the counters are recomputed **even when there is nothing to extract** (#222 Finding 1). |
 | `--scan-all` | off | Sweep every AILOG in the project instead of the git range. |
 | `--range <REV..REV>` | — | Explicit git range for the default scan. |
 
-**Anti-noise refinement** (issue #214 Signal 1): bullets whose AILOG text carries an explicit closure marker — `closed in-Charter`, `fixed in batch N`, a backtick-wrapped commit hash — are extracted as **`suspected-closed`** instead of `open`, so already-resolved work stops polluting the `ready` bucket as TBD noise. The operator confirms (→ `closed`) or reopens at the next triage.
+**Anti-noise refinement** (issue #214 Signal 1): bullets whose AILOG text carries an explicit closure marker — `closed in-Charter`, `fixed in batch N`, a backtick-wrapped commit hash, or *(cli-3.20.0+, #222 Finding 2)* a born-resolved idiom (a closure verb `updated`/`corrected`/`remediated`/`resolved`/`fixed`/`closed` followed by `in this PR` / `in this commit`, e.g. `updated atomically in this PR`) — are extracted as **`suspected-closed`** instead of `open`, so already-resolved work stops polluting the `ready` bucket as TBD noise. The operator confirms (→ `closed`) or reopens at the next triage. The canonical idiom vocabulary is documented in `FOLLOW-UPS-BACKLOG-PATTERN.md`.
 
 ```bash
 $ straymark followups drift --scan-all --apply
 ✓ Extracted 4 entries from 1 AILOG(s) into `## Bucket: ready`.
   ! 1 extracted as suspected-closed (closure marker in source AILOG) — confirm at the next triage.
   Counters recomputed: 3 open / 1 suspected-closed / 0 promoted (total 4).
+```
+
+#### `straymark followups recount [--path <dir>]` *(cli-3.20.0+)*
+
+Recompute the CLI-owned `total_*` counters from actual entry statuses and rewrite the frontmatter — without scanning AILOGs, extracting, or touching entries. The §13-compliant way to reconcile counters after a **manual-triage session** (statuses flipped by hand per the sanctioned Triage/Consumption lifecycle, nothing left to extract or promote — #222 Finding 1, first external adopter). Idempotent: a second run reports the counters as already in sync. Upgrades v0 registries to v1 in place, like every other write command.
+
+```bash
+$ straymark followups recount
+✓ Counters recomputed: 0 open / 0 suspected-closed / 2 promoted (total 2).
 ```
 
 #### `straymark followups promote <FU-NNN> [--title <title>] [--path <dir>]`

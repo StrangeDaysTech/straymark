@@ -114,6 +114,28 @@ pub fn run(path: &str, apply: bool, scan_all: bool, range: Option<&str>) -> Resu
             "{} registry in sync — no AILOGs with unextracted follow-up content.",
             "OK".green().bold()
         );
+        // --apply always reconciles the CLI-owned counters, even with zero
+        // extractions (#222 Finding 1): after a sanctioned manual-triage
+        // session the statuses changed but nothing is left to extract, and
+        // without this write the frontmatter stays knowingly stale.
+        if apply {
+            let counters = followups::compute_counters(&registry);
+            let fm =
+                followups::fm_apply_counters_and_v1(&registry.frontmatter_raw, &counters);
+            if fm != registry.frontmatter_raw {
+                let was_v0 = registry.is_v0();
+                std::fs::write(&registry_path, followups::assemble(&fm, &registry.body))?;
+                println!(
+                    "  Counters recomputed: {} open / {} suspected-closed / {} promoted (total {}).",
+                    counters.open, counters.suspected_closed, counters.promoted, counters.total
+                );
+                if was_v0 {
+                    utils::info(
+                        "Registry upgraded to schema v1 (non-destructive — counters are now CLI-owned).",
+                    );
+                }
+            }
+        }
         return Ok(());
     }
 

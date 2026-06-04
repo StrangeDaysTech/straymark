@@ -748,11 +748,25 @@ fn extract_section(content: &str, pred: impl Fn(&str) -> bool) -> Option<String>
     }
 }
 
+/// Closure verbs recognized by the born-resolved idiom family
+/// "<verb> … in this PR / in this commit" (#222 Finding 2).
+const CLOSURE_VERBS: [&str; 6] = [
+    "updated",
+    "corrected",
+    "remediated",
+    "resolved",
+    "fixed",
+    "closed",
+];
+
 /// True when the text carries an explicit in-Charter closure marker:
 /// "closed in-Charter" / "closed in Charter" / "resolved in-Charter" /
-/// "fixed in batch N" (case-insensitive), or a backtick-wrapped commit hash
-/// (7-40 hex chars). The signal that drives `suspected-closed` extraction
-/// (#214 Signal 1 — 20-75% of auto-appended entries per batch were already
+/// "fixed in batch N", a born-resolved idiom — a closure verb (`updated` /
+/// `corrected` / `remediated` / `resolved` / `fixed` / `closed`) followed by
+/// "in this PR" or "in this commit" (#222 Finding 2, first external adopter)
+/// — all case-insensitive, or a backtick-wrapped commit hash (7-40 hex
+/// chars). The signal that drives `suspected-closed` extraction (#214
+/// Signal 1 — 20-75% of auto-appended entries per batch were already
 /// resolved in-Charter across both documented occurrences).
 pub fn has_closure_marker(text: &str) -> bool {
     let lower = text.to_lowercase();
@@ -768,6 +782,17 @@ pub fn has_closure_marker(text: &str) -> bool {
         let rest = &lower[idx + "fixed in batch ".len()..];
         if rest.chars().next().is_some_and(|c| c.is_ascii_digit()) {
             return true;
+        }
+    }
+    // Born-resolved idiom: a closure verb anywhere before "in this PR" /
+    // "in this commit" (e.g. "Charter row updated atomically in this PR").
+    // rfind takes the last context occurrence, maximizing the verb window.
+    for ctx in ["in this pr", "in this commit"] {
+        if let Some(ctx_idx) = lower.rfind(ctx) {
+            let before = &lower[..ctx_idx];
+            if CLOSURE_VERBS.iter().any(|v| before.contains(v)) {
+                return true;
+            }
         }
     }
     // Backtick-wrapped hex run of 7-40 chars (commit hash reference).
@@ -1172,6 +1197,23 @@ Done.
         // Backtick word that isn't a hash (no digit / not hex).
         assert!(!has_closure_marker("see `feedface` once")); // hex but no digit
         assert!(!has_closure_marker("run `cargo test` first"));
+    }
+
+    #[test]
+    fn closure_markers_born_resolved_idiom_family() {
+        // #222 Finding 2 — the exact lnxdrive phrasing that landed as `open`.
+        assert!(has_closure_marker(
+            "Charter `## Files to modify` row updated atomically in this PR."
+        ));
+        assert!(has_closure_marker("remediated in this PR"));
+        assert!(has_closure_marker("the regression was Corrected in this commit"));
+        assert!(has_closure_marker("scope drift recognized and fixed in this PR"));
+        // Verb required — context phrase alone is not a closure.
+        assert!(!has_closure_marker("discussed in this PR"));
+        assert!(!has_closure_marker("tracked in this PR for visibility"));
+        // Context phrase required — future-tense / follow-up phrasing is not.
+        assert!(!has_closure_marker("will be updated in a follow-up PR"));
+        assert!(!has_closure_marker("should be corrected in the next commit"));
     }
 
     #[test]
