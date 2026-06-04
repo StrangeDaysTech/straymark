@@ -7,6 +7,16 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.19.1 — registry status annotations parse leniently
+
+Patch found by validating cli-3.19.0 against the Sentinel production registry (65 entries): operators annotate status values in place — `- **Status**: open — **OVERDUE** (…)`, `open — mitigation in place (…)` — and the exact-match parser demoted those to `unknown`, which would have **undercounted the CLI-owned `total_open`** (observed live: 58 vs 62) on the first v0 → v1 migration write.
+
+### Fixed (CLI)
+
+- **`FuStatus::from_str_loose` / `Severity::from_str_loose`**: when the full value doesn't match the vocabulary, retry on the first whitespace-delimited token — so the in-place annotation idiom parses as its real status. Genuinely unknown values (e.g. `reopened`) still map to `unknown` (no over-match). Verified against the Sentinel registry: 65/65 entries now parse to their intended status (62 open / 3 promoted, zero unknown), matching the operator-declared counters exactly.
+
+---
+
 ## CLI 3.19.0 — `straymark followups` namespace (companion to fw-4.21.0)
 
 Ships the native CLI surface for the follow-ups backlog registry crystallized in fw-4.21.0 ([`ADR-2026-06-03-001`](docs/decisions/ADR-2026-06-03-followups-first-class.md), driven by [#214](https://github.com/StrangeDaysTech/straymark/issues/214)). The registry stops being invisible to tooling: it gains a CLI namespace, a synthetic group in `explore`, and a block in `status`. Collapses Tiers 2 and 4 of [#135](https://github.com/StrangeDaysTech/straymark/issues/135) into one native implementation; Tier 3 (`charter close` soft-integration) remains gated.
