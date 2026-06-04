@@ -58,7 +58,7 @@ impl FuStatus {
     }
 
     pub fn from_str_loose(s: &str) -> Self {
-        match s.trim().to_lowercase().as_str() {
+        let exact = |v: &str| match v {
             "open" => Self::Open,
             "in-progress" | "in progress" => Self::InProgress,
             "suspected-closed" | "suspected closed" => Self::SuspectedClosed,
@@ -66,6 +66,21 @@ impl FuStatus {
             "superseded" => Self::Superseded,
             "promoted" => Self::Promoted,
             _ => Self::Unknown,
+        };
+        let lower = s.trim().to_lowercase();
+        let parsed = exact(&lower);
+        if parsed != Self::Unknown {
+            return parsed;
+        }
+        // Leniency fallback (cli-3.19.1, found validating against the
+        // Sentinel production registry): operators annotate the status value
+        // in place — `open — **OVERDUE** (…)`, `open — mitigation in place`.
+        // Take the first whitespace-delimited token and rematch, so the
+        // annotation idiom doesn't demote real statuses to Unknown (which
+        // would undercount the CLI-owned `total_open` on migration).
+        match lower.split_whitespace().next() {
+            Some(first) => exact(first),
+            None => Self::Unknown,
         }
     }
 }
@@ -87,11 +102,14 @@ impl Severity {
     }
 
     pub fn from_str_loose(s: &str) -> Option<Self> {
-        match s.trim().to_lowercase().as_str() {
+        let exact = |v: &str| match v {
             "normal" => Some(Self::Normal),
             "blocking" | "prod-blocker" => Some(Self::Blocking),
             _ => None,
-        }
+        };
+        let lower = s.trim().to_lowercase();
+        // Same first-token annotation fallback as FuStatus::from_str_loose.
+        exact(&lower).or_else(|| lower.split_whitespace().next().and_then(exact))
     }
 }
 
@@ -1251,5 +1269,65 @@ Done.
     fn registry_without_frontmatter_errors_with_hint() {
         let err = parse_registry_str(Path::new("x.md"), "# no frontmatter\n").unwrap_err();
         assert!(err.to_string().contains("no YAML frontmatter"));
+    }
+
+    #[test]
+    fn status_tolerates_inline_annotations_after_value() {
+        // Real idiom from the Sentinel production registry (cli-3.19.1):
+        // the status value carries an in-place annotation after an em dash.
+        assert_eq!(
+            FuStatus::from_str_loose("open — **OVERDUE** (15-Apr-2026 was 22 days ago)"),
+            FuStatus::Open
+        );
+        assert_eq!(
+            FuStatus::from_str_loose("open — mitigation in place (`-timeout` default 600s)"),
+            FuStatus::Open
+        );
+        assert_eq!(
+            FuStatus::from_str_loose("suspected-closed — confirm at triage"),
+            FuStatus::SuspectedClosed
+        );
+        assert_eq!(
+            FuStatus::from_str_loose("promoted (see TDE-2026-05-01-001)"),
+            FuStatus::Promoted
+        );
+        // Genuinely unknown values stay Unknown — the annotation fallback
+        // must not over-match.
+        assert_eq!(FuStatus::from_str_loose("reopened — by audit"), FuStatus::Unknown);
+        assert_eq!(FuStatus::from_str_loose(""), FuStatus::Unknown);
+    }
+
+    #[test]
+    fn severity_tolerates_inline_annotations_after_value() {
+        assert_eq!(
+            Severity::from_str_loose("blocking — must land before prod cutover"),
+            Some(Severity::Blocking)
+        );
+        assert_eq!(Severity::from_str_loose("normal (default)"), Some(Severity::Normal));
+        assert_eq!(Severity::from_str_loose("urgent — not a vocab value"), None);
+    }
+
+    #[test]
+    fn annotated_statuses_count_into_recomputed_counters() {
+        // The undercount this fix prevents: an annotated `open` must count
+        // as open, or the CLI-owned total_open writes the wrong number on
+        // migration (observed live: Sentinel registry, 58 vs 62).
+        let content = r#"---
+schema_version: v0
+fully_extracted_ailogs: []
+---
+
+## Bucket: ready
+
+### FU-001 — annotated open
+- **Status**: open — **OVERDUE** (15-Apr-2026)
+
+### FU-002 — plain open
+- **Status**: open
+"#;
+        let reg = parse(content);
+        let c = compute_counters(&reg);
+        assert_eq!(c.open, 2);
+        assert!(reg.entries().all(|e| e.status == FuStatus::Open));
     }
 }
