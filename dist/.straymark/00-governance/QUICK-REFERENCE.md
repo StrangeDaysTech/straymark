@@ -243,6 +243,7 @@ Mark `review_required: true` when:
 | `/straymark-ailog` / `/straymark-aidec` / `/straymark-adr` | Quick shortcuts for AILOG / AIDEC / ADR |
 | `/straymark-mcard` / `/straymark-sec` | Interactive flows for Model Card / SEC assessment |
 | `/straymark-charter-new` | Scaffold a Charter (declarative ex-ante work unit) |
+| `/straymark-followups` *(fw-4.22.0+)* | Maintain the follow-ups backlog registry — "what's pending?", pre-commit drift, post-close triage/promote |
 | `/straymark-audit-prompt CHARTER-XX` *(fw-4.9.0+, refactored in fw-4.9.0)* | External multi-model audit — write unified prompt at canonical path |
 | `/straymark-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | Run inside an auditor CLI — read prompt, audit with tool use, write report |
 | `/straymark-audit-review CHARTER-XX` *(fw-4.9.0+, expanded in fw-4.9.0)* | Consolidate N reports into review.md (6 sections) + merge YAML into telemetry |
@@ -258,4 +259,4 @@ Mark `review_required: true` when:
 
 ---
 
-*StrayMark fw-4.21.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.22.0 | [Strange Days Tech](https://strangedays.tech)*

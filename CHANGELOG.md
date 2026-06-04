@@ -7,6 +7,21 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.22.0 — `/straymark-followups` skill ships the §13 directives as an invocable wrapper
+
+Closes the last gap in the follow-ups first-class lane (fw-4.21.0 / cli-3.19.0): the `AGENT-RULES.md §13` directives — session-start "what's pending?" answered from the canonical registry, pre-commit `followups drift --apply` riding the same commit as the AILOG, post-Charter-close triage and operator-gated `promote` — now ship as an invocable skill across all four agent surfaces, mirroring the `straymark-charter-new` lane. Driven by [#220](https://github.com/StrangeDaysTech/straymark/issues/220) (deferred from the cli-3.19.0 PR because skills ride framework releases and fw-4.21.0 was already tagged). The skill is a **thin wrapper**: parsing, schema validation, counter recomputation, and the FU → TDE elevation all stay in the CLI (`straymark followups list/status/drift/promote`, cli-3.19.0+); the skill only drives the discipline.
+
+### Added (Framework)
+
+- **`/straymark-followups` skill** in all four agent surfaces — `.claude/skills/` (source of truth, full frontmatter), `.gemini/skills/`, `.agent/workflows/`, and the generated `.codex/skills/` (via `gen_codex_skills`). Wraps the three `AGENT-RULES.md §13` sub-flows; `allowed-tools` deliberately omits `Write` — every registry mutation goes through the CLI, and the frontmatter counters stay CLI-owned.
+- **Skills table rows** for `/straymark-followups` in `QUICK-REFERENCE.md` (EN/ES/zh-CN) and in the `CLI-REFERENCE.md` Skills section (EN/ES/zh-CN). The CLI-REFERENCE table also gains the previously missing `/straymark-charter-new` row (shipped in fw-4.12.0, never listed there).
+
+### Adopter guidance
+
+Run `straymark update-framework` (→ `fw-4.22.0`). Claude and Gemini pick the skill up directly from the project tree; for Codex, re-run `straymark install-skills --agent codex` once to refresh the user-level skills directory. `/straymark-followups` is then invocable in any adopter repo that maintains the registry.
+
+---
+
 ## CLI 3.19.1 — registry status annotations parse leniently
 
 Patch found by validating cli-3.19.0 against the Sentinel production registry (65 entries): operators annotate status values in place — `- **Status**: open — **OVERDUE** (…)`, `open — mitigation in place (…)` — and the exact-match parser demoted those to `unknown`, which would have **undercounted the CLI-owned `total_open`** (observed live: 58 vs 62) on the first v0 → v1 migration write.

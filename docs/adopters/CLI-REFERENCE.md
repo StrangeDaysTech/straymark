@@ -47,7 +47,7 @@ StrayMark uses **independent version tags** for each component:
 
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
-| Framework | `fw-` | `fw-4.21.0` | Templates (12 types), governance docs, directives, Charter template + schema |
+| Framework | `fw-` | `fw-4.22.0` | Templates (12 types), governance docs, directives, Charter template + schema |
 | CLI | `cli-` | `cli-3.19.1` | The `straymark` binary |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
@@ -1385,6 +1385,8 @@ Claude and Gemini discover skills directly from the project tree. **Codex reads 
 | `/straymark-adr` | Quick ADR creation shortcut. | `.straymark/02-design/decisions/ADR-*.md` |
 | `/straymark-mcard` | Interactive Model Card creation flow. | `.straymark/09-ai-models/MCARD-*.md` |
 | `/straymark-sec` | Interactive SEC (security assessment) flow. | `.straymark/08-security/SEC-*.md` |
+| `/straymark-charter-new` *(fw-4.12.0+)* | Scaffold a Charter — declarative ex-ante work unit. Wraps `straymark charter new` (slug derivation, sequential numbering, template substitution); the skill drives origin/effort selection and the reconnaissance-before-declaration discipline. | `.straymark/charters/NN-slug.md` |
+| `/straymark-followups` *(fw-4.22.0+)* | Maintain the follow-ups backlog registry (`AGENT-RULES.md §13`): session-start "what's pending?" answered from the canonical registry, pre-commit `followups drift --apply` riding the same commit as the AILOG, post-Charter-close triage and operator-gated `promote`. Thin wrapper over `straymark followups` — never edits CLI-owned counters. | none directly (writes go through `straymark followups drift --apply` / `promote` → `.straymark/follow-ups-backlog.md`, TDE on promote) |
 | `/straymark-audit-prompt CHARTER-ID` *(fw-4.9.0+, refactored in fw-4.9.0)* | Generate the unified audit prompt for a Charter at the canonical path. Wraps `straymark charter audit --prepare`. The operator then opens N auditor CLIs in the same repo and invokes `/straymark-audit-execute` in each — no copy/paste. | `.straymark/audits/<CHARTER-ID>/audit-prompt.md` |
 | `/straymark-audit-execute [CHARTER-ID]` *(fw-4.9.0+)* | **Run inside an auditor-side CLI** (gemini-cli, claude-cli, copilot-cli, codex-cli, ...). Reads the prepared prompt from disk, audits with tool use citing `path:line`, writes a report keyed on the auditor's model id. CHARTER-ID argument is optional — auto-discovers prompts that don't yet have a report from this model. | `.straymark/audits/<CHARTER-ID>/report-<sluggified-model-id>.md` |
 | `/straymark-audit-review CHARTER-ID` *(fw-4.9.0+, expanded in fw-4.9.0)* | Counterpart to `/straymark-audit-prompt`. Reads N reports under `.straymark/audits/<CHARTER-ID>/`, verifies each finding against actual code (Explore agents in parallel), produces a six-section consolidated `review.md` (Executive summary, Scope, Per-auditor evaluation, Remediation plan P0-P4, Discarded findings, Auditor ratings), and runs `straymark charter audit --merge-reports --merge-into` to append `external_audit:` into the Charter telemetry. If the telemetry doesn't yet exist (Charter not yet closed), writes `external-audit-pending.yaml` for later merge at close time. | `.straymark/audits/<CHARTER-ID>/review.md`, `external_audit:` array merged into telemetry (or pending YAML) |

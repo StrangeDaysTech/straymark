@@ -47,7 +47,7 @@ StrayMark 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.21.0` | 模板（12 种类型）、治理文档、指令 |
+| Framework | `fw-` | `fw-4.22.0` | 模板（12 种类型）、治理文档、指令 |
 | CLI | `cli-` | `cli-3.19.1` | `straymark` 二进制文件 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
@@ -1208,6 +1208,8 @@ Claude 和 Gemini 直接从项目树发现 skills。**Codex 从 `~/.codex/skills
 | `/straymark-adr` | 快速 ADR 创建快捷方式。 | `.straymark/02-design/decisions/ADR-*.md` |
 | `/straymark-mcard` | 交互式 Model Card 创建流程。 | `.straymark/09-ai-models/MCARD-*.md` |
 | `/straymark-sec` | 交互式 SEC（安全评估）流程。 | `.straymark/08-security/SEC-*.md` |
+| `/straymark-charter-new` *(fw-4.12.0+)* | 搭建 Charter —— 声明式事前工作单元。封装 `straymark charter new`（slug 派生、顺序编号、模板替换）；skill 负责来源/工作量选择以及声明前侦察纪律。 | `.straymark/charters/NN-slug.md` |
+| `/straymark-followups` *(fw-4.22.0+)* | 维护 follow-ups backlog 注册表（`AGENT-RULES.md §13`）：会话开始时从规范注册表回答“有什么待办？”，提交前运行 `followups drift --apply` 使注册表与 AILOG 同一提交，Charter 关闭后分诊以及操作员审批的 `promote`。`straymark followups` 之上的薄封装 —— 绝不手动编辑 CLI 拥有的计数器。 | 无直接产物（写入经由 `straymark followups drift --apply` / `promote` → `.straymark/follow-ups-backlog.md`，promote 时生成 TDE） |
 | `/straymark-audit-prompt CHARTER-ID` *(fw-4.9.0+，在 fw-4.9.0 中重构)* | 在规范路径处生成章程的统一审计 prompt。封装 `straymark charter audit --prepare`。操作员随后在同一仓库中打开 N 个审计员 CLI，在每个中调用 `/straymark-audit-execute` — 无需复制/粘贴。 | `.straymark/audits/<CHARTER-ID>/audit-prompt.md` |
 | `/straymark-audit-execute [CHARTER-ID]` *(fw-4.9.0+)* | **在审计员 CLI 中运行**（gemini-cli、claude-cli、copilot-cli、codex-cli 等）。从磁盘读取已准备的 prompt，使用 tool use 进行审计并引用 `path:line`，写入以审计员模型 ID 为键的 report。CHARTER-ID 参数可选 — 自动发现尚未由此模型生成 report 的 prompts。 | `.straymark/audits/<CHARTER-ID>/report-<sluggified-model-id>.md` |
 | `/straymark-audit-review CHARTER-ID` *(fw-4.9.0+，在 fw-4.9.0 中扩展)* | `/straymark-audit-prompt` 的对应。读取 `.straymark/audits/<CHARTER-ID>/` 下的 N 个 reports，对每个 finding 与实际代码进行交叉验证（并行 Explore agents），生成六节合并的 `review.md`（执行摘要、范围、按审计员评估、修复计划 P0-P4、丢弃的 findings、审计员评分），并运行 `straymark charter audit --merge-reports --merge-into` 将 `external_audit:` 追加到章程遥测中。如果遥测尚不存在（章程未关闭），写入 `external-audit-pending.yaml` 供 close 时合并。 | `.straymark/audits/<CHARTER-ID>/review.md`，`external_audit:` 数组合并入遥测（或 pending YAML） |

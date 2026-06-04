@@ -218,6 +218,7 @@ risk_level: low | medium | high | critical
 | `/straymark-ailog` / `/straymark-aidec` / `/straymark-adr` | AILOG / AIDEC / ADR 的快速快捷方式 |
 | `/straymark-mcard` / `/straymark-sec` | Model Card / SEC 评估的交互流程 |
 | `/straymark-charter-new` | 搭建一个 Charter（声明式事前工作单元） |
+| `/straymark-followups` *(fw-4.22.0+)* | 维护 follow-ups backlog 注册表 —— “有什么待办？”、提交前 drift、关闭后分诊/promote |
 | `/straymark-audit-prompt CHARTER-XX` *(fw-4.9.0+，在 fw-4.9.0 中重构)* | 外部多模型审计 — 在规范路径写入统一 prompt |
 | `/straymark-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | 在审计员 CLI 中运行 — 读取 prompt，使用 tool use 审计，写入 report |
 | `/straymark-audit-review CHARTER-XX` *(fw-4.9.0+，在 fw-4.9.0 中扩展)* | 合并 N 个 reports 为 review.md（6 节）+ YAML 合并入遥测 |
@@ -233,4 +234,4 @@ risk_level: low | medium | high | critical
 
 ---
 
-*StrayMark fw-4.21.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.22.0 | [Strange Days Tech](https://strangedays.tech)*
