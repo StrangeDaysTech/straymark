@@ -454,6 +454,49 @@ The command does not touch git — the operator decides when to commit. The `str
 
 ---
 
+## 16. Follow-ups backlog — the pending-work registry *(fw-4.21.0+)*
+
+The **follow-ups backlog** is StrayMark's first-class artifact for *deferred work that outlives the AILOG that recorded it*. Every AILOG documents what is deferred in its `§Follow-ups` section and its `R<N> (new, not in Charter)` risks; past ~20 AILOGs that dispersed knowledge stops being scannable from memory. The registry aggregates it into a single queryable file.
+
+Like Charters (section 15), the registry is **conceptually distinct** from the 12+4 document types of section 13:
+
+- It lives at `.straymark/follow-ups-backlog.md` — one file per project, never one file per entry.
+- Entries (`FU-NNN`) are organized in five buckets by trigger type (*when actionable*): `ready`, `time-triggered`, `charter-triggered`, `phase-blocked`, `operational`.
+- Entry statuses: `open` → `in-progress` → `closed` / `superseded` / `promoted`, plus `suspected-closed` for auto-extracted entries whose source AILOG carries a closure marker.
+- Frontmatter counters (`total_open`, …) are **CLI-owned** — recomputed on every write command; never maintain them by hand.
+
+### Why it matters beyond tracking
+
+Follow-ups originate not only from planning (ex-ante) but from **execution reality** — test runs, telemetry, staging incidents, real-environment bugs — and they feed planning back: entries become chores, mini-charters, or reshape already-planned Charters (`Destination: charter-replanning`). The registry is the ex-post counterpart of SpecKit. The v1 entry dimensions (`Origin-class`, `Severity: blocking`, `Labels`) exist to make that planning loop queryable.
+
+### Lifecycle
+
+| Stage | What happens | CLI |
+|-------|--------------|-----|
+| **Extraction** | New AILOG with `§Follow-ups` / `R<N> (new)` content → entries auto-extracted into `## Bucket: ready` (or `suspected-closed` when the AILOG text marks them resolved in-Charter). | `straymark followups drift --apply` |
+| **Triage** | Operator reclassifies bucket/trigger/destination, fills `Severity`/`Labels`, confirms or reopens `suspected-closed` entries. Typically once per stage close (~1h per 4-8 Charters at reference-adopter scale). | (manual edit + `followups list`) |
+| **Consumption** | Entries feed Charter planning; when a Charter addresses an entry, mark `in-progress` → `closed` with provenance in `Notes`. | (manual edit) |
+| **Promotion** | Entries meeting the transversal-debt criteria (AGENT-RULES.md §3) are elevated to a TDE document with full traceability. | `straymark followups promote FU-NNN` |
+
+### How it relates to existing artifacts
+
+- It **does not replace** per-AILOG `§Follow-ups` — that convention stays; the registry aggregates it. Per-AILOG extraction granularity (the `fully_extracted_ailogs` frontmatter list) is the load-bearing design choice.
+- It **feeds** Charters and TDEs: `Destination:` points at where the work lands; `straymark followups promote` creates the TDE with `promoted_from_followup: FU-NNN` traceability.
+- Agent directives (session-start glance, pre-commit drift, post-close review) ship in `AGENT-RULES.md §13`.
+
+### Quick CLI surface
+
+```bash
+straymark followups list                  # enumerate entries (filters: --bucket, --status, --severity, --label)
+straymark followups status [FU-NNN]       # registry pulse (counters recomputed on the fly) / entry detail
+straymark followups drift [--apply|--scan-all]   # detect/extract AILOGs not yet in the registry
+straymark followups promote FU-NNN        # automate FU → TDE promotion
+```
+
+> **Schema**: `.straymark/schemas/follow-ups-backlog.schema.v1.json` — experimental v1; hard stabilization gated on a second adopter (Principle #12, ADR-2026-06-03-001). Full convention: `.straymark/00-governance/FOLLOW-UPS-BACKLOG-PATTERN.md`. Template: `.straymark/templates/follow-ups-backlog.md`.
+
+---
+
 ## Directive Injection Markers
 
 StrayMark uses HTML comment markers to manage injected content in agent configuration files (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursorrules`, `.cursor/rules/straymark.md`):

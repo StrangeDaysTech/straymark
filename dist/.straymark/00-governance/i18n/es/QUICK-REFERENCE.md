@@ -67,6 +67,20 @@ Los Charters **no** son tipos de documento — envuelven un bloque de implementa
 
 > Ver sección 15 de `STRAYMARK.md` y `.straymark/00-governance/SPECKIT-CHARTER-BRIDGE.md` para heurísticas de granularidad, ciclo de vida y el puente SpecKit ↔ Charter.
 
+### Registros de Primera Clase — Backlog de Follow-ups *(fw-4.21.0+)*
+
+El backlog de follow-ups tampoco es un tipo de documento — un registry de un solo archivo que agrega entradas `§Follow-ups` / `R<N> (new)` a lo largo de los AILOGs. Ids de entrada `FU-NNN`; cinco buckets por tipo de trigger; estados `open | in-progress | suspected-closed | closed | superseded | promoted`. Los contadores son CLI-owned.
+
+| Concepto | Archivo | Autonomía del Agente |
+|----------|---------|---------------------|
+| `Registry de follow-ups` | `.straymark/follow-ups-backlog.md` (schema: `follow-ups-backlog.schema.v1.json`, experimental) | El agente extrae vía `followups drift --apply` (pre-commit); el operador es dueño del triage y de la aprobación de promociones |
+
+```bash
+straymark followups list / status / drift [--apply] / promote FU-NNN
+```
+
+> Ver sección 16 de `STRAYMARK.md`, `FOLLOW-UPS-BACKLOG-PATTERN.md` y AGENT-RULES.md §13 para las directivas de agente shippeadas.
+
 ---
 
 ## Cuándo Documentar
@@ -82,6 +96,7 @@ Los Charters **no** son tipos de documento — envuelven un bloque de implementa
 | Cambios en instrumentación OTel | AILOG + tag `observabilidad` |
 | Bloque de implementación multi-sesión (>1 día, >5 tareas en varias fases) | Declarar un **Charter** (`straymark charter new`) |
 | Deuda técnica transversal (herencia de Charter previo, aplica a múltiples módulos, requiere Charter dedicado, necesita priorización humana) | **TDE** — distinto del `R<N>` por Charter; ver AGENT-RULES.md §3 |
+| AILOG creado/modificado con entradas `## Follow-ups` o `R<N> (new, not in Charter)` | `straymark followups drift --apply` en el mismo commit — ver AGENT-RULES.md §13 |
 
 **NO documentar**: credenciales, tokens, PII, secretos.
 
@@ -141,7 +156,8 @@ Marcar `review_required: true` cuando:
 ├── 08-security/                 ← SEC
 ├── 09-ai-models/                ← MCARD
 ├── charters/                    ← Charter (NN-slug.md + NN-slug.telemetry.yaml)
-└── templates/                   ← Plantillas (incl. subdir charter/)
+├── follow-ups-backlog.md        ← Registry de follow-ups (entradas FU-NNN, primera clase desde fw-4.21.0)
+└── templates/                   ← Plantillas (incl. subdir charter/ + follow-ups-backlog.md)
 ```
 
 ---
@@ -212,9 +228,9 @@ Marcar `review_required: true` cuando:
 
 | Patrón | Documento |
 |--------|-----------|
-| Backlog de follow-ups (registro central + detección de drift) *(fw-4.10.0+)* | [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) |
+| Backlog de follow-ups (registry de primera clase + CLI nativo `followups`) *(fw-4.10.0+, primera clase fw-4.21.0+)* | [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) |
 | Polish Charter como detección de deuda (anti-patrón "declaración de superficie sin cableado") *(fw-4.18.0+)* | [POLISH-CHARTER-PATTERN.md](POLISH-CHARTER-PATTERN.md) |
 
 ---
 
-*StrayMark fw-4.20.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.21.0 | [Strange Days Tech](https://strangedays.tech)*

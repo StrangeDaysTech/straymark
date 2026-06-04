@@ -381,10 +381,34 @@ These are heuristics, not rigid rules — you are close to the context, refine t
 
 ---
 
-## Patterns
+## 13. Follow-ups Backlog (registry maintenance)
 
-When a project accumulates a high volume of AILOGs across multiple Charters and follow-ups become hard to track, see [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) for a reproducible convention (central registry + drift detection script + agent integration). Adopters at ~20+ AILOGs benefit; below that threshold the per-AILOG `§Follow-ups` convention alone is sufficient.
+When the project maintains the central follow-ups registry (`.straymark/follow-ups-backlog.md` — see [`FOLLOW-UPS-BACKLOG-PATTERN.md`](FOLLOW-UPS-BACKLOG-PATTERN.md) and `STRAYMARK.md §16`), the agent is its **primary maintainer**. Three directives:
+
+### Session start
+
+Glance at `.straymark/follow-ups-backlog.md` (or run `straymark followups status`) to know what is pending across the project. When the operator asks *"what's pending?"* / *"what follow-ups do we have?"*, **the registry is the canonical source** — answer from it (`straymark followups list`), not by re-scanning AILOGs. Only fall back to an AILOG scan when the registry does not exist or `followups drift` reports unextracted AILOGs.
+
+### Pre-commit
+
+Created or modified any AILOG with `## Follow-ups` or `R<N> (new, not in Charter)` entries? → run `straymark followups drift --apply` so the registry extension rides **the same commit** as the AILOG. Entries the AILOG text already marks as resolved in-Charter are extracted as `suspected-closed` automatically — do not delete them; the operator confirms at the next triage.
+
+### Post-Charter close
+
+Review the registry entries the just-closed Charter resolved:
+
+- Mark them `closed` (with the closing Charter id in `Notes`) or `superseded`.
+- Confirm or reopen any `suspected-closed` entries that the Charter's AILOGs produced.
+- For un-resolved entries that meet the TDE criteria of §3 (heritage, transversal, dedicated Charter, human prioritization), propose promotion via `straymark followups promote FU-NNN` — promotion itself is operator-approved, per the autonomy limits of §3.
+
+Counters in the registry frontmatter (`total_open`, …) are **CLI-owned**: never edit them by hand; every write command recomputes them.
 
 ---
 
-*StrayMark fw-4.20.0 | [Strange Days Tech](https://strangedays.tech)*
+## Patterns
+
+When a project accumulates a high volume of AILOGs across multiple Charters and follow-ups become hard to track, see [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) — a **first-class registry since fw-4.21.0 / cli-3.19.0** (central registry + native `straymark followups` CLI + the §13 directives above). Adopters at ~20+ AILOGs benefit; below that threshold the per-AILOG `§Follow-ups` convention alone is sufficient.
+
+---
+
+*StrayMark fw-4.21.0 | [Strange Days Tech](https://strangedays.tech)*

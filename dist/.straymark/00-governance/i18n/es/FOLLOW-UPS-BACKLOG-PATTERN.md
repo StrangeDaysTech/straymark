@@ -1,6 +1,6 @@
 # Patrón de Backlog de Follow-ups - StrayMark
 
-> Convención reproducible para gestionar entradas acumuladas de `§Follow-ups` y `R<N> (new, not in Charter)` a lo largo de muchos AILOGs y Charters.
+> Registry de primera clase para gestionar entradas acumuladas de `§Follow-ups` y `R<N> (new, not in Charter)` a lo largo de muchos AILOGs y Charters.
 
 **Idiomas**: [English](../../FOLLOW-UPS-BACKLOG-PATTERN.md) | Español | [简体中文](../zh-CN/FOLLOW-UPS-BACKLOG-PATTERN.md)
 
@@ -8,9 +8,17 @@
 
 ## Estado
 
-**v0 — validado en N=1 dominio** (`StrangeDaysTech/sentinel` CHARTER-12, 2026-05-06).
+**v1 — entidad de primera clase desde fw-4.21.0 / cli-3.19.0** (experimental; la estabilización dura está condicionada a un segundo adopter, según el principio de diseño #12 y ADR-2026-06-03-001).
 
-Esto es una **convención**, no una funcionalidad del CLI. Los adopters la reproducen localmente con markdown + un script bash portable. El patrón puede evolucionar a un subcomando `straymark followups` una vez que un segundo adopter lo valide (ver [Preguntas abiertas](#preguntas-abiertas)).
+Cronología de maduración, espejando el carril del Charter:
+
+| Etapa | Release | Qué aterrizó |
+|-------|---------|--------------|
+| Convención (v0) | fw-4.10.0 | Documento del patrón + script bash del lado del adopter (Sentinel CHARTER-12, N=47) |
+| Refinamiento (v0.1) | fw-4.13.1 | Ruta de promoción FU → TDE (2 formas), contador `total_promoted` |
+| **Primera clase (v1)** | **fw-4.21.0 / cli-3.19.0** | Schema JSON, CLI nativo `straymark followups`, integración con `explore`/`status`, directivas de agente shippeadas en `AGENT-RULES.md §13`, template del registry |
+
+El registry es un **artefacto de primera clase** como el Charter — no es uno de los 16 tipos de documento. Tiene su propia ruta canónica, su propio schema, su propio namespace de CLI y su propio grupo sintético en la TUI de `explore`.
 
 ---
 
@@ -27,11 +35,15 @@ Adopta este patrón cuando se cumpla **cualquiera** de estas condiciones:
 
 Por debajo de ese volumen, la convención per-AILOG por sí sola es suficiente — adoptar este patrón temprano agrega overhead de mantenimiento sin retorno.
 
+### El registry como input de planificación
+
+Lección empírica del adopter de referencia (issue #214, N=91 entradas): el backlog es más que una lista de chores diferidos. Los follow-ups se originan no solo de la planificación (ex-ante) sino de la **realidad de ejecución** — corridas de tests, lecturas de telemetría, incidentes de staging, bugs observados en entornos reales (no simulados) — y retroalimentan la planificación: se vuelven chores, mini-charters, o incluso reconfiguran Charters que ya estaban planeados. El registry es el **contraparte ex-post de SpecKit**: SpecKit alimenta la planificación desde la intención; el backlog la alimenta desde la ejecución. Las dimensiones de v1 (`Origin-class`, `Severity`, `Labels`, el vocabulario de `Destination`) existen para hacer ese bucle de planificación consultable.
+
 ---
 
 ## Forma
 
-### Archivo de registro
+### Archivo del registry
 
 Único archivo markdown en la ruta canónica:
 
@@ -39,17 +51,20 @@ Por debajo de ese volumen, la convención per-AILOG por sí sola es suficiente �
 .straymark/follow-ups-backlog.md
 ```
 
+Un template con frontmatter vacío y los cinco headers de bucket se shippea en `.straymark/templates/follow-ups-backlog.md`.
+
 ### Frontmatter (YAML)
 
 ```yaml
 ---
-last_scan: 2026-05-06
+last_scan: 2026-06-03
 last_scan_range: AILOG-NNNN-NN-NN-NNN..AILOG-NNNN-NN-NN-NNN  # opcional — primer..último AILOG cubierto
-schema_version: v0
-total_open: 0           # cuenta de entradas actualmente `open`
-total_promoted: 0       # cuenta de entradas actualmente `promoted` (agregado en schema v0.1 — ver "Promoción a TDE")
-total_closed_in_session: 0   # cuenta de entradas `closed` desde la última sesión (opcional, operator-maintained)
-total_phase_blocked: 0  # cuenta de entradas `phase-blocked` (opcional)
+schema_version: v1
+total_open: 0                # CLI-owned — recalculado en cada escritura
+total_promoted: 0            # CLI-owned
+total_closed_in_session: 0   # CLI-owned
+total_phase_blocked: 0       # CLI-owned
+total_suspected_closed: 0    # CLI-owned (nuevo en v1)
 buckets:
   - ready
   - time-triggered
@@ -63,13 +78,15 @@ fully_extracted_ailogs:
 ---
 ```
 
-Los contadores `total_*` son **metadatos operator-maintained**. El script de drift no los actualiza automáticamente — viven en el header para que un vistazo a inicio de sesión muestre el pulso del registro sin scrollear por buckets. `total_promoted` se canonicalizó en schema v0.1 (señal empírica del adopter Sentinel, fw-4.13.1) para reflejar el patrón existente de `total_open` / `total_closed_in_session` / `total_phase_blocked`.
+**Los contadores `total_*` son CLI-owned desde v1.** Cada comando de escritura (`straymark followups drift --apply`, `straymark followups promote`) los recalcula desde los estados reales de las entradas. No los mantengas a mano — los valores rancios editados a mano se corrigen en la siguiente escritura. Esto cierra el modo de fallo de drift silencioso de contadores observado en N=91 (declarado `total_open: 47` vs 65 real tras 4 semanas — issue #214 Señal 2). `straymark followups status` siempre muestra conteos recalculados al vuelo, así que el pulso es confiable incluso si el archivo está rancio.
 
-La lista `fully_extracted_ailogs` es el **metadato cargante** para la detección de drift. Todo AILOG cuyas entradas de `§Follow-ups` y `R<N>` han sido transferidas al registro (o explícitamente clasificadas como superseded) pertenece a esta lista. La detección de drift compara esta lista contra los AILOGs que tienen contenido de follow-ups en el repo.
+La lista `fully_extracted_ailogs` es el **metadato cargante** para la detección de drift. Todo AILOG cuyas entradas de `§Follow-ups` y `R<N>` han sido transferidas al registry (o explícitamente clasificadas como superseded) pertenece a esta lista. La detección de drift compara esta lista contra los AILOGs que tienen contenido de follow-ups en el repo.
+
+El schema formal del frontmatter es `.straymark/schemas/follow-ups-backlog.schema.v1.json` (v1 experimental — ver Estado arriba).
 
 ### Buckets
 
-Cinco buckets organizan las entradas por tipo de trigger:
+Cinco buckets organizan las entradas por tipo de trigger — *cuándo son accionables*:
 
 - `ready` — accionable ahora, sin dependencia de trigger externo.
 - `time-triggered` — trigger basado en calendario (ciclo de auditoría, revisión periódica).
@@ -77,27 +94,40 @@ Cinco buckets organizan las entradas por tipo de trigger:
 - `phase-blocked` — bloqueado por un componente o fase futura que aún no existe.
 - `operational` — decisión manual del operador o acción de sistema externo.
 
-### Esquema de entrada
+El vocabulario es estable en N=91 entradas en el adopter de referencia — no se ha necesitado un sexto bucket. La Severity (*cuánto duele saltársela*) intencionalmente **no** es un bucket: es un campo per-entry ortogonal (ver abajo).
 
-Cada entrada dentro de un bucket sigue esta forma:
+### Esquema de entrada (v1)
+
+Cada entrada dentro de un bucket sigue esta forma (campos v1 marcados; todos opcionales — las entradas v0 siguen siendo válidas):
 
 ```markdown
 ### FU-NNN — <descripción corta>
 - **Origin**: AILOG-NNNN-NN-NN-NNN <pointer a la sección fuente>
-- **Status**: open | in-progress | closed | superseded | promoted
+- **Origin-class**: ex-ante-planning | testing | telemetry | staging | real-env-bug   (v1, opcional)
+- **Status**: open | in-progress | suspected-closed | closed | superseded | promoted
+- **Severity**: normal | blocking                                                     (v1, opcional; default normal)
 - **Trigger**: ready | <fecha calendario> | when <X> | <otro>
-- **Destination**: <id de Charter, "operations", fase futura, o TDE-YYYY-MM-DD-NNN>
+- **Destination**: chore | mini-charter | charter-replanning | operations | <charter-id> | <TDE id>
 - **Cost**: <estimación de esfuerzo>
+- **Labels**: <tags libres, separados por comas>                                       (v1, opcional)
 - **Notes**: <contexto libre>
 - **Promoted to**: <id de TDE, cuando Status: promoted — ver "Promoción a TDE" abajo>
 ```
 
-`FU-NNN` es monotónicamente creciente a lo largo de la vida del registro; no se renumera cuando las entradas se cierran.
+`FU-NNN` es monotónicamente creciente a lo largo de la vida del registry; no se renumera cuando las entradas se cierran.
+
+**Las dimensiones de v1**, cada una canonicalizando una necesidad observada empíricamente (issue #214):
+
+- **`Origin-class`** — dónde nació la entrada: artefactos de planificación (ex-ante) vs realidad de ejecución (testing, telemetry, staging, bugs de entorno real). Hace consultable el bucle de planificación ex-post.
+- **`Severity`** — `blocking` marca issues de clase fiabilidad que deben aterrizar antes de un cutover a producción. Canonicaliza la convención en prosa `PROD-BLOCKER` que emergió en el campo `Notes` del adopter de referencia (Señal 3). Ortogonal al bucket: una entrada `charter-triggered` puede ser `blocking`.
+- **`Labels`** — tags libres para agrupar entradas en Charters / mini-charters / chores planeados durante el triage. Consultable vía `straymark followups list --label <tag>`.
+- **Vocabulario de `Destination`** — formaliza dónde aterriza el trabajo cuando se dispara: `chore`, `mini-charter`, `charter-replanning` (la entrada reconfigura un Charter ya planeado en vez de agregarle una tarea), `operations`, un id de Charter específico, o un id de TDE. Los valores free-form siguen siendo aceptados (parsing tolerante).
 
 ### Vocabulario de status
 
 - `open` — pendiente, sin acción aún.
 - `in-progress` — un Charter ha sido declarado o está en ejecución para atender esta entrada.
+- `suspected-closed` *(nuevo en v1)* — auto-extraído por `drift --apply` desde un AILOG cuyo texto carga un marcador de cierre explícito (`closed in-Charter`, `fixed in batch N`, un hash de commit). El operador confirma (→ `closed`) o reabre (→ `open`) en el siguiente triage. Ver "Detección de drift" abajo.
 - `closed` — entrada resuelta (Charter mergeado, tarea operativa hecha, tiempo transcurrido y revisado).
 - `superseded` — atendida por otro trabajo que no referenció esta entrada directamente.
 - `promoted` — la entrada fue elevada a un documento TDE porque cumple los criterios de deuda transversal (ver "Promoción a TDE" abajo). El campo `Promoted to:` carga el id del TDE.
@@ -111,26 +141,32 @@ Las entradas closed, superseded y promoted permanecen en el archivo (historia au
 Algunas entradas FU no son solo tareas diferidas — describen **deuda técnica transversal** que merece su propio documento de gobernanza (TDE). Los criterios para promoción reflejan la desambiguación TDE-vs-`R<N>` en `AGENT-RULES.md §3`:
 
 - La entrada es *herencia de un Charter previo* (ya vivió ≥1 cierre de Charter sin remediación).
-- La entrada *aplica a múltiples módulos o múltiples Charters* — el registro central la ha fragmentado en bullets que comparten una causa raíz.
+- La entrada *aplica a múltiples módulos o múltiples Charters* — el registry central la ha fragmentado en bullets que comparten una causa raíz.
 - La entrada *requiere un Charter dedicado fuera del envelope de scope actual* para remediarse.
 - La entrada *requiere priorización o asignación humana* que la revisión periódica del operador no puede decidir desde el bullet solo (matriz impact × effort, ownership).
 
 Cuando cualquiera de estos se cumple, promueve la entrada FU a un documento TDE bajo `.straymark/06-evolution/technical-debt/`:
 
-1. Crea el TDE vía `/straymark-new tde` (o `straymark new --type tde`). Llena `impact`, `effort`, `type`, y las secciones del body desde el contexto de la entrada FU.
-2. Agrega `promoted_from_followup: FU-NNN` al frontmatter del TDE para trazabilidad.
-3. En la entrada FU, establece `Status: promoted`, `Destination: TDE-YYYY-MM-DD-NNN`, y agrega `Promoted to: TDE-YYYY-MM-DD-NNN`. Mueve la entrada a la sección `## Bucket: closed` si mantienes una; si no, déjala en lugar con el nuevo status.
+```bash
+straymark followups promote FU-NNN
+```
 
-La entrada FU **no se elimina** tras la promoción — su presencia en el registro es el rastro auditable que muestra de dónde vino el TDE.
+El comando automatiza el flujo de tres pasos que era manual en v0:
+
+1. Crea el documento TDE (la misma maquinaria que `straymark new --type tde`), pre-llenando `impact`, `effort`, `type`, y el contexto del body desde la entrada FU.
+2. Agrega `promoted_from_followup: FU-NNN` al frontmatter del TDE para trazabilidad.
+3. En la entrada FU, establece `Status: promoted`, `Destination: TDE-YYYY-MM-DD-NNN`, y `Promoted to: TDE-YYYY-MM-DD-NNN`; recalcula los contadores del frontmatter.
+
+La entrada FU **no se elimina** tras la promoción — su presencia en el registry es el rastro auditable que muestra de dónde vino el TDE.
 
 ### Dos formas de promoción — promoción-de-existente vs retroactiva-en-la-creación
 
-El workflow anterior cubre el **caso estándar**: una entrada FU `open` ya existe en el registro y se eleva a un TDE durante revisión periódica. Existe un segundo caso igualmente válido que emergió empíricamente del retrospectivo de Sentinel CHARTER-13:
+El flujo anterior cubre el **caso estándar**: una entrada FU `open` ya existe en el registry y se eleva a un TDE durante revisión periódica. Existe un segundo caso igualmente válido que emergió empíricamente del retrospectivo de Sentinel CHARTER-13:
 
-- **Promoción de entrada existente** — un FU fue registrado (típicamente vía `--apply`) como `open` semanas o Charters atrás, vivió ≥1 cierre de Charter sin resolución, y cumple los cuatro criterios. Flujo estándar.
-- **Promoción retroactiva en la creación** — la deuda se reconoce como TDE-worthy *durante* un retrospectivo (ceremonia de cierre de Charter, ciclo de auditoría, redacción de RFC) y nunca existió como FU `open`. Se crea primero el TDE; se agrega una entrada FU al registro *con `Status: promoted`* desde el nacimiento, proporcionando el rastro auditable desde el TDE hacia el contexto originador (un `R<N>` en un AILOG, un finding del calibrador, una clasificación diferida).
+- **Promoción de entrada existente** — un FU fue registrado (típicamente vía `drift --apply`) como `open` semanas o Charters atrás, vivió ≥1 cierre de Charter sin resolución, y cumple los cuatro criterios anteriores. Flujo estándar.
+- **Promoción retroactiva en la creación** — la deuda se reconoce como TDE-worthy *durante* un retrospectivo (ceremonia de cierre de Charter, ciclo de auditoría, redacción de RFC) y nunca existió como FU `open`. Se crea primero el TDE; se agrega una entrada FU al registry *con `Status: promoted`* desde el nacimiento, proporcionando el rastro auditable desde el TDE hacia el contexto originador (un `R<N>` en un AILOG, un finding del calibrador, una clasificación diferida).
 
-Ambas formas producen el mismo estado final en el registro: una entrada con `Status: promoted` y un puntero `Promoted to: TDE-YYYY-MM-DD-NNN`. La diferencia es si la entrada pre-existía como `open` o nació `promoted`. El script de drift las trata idénticamente (no diferencia por status de nacimiento), y las analíticas del adopter que cuentan `total_promoted` obtienen el mismo número en ambos casos.
+Ambas formas producen el mismo estado final en el registry: una entrada con `Status: promoted` y un puntero `Promoted to: TDE-YYYY-MM-DD-NNN`. La diferencia es si la entrada pre-existía como `open` o nació `promoted`. La detección de drift las trata idénticamente, y las analíticas que cuentan `total_promoted` obtienen el mismo número en ambos casos.
 
 Ante la duda, prefiere crear la entrada FU — aunque sea retroactivamente — porque cross-referencia el TDE de vuelta al AILOG / número-R / contexto fuente que disparó el reconocimiento. Un TDE con `promoted_from_followup: FU-NNN` apuntando a una entrada que existe en el backlog es más navegable que uno apuntando a un FU ficticio.
 
@@ -138,54 +174,64 @@ Ante la duda, prefiere crear la entrada FU — aunque sea retroactivamente — p
 
 - **Revisión periódica** — cuando el operador hace el pase manual de reclasificación, promueve cualquier entrada que haya vivido ≥2 cierres de Charter sin resolución y cumpla los criterios anteriores.
 - **Cierre de Charter** — al revisar entradas que el Charter recién cerrado resolvió, si encuentras entradas que *no* fueron resueltas y cumplen los criterios anteriores, promuévelas en vez de dejarlas como `open`.
-- **Pre-declaración de Charter** — si estás a punto de declarar un Charter y notas que el registro contiene entradas que este Charter *parcialmente* atendería, la porción no atendida puede pertenecer como TDE en vez de como otro FU diferido.
-
-El script de drift (`scripts/check-followups-drift.sh`) **no se extiende** para candidatos a promoción en v0 — la promoción es operator-driven. Una mejora futura v1 podría flagear entradas que cumplan la heurística "vivió ≥2 Charters", pero eso cristaliza tras un segundo adopter que valide el patrón (misma puerta que el resto de v0 → v1).
+- **Pre-declaración de Charter** — si estás a punto de declarar un Charter y notas que el registry contiene entradas que este Charter *parcialmente* atendería, la porción no atendida puede pertenecer como TDE en vez de como otro FU diferido.
 
 ---
 
-## Detección de drift
+## Detección de drift — nativa desde cli-3.19.0
 
-Un pequeño script bash es la capa de verificación que mantiene el registro sincronizado con nuevos AILOGs. El script vive en el repo del adopter (ruta sugerida: `scripts/check-followups-drift.sh`) y tiene tres modos.
+La detección de drift mantiene el registry sincronizado con nuevos AILOGs. Desde cli-3.19.0 es un **comando nativo del CLI** — sin script externo:
 
-### Modos
+```bash
+straymark followups drift              # escanea AILOGs modificados en git diff origin/main..HEAD (fallback HEAD~1..HEAD); sale con 1 si hay drift
+straymark followups drift --apply      # mismo escaneo + extrae nuevas entradas al registry
+straymark followups drift --scan-all   # barrido completo periódico sobre cada AILOG
+```
 
-- **Default** — escanea AILOGs modificados en `git diff origin/main..HEAD` (con fallback a `HEAD~1..HEAD`). Avisa sobre cualquier AILOG con contenido `§Follow-ups` / `R<N> (new)` que no esté en `fully_extracted_ailogs`. Sale con 1 si hay drift.
-- **`--apply`** — mismo escaneo, pero auto-agrega nuevas entradas bajo `## Bucket: ready` con ids `FU-NNN` auto-generados y agrega el id del AILOG a `fully_extracted_ailogs`. El operador reclasifica al bucket correcto después.
-- **`--scan-all`** — escanea cada AILOG en el proyecto (barrido completo periódico).
+### Qué hace `--apply`
+
+1. Extrae cada bullet `§Follow-ups` y riesgo `R<N> (new, not in Charter)` de AILOGs que aún no están en `fully_extracted_ailogs`, agregándolos bajo `## Bucket: ready` con ids `FU-NNN` auto-numerados. El operador reclasifica bucket/trigger/destination en el siguiente triage.
+2. **Refinamiento anti-ruido** *(v1 — resuelve issue #214 Señal 1)*: los bullets cuyo texto del AILOG carga un marcador de cierre explícito (`closed in-Charter`, `fixed in batch N`, una referencia de hash de commit) se extraen con `Status: suspected-closed` en vez de `open`, en lugar de contaminar el bucket `ready` como ruido TBD. A lo largo de ambas ocurrencias documentadas en el adopter de referencia, 20–75% de las entradas auto-agregadas por batch ya estaban resueltas in-Charter — este refinamiento elimina el único costo recurrente del workflow v0.
+3. Agrega el id del AILOG a `fully_extracted_ailogs`.
+4. **Recalcula todos los contadores `total_*`** desde los estados reales de las entradas (Señal 2).
+5. Si el registry es `schema_version: v0`, lo actualiza a `v1` in situ — de forma no destructiva e idempotente (todos los campos v1 son opcionales; no se reescribe nada excepto el marcador de versión y los contadores).
 
 ### Granularidad per-AILOG vs per-bullet
 
-El tracking es **per-AILOG**, no per-bullet. Un AILOG está totalmente extraído (su id está en `fully_extracted_ailogs` — confiar en el registro) o no lo está (extraer todo). El matching per-bullet requeriría fingerprinting (hashing de texto o comparación fuzzy), que produce falsos positivos cada vez que una entrada del registro parafrasea el bullet del AILOG — y las entradas curadas siempre parafrasean.
+El tracking es **per-AILOG**, no per-bullet. Un AILOG está totalmente extraído (su id está en `fully_extracted_ailogs` — confiar en el registry) o no lo está (extraer todo). El matching per-bullet requeriría fingerprinting (hashing de texto o comparación fuzzy), que produce falsos positivos cada vez que una entrada del registry parafrasea el bullet del AILOG — y las entradas curadas siempre parafrasean. Esta decisión de diseño está validada empíricamente: **0 falsos positivos a lo largo de 76 AILOGs y ~10 corridas de apply** en el adopter de referencia.
 
-El costo de la granularidad per-AILOG: cuando se agrega un follow-up a un AILOG ya extraído tras el cierre del Charter, la detección de drift no lo detecta. La remediación es manual del operador — quitar el AILOG de `fully_extracted_ailogs` y re-correr con `--apply`. Este trade-off es intencional para v0 porque la mayoría de AILOGs son write-once tras el cierre del Charter.
+El costo de la granularidad per-AILOG: cuando se agrega un follow-up a un AILOG ya extraído tras el cierre del Charter, la detección de drift no lo detecta. La remediación es manual del operador — quitar el AILOG de `fully_extracted_ailogs` y re-correr con `--apply`. Este trade-off es intencional porque la mayoría de AILOGs son write-once tras el cierre del Charter.
 
-### Plantilla de script
+### Script bash legacy (deprecado)
 
-Una implementación de referencia (~290 líneas de bash POSIX) está en `StrangeDaysTech/sentinel` en `scripts/check-followups-drift.sh`. Cópiala a tu repo y ajusta las constantes al inicio:
+La implementación de referencia v0 (`scripts/check-followups-drift.sh`, ~296 líneas de bash POSIX en el repo del adopter Sentinel) está **deprecada a partir de cli-3.19.0**. Sigue funcionando para registries v0 pero ya no se mantiene y carece del refinamiento anti-ruido y del recálculo de contadores. Ruta de migración: borra el script, ejecuta `straymark followups drift --apply` una vez (esto también actualiza el registry a v1), y actualiza cualquier pre-commit hook para que llame al CLI en su lugar.
+
+---
+
+## Superficie del CLI
 
 ```bash
-BACKLOG_FILE=".straymark/follow-ups-backlog.md"
-AILOG_DIR=".straymark/07-ai-audit/agent-logs"
+straymark followups list                  # enumera entradas: id FU, status, severity, bucket, destination
+straymark followups list --bucket ready --status open --severity blocking --label <tag>
+straymark followups status                # pulso del registry: contadores (recalculados al vuelo), desglose por bucket/severity
+straymark followups status FU-NNN         # vista de detalle de una entrada
+straymark followups drift [--apply|--scan-all]   # detección de drift (ver arriba)
+straymark followups promote FU-NNN        # automatiza la promoción FU → TDE (ver arriba)
 ```
 
-El script usa solo `awk` y `grep` — sin jq, sin yq, sin dependencias pesadas. Portable entre Linux y macOS.
+El registry también aparece como un grupo sintético **Follow-ups** en la TUI de `straymark explore` (sub-nodos por bucket) y como un bloque de conteos en `straymark status`.
 
 ---
 
 ## Integración con agentes
 
-El agente (Claude / Gemini / etc.) se vuelve el mantenedor primario del registro. Agrega a tu `CLAUDE.md` / `AGENT.md`:
+Desde fw-4.21.0 las directivas de agente **se shippean con el framework** en [`AGENT-RULES.md §13`](AGENT-RULES.md) — los adopters ya no copian un bloque a su propio `CLAUDE.md` / `AGENT.md`. En resumen:
 
-```markdown
-## Backlog de follow-ups
+- **Session start**: echa un vistazo a `.straymark/follow-ups-backlog.md` (o ejecuta `straymark followups status`) para saber qué está pendiente en el proyecto.
+- **Pre-commit**: ¿creaste o modificaste algún AILOG con entradas `## Follow-ups` o `R<N> (new, not in Charter)`? → ejecuta `straymark followups drift --apply` en el mismo commit.
+- **Post-Charter close**: revisa las entradas que el Charter resolvió; márcalas `closed` (con el id del Charter de cierre en `Notes`) o `superseded`; confirma o reabre cualquier entrada `suspected-closed`; promueve las entradas no resueltas que cumplen los criterios de TDE vía `straymark followups promote`.
 
-- **Inicio de sesión**: revisar `.straymark/follow-ups-backlog.md` para saber qué está pendiente en el proyecto.
-- **Checklist pre-commit**: ¿creaste o modificaste algún AILOG con entradas `## Follow-ups` o `R<N> (new, not in Charter)`? → ejecuta `scripts/check-followups-drift.sh --apply` para extender el backlog en el mismo commit.
-- **Post-cierre de Charter**: revisar entradas que el Charter resolvió; marcarlas `closed` (con el id del Charter de cierre en `Notes`) o `superseded`. Para entradas no resueltas que cumplen los criterios de TDE (herencia de Charter previo, transversal, requiere Charter dedicado, necesita priorización humana), promuévelas a un documento TDE (ver "Promoción a TDE" en este patrón + `AGENT-RULES.md §3`).
-```
-
-Esto hace al agente el mantenedor, al script la capa de verificación, y al operador el revisor periódico (re-bucketing, marcar closed, podar superseded, promover a TDE cuando los criterios aplican).
+Esto hace al agente el mantenedor primario del registry, al CLI la capa de verificación, y al operador el revisor periódico (re-bucketing, confirmar suspected-closed, podar superseded, promover a TDE cuando los criterios aplican).
 
 ---
 
@@ -193,54 +239,56 @@ Esto hace al agente el mantenedor, al script la capa de verificación, y al oper
 
 Para un adopter empezando desde cero:
 
-1. Crear `.straymark/follow-ups-backlog.md` con el frontmatter de arriba (lista `fully_extracted_ailogs:` vacía inicialmente) y los cinco headers `## Bucket: <name>`.
-2. Copiar el script de referencia desde `StrangeDaysTech/sentinel` a `scripts/check-followups-drift.sh`. Ajustar `AILOG_DIR` si tus AILOGs viven en otro lado.
-3. Ejecutar `scripts/check-followups-drift.sh --scan-all --apply` para sembrar el registro desde AILOGs existentes.
-4. Reclasificar manualmente las entradas auto-generadas en `## Bucket: ready` a los buckets correctos. Esto es triage one-time, típicamente 30-60 min para un backlog de ~50 entradas.
-5. Agregar el bloque de integración con agentes a `CLAUDE.md` / `AGENT.md`.
-6. Opcionalmente conectar `scripts/check-followups-drift.sh` a un pre-commit hook para enforcement duro.
+1. Copia `.straymark/templates/follow-ups-backlog.md` a `.straymark/follow-ups-backlog.md` (lista `fully_extracted_ailogs:` vacía, cinco headers `## Bucket:`).
+2. Ejecuta `straymark followups drift --scan-all --apply` para sembrar el registry desde AILOGs existentes.
+3. Reclasifica manualmente las entradas auto-generadas en `## Bucket: ready` a los buckets correctos; llena `Origin-class`/`Severity`/`Labels` donde agreguen señal. Esto es triage one-time, típicamente 30-60 min para un backlog de ~50 entradas.
+4. Listo — las directivas de agente en `AGENT-RULES.md §13` ya están activas; no se necesitan ediciones a `CLAUDE.md`.
 
-Para un adopter migrando desde tracking ad-hoc: el mismo flujo, pero el paso 4 puede requerir decidir qué entradas ya están `closed` o `superseded` — esa clasificación es lo que hace al registro útil.
+Para un adopter migrando desde la convención v0: ejecuta `straymark followups drift --apply` una vez (auto-actualiza el registry a v1), borra el script bash local, y actualiza cualquier pre-commit hook para que llame al CLI.
 
 ---
 
 ## Implementación de referencia
 
-`StrangeDaysTech/sentinel` CHARTER-12, mergeado 2026-05-06:
+`StrangeDaysTech/sentinel` — el adopter originador:
 
-- PR de implementación: [sentinel#53](https://github.com/StrangeDaysTech/sentinel/pull/53) (registro + script + adiciones a CLAUDE.md).
-- PR de cierre: [sentinel#54](https://github.com/StrangeDaysTech/sentinel/pull/54) (verificación post-merge + cierre del Charter).
-
-Contexto empírico: 47 entradas sembradas desde la retrospectiva CHARTER-08 → CHARTER-11 (~30 min de triage multi-agente). La cadena demostró el gap que motivó el patrón — sin el registro, el operador no podía ver "qué está pendiente en el proyecto" sin reclasificar los follow-ups de cada Charter en aislamiento. Con el registro, la revisión de inicio de sesión es una sola lectura de archivo.
+- Patrón v0: CHARTER-12, mergeado 2026-05-06 ([sentinel#53](https://github.com/StrangeDaysTech/sentinel/pull/53), [sentinel#54](https://github.com/StrangeDaysTech/sentinel/pull/54)). 47 entradas sembradas desde la retrospectiva CHARTER-08 → CHARTER-11.
+- Validación de escala: triage post-Etapa-3 en **N=91 FUs / 76 AILOGs extraídos / 65 open** ([issue #214](https://github.com/StrangeDaysTech/straymark/issues/214)) — el input empírico que impulsó el schema v1 y el CLI nativo (ADR-2026-06-03-001).
 
 ---
 
 ## Preguntas abiertas
 
-Estas no se resuelven en v0. Revisiones futuras de este patrón, o un helper CLI, pueden atenderlas:
+Resueltas en v1:
 
-- **Heurística de clasificación de bucket**. Hoy `--apply` vuelca cada entrada nueva a `## Bucket: ready`; el operador reclasifica manualmente. Una heurística usando `tags` del AILOG y `effort_estimate` del Charter podría sugerir un bucket automáticamente.
-- **Validación de schema**. El registro sigue un esquema tácito; aún no existe `.straymark/schemas/follow-ups-backlog.schema.v0.json`. La validación hoy es revisión humana.
-- **Integración con el ciclo de auditoría**. Cuando `straymark charter audit --merge-reports` produce findings de deuda real que no son remediados atómicamente pre-cierre, esos findings viven solo en `.straymark/audits/<id>/review.md`. No fluyen automáticamente al registro central. Aflorarlos automáticamente cerraría un gap conocido.
-- **Semántica `closed` vs `superseded`**. Hoy la diferencia es si el trabajo de resolución referenció explícitamente la entrada. Una convención más estricta puede emerger.
-- **Cristalización como CLI `straymark followups`**. Una vez que un segundo adopter valide el patrón, el framework puede shippear un subcomando que espeje al trío existente `straymark charter`: `list` / `close` / `drift`. Los adopters en v0 (este patrón) migran borrando su script local y cambiando la instrucción del agente.
+- ~~**Validación de schema.**~~ → `.straymark/schemas/follow-ups-backlog.schema.v1.json` (frontmatter), validación de la forma de entrada en el parser del CLI.
+- ~~**Cristalización como CLI `straymark followups`.**~~ → `list / status / drift / promote` nativos desde cli-3.19.0.
+- ~~**Heurística de clasificación de bucket** (parcialmente).~~ → `suspected-closed` elimina la clase de ruido dominante; la sugerencia completa de bucket (usando `tags` del AILOG / `effort_estimate` del Charter) sigue abierta.
+
+Aún abiertas para revisiones futuras:
+
+- **Integración con el ciclo de auditoría.** Cuando `straymark charter audit --merge-reports` produce findings de deuda real que no son remediados atómicamente pre-cierre, esos findings viven solo en `.straymark/audits/<id>/review.md`. No fluyen automáticamente al registry central. Aflorarlos automáticamente cerraría un gap conocido.
+- **Semántica `closed` vs `superseded`.** Hoy la diferencia es si el trabajo de resolución referenció explícitamente la entrada. Una convención más estricta puede emerger.
+- **Integración suave con `charter close`** (issue #135 Tier 3): auto-invocar `followups drift --apply` tras un cierre de Charter, con un prompt interactivo de promoción. Condicionada a una señal de fricción de un segundo adopter.
+- **Estabilización dura del schema (v1.0).** Condicionada a la validación por un segundo adopter en otro dominio, según el principio de diseño #12.
 
 ---
 
 ## Créditos
 
-Contribuido vía [issue #111](https://github.com/StrangeDaysTech/straymark/issues/111) por el adopter Sentinel. Fundamento empírico: cadena CHARTER-08 → CHARTER-11 en `StrangeDaysTech/sentinel`. Autor: José Villaseñor Montfort.
+Contribuido vía [issue #111](https://github.com/StrangeDaysTech/straymark/issues/111) por el adopter Sentinel; madurado a primera clase vía [issue #214](https://github.com/StrangeDaysTech/straymark/issues/214) y ADR-2026-06-03-001. Fundamento empírico: cadena CHARTER-08 → CHARTER-11 y el triage post-Etapa-3 en N=91 en `StrangeDaysTech/sentinel`. Autor: José Villaseñor Montfort.
 
-*Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7); toda la responsabilidad del contenido recae en el autor humano.*
+*Este documento fue elaborado con asistencia de herramientas de IA generativa (Claude 4.7 / Opus 4.8); toda la responsabilidad del contenido recae en el autor humano.*
 
 ---
 
 ## Relacionado
 
-- [EMERGENT-OBSERVATION-DESIGN.md](EMERGENT-OBSERVATION-DESIGN.md) — el meta-patrón que esta convención de detección de drift instancia en la superficie per-AILOG ↔ registro.
+- [EMERGENT-OBSERVATION-DESIGN.md](EMERGENT-OBSERVATION-DESIGN.md) — el meta-patrón que esta convención de detección de drift instancia en la superficie per-AILOG ↔ registry.
 - [CHARTER-CHAIN-EVOLUTION.md](CHARTER-CHAIN-EVOLUTION.md) — patrón hermano que opera a nivel de cadena (Pattern 1) y a nivel de ciclo (Pattern 2).
-- [AGENT-RULES.md §3](AGENT-RULES.md) — criterios de escalación TDE-vs-`R<N>` que pueden promover follow-ups a entradas de deuda dedicadas.
+- [AGENT-RULES.md §3](AGENT-RULES.md) — criterios de escalación TDE-vs-`R<N>` que pueden promover follow-ups a entradas de deuda dedicadas; §13 — las directivas de agente shippeadas para el mantenimiento del registry.
+- `STRAYMARK.md §16` — el resumen a nivel onboarding del registry como artefacto de primera clase.
 
 ---
 
-*StrayMark fw-4.19.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.21.0 | [Strange Days Tech](https://strangedays.tech)*

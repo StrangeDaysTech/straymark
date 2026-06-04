@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://straymark.dev/schemas/follow-ups-backlog.schema.v1.json",
+  "title": "StrayMark Follow-ups Backlog registry (experimental v1)",
+  "description": "Frontmatter schema for the central follow-ups registry (.straymark/follow-ups-backlog.md) — the single-file, first-class artifact that aggregates §Follow-ups and R<N> (new, not in Charter) entries across AILOGs. The entry body (### FU-NNN blocks under ## Bucket: headers) is semi-structured markdown validated by shape in the CLI, not by this schema; the canonical entry field vocabulary is documented under $defs/entry for tooling and reference. See FOLLOW-UPS-BACKLOG-PATTERN.md for the full convention.",
+  "$comment": "EXPERIMENTAL v1. Crystallized from Sentinel CHARTER-12 → post-Etapa-3 triage (N=91 FUs, 76 AILOGs, 0 extraction false positives) plus issues #111/#135/#214 and ADR-2026-06-03-001. Hard stabilization (v1.0, breaking-change freeze) is gated on validation by a second adopter in another domain, per design principle #12. Adopters: avoid persisting tooling that depends on this exact shape; expect breaking changes between v1.x revisions. v0 registries remain readable forever (lenient parsing); the CLI upgrades them in place on the first write command.",
+  "type": "object",
+  "required": ["schema_version", "last_scan", "buckets", "fully_extracted_ailogs"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["v0", "v1"],
+      "description": "Registry schema version. v0 registries are read leniently and auto-upgraded to v1 (non-destructively, idempotently) by the first CLI write command (`followups drift --apply` or `followups promote`)."
+    },
+    "last_scan": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "Date (YYYY-MM-DD) of the last drift scan that touched this registry. Maintained by `straymark followups drift`."
+    },
+    "last_scan_range": {
+      "type": "string",
+      "description": "Optional — first..last AILOG id covered by extraction, e.g. 'AILOG-2026-04-11-001..AILOG-2026-06-03-006'."
+    },
+    "total_open": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Count of entries with Status: open. CLI-OWNED since v1: recomputed by every write command (`drift --apply`, `promote`). Do not maintain by hand — stale values are corrected on the next write (issue #214 Signal 2)."
+    },
+    "total_promoted": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Count of entries with Status: promoted. CLI-owned since v1 (canonicalized in schema v0.1, fw-4.13.1)."
+    },
+    "total_closed_in_session": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Count of entries closed since the last triage session. CLI-owned since v1."
+    },
+    "total_phase_blocked": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Count of entries currently in the phase-blocked bucket. CLI-owned since v1."
+    },
+    "total_suspected_closed": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Count of entries with Status: suspected-closed (new in v1 — auto-extracted entries whose source AILOG carries an in-Charter closure marker). CLI-owned."
+    },
+    "buckets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["ready", "time-triggered", "charter-triggered", "phase-blocked", "operational"]
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "Bucket vocabulary in use. The five canonical buckets organize entries by trigger type (when actionable). Stable at N=91 entries in the reference adopter — no sixth bucket has been needed."
+    },
+    "fully_extracted_ailogs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^AILOG-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3}[a-z]?(-[a-z0-9-]+)?$"
+      },
+      "uniqueItems": true,
+      "description": "Load-bearing metadata for drift detection. Every AILOG whose §Follow-ups and R<N> entries have been transferred into the registry (or explicitly classified as superseded) belongs in this list. Per-AILOG granularity — not per-bullet — is the empirically validated design choice (0 false positives across 76 AILOGs in the reference adopter)."
+    }
+  },
+  "$defs": {
+    "entry": {
+      "$comment": "Documentation of the markdown entry shape (### FU-NNN blocks). NOT validated by this JSON schema — the CLI parses these fields leniently from the registry body. Listed here as the canonical vocabulary for tooling (Loom node model, future validators).",
+      "type": "object",
+      "properties": {
+        "fu_id": {
+          "type": "string",
+          "pattern": "^FU-[0-9]{3,}$",
+          "description": "Monotonically increasing across the registry's lifetime; never renumbered when entries close."
+        },
+        "origin": {
+          "type": "string",
+          "description": "Pointer to the source AILOG section, e.g. 'AILOG-2026-06-03-003 §R3 (new, not in Charter)'."
+        },
+        "origin_class": {
+          "type": "string",
+          "enum": ["ex-ante-planning", "testing", "telemetry", "staging", "real-env-bug"],
+          "description": "NEW in v1 (optional). Where the follow-up was born: ex-ante planning artifacts vs ex-post execution reality (test runs, telemetry readings, staging incidents, bugs observed in real — non-simulated — environments). This dimension makes the registry queryable as the ex-post counterpart of SpecKit for Charter planning."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["open", "in-progress", "suspected-closed", "closed", "superseded", "promoted"],
+          "description": "Entry lifecycle. NEW in v1: suspected-closed — assigned by `drift --apply` instead of open when the source AILOG text carries an explicit closure marker ('closed in-Charter', 'fixed in batch N', a commit hash); the operator confirms (→ closed) or reopens (→ open) at the next triage. Resolves the recurring extractor-noise pattern (issue #214 Signal 1)."
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["normal", "blocking"],
+          "description": "NEW in v1 (optional, default normal). How much it hurts to skip — orthogonal to the bucket (when actionable). 'blocking' canonicalizes the PROD-BLOCKER prose convention that emerged in the reference adopter (issue #214 Signal 3): reliability-class issues that must land before a production cutover."
+        },
+        "trigger": {
+          "type": "string",
+          "description": "ready | <calendar date> | when <X> | <other>. Free-text observable condition that makes the entry actionable."
+        },
+        "destination": {
+          "type": "string",
+          "description": "NEW vocabulary in v1: chore | mini-charter | charter-replanning | operations | <charter-id> | <TDE-id>. Formalizes where the work lands when triggered — including 'charter-replanning' for entries that reshape an already-planned Charter rather than adding a task to it. Free-form values remain accepted (lenient)."
+        },
+        "cost": {
+          "type": "string",
+          "description": "Effort estimate, free-form (e.g. 'M (~2-3h: 2 integ tests following the existing pattern)')."
+        },
+        "labels": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "NEW in v1 (optional). Free tags for grouping entries into planned Charters / mini-charters / chores during triage (e.g. 'staging-hardening, auth'). Queryable via `straymark followups list --label <tag>`."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Free-form context, including reclassification provenance ('Reclassified from ready (auto-appended TBD) by <triage> <date>')."
+        },
+        "promoted_to": {
+          "type": "string",
+          "pattern": "^TDE-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3}.*$",
+          "description": "TDE id, present when Status: promoted. The TDE's frontmatter carries the reverse pointer (promoted_from_followup: FU-NNN)."
+        }
+      },
+      "required": ["fu_id", "origin", "status"]
+    }
+  }
+}

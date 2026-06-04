@@ -76,6 +76,20 @@ Charters are **not** doc types — they wrap a multi-session implementation bloc
 
 > See section 15 of `STRAYMARK.md` and `.straymark/00-governance/SPECKIT-CHARTER-BRIDGE.md` for granularity heuristics, lifecycle, and the SpecKit ↔ Charter bridge.
 
+### First-Class Registries — Follow-ups Backlog *(fw-4.21.0+)*
+
+The follow-ups backlog is **not** a doc type either — a single-file registry aggregating `§Follow-ups` / `R<N> (new)` entries across AILOGs. Entry ids `FU-NNN`; five buckets by trigger type; statuses `open | in-progress | suspected-closed | closed | superseded | promoted`. Counters are CLI-owned.
+
+| Concept | File | Agent Autonomy |
+|---------|------|---------------|
+| `Follow-ups registry` | `.straymark/follow-ups-backlog.md` (schema: `follow-ups-backlog.schema.v1.json`, experimental) | Agent extracts via `followups drift --apply` (pre-commit); operator owns triage and promotion approval |
+
+```bash
+straymark followups list / status / drift [--apply] / promote FU-NNN
+```
+
+> See section 16 of `STRAYMARK.md`, `FOLLOW-UPS-BACKLOG-PATTERN.md`, and AGENT-RULES.md §13 for the shipped agent directives.
+
 ---
 
 ## When to Document
@@ -91,6 +105,7 @@ Charters are **not** doc types — they wrap a multi-session implementation bloc
 | OTel instrumentation changes | AILOG + tag `observabilidad` |
 | Multi-session implementation block (>1 day, >5 tasks across phases) | Declare a **Charter** (`straymark charter new`) |
 | Transversal technical debt (heritage from prior Charter, applies to multiple modules, requires dedicated Charter, needs human prioritization) | **TDE** — distinct from per-Charter `R<N>`; see AGENT-RULES.md §3 |
+| AILOG created/modified with `## Follow-ups` or `R<N> (new, not in Charter)` entries | `straymark followups drift --apply` in the same commit — see AGENT-RULES.md §13 |
 
 **DO NOT document**: credentials, tokens, PII, secrets.
 
@@ -153,7 +168,8 @@ Mark `review_required: true` when:
 ├── 09-ai-models/                ← MCARD
 │   └── labeling/                ← AILABEL*
 ├── charters/                    ← Charter (NN-slug.md + NN-slug.telemetry.yaml)
-└── templates/                   ← Templates (incl. charter/ subdir)
+├── follow-ups-backlog.md        ← Follow-ups registry (FU-NNN entries, first-class since fw-4.21.0)
+└── templates/                   ← Templates (incl. charter/ subdir + follow-ups-backlog.md)
 
 * Only created when regional_scope: china is enabled.
 ```
@@ -237,9 +253,9 @@ Mark `review_required: true` when:
 
 | Pattern | Document |
 |---------|----------|
-| Follow-ups backlog (central registry + drift detection) *(fw-4.10.0+)* | [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) |
+| Follow-ups backlog (first-class registry + native `followups` CLI) *(fw-4.10.0+, first-class fw-4.21.0+)* | [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) |
 | Polish Charter as debt-detection ("surface declaration without wiring" anti-pattern) *(fw-4.18.0+)* | [POLISH-CHARTER-PATTERN.md](POLISH-CHARTER-PATTERN.md) |
 
 ---
 
-*StrayMark fw-4.20.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.21.0 | [Strange Days Tech](https://strangedays.tech)*

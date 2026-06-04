@@ -376,10 +376,34 @@ confidence: high | medium | low
 
 ---
 
-## 模式
+## 13. Follow-ups Backlog（注册表维护）
 
-当项目在多个 Charter 之间累积大量 AILOG 且 follow-ups 难以跟踪时,参见 [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) 了解可复制的约定(中央注册表 + drift 检测脚本 + 代理集成)。约 20+ AILOG 的 adopter 会受益;低于该阈值时,仅 per-AILOG 的 `§Follow-ups` 约定就足够了。
+当项目维护中央 follow-ups 注册表（`.straymark/follow-ups-backlog.md` —— 见 [`FOLLOW-UPS-BACKLOG-PATTERN.md`](FOLLOW-UPS-BACKLOG-PATTERN.md) 和 `STRAYMARK.md §16`）时,代理是它的**主要维护者**。三条指令:
+
+### 会话开始
+
+扫视 `.straymark/follow-ups-backlog.md`（或运行 `straymark followups status`）以了解项目中所有待处理事项。当操作员询问 *"有什么待处理?"* / *"我们有哪些 follow-ups?"* 时,**注册表是规范来源** —— 从中作答（`straymark followups list`）,而不是重新扫描 AILOG。仅当注册表不存在或 `followups drift` 报告有未提取的 AILOG 时,才回退到 AILOG 扫描。
+
+### Pre-commit
+
+创建或修改了任何带有 `## Follow-ups` 或 `R<N> (new, not in Charter)` 条目的 AILOG 吗? → 运行 `straymark followups drift --apply`,使注册表扩展与 AILOG 搭乘**同一个 commit**。AILOG 文本已标记为在 Charter 内解决的条目会被自动提取为 `suspected-closed` —— 不要删除它们;操作员在下一次 triage 时确认。
+
+### Charter 关闭后
+
+审查刚关闭的 Charter 所解决的注册表条目:
+
+- 将其标记为 `closed`（在 `Notes` 中带有关闭 Charter id）或 `superseded`。
+- 确认或重新打开该 Charter 的 AILOG 产生的任何 `suspected-closed` 条目。
+- 对于符合 §3 TDE 标准（遗留、横向、专用 Charter、人工优先级）的未解决条目,通过 `straymark followups promote FU-NNN` 提议提升 —— 提升本身需操作员批准,依据 §3 的自主权限制。
+
+注册表 frontmatter 中的计数器（`total_open`、…）为 **CLI-owned**:绝不手工编辑;每个写入命令都会重新计算它们。
 
 ---
 
-*StrayMark fw-4.20.0 | [Strange Days Tech](https://strangedays.tech)*
+## 模式
+
+当项目在多个 Charter 之间累积大量 AILOG 且 follow-ups 难以跟踪时,参见 [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) —— **自 fw-4.21.0 / cli-3.19.0 起的一等公民注册表**（中央注册表 + 原生 `straymark followups` CLI + 上方 §13 指令）。约 20+ AILOG 的 adopter 会受益;低于该阈值时,仅 per-AILOG 的 `§Follow-ups` 约定就足够了。
+
+---
+
+*StrayMark fw-4.21.0 | [Strange Days Tech](https://strangedays.tech)*

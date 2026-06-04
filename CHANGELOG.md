@@ -7,6 +7,33 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.21.0 — Follow-ups backlog becomes a first-class entity (schema v1)
+
+Promotes the follow-ups backlog from documented convention (v0, adopter-side bash) to **first-class framework entity**, following the lane Charter used: canonical schema, shipped agent directives, onboarding-level visibility. Driven by [#214](https://github.com/StrangeDaysTech/straymark/issues/214) (Sentinel post-stage triage at N=91 FUs — extractor noise ×2, silent counter drift, ad-hoc severity) and recorded in [`ADR-2026-06-03-001`](docs/decisions/ADR-2026-06-03-followups-first-class.md), which documents the design-principle #12 reframe: the structural evidence (91 FUs, schema already iterated under empirical pressure, 0 extraction false positives across 76 AILOGs, stable bucket vocabulary, internal Loom roadmap demand) justifies crystallizing as **v1 experimental**; hard stabilization stays gated on a second adopter. The native CLI surface (`straymark followups list/status/drift/promote`) ships in the companion release cli-3.19.0.
+
+### Added (Framework)
+
+- **`follow-ups-backlog.schema.v1.json`** (`.straymark/schemas/`) — frontmatter schema for the registry, experimental v1. Canonicalizes four optional entry dimensions surfaced empirically: **`Severity`** (`normal | blocking` — Sentinel's ad-hoc `PROD-BLOCKER`, #214 Signal 3), **`Origin-class`** (`ex-ante-planning | testing | telemetry | staging | real-env-bug` — making the registry queryable as the ex-post counterpart of SpecKit for Charter planning), **`Labels`** (free tags for grouping entries into planned Charters/mini-charters), and a formal **`Destination`** vocabulary (`chore | mini-charter | charter-replanning | operations | <charter-id> | <TDE id>`). New entry status **`suspected-closed`** for auto-extracted entries whose source AILOG carries an in-Charter closure marker.
+- **Registry template** at `.straymark/templates/follow-ups-backlog.md` — empty frontmatter v1 + the five `## Bucket:` headers; adoption no longer starts from a blank file.
+- **`STRAYMARK.md` §16 — Follow-ups backlog** — onboarding-level section mirroring §15 (Charters): what the registry is, the lifecycle (extraction → triage → consumption → promotion), how it relates to AILOGs/Charters/TDEs, and the CLI quick surface.
+- **`AGENT-RULES.md` §13 — Follow-ups Backlog (registry maintenance)** — the agent directives now **ship with the framework** instead of being a suggested copy-paste block: session-start glance (the registry is the canonical answer to "what's pending?"), pre-commit `followups drift --apply` in the same commit as the AILOG, post-Charter-close review/confirmation/promotion. Root-cause fix for agents bypassing the registry and re-scanning AILOGs.
+
+### Changed (Framework)
+
+- **`FOLLOW-UPS-BACKLOG-PATTERN.md` graduates v0 → v1** (EN + ES + zh-CN): maturation chronology table; **frontmatter counters become CLI-owned** (recomputed on every write — closes the silent counter-drift failure mode, #214 Signal 2: declared `total_open: 47` vs 65 real); entry schema gains the four v1 dimensions; drift detection section rewritten for the native CLI including the **anti-noise refinement** (closure markers → `suspected-closed`, #214 Signal 1: 20–75% noise per auto-append batch across both documented occurrences); v0 bash script deprecated with a one-command migration path; "The registry as planning input" section documents the ex-post planning loop; resolved open questions struck through.
+- **`QUICK-REFERENCE.md`**: new "First-Class Registries — Follow-ups Backlog" subsection beside the Charter one, a "When to Document" row for the pre-commit drift trigger, and the registry in the folder tree.
+- **`DOCUMENTATION-POLICY.md` §6**: the registry appears in the folder structure (explicitly *not* a doc type).
+
+### Migration (adopters on the v0 convention)
+
+No action needed until cli-3.19.0: v0 registries remain readable forever (lenient parsing). On the first `straymark followups drift --apply`, the registry upgrades to v1 in place — non-destructively and idempotently (all v1 fields optional; only the version marker and counters are rewritten). Then delete the local `check-followups-drift.sh` and point any pre-commit hook at the CLI.
+
+### Not in this release
+
+The CLI surface itself (`followups list/status/drift/promote`, `explore`/`status` integration) ships in cli-3.19.0. Tier 3 of [#135](https://github.com/StrangeDaysTech/straymark/issues/135) (soft integration with `charter close`) remains open and gated on a second-adopter friction signal.
+
+---
+
 ## CLI 3.18.0 — `analyze declared-vs-wired` subcommand (LNXDrive #209, Release B)
 
 Ships the mechanical check the N=2 crossing unlocked: a config-driven set-difference that catches the *surface-declaration-without-wiring* anti-pattern's sub-class 5 — a declared client-side IPC/RPC proxy method with no implemented server-interface counterpart (the LNXDrive D-Bus/GOA regression). Follows the framework crystallization shipped in fw-4.20.0.
