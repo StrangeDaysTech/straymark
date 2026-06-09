@@ -39,9 +39,13 @@
     "message": "Issues",
     "description": "The label of footer link with label=Issues linking to https://github.com/StrangeDaysTech/straymark/issues"
   },
-  "link.item.label.Organization": {
-    "message": "组织",
-    "description": "The label of footer link with label=Organization linking to https://github.com/StrangeDaysTech"
+  "link.item.label.LinkedIn": {
+    "message": "LinkedIn",
+    "description": "The label of footer link with label=LinkedIn linking to https://www.linkedin.com/company/strangedaystech/"
+  },
+  "link.item.label.Website": {
+    "message": "网站",
+    "description": "The label of footer link with label=Website linking to https://strangedays.tech/"
   },
   "link.title.Legal": {
     "message": "法律",

@@ -365,7 +365,9 @@ const config: Config = {
         {
           title: 'Strange Days Tech',
           items: [
-            {label: 'Organization', href: 'https://github.com/StrangeDaysTech'},
+            {label: 'GitHub', href: 'https://github.com/StrangeDaysTech'},
+            {label: 'LinkedIn', href: 'https://www.linkedin.com/company/strangedaystech/'},
+            {label: 'Website', href: 'https://strangedays.tech/'},
           ],
         },
         {
