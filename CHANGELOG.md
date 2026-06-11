@@ -7,6 +7,24 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.24.0 — portable installed skills: runtime-agnostic identity + current-work git context
+
+Five portability/correctness fixes to the installed skills, surfaced by a Codex (`gpt-5.5`) review of the StrayMark skills running under Codex CLI in the reference adopter Sentinel ([#232](https://github.com/StrangeDaysTech/straymark/issues/232)). The skills ship in four families under `dist/` (`.claude/`, `.gemini/`, `.agent/workflows/` hand-maintained; `.codex/` generated from `.claude/` by `gen_codex_skills`); the fixes were applied to the hand-maintained sources and the Codex tree regenerated.
+
+### Fixed
+
+- **Runtime-agnostic agent identity** (`straymark-new`, `-adr`, `-aidec`, `-ailog`, `-mcard`, `-sec`): the skills no longer hardcode a platform identity in the `agent:` frontmatter they write. Codex skills, generated verbatim from the Claude source, previously instructed Codex to write `agent: claude-code-v1.0` — distorting provenance and agent/model telemetry. Skills now instruct the runtime to resolve its own canonical identity from `AGENT-RULES.md §1` (`claude-code-v1.0`, `gemini-cli-v1.0`, `codex-cli-v1.0`, `cursor-v1.0`, …). (#232 Finding 1)
+- **Same-day ID discovery no longer misses nested documents** (`straymark-new`): the sequence-counting glob `ls .straymark/*/[TYPE]-…` matched only one directory level and returned 0 for types nested two levels deep (AILOG/AIDEC/ETH under `.straymark/07-ai-audit/…`), risking duplicate IDs. Replaced with a recursive `find`, plus a note to take the highest existing `NNN` (not the file count) when sequence gaps exist. (#232 Finding 2)
+- **Context gathering describes current work, not the previous commit** (`straymark-new`, `-adr`, `-aidec`, `-ailog`, `-sec`): `git diff --stat HEAD~1 2>/dev/null || git diff --stat` never reached its fallback (the first command almost always succeeds) and summarized the prior commit. Replaced with explicitly labeled staged (`--cached`), unstaged, and untracked (`git status --porcelain`) blocks. (#232 Finding 3)
+- **`straymark-status` reports uncommitted StrayMark documents** (`straymark-status`): the recent-document lookup used only `git log --since="1 hour ago"`, missing newly created docs in the working tree — exactly the pre-commit case the skill targets. It now combines git history with staged/unstaged/untracked `.straymark/**/*.md`, and the modified-source-files step gets the same current-work fix as Finding 3. (#232 Finding 4)
+- **Audit-review degrades cleanly without a subagent primitive** (`straymark-audit-review`): "Launch Explore agents in parallel" assumed a runtime-specific capability. Reworded as capability-dependent — use parallel read-only subagents when the runtime provides them, otherwise verify findings directly in bounded groups by file. (#232 Finding 5)
+
+### Adopter guidance
+
+Run `straymark update-framework` to fw-4.24.0, then re-install the skills for your runtime (e.g. `straymark install-skills --agent codex`). No document migration is needed; the fixes only change how new documents are created and how status is reported.
+
+---
+
 ## Framework 4.23.1 — migration sweep warning from the reference adopter's update run
 
 Docs-only patch driven by the Sentinel update report ([#225](https://github.com/StrangeDaysTech/straymark/issues/225), cli-3.16.0 → 3.19.x / fw-4.20.0 → 4.22.0): the deprecated v0 bash script produced **silent false-negatives on drift detection itself** — its format-sensitive extractor (required both a `## Risk` heading and the exact `- **R<N> (new` bullet shape) never registered 8 AILOGs whose risks were written as bare paragraphs, reporting "in sync" while 29 entries sat unextracted. The native lenient parser caught them all on the first post-migration sweep.

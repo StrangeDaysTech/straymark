@@ -18,8 +18,11 @@ Use this skill for major architectural decisions that affect the system structur
 # Get current date
 date +%Y-%m-%d
 
-# Get recent changes for context
-git diff --stat HEAD~1 2>/dev/null || git diff --stat
+# Summarize the CURRENT work (staged + unstaged + untracked) — label each block.
+# Avoid `HEAD~1`: it describes the previous commit, not the work being decided on.
+git diff --cached --stat        # staged changes
+git diff --stat                 # unstaged changes
+git status --porcelain          # includes untracked files
 
 # Check for related ADRs
 ls .straymark/02-design/decisions/ADR-*.md 2>/dev/null | tail -5
@@ -71,7 +74,7 @@ Fill template with:
 - `status`: **draft** (always for AI-created ADRs)
 - `created`: Current date
 - `updated`: Current date
-- `agent`: your agent identifier (e.g., `cursor-v1.0`, `copilot-v1.0`, `windsurf-v1.0`)
+- `agent`: your agent identifier (e.g., `cursor-v1.0`, `copilot-v1.0`, `windsurf-v1.0`) — see AGENT-RULES.md §1 for the canonical list; do not assume Claude
 - `confidence`: based on research done
 - `review_required`: **true** (always for ADRs)
 - `risk_level`: minimum `medium` for architectural decisions

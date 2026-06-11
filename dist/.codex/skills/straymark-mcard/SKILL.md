@@ -290,7 +290,7 @@ Wait for user confirmation before proceeding.
 2. Replace placeholders:
    - `YYYY-MM-DD` -> Current date
    - `NNN` -> Sequence number (001, 002, etc.)
-   - `[agent-name]` -> `claude-code-v1.0`
+   - `[agent-name]` -> your runtime's canonical agent identity (see AGENT-RULES.md §1 — e.g. `claude-code-v1.0`, `gemini-cli-v1.0`, `codex-cli-v1.0`, `cursor-v1.0`; do not assume Claude)
    - `[Model Name]` -> User-provided model name
 3. Fill in all sections with the gathered information
 4. Set `review_required: true` in the frontmatter
