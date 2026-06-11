@@ -80,7 +80,7 @@ fully_extracted_ailogs:
 
 **自 v1 起,`total_*` 计数器为 CLI-owned。** 每个写入命令（`straymark followups drift --apply`、`straymark followups promote`）都会根据实际条目状态重新计算它们。不要手工维护它们 —— 陈旧的手工编辑值会在下一次写入时被纠正。这关闭了在 N=91 处观察到的静默计数器漂移失败模式（声明 `total_open: 47`,而 4 周后实际为 65 —— issue #214 信号 2）。`straymark followups status` 始终显示即时重新计算的计数,因此即便文件陈旧,脉搏也是可信的。
 
-`fully_extracted_ailogs` 列表是漂移检测的**承重元数据**。所有 `§Follow-ups` 和 `R<N>` 条目已被转移到注册表(或被显式分类为 superseded)的 AILOG 都属于此列表。漂移检测将此列表与 repo 中具有 follow-up 内容的 AILOG 进行比对。
+`fully_extracted_ailogs` 列表记录所有 `§Follow-ups` 和 `R<N>` 条目已被转移到注册表(或被显式分类为 superseded)的 AILOG。自 cli-3.21.0 起它是**信息性的**(由 `followups status` 显示);漂移检测按 follow-up 的内容哈希去重,而非依据此列表 —— 见下文"按 follow-up 的内容哈希去重"。
 
 正式的 frontmatter schema 是 `.straymark/schemas/follow-ups-backlog.schema.v1.json`（实验性 v1 —— 见上方"状态"）。
 
@@ -103,6 +103,7 @@ bucket 内的每个条目遵循以下形式（标注了 v1 字段;所有这些�
 ```markdown
 ### FU-NNN — <简短描述>
 - **Origin**: AILOG-NNNN-NN-NN-NNN <指向源部分的指针>
+- **Source-hash**: <12 位十六进制>                                                     (cli-3.21.0+,自动管理 —— 漂移检测的去重键;请勿手动编辑)
 - **Origin-class**: ex-ante-planning | testing | telemetry | staging | real-env-bug   (v1, 可选)
 - **Status**: open | in-progress | suspected-closed | closed | superseded | promoted
 - **Severity**: normal | blocking                                                     (v1, 可选;默认 normal)
@@ -183,14 +184,16 @@ FU 条目在提升后**不会被删除** —— 它在注册表中的存在就�
 漂移检测使注册表与新 AILOG 保持同步。自 cli-3.19.0 起,它是一个**原生 CLI 命令** —— 无需外部脚本:
 
 ```bash
-straymark followups drift              # 扫描 git diff origin/main..HEAD（回退 HEAD~1..HEAD）中修改的 AILOG;drift 时退出 1
+straymark followups drift              # 扫描 git diff origin/main..HEAD（回退 HEAD~1..HEAD）中修改的 AILOG,并与工作树（git status --porcelain）取并集;drift 时退出 1
 straymark followups drift --apply      # 相同扫描 + 将新条目提取到注册表
 straymark followups drift --scan-all   # 对每个 AILOG 的周期性完整扫描
 ```
 
+自 cli-3.21.0 起,默认扫描将已提交的 git 范围与工作树（`git status --porcelain`）取并集,因此未提交/未跟踪的 AILOG 对已记录的 pre-commit 流程可见 —— 你不再需要 `--scan-all` 来查看刚写入、尚未提交的 AILOG(issue #229)。
+
 ### `--apply` 做什么
 
-1. 从尚未在 `fully_extracted_ailogs` 中的 AILOG 提取每个 `§Follow-ups` bullet 和 `R<N> (new, not in Charter)` 风险,在 `## Bucket: ready` 下以自动生成的 `FU-NNN` id 追加。操作员在下一次 triage 时重新分类 bucket/trigger/destination。
+1. 提取每个**内容哈希尚未在注册表中**的 `§Follow-ups` bullet 和 `R<N> (new, not in Charter)` 风险,在 `## Bucket: ready` 下以自动生成的 `FU-NNN` id 及存储的 `Source-hash` 追加。操作员在下一次 triage 时重新分类 bucket/trigger/destination。(已提取的 AILOG 会被重新扫描并按 follow-up 去重 —— 见下文"按 follow-up 的内容哈希去重"。)
 2. **反噪声精化** *(v1 —— 解决 issue #214 信号 1)*:其 AILOG 文本携带显式关闭标记（`closed in-Charter`、`fixed in batch N`、某个 commit 哈希引用）的 bullet 会以 `Status: suspected-closed` 而非 `open` 提取,而不是作为 TBD 噪声污染 `ready` bucket。在参考 adopter 的两次有记录的发生中,每批自动追加的条目中有 20–75% 已在 Charter 内解决 —— 此精化消除了 v0 工作流唯一反复出现的成本。
 3. 将 AILOG id 追加到 `fully_extracted_ailogs`。
 4. **根据实际条目状态重新计算所有 `total_*` 计数器**(信号 2)。
@@ -211,11 +214,13 @@ straymark followups drift --scan-all   # 对每个 AILOG 的周期性完整扫�
 
 词汇表之外的表述（如 `done earlier`、`no longer relevant`）会以 `open` 提取;操作员在分诊时翻转。当新的关闭习语在你的 AILOG 中反复出现时,请向上游提议,而不是手动编辑提取结果。
 
-### Per-AILOG 与 per-bullet 粒度
+### 按 follow-up 的内容哈希去重
 
-跟踪是 **per-AILOG**,而非 per-bullet。AILOG 要么被完全提取(其 id 在 `fully_extracted_ailogs` 中 — 信任注册表),要么未被提取(提取所有内容)。Per-bullet 匹配将需要指纹识别(文本哈希或模糊比较),每当注册表条目对 AILOG 的 bullet 进行改写时,这都会产生误报 — 而经过整理的条目总是会改写。这个设计选择经过经验验证:在参考 adopter 中,**跨 76 个 AILOG 和约 10 次 apply 运行,0 个误报**。
+自 cli-3.21.0 起,漂移检测**按 follow-up 通过稳定的内容哈希去重**(`fu_content_hash`,由源 AILOG id + 来源部分 + 描述计算),作为每个条目的 `Source-hash` 存储。已提取的 AILOG 会被重新扫描,各个 follow-up 与注册表去重 —— 因此**追加到已提取 AILOG 的 follow-up**(多批次 Charter 的情形,即一个 AILOG 的 `§Follow-ups` 跨多个批次增长)会被发现,而不会被静默遗漏(issue #231)。
 
-Per-AILOG 粒度的成本:当在 Charter 关闭后向已提取的 AILOG 添加 follow-up 时,漂移检测无法发现。修复由操作员驱动 — 手动从 `fully_extracted_ailogs` 中移除该 AILOG 并使用 `--apply` 重新运行。这种权衡是有意为之,因为大多数 AILOG 在 Charter 关闭后是 write-once。
+对 per-bullet 匹配最初的反对是改写导致的误报:经过整理的注册表条目会改写 AILOG 的 bullet,因此从*注册表*文本重新计算哈希会重新标记已提取的内容。存储的 `Source-hash` 解决了这一点 —— 它在提取时从 AILOG 的原始文本捕获,绝不从(后来被改写的)注册表标题重新计算。对每个携带哈希的条目,零误报的特性得以保留。
+
+cli-3.21.0 之前创建的旧条目没有 `Source-hash`;对它们,漂移检测回退为从 `Origin` + `description` 重新计算哈希 —— 尽力而为,这是唯一残留的改写脆弱性向量,会随旧条目关闭而递减。`fully_extracted_ailogs` 予以保留(它记录哪些 AILOG 已被扫描,并由 `followups status` 显示),但**不再是跳过门**(skip gate)—— 去重按内容哈希进行,而非按整个 AILOG id。
 
 ### 旧版 bash 脚本（已弃用）
 
@@ -309,4 +314,4 @@ straymark followups promote FU-NNN        # 自动化 FU → TDE 提升(见上�
 
 ---
 
-*StrayMark fw-4.24.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.25.0 | [Strange Days Tech](https://strangedays.tech)*
