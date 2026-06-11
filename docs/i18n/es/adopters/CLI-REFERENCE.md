@@ -48,7 +48,7 @@ StrayMark usa **tags de versión independientes** para cada componente:
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
 | Framework | `fw-` | `fw-4.25.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.21.0` | El binario `straymark` |
+| CLI | `cli-` | `cli-3.22.0` | El binario `straymark` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
 
@@ -502,7 +502,14 @@ $ straymark charter close CHARTER-01
   ✔ Charter CHARTER-01 closed.
     Telemetry: .straymark/charters/CHARTER-01.telemetry.yaml
     Status updated: in-progress/declared → closed
+
+  ── Follow-ups ──
+  ✔ Extracted 2 follow-ups from 1 AILOG(s) into the registry (`## Bucket: ready`).
+    Review against the TDE-promotion criteria (AGENT-RULES.md §3): ...
+  Promote FU-078 — wire the retry budget into the sync loop to a TDE? [y/N]
 ```
+
+**Reconciliación de follow-ups** *(cli-3.22.0+, RFC #135 Tier 3)*. Tras un cierre **interactivo**, el comando corre el scan por defecto de `followups drift` (rango git commiteado ∪ working tree) sobre los AILOGs recién escritos, extrae el contenido `§Follow-ups` / `R<N> (new)` **que aún no está en el registry** a `## Bucket: ready`, y luego ofrece **promoción a TDE por entrada** contra los cuatro criterios de §3 (herencia de Charter previo, alcance multi-módulo/Charter, Charter dedicado, priorización humana). Declinar un prompt deja el follow-up extraído (capturado en el registry, solo no promovido); aceptar corre el flujo `followups promote` (crea el TDE con trazabilidad `promoted_from_followup`). Es **no-op** cuando el proyecto no tiene registry de follow-ups o cuando no hay nada sin extraer, y se **salta en las rutas `--from-template`** (sin contexto de prompt interactivo) — corre `straymark followups drift --apply` ahí.
 
 #### `straymark charter drift <CHARTER-ID> [--range <REV..REV>] [--no-ailog-suppress] [--no-batch-ledger-check] [--path <dir>]`
 

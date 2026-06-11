@@ -21,6 +21,7 @@ use colored::Colorize;
 use std::path::{Path, PathBuf};
 
 use crate::charter::{self, charters_dir, Charter, CharterStatus};
+use crate::followups;
 use crate::prompts;
 use crate::telemetry_schema::TelemetrySchema;
 use crate::utils;
@@ -134,7 +135,90 @@ pub fn run(
             );
         }
     }
+
+    // Tier 3 (RFC #135): in the interactive close, scan recent AILOGs for
+    // unextracted follow-ups, extract them into the registry, and offer to
+    // promote each to a TDE. Only the interactive flow has a confirmed TTY
+    // (require_interactive ran above) and a finalized close; the --from-template
+    // paths are skipped — run `straymark followups drift --apply` there.
+    if !from_template {
+        offer_followup_promotions(path, project_root)?;
+    }
+
     Ok(())
+}
+
+/// Reconcile the follow-ups registry against the work just closed, then offer
+/// per-entry TDE promotion. No-op when the project has no registry or when the
+/// recent AILOGs carry no unextracted follow-up content. (Tier 3, RFC #135.)
+fn offer_followup_promotions(path: &str, project_root: &Path) -> Result<()> {
+    use crate::commands::followups::{drift, promote};
+
+    let registry_path = followups::registry_path(project_root);
+    if !registry_path.exists() {
+        // Project hasn't adopted the follow-ups registry — nothing to reconcile.
+        return Ok(());
+    }
+    let registry = followups::parse_registry(&registry_path)?;
+    // Default scan (git range ∪ working tree): at close time this is exactly the
+    // Charter's just-written AILOGs. Not scoped to `originating_ailogs` — that
+    // field is the ex-ante seed, not the execution AILOGs where follow-ups live.
+    let drifted = drift::detect_drift_candidates(project_root, &registry, false, None);
+    if drifted.is_empty() {
+        return Ok(());
+    }
+
+    let today = Local::now().format("%Y-%m-%d").to_string();
+    let report = drift::apply_candidates(&registry_path, &registry, &drifted, &today)?;
+
+    println!();
+    println!("{}", "── Follow-ups ──".bold());
+    utils::success(&format!(
+        "Extracted {} follow-up{} from {} AILOG(s) into the registry (`## Bucket: ready`).",
+        report.applied.len(),
+        if report.applied.len() == 1 { "" } else { "s" },
+        report.ailogs
+    ));
+    if report.suspected > 0 {
+        println!(
+            "  {} {} carried a closure marker → extracted as suspected-closed; confirm at triage.",
+            "!".magenta().bold(),
+            report.suspected
+        );
+    }
+    println!(
+        "  Review against the TDE-promotion criteria (AGENT-RULES.md §3): prior-Charter heritage, spans multiple modules/Charters, needs a dedicated Charter, or needs human prioritization."
+    );
+
+    for fu in &report.applied {
+        // suspected-closed entries are likely already resolved in-Charter, so
+        // they are rarely transversal debt — flag that context in the prompt.
+        let marker = if fu.suspected_closed {
+            " [suspected-closed]"
+        } else {
+            ""
+        };
+        let label = format!(
+            "Promote {} — {}{} to a TDE?",
+            fu.fu_id,
+            truncate_desc(&fu.description, 60),
+            marker
+        );
+        if prompts::prompt_bool(&label, false)? {
+            promote::run(path, &fu.fu_id, None)?;
+        }
+    }
+    Ok(())
+}
+
+/// Single-line, length-bounded version of a follow-up description for prompts.
+fn truncate_desc(s: &str, max: usize) -> String {
+    if s.chars().count() <= max {
+        s.to_string()
+    } else {
+        let truncated: String = s.chars().take(max).collect();
+        format!("{}…", truncated.trim_end())
+    }
 }
 
 /// Build the `.straymark/charters/CHARTER-NN.telemetry.yaml` path for a Charter.

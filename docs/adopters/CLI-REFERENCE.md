@@ -48,7 +48,7 @@ StrayMark uses **independent version tags** for each component:
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
 | Framework | `fw-` | `fw-4.25.0` | Templates (12 types), governance docs, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.21.0` | The `straymark` binary |
+| CLI | `cli-` | `cli-3.22.0` | The `straymark` binary |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
 
@@ -585,7 +585,14 @@ $ straymark charter close CHARTER-01
   ✔ Charter CHARTER-01 closed.
     Telemetry: .straymark/charters/CHARTER-01.telemetry.yaml
     Status updated: in-progress/declared → closed
+
+  ── Follow-ups ──
+  ✔ Extracted 2 follow-ups from 1 AILOG(s) into the registry (`## Bucket: ready`).
+    Review against the TDE-promotion criteria (AGENT-RULES.md §3): ...
+  Promote FU-078 — wire the retry budget into the sync loop to a TDE? [y/N]
 ```
+
+**Follow-ups reconciliation** *(cli-3.22.0+, RFC #135 Tier 3)*. After an **interactive** close, the command runs the default `followups drift` scan (committed git range ∪ working tree) over the recently-written AILOGs, extracts any `§Follow-ups` / `R<N> (new)` content **not yet in the registry** into `## Bucket: ready`, then offers **per-entry TDE promotion** against the four §3 criteria (prior-Charter heritage, multi-module/Charter span, dedicated Charter, human prioritization). Declining a prompt leaves the follow-up extracted (captured in the registry, just not promoted); accepting runs the `followups promote` flow (creates the TDE with `promoted_from_followup` traceability). It is a **no-op** when the project has no follow-ups registry or when nothing is unextracted, and is **skipped on the `--from-template` paths** (no interactive prompt context) — run `straymark followups drift --apply` there.
 
 #### `straymark charter drift <CHARTER-ID> [--range <REV..REV>] [--no-ailog-suppress] [--no-batch-ledger-check] [--path <dir>]`
 
