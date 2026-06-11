@@ -7,6 +7,21 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.25.0 / CLI 3.21.0 — follow-ups drift correctness: see the working tree + catch appended follow-ups
+
+Two silent-data-loss bugs in `straymark followups drift`, both surfaced by the reference adopter (Sentinel) and both prerequisites for wiring drift into the Charter-close flow (RFC [#135](https://github.com/StrangeDaysTech/straymark/issues/135) Tier 3).
+
+### Fixed (CLI)
+
+- **`followups drift` default scan now sees the working tree** ([#229](https://github.com/StrangeDaysTech/straymark/issues/229)): the default scan considered only the committed git range (`git diff origin/main..HEAD`), so an uncommitted/untracked AILOG — the normal state at pre-commit time — was invisible, and the documented `drift --apply` flow reported "in sync" while real follow-up content went unextracted. The scan now unions the git range with the working tree (`git status --porcelain`), mirroring the v0 reference script. `--scan-all` semantics unchanged.
+- **`followups drift` catches follow-ups appended to an already-extracted AILOG** ([#231](https://github.com/StrangeDaysTech/straymark/issues/231)): `fully_extracted_ailogs` was a whole-AILOG idempotency gate — once an AILOG id was in it, the file was never re-scanned, so follow-ups added later (the multi-batch Charter pattern, where one AILOG's `§Follow-ups` grows across batches) were silently dropped. Drift now dedups **per follow-up by a stable content hash** (`Source-hash`, stored on each entry): already-extracted AILOGs are re-scanned and individual follow-ups deduped, so appended content is caught. The stored hash is captured at extraction time and immune to later triage rewording, preserving the zero-false-positive property that motivated the original per-AILOG choice; legacy entries (pre-cli-3.21.0, no `Source-hash`) fall back to recomputing the hash from `Origin` + `description`. `fully_extracted_ailogs` is retained as informational metadata, no longer the skip gate.
+
+### Changed (Framework)
+
+- **`FOLLOW-UPS-BACKLOG-PATTERN.md`** (EN/ES/zh-CN): documents the working-tree union, the per-follow-up content-hash dedup (replacing the "Per-AILOG vs per-bullet granularity" section that described the #231 bug as an intentional trade-off), the new auto-managed `Source-hash` entry field, and the revised role of `fully_extracted_ailogs`.
+
+---
+
 ## Framework 4.24.0 — portable installed skills: runtime-agnostic identity + current-work git context
 
 Five portability/correctness fixes to the installed skills, surfaced by a Codex (`gpt-5.5`) review of the StrayMark skills running under Codex CLI in the reference adopter Sentinel ([#232](https://github.com/StrangeDaysTech/straymark/issues/232)). The skills ship in four families under `dist/` (`.claude/`, `.gemini/`, `.agent/workflows/` hand-maintained; `.codex/` generated from `.claude/` by `gen_codex_skills`); the fixes were applied to the hand-maintained sources and the Codex tree regenerated.

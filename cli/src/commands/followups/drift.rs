@@ -4,9 +4,11 @@
 //! `check-followups-drift.sh`. Three modes, mirroring the v0 script:
 //!
 //! - **default** — scan AILOGs changed in `git diff origin/main..HEAD`
-//!   (fallback `origin/master..HEAD`, then `HEAD~1..HEAD` with a warning).
-//!   Warn + exit 1 when an AILOG with follow-up content is not in
-//!   `fully_extracted_ailogs`.
+//!   (fallback `origin/master..HEAD`, then `HEAD~1..HEAD` with a warning)
+//!   **unioned with the working tree** (`git status --porcelain`) so an
+//!   uncommitted/untracked AILOG is visible to the documented pre-commit flow
+//!   (#229). Warn + exit 1 when an AILOG carries follow-up content not yet in
+//!   the registry.
 //! - **`--apply`** — same scan + extract new entries into `## Bucket: ready`,
 //!   append the AILOG ids to `fully_extracted_ailogs`, **recompute the
 //!   `total_*` counters** (#214 Signal 2) and upgrade v0 → v1 in place.
@@ -15,9 +17,14 @@
 //!   refinement).
 //! - **`--scan-all`** — sweep every AILOG in the project.
 //!
-//! Granularity is **per-AILOG**, never per-bullet — the empirically validated
-//! design choice (0 false positives across 76 AILOGs in the reference
-//! adopter). See `FOLLOW-UPS-BACKLOG-PATTERN.md` §Drift detection.
+//! Drift is detected **per follow-up by content hash** (`fu_content_hash`),
+//! not by a whole-AILOG idempotency gate. Already-extracted AILOGs are
+//! re-scanned and individual follow-ups deduped against the registry, so
+//! content appended to a multi-batch AILOG after its first extraction is
+//! caught instead of silently skipped (#231). The hash dedup preserves the
+//! empirically validated zero-false-positive property (no AILOG re-flags once
+//! its content is in the registry). See `FOLLOW-UPS-BACKLOG-PATTERN.md`
+//! §Drift detection.
 //!
 //! ## Exit codes
 //! - `0` — no drift (or `--apply` extracted everything)
@@ -75,37 +82,50 @@ pub fn run(path: &str, apply: bool, scan_all: bool, range: Option<&str>) -> Resu
         utils::warn(w);
     }
 
-    // Candidate AILOG files.
+    // Candidate AILOG files. Default mode unions the committed git range with
+    // the working tree (#229): at pre-commit time the just-written AILOG is
+    // usually untracked, so a range-only scan is blind to exactly the file the
+    // documented `drift --apply` flow targets.
     let agent_logs = ailog::agent_logs_dir(project_root);
     let candidates: Vec<PathBuf> = if scan_all {
         walk_ailogs(&agent_logs)
     } else {
-        ailogs_in_git_range(project_root, &agent_logs, range)
+        let mut set = ailogs_in_git_range(project_root, &agent_logs, range);
+        for p in ailogs_in_working_tree(project_root, &agent_logs) {
+            if !set.contains(&p) {
+                set.push(p);
+            }
+        }
+        set
     };
 
-    // Drift = AILOG with follow-up content whose id is NOT in
-    // fully_extracted_ailogs.
-    let extracted_set: std::collections::HashSet<&str> = registry
-        .frontmatter
-        .fully_extracted_ailogs
-        .iter()
-        .map(|s| s.as_str())
-        .collect();
+    // Drift = an AILOG carrying follow-up content whose content hash is NOT yet
+    // in the registry (#231). Re-scanning already-extracted AILOGs and deduping
+    // per follow-up by content hash — instead of skipping the whole file once
+    // its id lands in `fully_extracted_ailogs` — is what catches follow-ups
+    // appended to a multi-batch AILOG after its first extraction.
+    let seen_hashes = followups::registry_extracted_hashes(&registry);
 
     let mut drifted: Vec<(String, PathBuf, Vec<ExtractedFu>)> = Vec::new();
     for path in candidates {
         let Some(id) = followups::ailog_id_from_path(&path) else {
             continue;
         };
-        if extracted_set.contains(id.as_str()) {
-            continue;
-        }
         let Ok(content) = std::fs::read_to_string(&path) else {
             continue;
         };
-        let found = followups::extract_followups_from_ailog(&content);
-        if !found.is_empty() {
-            drifted.push((id, path, found));
+        let new: Vec<ExtractedFu> = followups::extract_followups_from_ailog(&content)
+            .into_iter()
+            .filter(|fu| {
+                !seen_hashes.contains(&followups::fu_content_hash(
+                    &id,
+                    &fu.origin_section,
+                    &fu.description,
+                ))
+            })
+            .collect();
+        if !new.is_empty() {
+            drifted.push((id, path, new));
         }
     }
 
@@ -182,8 +202,20 @@ pub fn run(path: &str, apply: bool, scan_all: bool, range: Option<&str>) -> Resu
         }
     }
 
-    // Frontmatter: append AILOG ids, set last_scan, recompute counters + v1.
-    let new_ids: Vec<String> = drifted.iter().map(|(id, _, _)| id.clone()).collect();
+    // Frontmatter: append AILOG ids (deduped — a re-scanned AILOG already in
+    // the list must not be appended twice), set last_scan, recompute counters.
+    let already: std::collections::HashSet<&str> = registry
+        .frontmatter
+        .fully_extracted_ailogs
+        .iter()
+        .map(|s| s.as_str())
+        .collect();
+    let mut new_ids: Vec<String> = Vec::new();
+    for (id, _, _) in &drifted {
+        if !already.contains(id.as_str()) && !new_ids.contains(id) {
+            new_ids.push(id.clone());
+        }
+    }
     let mut fm = followups::fm_append_list_items(
         &registry.frontmatter_raw,
         "fully_extracted_ailogs",
@@ -303,6 +335,64 @@ fn ailogs_in_git_range(
         .collect()
 }
 
+/// AILOG files present in the working tree (staged, unstaged, or untracked),
+/// via `git status --porcelain`. Unioned into the default scan so the
+/// documented pre-commit `drift --apply` flow sees the just-written AILOG
+/// before it is committed (#229) — mirroring the v0 reference script, which
+/// folded `git status --porcelain` into its default scan set for exactly this
+/// in-progress agent workflow.
+fn ailogs_in_working_tree(project_root: &Path, agent_logs: &Path) -> Vec<PathBuf> {
+    let output = Command::new("git")
+        .args(["status", "--porcelain"])
+        .current_dir(project_root)
+        .output();
+    let Ok(output) = output else {
+        return Vec::new();
+    };
+    if !output.status.success() {
+        return Vec::new();
+    }
+    let agent_logs_rel = agent_logs
+        .strip_prefix(project_root)
+        .unwrap_or(agent_logs)
+        .to_path_buf();
+    parse_porcelain_ailogs(&String::from_utf8_lossy(&output.stdout), &agent_logs_rel)
+        .into_iter()
+        .map(|p| project_root.join(p))
+        .filter(|p| p.exists())
+        .collect()
+}
+
+/// Parse `git status --porcelain` (v1) output into AILOG file paths relative to
+/// the repo root, filtered to the agent-logs dir. Handles the `XY <path>`
+/// shape, untracked `?? <path>`, and rename/copy `R  <old> -> <new>` (takes the
+/// destination). Pure for testability.
+fn parse_porcelain_ailogs(stdout: &str, agent_logs_rel: &Path) -> Vec<PathBuf> {
+    let mut out = Vec::new();
+    for line in stdout.lines() {
+        // Porcelain v1: two status chars + a space, then the path (≥ 4 chars).
+        if line.len() < 4 {
+            continue;
+        }
+        let rest = &line[3..];
+        // Rename/copy entries render as `old -> new`; the destination is what
+        // exists on disk.
+        let path_str = rest.rsplit(" -> ").next().unwrap_or(rest).trim();
+        // Porcelain quotes paths containing special chars; strip the quotes.
+        let path_str = path_str.trim_matches('"');
+        let p = PathBuf::from(path_str);
+        if p.starts_with(agent_logs_rel)
+            && p.file_name()
+                .and_then(|n| n.to_str())
+                .map(|n| n.starts_with("AILOG-") && n.ends_with(".md"))
+                .unwrap_or(false)
+        {
+            out.push(p);
+        }
+    }
+    out
+}
+
 fn git_ref_exists(project_root: &Path, r: &str) -> bool {
     Command::new("git")
         .args(["rev-parse", "--verify", "--quiet", r])
@@ -310,4 +400,59 @@ fn git_ref_exists(project_root: &Path, r: &str) -> bool {
         .output()
         .map(|o| o.status.success())
         .unwrap_or(false)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_porcelain_picks_ailogs_across_status_codes() {
+        let rel = Path::new(".straymark/07-ai-audit/agent-logs");
+        // Built via join so leading status spaces (` M`) survive verbatim — a
+        // `\`-continued string literal would strip them.
+        let stdout = [
+            "?? .straymark/07-ai-audit/agent-logs/AILOG-2026-06-09-001-untracked.md",
+            " M .straymark/07-ai-audit/agent-logs/AILOG-2026-06-09-002-modified.md",
+            "A  .straymark/07-ai-audit/agent-logs/AILOG-2026-06-09-003-staged.md",
+            "R  .straymark/07-ai-audit/agent-logs/AILOG-old.md -> .straymark/07-ai-audit/agent-logs/AILOG-2026-06-09-004-renamed.md",
+            " M .straymark/07-ai-audit/agent-logs/notes.md",
+            "?? src/main.rs",
+            " M .straymark/07-ai-audit/decisions/AIDEC-2026-06-09-001.md",
+        ]
+        .join("\n");
+        let got = parse_porcelain_ailogs(&stdout, rel);
+        let names: Vec<String> = got
+            .iter()
+            .map(|p| p.file_name().unwrap().to_string_lossy().into_owned())
+            .collect();
+        assert_eq!(
+            names,
+            vec![
+                "AILOG-2026-06-09-001-untracked.md",
+                "AILOG-2026-06-09-002-modified.md",
+                "AILOG-2026-06-09-003-staged.md",
+                "AILOG-2026-06-09-004-renamed.md", // rename → destination path
+            ]
+        );
+        // notes.md (not AILOG-*), src/main.rs (outside dir), and the AIDEC
+        // (sibling dir) are all excluded.
+    }
+
+    #[test]
+    fn parse_porcelain_tolerates_quoted_paths_and_short_lines() {
+        let rel = Path::new(".straymark/07-ai-audit/agent-logs");
+        let stdout = [
+            "?? \".straymark/07-ai-audit/agent-logs/AILOG-2026-06-09-005-spaced name.md\"",
+            "",
+            "XX",
+        ]
+        .join("\n");
+        let got = parse_porcelain_ailogs(&stdout, rel);
+        assert_eq!(got.len(), 1);
+        assert_eq!(
+            got[0].file_name().unwrap().to_string_lossy(),
+            "AILOG-2026-06-09-005-spaced name.md"
+        );
+    }
 }

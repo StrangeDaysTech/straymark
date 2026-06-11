@@ -310,11 +310,13 @@ fn drift_scan_all_clean_when_everything_extracted() {
     let tmp = TempDir::new().unwrap();
     let straymark = scaffold(tmp.path());
     write_registry(&straymark, V0_REGISTRY);
-    // The only AILOG is already in fully_extracted_ailogs.
+    // The AILOG's only follow-up is already in the registry (FU-001, same
+    // origin + description) — drift dedups by content hash (#231), so it is in
+    // sync even though the AILOG is re-scanned rather than skipped wholesale.
     write_ailog(
         &straymark,
         "AILOG-2026-04-11-001-first.md",
-        "# AILOG\n\n## Follow-ups\n\n- already extracted\n",
+        "# AILOG\n\n## Follow-ups\n\n- Wire the retry budget into the sync loop\n",
     );
 
     cmd()
@@ -399,10 +401,12 @@ fn drift_apply_recomputes_counters_with_zero_extractions() {
     let tmp = TempDir::new().unwrap();
     let straymark = scaffold(tmp.path());
     write_registry(&straymark, V0_REGISTRY); // claims total_open: 47, real count 2
+    // The AILOG's follow-up already exists as FU-001 (same origin + description)
+    // → nothing to extract; --apply still reconciles the counters.
     write_ailog(
         &straymark,
         "AILOG-2026-04-11-001-first.md",
-        "# AILOG\n\n## Follow-ups\n\n- already extracted\n",
+        "# AILOG\n\n## Follow-ups\n\n- Wire the retry budget into the sync loop\n",
     );
 
     cmd()
@@ -438,8 +442,11 @@ fn drift_apply_extracts_born_resolved_idiom_as_suspected_closed() {
 
     let updated = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
     let idx = updated.find("probe path normalization").unwrap();
-    let block = &updated[idx..(idx + 400).min(updated.len())];
-    assert!(block.contains("- **Status**: suspected-closed"));
+    let after = &updated[idx..];
+    // Bound to this entry (next heading or EOF) on a char boundary — never a
+    // fixed byte offset, which can split a multi-byte char like `—`.
+    let end = after.find("\n###").unwrap_or(after.len());
+    assert!(after[..end].contains("- **Status**: suspected-closed"));
 }
 
 // ───────────────────────────── recount (#222 Finding 1) ─────────────────────────────

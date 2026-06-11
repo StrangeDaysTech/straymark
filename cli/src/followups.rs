@@ -21,6 +21,8 @@
 //! clap/colored/dialoguer; presentation lives in `commands/followups/`.
 
 use anyhow::{anyhow, Context, Result};
+use sha2::{Digest, Sha256};
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 /// Canonical registry location, relative to the project root.
@@ -125,6 +127,11 @@ pub struct Entry {
     pub bucket: String,
     pub origin: Option<String>,
     pub origin_class: Option<String>,
+    /// Stable content hash of the source follow-up (`fu_content_hash`), stored
+    /// by `drift --apply` so a re-scan can dedupe by content identity instead
+    /// of skipping the whole AILOG (#231). Absent on legacy (pre-fix) entries —
+    /// drift falls back to recomputing the hash from `origin` + `description`.
+    pub source_hash: Option<String>,
     pub status: FuStatus,
     pub status_raw: Option<String>,
     pub severity: Option<Severity>,
@@ -338,6 +345,7 @@ fn parse_entries(
             bucket: bucket.to_string(),
             origin: None,
             origin_class: None,
+            source_hash: None,
             status: FuStatus::Unknown,
             status_raw: None,
             severity: None,
@@ -360,6 +368,9 @@ fn parse_entries(
                 "origin" => entry.origin = some_nonempty(value),
                 "origin-class" | "origin class" | "origin_class" => {
                     entry.origin_class = some_nonempty(value)
+                }
+                "source-hash" | "source hash" | "source_hash" => {
+                    entry.source_hash = some_nonempty(value)
                 }
                 "status" => {
                     entry.status_raw = some_nonempty(value);
@@ -826,6 +837,57 @@ pub fn ailog_id_from_path(path: &Path) -> Option<String> {
     Some(id)
 }
 
+/// Stable content hash identifying a follow-up by its source — the dedup key
+/// that lets `drift` re-scan an already-extracted AILOG without re-adding
+/// entries (#231). Derived from the source AILOG id, the origin section, and
+/// the follow-up description. SHA-256 truncated to 12 hex chars: stable across
+/// platforms/runs (unlike `std`'s `DefaultHasher`) and collision-safe enough
+/// for a per-project registry. The separator is the ASCII unit separator so
+/// it can't appear in any component.
+pub fn fu_content_hash(ailog_id: &str, origin_section: &str, description: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(ailog_id.as_bytes());
+    hasher.update([0x1f]);
+    hasher.update(origin_section.as_bytes());
+    hasher.update([0x1f]);
+    hasher.update(description.as_bytes());
+    format!("{:x}", hasher.finalize())[..12].to_string()
+}
+
+/// Split a rendered `Origin` value (`<AILOG-id> <§section...>`) into its
+/// `(ailog_id, origin_section)` parts at the first whitespace run. Returns
+/// `None` when there is no section suffix.
+pub fn split_origin(origin: &str) -> Option<(&str, &str)> {
+    let trimmed = origin.trim();
+    let idx = trimmed.find(char::is_whitespace)?;
+    let ailog_id = &trimmed[..idx];
+    let section = trimmed[idx..].trim_start();
+    if ailog_id.is_empty() || section.is_empty() {
+        None
+    } else {
+        Some((ailog_id, section))
+    }
+}
+
+/// The set of follow-up content hashes already present in the registry — the
+/// dedup key set for drift re-scans (#231). Prefers each entry's stored
+/// `source_hash`; for legacy entries that predate the field, recomputes the
+/// hash from `origin` + `description` (best-effort — vulnerable only to a
+/// triage rewording of the heading, which the stored hash is immune to).
+pub fn registry_extracted_hashes(registry: &Registry) -> HashSet<String> {
+    let mut set = HashSet::new();
+    for entry in registry.entries() {
+        if let Some(h) = &entry.source_hash {
+            set.insert(h.clone());
+        } else if let Some(origin) = &entry.origin {
+            if let Some((ailog_id, section)) = split_origin(origin) {
+                set.insert(fu_content_hash(ailog_id, section, &entry.description));
+            }
+        }
+    }
+    set
+}
+
 /// Render a new entry block for `drift --apply`.
 pub fn render_new_entry(
     fu_number: u32,
@@ -842,15 +904,17 @@ pub fn render_new_entry(
     if extracted.suspected_closed {
         notes.push_str(" Closure marker detected in the source AILOG — confirm and mark `closed`, or reopen.");
     }
+    let source_hash = fu_content_hash(ailog_id, &extracted.origin_section, &extracted.description);
     format!(
         "### FU-{:03} — {}\n\
          - **Origin**: {} {}\n\
+         - **Source-hash**: {}\n\
          - **Status**: {}\n\
          - **Trigger**: TBD\n\
          - **Destination**: TBD\n\
          - **Cost**: TBD\n\
          - **Notes**: {}\n",
-        fu_number, extracted.description, ailog_id, extracted.origin_section, status, notes
+        fu_number, extracted.description, ailog_id, extracted.origin_section, source_hash, status, notes
     )
 }
 
@@ -1305,6 +1369,86 @@ Done.
         assert!(block.contains("### FU-092 — Formal run"));
         assert!(block.contains("- **Status**: suspected-closed"));
         assert!(block.contains("Closure marker detected"));
+    }
+
+    #[test]
+    fn fu_content_hash_is_stable_12_hex_and_discriminating() {
+        let h = fu_content_hash("AILOG-2026-06-09-001", "§Follow-ups", "Wire X into Y");
+        assert_eq!(h.len(), 12);
+        assert!(h.chars().all(|c| c.is_ascii_hexdigit()));
+        // Deterministic across calls.
+        assert_eq!(
+            h,
+            fu_content_hash("AILOG-2026-06-09-001", "§Follow-ups", "Wire X into Y")
+        );
+        // Any component change moves the hash.
+        assert_ne!(
+            h,
+            fu_content_hash("AILOG-2026-06-09-002", "§Follow-ups", "Wire X into Y")
+        );
+        assert_ne!(
+            h,
+            fu_content_hash("AILOG-2026-06-09-001", "§Follow-ups", "Wire X into Z")
+        );
+    }
+
+    #[test]
+    fn split_origin_splits_id_and_section() {
+        assert_eq!(
+            split_origin("AILOG-2026-06-09-001 §Follow-ups"),
+            Some(("AILOG-2026-06-09-001", "§Follow-ups"))
+        );
+        assert_eq!(
+            split_origin("AILOG-2026-06-09-001 §R3 (new, not in Charter)"),
+            Some(("AILOG-2026-06-09-001", "§R3 (new, not in Charter)"))
+        );
+        // No section suffix → None.
+        assert_eq!(split_origin("AILOG-2026-06-09-001"), None);
+    }
+
+    #[test]
+    fn render_new_entry_embeds_matching_source_hash() {
+        let fu = ExtractedFu {
+            description: "Backfill the missing migration".to_string(),
+            origin_section: "§Follow-ups".to_string(),
+            suspected_closed: false,
+        };
+        let block = render_new_entry(7, &fu, "AILOG-2026-06-09-001", "2026-06-10");
+        let expected = fu_content_hash("AILOG-2026-06-09-001", "§Follow-ups", &fu.description);
+        assert!(block.contains(&format!("- **Source-hash**: {}", expected)));
+    }
+
+    #[test]
+    fn parse_reads_source_hash_field() {
+        let content = "---\nschema_version: v1\nfully_extracted_ailogs: []\n---\n\n\
+            ## Bucket: ready\n\n\
+            ### FU-001 — x\n- **Origin**: AILOG-2026-06-09-001 §Follow-ups\n- **Source-hash**: abc123def456\n- **Status**: open\n";
+        let reg = parse(content);
+        assert_eq!(
+            find_entry(&reg, "FU-001").unwrap().source_hash.as_deref(),
+            Some("abc123def456")
+        );
+    }
+
+    #[test]
+    fn registry_extracted_hashes_prefers_stored_then_falls_back_to_legacy() {
+        let aid = "AILOG-2026-06-09-001";
+        let h_first = fu_content_hash(aid, "§Follow-ups", "First FU");
+        // FU-001 carries a stored Source-hash; FU-002 is legacy (no hash).
+        let content = format!(
+            "---\nschema_version: v1\nfully_extracted_ailogs:\n  - {aid}\n---\n\n\
+             ## Bucket: ready\n\n\
+             ### FU-001 — First FU\n- **Origin**: {aid} §Follow-ups\n- **Source-hash**: {h_first}\n- **Status**: open\n\n\
+             ### FU-002 — Second FU\n- **Origin**: {aid} §Follow-ups\n- **Status**: open\n"
+        );
+        let reg = parse(&content);
+        let set = registry_extracted_hashes(&reg);
+        // Stored hash present, legacy hash recomputed from origin + description.
+        assert!(set.contains(&h_first));
+        assert!(set.contains(&fu_content_hash(aid, "§Follow-ups", "Second FU")));
+        // A genuinely new follow-up on the same AILOG is NOT in the set — this
+        // is the #231 case (content appended after first extraction).
+        assert!(!set.contains(&fu_content_hash(aid, "§Follow-ups", "Third FU")));
     }
 
     #[test]

@@ -80,7 +80,7 @@ fully_extracted_ailogs:
 
 **The `total_*` counters are CLI-owned since v1.** Every write command (`straymark followups drift --apply`, `straymark followups promote`) recomputes them from the actual entry statuses. Do not maintain them by hand — stale hand-edited values are corrected on the next write. This closes the silent counter-drift failure mode observed at N=91 (declared `total_open: 47` vs 65 real after 4 weeks — issue #214 Signal 2). `straymark followups status` always shows counts recomputed on the fly, so the pulse is trustworthy even if the file is stale.
 
-The `fully_extracted_ailogs` list is the **load-bearing metadata** for drift detection. Every AILOG whose `§Follow-ups` and `R<N>` entries have been transferred into the registry (or explicitly classified as superseded) belongs in this list. Drift detection compares this list against AILOGs that have follow-up content in the repo.
+The `fully_extracted_ailogs` list records every AILOG whose `§Follow-ups` and `R<N>` entries have been transferred into the registry (or explicitly classified as superseded). Since cli-3.21.0 it is **informational** (shown by `followups status`); drift dedups per follow-up by content hash, not by this list — see "Per-follow-up content-hash dedup" below.
 
 The formal frontmatter schema is `.straymark/schemas/follow-ups-backlog.schema.v1.json` (experimental v1 — see Status above).
 
@@ -103,6 +103,7 @@ Each entry inside a bucket follows this shape (v1 fields marked; all of them opt
 ```markdown
 ### FU-NNN — <short description>
 - **Origin**: AILOG-NNNN-NN-NN-NNN <pointer to source section>
+- **Source-hash**: <12 hex chars>                                                     (cli-3.21.0+, auto-managed — drift's dedup key; do not hand-edit)
 - **Origin-class**: ex-ante-planning | testing | telemetry | staging | real-env-bug   (v1, optional)
 - **Status**: open | in-progress | suspected-closed | closed | superseded | promoted
 - **Severity**: normal | blocking                                                     (v1, optional; default normal)
@@ -183,14 +184,16 @@ When in doubt, prefer creating the FU entry — even retroactively — because i
 Drift detection keeps the registry in sync with new AILOGs. Since cli-3.19.0 it is a **native CLI command** — no external script:
 
 ```bash
-straymark followups drift              # scan AILOGs changed in git diff origin/main..HEAD (fallback HEAD~1..HEAD); exit 1 on drift
+straymark followups drift              # scan AILOGs changed in git diff origin/main..HEAD (fallback HEAD~1..HEAD) UNIONED with the working tree (git status --porcelain); exit 1 on drift
 straymark followups drift --apply      # same scan + extract new entries into the registry
 straymark followups drift --scan-all   # periodic full sweep over every AILOG
 ```
 
+Since cli-3.21.0 the default scan unions the committed git range with the working tree (`git status --porcelain`), so an uncommitted/untracked AILOG is visible to the documented pre-commit flow — you no longer need `--scan-all` to see a just-written AILOG before it is committed (issue #229).
+
 ### What `--apply` does
 
-1. Extracts every `§Follow-ups` bullet and `R<N> (new, not in Charter)` risk from AILOGs not yet in `fully_extracted_ailogs`, appending them under `## Bucket: ready` with auto-numbered `FU-NNN` ids. The operator reclassifies bucket/trigger/destination at the next triage.
+1. Extracts every `§Follow-ups` bullet and `R<N> (new, not in Charter)` risk **whose content hash is not yet in the registry**, appending them under `## Bucket: ready` with auto-numbered `FU-NNN` ids and a stored `Source-hash`. The operator reclassifies bucket/trigger/destination at the next triage. (Already-extracted AILOGs are re-scanned and deduped per follow-up — see "Per-follow-up content-hash dedup" below.)
 2. **Anti-noise refinement** *(v1 — resolves issue #214 Signal 1)*: bullets whose AILOG text carries an explicit closure marker (`closed in-Charter`, `fixed in batch N`, a commit hash reference) are extracted with `Status: suspected-closed` instead of `open`, instead of polluting the `ready` bucket as TBD noise. Across both documented occurrences in the reference adopter, 20–75% of auto-appended entries per batch were already resolved in-Charter — this refinement removes the single recurring cost of the v0 workflow.
 3. Appends the AILOG id to `fully_extracted_ailogs`.
 4. **Recomputes all `total_*` counters** from actual entry statuses (Signal 2).
@@ -211,11 +214,13 @@ The anti-noise refinement recognizes a fixed vocabulary, case-insensitively. AIL
 
 Phrasings outside this vocabulary (e.g. `done earlier`, `no longer relevant`) extract as `open`; the operator flips them at triage. When a new closure idiom recurs in your AILOGs, propose it upstream rather than hand-editing extractions.
 
-### Per-AILOG vs per-bullet granularity
+### Per-follow-up content-hash dedup
 
-Tracking is **per-AILOG**, not per-bullet. An AILOG is either fully extracted (its id is in `fully_extracted_ailogs` — trust the registry) or it is not (extract everything). Per-bullet matching would require fingerprinting (text hashing or fuzzy comparison), which produces false positives whenever a registry entry paraphrases the AILOG bullet — and curated entries always paraphrase. This design choice is empirically validated: **0 false positives across 76 AILOGs and ~10 apply runs** in the reference adopter.
+Since cli-3.21.0, drift dedups **per follow-up by a stable content hash** (`fu_content_hash` of the source AILOG id + origin section + description), stored as each entry's `Source-hash`. Already-extracted AILOGs are re-scanned and individual follow-ups deduped against the registry — so a follow-up **appended to an already-extracted AILOG** (the multi-batch Charter case, where one AILOG's `§Follow-ups` grows across batches) is caught instead of silently missed (issue #231).
 
-The cost of per-AILOG granularity: when a follow-up is added to an already-extracted AILOG post-Charter close, drift detection misses it. The remediation is operator-driven — manually remove the AILOG from `fully_extracted_ailogs` and re-run with `--apply`. This trade-off is intentional because most AILOGs are write-once after Charter close.
+The original objection to per-bullet matching was paraphrase false positives: curated registry entries reword the AILOG bullet, so recomputing a hash from the *registry* text would re-flag already-extracted content. The stored `Source-hash` resolves this — it is captured at extraction time from the AILOG's original text and never recomputed from the (later paraphrased) registry heading. The zero-false-positive property is preserved for every hash-bearing entry.
+
+Legacy entries created before cli-3.21.0 have no `Source-hash`; for them drift falls back to recomputing the hash from `Origin` + `description` — best-effort, and the one residual paraphrase-vulnerability vector, shrinking as legacy entries close out. `fully_extracted_ailogs` is retained (it records which AILOGs have been scanned and is shown by `followups status`) but is **no longer the skip gate** — dedup is by content hash, not whole-AILOG id.
 
 ### Legacy bash script (deprecated)
 
@@ -309,4 +314,4 @@ Contributed via [issue #111](https://github.com/StrangeDaysTech/straymark/issues
 
 ---
 
-*StrayMark fw-4.24.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.25.0 | [Strange Days Tech](https://strangedays.tech)*
