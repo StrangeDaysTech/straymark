@@ -309,4 +309,4 @@ straymark followups promote FU-NNN        # 自动化 FU → TDE 提升(见上�
 
 ---
 
-*StrayMark fw-4.23.1 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.24.0 | [Strange Days Tech](https://strangedays.tech)*

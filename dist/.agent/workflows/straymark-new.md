@@ -29,11 +29,16 @@ date +%Y-%m-%d
 # Get modified files (staged and unstaged)
 git status --porcelain
 
-# Get recent changes summary
-git diff --stat HEAD~1 2>/dev/null || git diff --stat
+# Summarize the CURRENT work (staged + unstaged + untracked) — label each block,
+# do NOT use `HEAD~1`, which describes the previous commit, not current work.
+git diff --cached --stat        # staged changes
+git diff --stat                 # unstaged changes
+git status --porcelain          # includes untracked files
+# Only if the user explicitly asks to document an already-committed range:
+#   git diff --stat <range>     # e.g. origin/main..HEAD
 
-# Count lines changed
-git diff --numstat HEAD~1 2>/dev/null || git diff --numstat
+# Count lines changed in current work
+git diff --cached --numstat ; git diff --numstat
 
 # Check code complexity (primary method for AILOG trigger)
 straymark analyze --output json 2>/dev/null
@@ -101,8 +106,10 @@ Use template path based on language:
 Determine the next sequence number:
 
 ```bash
-# Find existing documents of this type for today
-ls .straymark/*/[TYPE]-$(date +%Y-%m-%d)-*.md 2>/dev/null | wc -l
+# Find existing documents of this type for today — search RECURSIVELY so nested
+# locations (e.g. AILOG/AIDEC/ETH under .straymark/07-ai-audit/...) are not missed.
+# A one-level glob like `.straymark/*/` returns 0 for those and causes ID collisions.
+find .straymark -type f -name "[TYPE]-$(date +%Y-%m-%d)-*.md" 2>/dev/null | wc -l
 ```
 
 ID format: `[TYPE]-YYYY-MM-DD-NNN`
@@ -113,7 +120,7 @@ ID format: `[TYPE]-YYYY-MM-DD-NNN`
 2. Replace placeholders:
    - `YYYY-MM-DD` → Current date
    - `NNN` → Sequence number (001, 002, etc.)
-   - `[agent-name-v1.0]` → Your agent identifier (e.g., `cursor-v1.0`, `copilot-v1.0`, `windsurf-v1.0`)
+   - `[agent-name-v1.0]` → Your agent identifier (e.g., `cursor-v1.0`, `copilot-v1.0`, `windsurf-v1.0`) — see AGENT-RULES.md §1 for the canonical list; do not assume Claude
 3. Fill in context from git analysis
 4. Save to correct location:
 

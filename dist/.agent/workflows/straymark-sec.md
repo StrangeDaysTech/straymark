@@ -67,11 +67,14 @@ date +%Y-%m-%d
 # Get modified files (staged and unstaged)
 git status --porcelain
 
-# Get recent changes summary
-git diff --stat HEAD~1 2>/dev/null || git diff --stat
+# Summarize the CURRENT work (staged + unstaged + untracked) — label each block.
+# Avoid `HEAD~1`: it describes the previous commit, not the code under assessment.
+git diff --cached --stat        # staged changes
+git diff --stat                 # unstaged changes
+git status --porcelain          # includes untracked files
 
-# Count lines changed
-git diff --numstat HEAD~1 2>/dev/null || git diff --numstat
+# Count lines changed in current work
+git diff --cached --numstat ; git diff --numstat
 ```
 
 Also scan the codebase for security-relevant patterns in the component area:
@@ -138,7 +141,7 @@ ID format: `SEC-YYYY-MM-DD-NNN`
 2. Replace placeholders:
    - `YYYY-MM-DD` -> Current date
    - `NNN` -> Sequence number (001, 002, etc.)
-   - `[agent-name]` -> The agent platform name and version
+   - `[agent-name]` -> The agent platform name and version — your runtime's canonical agent identity (see AGENT-RULES.md §1; do not assume Claude)
    - `[System/Component]` -> The component name from step 1
    - `threat_model_methodology: STRIDE` -> The methodology chosen in step 2
    - `owasp_asvs_level: 1` -> The ASVS level chosen in step 3

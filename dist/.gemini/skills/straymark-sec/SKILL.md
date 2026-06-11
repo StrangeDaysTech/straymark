@@ -68,11 +68,14 @@ date +%Y-%m-%d
 # Get modified files (staged and unstaged)
 git status --porcelain
 
-# Get recent changes summary
-git diff --stat HEAD~1 2>/dev/null || git diff --stat
+# Summarize the CURRENT work (staged + unstaged + untracked) — label each block.
+# Avoid `HEAD~1`: it describes the previous commit, not the code under assessment.
+git diff --cached --stat        # staged changes
+git diff --stat                 # unstaged changes
+git status --porcelain          # includes untracked files
 
-# Count lines changed
-git diff --numstat HEAD~1 2>/dev/null || git diff --numstat
+# Count lines changed in current work
+git diff --cached --numstat ; git diff --numstat
 ```
 
 Also scan the codebase for security-relevant patterns in the component area:
@@ -139,7 +142,7 @@ ID format: `SEC-YYYY-MM-DD-NNN`
 2. Replace placeholders:
    - `YYYY-MM-DD` -> Current date
    - `NNN` -> Sequence number (001, 002, etc.)
-   - `[agent-name]` -> `gemini-cli-v1.0`
+   - `[agent-name]` -> your runtime's canonical agent identity (see AGENT-RULES.md §1 — e.g. `claude-code-v1.0`, `gemini-cli-v1.0`, `codex-cli-v1.0`, `cursor-v1.0`; do not assume Claude)
    - `[System/Component]` -> The component name from step 1
    - `threat_model_methodology: STRIDE` -> The methodology chosen in step 2
    - `owasp_asvs_level: 1` -> The ASVS level chosen in step 3
@@ -183,7 +186,7 @@ id: SEC-2026-03-24-001
 title: "Authentication API Security Assessment"
 status: draft
 created: 2026-03-24
-agent: gemini-cli-v1.0
+agent: <your-runtime-identity>   # resolved per AGENT-RULES.md §1 (e.g. codex-cli-v1.0)
 confidence: medium
 review_required: true
 risk_level: high
@@ -207,7 +210,7 @@ related: []
 | System Under Assessment | Authentication API v1.0 |
 | Assessment Type | code review / threat model |
 | Assessment Date | 2026-03-24 |
-| Assessor | gemini-cli-v1.0 |
+| Assessor | <your-runtime-identity> |
 
 **Objectives**:
 

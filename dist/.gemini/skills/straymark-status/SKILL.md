@@ -16,8 +16,12 @@ When invoked, perform the following checks and display the results:
 Search for StrayMark documents created or modified in the last hour:
 
 ```bash
-# Get documents modified in the last hour
+# Committed in the last hour
 git log --since="1 hour ago" --name-only --pretty=format: -- ".straymark/**/*.md" | sort -u | grep -v "^$"
+
+# PLUS uncommitted StrayMark docs (staged + unstaged + untracked) — this skill runs
+# pre-commit, so newly created docs are usually NOT in the git log yet.
+git status --porcelain -- ".straymark" | grep '\.md$'
 ```
 
 If git is not available or the directory is not a git repo, use file modification times.
@@ -52,8 +56,11 @@ If the project has no Charters yet but the work clearly fits the trigger (multi-
 Identify source files that were modified and might need documentation:
 
 ```bash
-# Get modified files (staged and unstaged)
-git diff --name-only HEAD~1..HEAD 2>/dev/null || git diff --name-only
+# Modified source files in the CURRENT work — label each block.
+# Avoid `HEAD~1..HEAD`: it lists the previous commit's files, not current work.
+git diff --cached --name-only           # staged
+git diff --name-only                    # unstaged
+git status --porcelain | awk '/^\?\?/ {print $2}'   # untracked
 ```
 
 Filter to show only files that might need documentation:
@@ -113,7 +120,7 @@ Use /straymark-new to create documentation for undocumented changes.
 ### Edge Cases
 
 1. **No git repository**: Show message explaining git is required for full functionality
-2. **No recent documents**: Show "No StrayMark documents created in the last hour"
+2. **No recent documents**: Show "No StrayMark documents created in the last hour (committed or in the working tree)"
 3. **No modified files**: Show "No source files modified recently"
 4. **Empty .straymark directory**: Show warning that StrayMark may not be properly set up
 

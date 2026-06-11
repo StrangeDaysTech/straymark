@@ -47,7 +47,7 @@ StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.23.1` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| Framework | `fw-` | `fw-4.24.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
 | CLI | `cli-` | `cli-3.20.0` | El binario `straymark` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.

@@ -17,8 +17,11 @@ Use this skill when you've made a decision between multiple technical approaches
 # Get current date
 date +%Y-%m-%d
 
-# Get recent changes for context
-git diff --stat HEAD~1 2>/dev/null || git diff --stat
+# Summarize the CURRENT work (staged + unstaged + untracked) — label each block.
+# Avoid `HEAD~1`: it describes the previous commit, not the work being decided on.
+git diff --cached --stat        # staged changes
+git diff --stat                 # unstaged changes
+git status --porcelain          # includes untracked files
 ```
 
 ### 2. Confirm with User
@@ -59,7 +62,7 @@ Fill template with:
 - `id`: AIDEC-YYYY-MM-DD-NNN
 - `title`: Decision title from user
 - `created`: Current date
-- `agent`: gemini-cli-v1.0
+- `agent`: your runtime's canonical agent identity (see AGENT-RULES.md §1 — e.g. `claude-code-v1.0`, `gemini-cli-v1.0`, `codex-cli-v1.0`; do not assume Claude)
 - `confidence`: based on decision clarity
 - `risk_level`: based on decision impact
 

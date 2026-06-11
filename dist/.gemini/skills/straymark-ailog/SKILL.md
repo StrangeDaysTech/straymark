@@ -20,8 +20,11 @@ date +%Y-%m-%d
 # Get modified files
 git status --porcelain
 
-# Get change summary
-git diff --stat HEAD~1 2>/dev/null || git diff --stat
+# Summarize the CURRENT work (staged + unstaged + untracked) — label each block.
+# Avoid `HEAD~1`: it summarizes the previous commit, not the work being logged.
+git diff --cached --stat        # staged changes
+git diff --stat                 # unstaged changes
+git status --porcelain          # includes untracked files
 ```
 
 ### 2. Confirm with User
@@ -65,7 +68,7 @@ Fill template with:
 - `id`: AILOG-YYYY-MM-DD-NNN
 - `title`: User-provided description
 - `created`: Current date
-- `agent`: gemini-cli-v1.0
+- `agent`: your runtime's canonical agent identity (see AGENT-RULES.md §1 — e.g. `claude-code-v1.0`, `gemini-cli-v1.0`, `codex-cli-v1.0`; do not assume Claude)
 - `confidence`: based on change complexity
 - `risk_level`: based on files modified
 
