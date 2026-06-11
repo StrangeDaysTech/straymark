@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  pull_request:
+    paths:
+      - 'dist/.claude/skills/**'
+      - 'dist/.codex/skills/**'
+      - 'cli/src/bin/gen_codex_skills.rs'
+      - '.github/workflows/ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'dist/.claude/skills/**'
+      - 'dist/.codex/skills/**'
+      - 'cli/src/bin/gen_codex_skills.rs'
+      - '.github/workflows/ci.yml'
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  codex-skills-sync:
+    name: Codex skills in sync with Claude source
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install OpenSSL (Linux)
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config
+
+      - name: Verify .codex/skills is regenerated from .claude/skills
+        working-directory: cli
+        run: |
+          # Fails if dist/.codex/skills/ drifted from what gen_codex_skills would
+          # produce from dist/.claude/skills/. Fix locally with:
+          #   cd cli && cargo run --bin gen_codex_skills
+          cargo run --quiet --bin gen_codex_skills -- --check
