@@ -48,7 +48,7 @@ StrayMark 为每个组件使用**独立的版本标签**：
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
 | Framework | `fw-` | `fw-4.25.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.21.0` | `straymark` 二进制文件 |
+| CLI | `cli-` | `cli-3.22.0` | `straymark` 二进制文件 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
 
@@ -519,7 +519,14 @@ $ straymark charter close CHARTER-01
   ✔ Charter CHARTER-01 closed.
     Telemetry: .straymark/charters/CHARTER-01.telemetry.yaml
     Status updated: in-progress/declared → closed
+
+  ── Follow-ups ──
+  ✔ Extracted 2 follow-ups from 1 AILOG(s) into the registry (`## Bucket: ready`).
+    Review against the TDE-promotion criteria (AGENT-RULES.md §3): ...
+  Promote FU-078 — wire the retry budget into the sync loop to a TDE? [y/N]
 ```
+
+**Follow-up 调和** *(cli-3.22.0+,RFC #135 Tier 3)*。**交互式**关闭后,该命令对最近写入的 AILOG 运行默认的 `followups drift` 扫描(已提交的 git 范围 ∪ 工作树),将**尚未在注册表中**的 `§Follow-ups` / `R<N> (new)` 内容提取到 `## Bucket: ready`,然后针对 §3 的四条标准(先前 Charter 的遗留、跨多个模块/Charter、需要专用 Charter、需要人工排优先级)**逐条提供 TDE 提升**。拒绝某个提示会保留该 follow-up 的提取状态(已捕获进注册表,只是未提升);接受则运行 `followups promote` 流程(创建带 `promoted_from_followup` 溯源的 TDE)。当项目没有 follow-ups 注册表、或没有任何未提取内容时为**空操作**,并在 `--from-template` 路径上**跳过**(无交互提示上下文)—— 在那里请运行 `straymark followups drift --apply`。
 
 #### `straymark charter drift <CHARTER-ID> [--range <REV..REV>] [--no-ailog-suppress] [--no-batch-ledger-check] [--path <dir>]`
 

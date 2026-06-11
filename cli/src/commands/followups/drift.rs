@@ -37,7 +37,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use crate::ailog;
-use crate::followups::{self, ExtractedFu};
+use crate::followups::{self, ExtractedFu, Registry};
 use crate::utils;
 
 pub fn run(path: &str, apply: bool, scan_all: bool, range: Option<&str>) -> Result<()> {
@@ -82,52 +82,7 @@ pub fn run(path: &str, apply: bool, scan_all: bool, range: Option<&str>) -> Resu
         utils::warn(w);
     }
 
-    // Candidate AILOG files. Default mode unions the committed git range with
-    // the working tree (#229): at pre-commit time the just-written AILOG is
-    // usually untracked, so a range-only scan is blind to exactly the file the
-    // documented `drift --apply` flow targets.
-    let agent_logs = ailog::agent_logs_dir(project_root);
-    let candidates: Vec<PathBuf> = if scan_all {
-        walk_ailogs(&agent_logs)
-    } else {
-        let mut set = ailogs_in_git_range(project_root, &agent_logs, range);
-        for p in ailogs_in_working_tree(project_root, &agent_logs) {
-            if !set.contains(&p) {
-                set.push(p);
-            }
-        }
-        set
-    };
-
-    // Drift = an AILOG carrying follow-up content whose content hash is NOT yet
-    // in the registry (#231). Re-scanning already-extracted AILOGs and deduping
-    // per follow-up by content hash — instead of skipping the whole file once
-    // its id lands in `fully_extracted_ailogs` — is what catches follow-ups
-    // appended to a multi-batch AILOG after its first extraction.
-    let seen_hashes = followups::registry_extracted_hashes(&registry);
-
-    let mut drifted: Vec<(String, PathBuf, Vec<ExtractedFu>)> = Vec::new();
-    for path in candidates {
-        let Some(id) = followups::ailog_id_from_path(&path) else {
-            continue;
-        };
-        let Ok(content) = std::fs::read_to_string(&path) else {
-            continue;
-        };
-        let new: Vec<ExtractedFu> = followups::extract_followups_from_ailog(&content)
-            .into_iter()
-            .filter(|fu| {
-                !seen_hashes.contains(&followups::fu_content_hash(
-                    &id,
-                    &fu.origin_section,
-                    &fu.description,
-                ))
-            })
-            .collect();
-        if !new.is_empty() {
-            drifted.push((id, path, new));
-        }
-    }
+    let drifted = detect_drift_candidates(project_root, &registry, scan_all, range);
 
     if drifted.is_empty() {
         println!(
@@ -181,24 +136,143 @@ pub fn run(path: &str, apply: bool, scan_all: bool, range: Option<&str>) -> Resu
 
     // ── --apply: extract into the registry ──
     let today = Local::now().format("%Y-%m-%d").to_string();
+    let report = apply_candidates(&registry_path, &registry, &drifted, &today)?;
+
+    utils::success(&format!(
+        "Extracted {} entr{} from {} AILOG(s) into `## Bucket: ready`.",
+        report.applied.len(),
+        if report.applied.len() == 1 { "y" } else { "ies" },
+        report.ailogs
+    ));
+    if report.suspected > 0 {
+        println!(
+            "  {} {} extracted as {} (closure marker in source AILOG) — confirm at the next triage.",
+            "!".magenta().bold(),
+            report.suspected,
+            "suspected-closed".magenta()
+        );
+    }
+    if report.was_v0 {
+        utils::info("Registry upgraded to schema v1 (non-destructive — counters are now CLI-owned).");
+    }
+    println!(
+        "  Counters recomputed: {} open / {} suspected-closed / {} promoted (total {}).",
+        report.counters.open,
+        report.counters.suspected_closed,
+        report.counters.promoted,
+        report.counters.total
+    );
+    println!("  Next: reclassify bucket/trigger/destination at triage (`straymark followups list --bucket ready`).");
+    Ok(())
+}
+
+/// Scan candidate AILOGs and return those carrying follow-up content not yet in
+/// the registry, deduped per follow-up by content hash (#231). Pure — no
+/// stdout, no `exit`. The reusable detection core shared by `run` and the
+/// `charter close` integration (Tier 3, RFC #135).
+pub fn detect_drift_candidates(
+    project_root: &Path,
+    registry: &Registry,
+    scan_all: bool,
+    range: Option<&str>,
+) -> Vec<(String, PathBuf, Vec<ExtractedFu>)> {
+    // Candidate AILOG files. Default mode unions the committed git range with
+    // the working tree (#229): at pre-commit time the just-written AILOG is
+    // usually untracked, so a range-only scan is blind to exactly the file the
+    // documented `drift --apply` flow targets.
+    let agent_logs = ailog::agent_logs_dir(project_root);
+    let candidates: Vec<PathBuf> = if scan_all {
+        walk_ailogs(&agent_logs)
+    } else {
+        let mut set = ailogs_in_git_range(project_root, &agent_logs, range);
+        for p in ailogs_in_working_tree(project_root, &agent_logs) {
+            if !set.contains(&p) {
+                set.push(p);
+            }
+        }
+        set
+    };
+
+    let seen_hashes = followups::registry_extracted_hashes(registry);
+
+    let mut drifted: Vec<(String, PathBuf, Vec<ExtractedFu>)> = Vec::new();
+    for path in candidates {
+        let Some(id) = followups::ailog_id_from_path(&path) else {
+            continue;
+        };
+        let Ok(content) = std::fs::read_to_string(&path) else {
+            continue;
+        };
+        let new: Vec<ExtractedFu> = followups::extract_followups_from_ailog(&content)
+            .into_iter()
+            .filter(|fu| {
+                !seen_hashes.contains(&followups::fu_content_hash(
+                    &id,
+                    &fu.origin_section,
+                    &fu.description,
+                ))
+            })
+            .collect();
+        if !new.is_empty() {
+            drifted.push((id, path, new));
+        }
+    }
+    drifted
+}
+
+/// One follow-up extracted into the registry by [`apply_candidates`] — the
+/// handle `charter close` needs to offer per-entry TDE promotion (Tier 3).
+pub struct AppliedFu {
+    pub fu_id: String,
+    pub description: String,
+    pub suspected_closed: bool,
+}
+
+/// Outcome of writing detected candidates into the registry.
+pub struct ApplyReport {
+    pub applied: Vec<AppliedFu>,
+    /// Number of distinct AILOGs that contributed entries.
+    pub ailogs: usize,
+    pub suspected: usize,
+    pub counters: followups::Counters,
+    pub was_v0: bool,
+}
+
+/// Extract `drifted` candidates into the registry's `## Bucket: ready`, append
+/// the AILOG ids to `fully_extracted_ailogs` (deduped), recompute the CLI-owned
+/// counters, and upgrade v0 → v1 in place. Writes the registry and returns the
+/// created entries. The reusable `--apply` core shared by `run` and the
+/// `charter close` integration.
+pub fn apply_candidates(
+    registry_path: &Path,
+    registry: &Registry,
+    drifted: &[(String, PathBuf, Vec<ExtractedFu>)],
+    today: &str,
+) -> Result<ApplyReport> {
     let mut body = registry.body.clone();
-    let mut next_n = followups::next_fu_number(&registry);
-    let mut added = 0usize;
+    let mut next_n = followups::next_fu_number(registry);
+    let mut applied: Vec<AppliedFu> = Vec::new();
     let mut suspected = 0usize;
 
-    for (id, _path, found) in &drifted {
+    for (id, _path, found) in drifted {
         for fu in found {
             // Re-parse spans against the evolving body so each insert lands
             // at the (possibly moved) end of the ready bucket.
-            let current =
-                followups::parse_registry_str(&registry_path, &followups::assemble(&registry.frontmatter_raw, &body))?;
-            let block = followups::render_new_entry(next_n, fu, id, &today);
+            let current = followups::parse_registry_str(
+                registry_path,
+                &followups::assemble(&registry.frontmatter_raw, &body),
+            )?;
+            let block = followups::render_new_entry(next_n, fu, id, today);
             body = followups::insert_into_bucket(&current, "ready", &block);
             if fu.suspected_closed {
                 suspected += 1;
             }
+            applied.push(AppliedFu {
+                fu_id: format!("FU-{:03}", next_n),
+                description: fu.description.clone(),
+                suspected_closed: fu.suspected_closed,
+            });
             next_n += 1;
-            added += 1;
         }
     }
 
@@ -211,7 +285,7 @@ pub fn run(path: &str, apply: bool, scan_all: bool, range: Option<&str>) -> Resu
         .map(|s| s.as_str())
         .collect();
     let mut new_ids: Vec<String> = Vec::new();
-    for (id, _, _) in &drifted {
+    for (id, _, _) in drifted {
         if !already.contains(id.as_str()) && !new_ids.contains(id) {
             new_ids.push(id.clone());
         }
@@ -221,38 +295,22 @@ pub fn run(path: &str, apply: bool, scan_all: bool, range: Option<&str>) -> Resu
         "fully_extracted_ailogs",
         &new_ids,
     );
-    fm = followups::fm_set_scalar(&fm, "last_scan", &today);
+    fm = followups::fm_set_scalar(&fm, "last_scan", today);
     let final_registry =
-        followups::parse_registry_str(&registry_path, &followups::assemble(&fm, &body))?;
+        followups::parse_registry_str(registry_path, &followups::assemble(&fm, &body))?;
     let counters = followups::compute_counters(&final_registry);
     fm = followups::fm_apply_counters_and_v1(&fm, &counters);
 
     let was_v0 = registry.is_v0();
-    std::fs::write(&registry_path, followups::assemble(&fm, &body))?;
+    std::fs::write(registry_path, followups::assemble(&fm, &body))?;
 
-    utils::success(&format!(
-        "Extracted {} entr{} from {} AILOG(s) into `## Bucket: ready`.",
-        added,
-        if added == 1 { "y" } else { "ies" },
-        drifted.len()
-    ));
-    if suspected > 0 {
-        println!(
-            "  {} {} extracted as {} (closure marker in source AILOG) — confirm at the next triage.",
-            "!".magenta().bold(),
-            suspected,
-            "suspected-closed".magenta()
-        );
-    }
-    if was_v0 {
-        utils::info("Registry upgraded to schema v1 (non-destructive — counters are now CLI-owned).");
-    }
-    println!(
-        "  Counters recomputed: {} open / {} suspected-closed / {} promoted (total {}).",
-        counters.open, counters.suspected_closed, counters.promoted, counters.total
-    );
-    println!("  Next: reclassify bucket/trigger/destination at triage (`straymark followups list --bucket ready`).");
-    Ok(())
+    Ok(ApplyReport {
+        ailogs: drifted.len(),
+        suspected,
+        counters,
+        was_v0,
+        applied,
+    })
 }
 
 /// All AILOG .md files under the agent-logs directory (recursive).
@@ -405,6 +463,59 @@ fn git_ref_exists(project_root: &Path, r: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::TempDir;
+
+    #[test]
+    fn tier3_detect_apply_dedup_roundtrip() {
+        // End-to-end of the reusable core that `charter close` (Tier 3) drives:
+        // detect candidates → apply into the registry → the returned FU ids →
+        // and that a re-scan does not re-drift the now-extracted follow-up.
+        let tmp = TempDir::new().unwrap();
+        let root = tmp.path();
+        let agent_logs = root.join(".straymark/07-ai-audit/agent-logs");
+        std::fs::create_dir_all(&agent_logs).unwrap();
+        std::fs::write(
+            agent_logs.join("AILOG-2026-06-11-001-x.md"),
+            "# AILOG\n\n## Follow-ups\n\n- do the thing\n",
+        )
+        .unwrap();
+
+        let registry_path = crate::followups::registry_path(root);
+        std::fs::create_dir_all(registry_path.parent().unwrap()).unwrap();
+        std::fs::write(
+            &registry_path,
+            "---\nschema_version: v1\ntotal_open: 0\nbuckets:\n  - ready\nfully_extracted_ailogs: []\n---\n\n## Bucket: ready\n",
+        )
+        .unwrap();
+
+        let registry = crate::followups::parse_registry(&registry_path).unwrap();
+        // scan_all so the test does not depend on a git repo.
+        let drifted = detect_drift_candidates(root, &registry, true, None);
+        assert_eq!(drifted.len(), 1);
+        assert_eq!(drifted[0].0, "AILOG-2026-06-11-001");
+        assert_eq!(drifted[0].2.len(), 1);
+        assert_eq!(drifted[0].2[0].description, "do the thing");
+
+        let report = apply_candidates(&registry_path, &registry, &drifted, "2026-06-11").unwrap();
+        assert_eq!(report.applied.len(), 1);
+        assert_eq!(report.applied[0].fu_id, "FU-001");
+        assert_eq!(report.applied[0].description, "do the thing");
+        assert!(!report.applied[0].suspected_closed);
+
+        let written = std::fs::read_to_string(&registry_path).unwrap();
+        assert!(written.contains("### FU-001 — do the thing"));
+        assert!(written.contains("- **Source-hash**:"));
+        assert!(written.contains("AILOG-2026-06-11-001"));
+
+        // Dedup: a second detect on the updated registry finds nothing new —
+        // the close hook re-running (or a manual drift) must be a no-op.
+        let registry2 = crate::followups::parse_registry(&registry_path).unwrap();
+        let drifted2 = detect_drift_candidates(root, &registry2, true, None);
+        assert!(
+            drifted2.is_empty(),
+            "already-extracted follow-up must not re-drift"
+        );
+    }
 
     #[test]
     fn parse_porcelain_picks_ailogs_across_status_codes() {

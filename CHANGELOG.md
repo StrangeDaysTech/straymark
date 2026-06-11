@@ -7,6 +7,20 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.22.0 — `charter close` reconciles follow-ups and offers TDE promotion (RFC #135 Tier 3)
+
+Closes the loop between Charter close and the follow-ups registry — the last open tier of the follow-ups automation roadmap ([#135](https://github.com/StrangeDaysTech/straymark/issues/135)), unblocked now that drift detection is reliable (cli-3.21.0, #229/#231).
+
+### Added (CLI)
+
+- **`charter close` follow-ups integration**: after an **interactive** close, the command runs the default `followups drift` scan (committed git range ∪ working tree) over the just-written AILOGs, extracts any `§Follow-ups` / `R<N> (new)` content not yet in the registry into `## Bucket: ready`, and then offers **per-entry TDE promotion** against the four AGENT-RULES.md §3 criteria. Declining a prompt leaves the follow-up extracted (captured, not promoted); accepting runs the `followups promote` flow (creates the TDE with `promoted_from_followup` traceability). No-op when there is no registry or nothing is unextracted; skipped on the `--from-template` paths (no interactive prompt context). The scan reuses the stabilized default drift (not scoped to `originating_ailogs`, which is the ex-ante seed rather than the execution AILOGs where follow-ups live).
+
+### Changed (CLI)
+
+- Refactored `followups drift` into reusable, side-effect-free cores — `detect_drift_candidates()` (scan + per-follow-up hash dedup) and `apply_candidates()` (write + return the created `FU-NNN` ids) — shared by `followups drift` and the new `charter close` integration. `followups drift` output is unchanged.
+
+---
+
 ## Framework 4.25.0 / CLI 3.21.0 — follow-ups drift correctness: see the working tree + catch appended follow-ups
 
 Two silent-data-loss bugs in `straymark followups drift`, both surfaced by the reference adopter (Sentinel) and both prerequisites for wiring drift into the Charter-close flow (RFC [#135](https://github.com/StrangeDaysTech/straymark/issues/135) Tier 3).
