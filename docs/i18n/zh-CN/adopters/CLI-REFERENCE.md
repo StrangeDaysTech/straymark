@@ -47,8 +47,8 @@ StrayMark 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.25.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.22.0` | `straymark` 二进制文件 |
+| Framework | `fw-` | `fw-4.26.0` | 模板（12 种类型）、治理文档、指令 |
+| CLI | `cli-` | `cli-3.23.0` | `straymark` 二进制文件 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
 
@@ -530,7 +530,7 @@ $ straymark charter close CHARTER-01
 
 #### `straymark charter drift <CHARTER-ID> [--range <REV..REV>] [--no-ailog-suppress] [--no-batch-ledger-check] [--path <dir>]`
 
-在章程关闭时检测文件 vs 提交漂移。封装框架的 `.straymark/scripts/check-charter-drift.sh`（在 Sentinel PLAN-05 回顾性 + PLAN-06 前瞻性中实证验证零误报）。CLI 在原始脚本之上的附加价值是 **AILOG 感知**：报告为"已声明但未修改"的路径，如果出现在被章程 `originating_ailogs` 引用的任何 AILOG 的 `## Risk` / `## Riesgos` / `## 风险` 节中，则被静默。使用 `--no-ailog-suppress` 来禁用。
+在章程关闭时检测文件 vs 提交漂移。**自 cli-3.23.0 起为原生 Rust**(#237)—— 不再委托给(现已弃用的)`.straymark/scripts/check-charter-drift.sh`,因此可在 Windows 原生环境运行(无需 WSL、无需 Git Bash)。零误报特性(Sentinel PLAN-05 回顾性 + PLAN-06 前瞻性)由脚本等价性测试套件保留。CLI 在原始脚本之上的附加价值是 **AILOG 感知**：报告为"已声明但未修改"的路径，如果出现在被章程 `originating_ailogs` 引用的任何 AILOG 的 `## Risk` / `## Riesgos` / `## 风险` 节中，则被静默。使用 `--no-ailog-suppress` 来禁用。
 
 **Batch Ledger 门控** *(cli-3.13.0+)*。当章程状态为 `in-progress` 或 `closed` 时，该命令还检查每个 originating AILOG 中仍为 `(pending)` 的 `## Batch Ledger` 条目，并以清晰的诊断列出缺失的批次。没有 ledger 的 AILOG 不参与 — 该章节是 opt-in 的。使用 `--no-batch-ledger-check` 来绕过（用于在 close 后合并 ledger 的 adopter）。
 

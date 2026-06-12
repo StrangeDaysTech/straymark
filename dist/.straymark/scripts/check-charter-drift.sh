@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+#
+# ⚠️  DEPRECATED since fw-4.26.0 / cli-3.23.0 (#237).
+# `straymark charter drift` is now native Rust and no longer invokes this
+# script — the command works on Windows-native (no WSL, no Git Bash). This file
+# is kept as an unmaintained reference prototype (it seeded `charter_files.rs`
+# and the native drift logic, validated byte-for-byte by the equivalence test
+# suite) and will be removed in a future release. Prefer `straymark charter
+# drift`; running this script directly still works but receives no fixes.
+#
 # check-charter-drift.sh — flag declared-but-not-modified files at Charter close.
 #
 # Ported from Sentinel scripts/check-plan-drift.sh (validated empirically with

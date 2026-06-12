@@ -1,33 +1,34 @@
 //! `straymark charter drift` — file-vs-commit drift check at Charter close.
 //!
-//! Wraps the framework's `.straymark/scripts/check-charter-drift.sh` (ported
-//! from Sentinel `scripts/check-plan-drift.sh`, validated empirically with
-//! zero false positives across PLAN-05 retrospective + PLAN-06 prospective).
-//! The CLI value-add over the raw script is **AILOG-awareness** (mitigation
-//! R2 of the Sentinel experiment): suppresses alerts on paths already
-//! documented as a risk in any AILOG referenced by the Charter's
+//! **Native Rust (cli-3.23.0, #237).** Replaces the bash delegation to
+//! `.straymark/scripts/check-charter-drift.sh` (now deprecated, kept as a
+//! reference prototype like `check-followups-drift.sh`). The declared-files
+//! parser was already pure Rust (`charter_files.rs`, byte-for-byte equivalent
+//! to the script's awk extraction); this module ports the remaining ~30% — the
+//! git-range diff, the wildcard set-difference, and the report — so the command
+//! works on Windows-native (no WSL, no Git Bash). Zero-false-positives property
+//! (Sentinel PLAN-05/PLAN-06) preserved by the equivalence test suite.
+//!
+//! Catches drift of **omission** (declared in the Charter, never modified) and
+//! **scope expansion** (modified but not declared). The CLI value-add over the
+//! raw script is **AILOG-awareness**: it suppresses omission alerts on paths
+//! already documented as a risk in any AILOG referenced by the Charter's
 //! `originating_ailogs` frontmatter.
-//!
-//! ## Scope (Phase 2)
-//!
-//! Bash delegation only. Windows native (no WSL, no Git Bash) currently has
-//! no path; document that limitation in the user-facing message and direct
-//! Windows users to WSL. A Rust-native fallback is feasible but deferred
-//! until a real adopter reports the need.
 //!
 //! ## Exit codes
 //!
 //! - `0` — no drift, or only documented out-of-scope extras / AILOG-suppressed
 //! - `1` — drift found that needs attention
-//! - `2` — usage error (Charter not found, bash missing, etc.)
+//! - `2` — usage error (Charter not found, etc.)
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, Result};
 use colored::Colorize;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 
 use crate::ailog;
 use crate::charter::{self, Charter, CharterStatus};
+use crate::charter_files;
 use crate::utils;
 
 const DEFAULT_RANGE: &str = "HEAD~1..HEAD";
@@ -42,7 +43,6 @@ pub fn run(
     let resolved = utils::resolve_project_root(path)
         .ok_or_else(|| anyhow!("StrayMark not installed. Run 'straymark init' first."))?;
     let project_root = &resolved.path;
-    let straymark_dir = project_root.join(".straymark");
 
     // Resolve the Charter file.
     let (charters, _errors) = charter::discover_and_parse(project_root);
@@ -61,46 +61,24 @@ pub fn run(
         .unwrap_or(&charter.path)
         .to_path_buf();
 
-    // Locate the drift script.
-    let script_path = straymark_dir.join("scripts").join("check-charter-drift.sh");
-    if !script_path.exists() {
-        bail!(
-            "Drift script not found at {}. Run `straymark repair` to restore framework files \
-             (the script ships with fw-4.6.0 and later).",
-            script_path.display()
-        );
-    }
-
-    // Locate bash.
-    let bash = which_bash().ok_or_else(|| {
-        anyhow!(
-            "`bash` not found in PATH. The drift check delegates to a bash script. \
-             On Windows native, install Git Bash or WSL; a pure-Rust fallback is on \
-             the roadmap but not in fw-4.6.0."
-        )
-    })?;
-
     let range_arg = range.unwrap_or(DEFAULT_RANGE);
 
-    // Run the script. cwd = project_root so git ranges and relative Charter
-    // paths work.
-    let output = Command::new(&bash)
-        .arg(&script_path)
-        .arg(&charter_path_rel)
-        .arg(range_arg)
-        .current_dir(project_root)
-        .output()
-        .with_context(|| format!("Failed to invoke bash script at {}", script_path.display()))?;
+    // Native drift computation (#237) — formerly a delegation to the bash
+    // script `check-charter-drift.sh`. `declared_files` reuses the same parser
+    // (`charter_files.rs`) the script's awk extraction was ported into.
+    let declared = declared_files(&charter.body);
+    let modified = modified_files(project_root, range_arg);
+    let (omitted, extra) = compute_drift(&declared, &modified);
 
-    let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
-    let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
-    let raw_exit = output.status.code().unwrap_or(-1);
+    // Render the script-equivalent report. Omitted/extra are shown in full;
+    // AILOG-aware suppression is applied below as a separate, additive layer
+    // (scope-expansion extras are informational and never suppressed — they
+    // are not in the declared list and rarely overlap documented risks).
+    render_drift_report(&charter_path_rel, range_arg, &declared, &modified, &omitted, &extra);
 
-    // Parse the script output to identify declared-but-not-modified paths.
-    // Scope-expansion ("Modified but NOT declared") is informational and not
-    // suppressed — those paths are not in the Charter's declared list and
-    // rarely overlap with documented risks.
-    let omitted = extract_omitted_paths(&stdout);
+    // The script exited 1 iff there were declared-but-not-modified paths;
+    // scope expansion is informational and does not change the exit code.
+    let raw_exit = if omitted.is_empty() { 0 } else { 1 };
 
     // O3 (cli-3.8.1, issue #91): always compute what AILOG-aware suppression
     // would have done, regardless of the flag. The flag only controls
@@ -125,13 +103,6 @@ pub fn run(
         .filter(|p| !suppressed_paths.contains(*p))
         .cloned()
         .collect();
-
-    // Render the report. We re-render rather than passing raw stdout because
-    // suppression can change the conclusion.
-    print!("{}", stdout);
-    if !stderr.is_empty() {
-        eprint!("{}", stderr);
-    }
 
     if !suppressions.is_empty() {
         println!();
@@ -264,60 +235,190 @@ fn collect_pending_batch_failures(
     out
 }
 
-/// Locate `bash` in PATH. Returns `None` if not found. We resolve it
-/// explicitly (rather than letting `Command::new("bash")` do PATH lookup at
-/// spawn time) so we can produce a friendlier error before spawning.
-fn which_bash() -> Option<PathBuf> {
-    let path_env = std::env::var_os("PATH")?;
-    for dir in std::env::split_paths(&path_env) {
-        for candidate in ["bash", "bash.exe"] {
-            let p = dir.join(candidate);
-            if p.is_file() {
-                return Some(p);
-            }
-        }
-    }
-    None
+/// Declared files from the Charter's `## Files to modify` section: sorted,
+/// deduplicated path list. Mirrors the script's `awk | grep | sort -u`,
+/// reusing `charter_files::parse_files_to_modify` (the shared, byte-for-byte
+/// port of the awk extraction). Wildcard paths (`...` / `*`) are preserved.
+fn declared_files(charter_body: &str) -> Vec<String> {
+    let mut v: Vec<String> = charter_files::parse_files_to_modify(charter_body)
+        .into_iter()
+        .map(|f| f.path)
+        .collect();
+    v.sort();
+    v.dedup();
+    v
 }
 
-/// Extract the list of declared-but-not-modified file paths from the drift
-/// script's stdout. The script's relevant block looks like:
-///
-/// ```text
-/// WARNING: Declared in Charter but NOT modified (3 files):
-///   - path/one.go
-///   - path/two.md
-///   - path/three.yaml
-///
-///   Action: ...
-/// ```
-///
-/// We scan from the WARNING line until a blank line or a non-bullet line
-/// (the first sub-bullet that isn't a path is `  Action:` text).
-fn extract_omitted_paths(stdout: &str) -> Vec<String> {
-    let mut out = Vec::new();
-    let mut in_section = false;
-    for line in stdout.lines() {
-        if line.starts_with("WARNING: Declared in Charter but NOT modified") {
-            in_section = true;
+/// Files modified in the git range: sorted, deduplicated. Empty on git failure
+/// or no output — the script treats both as "nothing modified" (WARN, exit 0).
+fn modified_files(project_root: &Path, range: &str) -> Vec<String> {
+    let Ok(output) = Command::new("git")
+        .args(["diff", "--name-only", range])
+        .current_dir(project_root)
+        .output()
+    else {
+        return Vec::new();
+    };
+    if !output.status.success() {
+        return Vec::new();
+    }
+    let mut v: Vec<String> = String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .map(str::to_string)
+        .filter(|s| !s.is_empty())
+        .collect();
+    v.sort();
+    v.dedup();
+    v
+}
+
+/// Glob match where `*` matches any (possibly empty) run of characters and
+/// every other character is literal, anchored over the whole string. Mirrors
+/// the script's `sed 's/\./\\./g; s/\*/.*/g'` + `^…$` for path-like inputs.
+fn glob_match(pattern: &str, text: &str) -> bool {
+    let parts: Vec<&str> = pattern.split('*').collect();
+    if parts.len() == 1 {
+        return pattern == text; // no wildcard → literal equality
+    }
+    if !text.starts_with(parts[0]) {
+        return false;
+    }
+    let mut pos = parts[0].len();
+    for (i, part) in parts.iter().enumerate().skip(1) {
+        if i == parts.len() - 1 {
+            // Last segment must end the string (and not overlap consumed prefix).
+            return text.len() >= pos && text[pos..].ends_with(part);
+        }
+        if part.is_empty() {
             continue;
         }
-        if in_section {
-            // The script emits `  - <path>` bullets, then a blank line, then
-            // an indented `  Action:` paragraph. We stop at the first line
-            // that isn't a `  - ` bullet.
-            if let Some(rest) = line.strip_prefix("  - ") {
-                let path = rest.trim();
-                if !path.is_empty() {
-                    out.push(path.to_string());
-                }
-                continue;
-            }
-            // Any other line ends the section.
-            in_section = false;
+        match text[pos..].find(part) {
+            Some(idx) => pos += idx + part.len(),
+            None => return false,
         }
     }
-    out
+    true
+}
+
+/// True when a declared path's wildcard form is satisfied by `target`.
+/// Ellipsis `prefix...suffix` → any path with that prefix; glob `prefix*suffix`
+/// → [`glob_match`]. Returns `None` when `decl` is a literal path.
+fn wildcard_satisfied_by(decl: &str, target: &str) -> Option<bool> {
+    if let Some(idx) = decl.rfind("...") {
+        Some(target.starts_with(&decl[..idx]))
+    } else if decl.contains('*') {
+        Some(glob_match(decl, target))
+    } else {
+        None
+    }
+}
+
+/// Set-difference at Charter close: `(declared_omitted, modified_extra)`.
+///
+/// - **Omitted**: declared but not modified. A wildcard declaration is
+///   satisfied by any modified path it matches; a literal needs an exact match.
+/// - **Extra** (scope expansion): modified but not declared. Charter-doc and
+///   AILOG paths are always in scope; a modified path also matched by any
+///   declared wildcard is not extra.
+fn compute_drift(declared: &[String], modified: &[String]) -> (Vec<String>, Vec<String>) {
+    let omitted: Vec<String> = declared
+        .iter()
+        .filter(|decl| {
+            !modified
+                .iter()
+                .any(|m| wildcard_satisfied_by(decl, m).unwrap_or_else(|| m == *decl))
+        })
+        .cloned()
+        .collect();
+
+    let extra: Vec<String> = modified
+        .iter()
+        .filter(|m| {
+            if m.starts_with(".straymark/charters/") || m.starts_with(".straymark/07-ai-audit/") {
+                return false;
+            }
+            if declared.iter().any(|d| d == *m) {
+                return false;
+            }
+            // Allowed when a declared wildcard prefix/glob matches it.
+            !declared
+                .iter()
+                .any(|decl| wildcard_satisfied_by(decl, m).unwrap_or(false))
+        })
+        .cloned()
+        .collect();
+
+    (omitted, extra)
+}
+
+/// Render the report — byte-for-byte equivalent to `check-charter-drift.sh`
+/// stdout/stderr. The header is printed only when both sides are non-empty
+/// (the script's WARN-and-exit-0 paths emit only to stderr).
+fn render_drift_report(
+    charter_path: &Path,
+    range: &str,
+    declared: &[String],
+    modified: &[String],
+    omitted: &[String],
+    extra: &[String],
+) {
+    if declared.is_empty() {
+        eprintln!(
+            "WARN: no files extracted from §Files to modify in {}",
+            charter_path.display()
+        );
+        eprintln!("  Either the section is missing, the table format is unusual, or the");
+        eprintln!("  declared paths don't have recognized extensions. Script can't help — exit clean.");
+        return;
+    }
+    if modified.is_empty() {
+        eprintln!(
+            "WARN: no files modified in range {} — Charter may not have executed.",
+            range
+        );
+        return;
+    }
+
+    println!("=== Charter drift check ===");
+    println!("  Charter: {}", charter_path.display());
+    println!("  Range:   {}", range);
+    println!("  Declared: {} files", declared.len());
+    println!("  Modified: {} files", modified.len());
+    println!();
+
+    if !omitted.is_empty() {
+        println!(
+            "WARNING: Declared in Charter but NOT modified ({} files):",
+            omitted.len()
+        );
+        for p in omitted {
+            println!("  - {}", p);
+        }
+        println!();
+        println!("  Action: either complete the work, or document in AILOG under '## Risk'");
+        println!("  as 'R<N+1> (new, not in Charter)' explaining why this file did not need");
+        println!("  changes (Charter was wrong, scope simplified, etc.).");
+        println!();
+    }
+
+    if !extra.is_empty() {
+        println!(
+            "INFO: Modified but NOT declared ({} files, scope expansion):",
+            extra.len()
+        );
+        for p in extra {
+            println!("  - {}", p);
+        }
+        println!();
+        println!("  Action: if intentional, document the scope expansion in AILOG.");
+        println!("  Common reasons: mock updates after interface change, generated");
+        println!("  files (e.g. wire_gen.go), pre-existing drift fix needed to unblock work.");
+        println!();
+    }
+
+    if omitted.is_empty() && extra.is_empty() {
+        println!("OK No drift detected. Charter and execution are in sync.");
+    }
 }
 
 /// For each declared-omitted path, check whether it appears in the `## Risk`
@@ -394,34 +495,54 @@ fn extract_risk_section(content: &str) -> Option<String> {
 mod tests {
     use super::*;
 
-    #[test]
-    fn extract_omitted_handles_typical_output() {
-        let stdout = r#"=== Charter drift check ===
-  Charter: .straymark/charters/01-foo.md
-  Range:   HEAD~1..HEAD
-  Declared: 5 files
-  Modified: 3 files
-
-WARNING: Declared in Charter but NOT modified (2 files):
-  - src/services/policy/handler.go
-  - src/services/policy/repository.go
-
-  Action: either complete the work, or document in AILOG.
-"#;
-        let omitted = extract_omitted_paths(stdout);
-        assert_eq!(
-            omitted,
-            vec![
-                "src/services/policy/handler.go".to_string(),
-                "src/services/policy/repository.go".to_string()
-            ]
-        );
+    fn s(items: &[&str]) -> Vec<String> {
+        items.iter().map(|x| x.to_string()).collect()
     }
 
     #[test]
-    fn extract_omitted_handles_empty_output() {
-        let stdout = "OK No drift detected.\n";
-        assert!(extract_omitted_paths(stdout).is_empty());
+    fn glob_match_mirrors_script_semantics() {
+        assert!(glob_match("AILOG-*.md", "AILOG-2026-06-12-001.md"));
+        assert!(glob_match("src/*.rs", "src/main.rs"));
+        assert!(glob_match("a*b*c", "axxbyyc"));
+        assert!(glob_match("*.md", "README.md"));
+        assert!(glob_match("dir/*", "dir/anything/deep.rs")); // `*` spans `/`, like `.*`
+        assert!(!glob_match("AILOG-*.md", "AILOG-2026.txt"));
+        assert!(!glob_match("src/*.rs", "src/main.go"));
+        // `.` is literal, not a regex metachar.
+        assert!(!glob_match("a.b", "axb"));
+        assert!(glob_match("a.b", "a.b"));
+        // No wildcard → exact equality.
+        assert!(glob_match("src/main.rs", "src/main.rs"));
+        assert!(!glob_match("src/main.rs", "src/main.rs.bak"));
+    }
+
+    #[test]
+    fn compute_drift_literal_omission_and_scope_expansion() {
+        let declared = s(&["src/a.rs", "src/b.rs", "src/c.rs"]);
+        let modified = s(&["src/a.rs", "src/d.rs"]);
+        let (omitted, extra) = compute_drift(&declared, &modified);
+        assert_eq!(omitted, s(&["src/b.rs", "src/c.rs"])); // declared, not modified
+        assert_eq!(extra, s(&["src/d.rs"])); // modified, not declared
+    }
+
+    #[test]
+    fn compute_drift_wildcards_and_in_scope_paths() {
+        // Ellipsis + glob declarations satisfied by a matching modified path;
+        // charter-doc and AILOG paths are always in scope (never "extra").
+        let declared = s(&[
+            ".straymark/07-ai-audit/agent-logs/AILOG-...md",
+            "src/gen/*.rs",
+            "src/lit.rs",
+        ]);
+        let modified = s(&[
+            ".straymark/07-ai-audit/agent-logs/AILOG-2026-06-12-001.md",
+            ".straymark/charters/05-x.md",
+            "src/gen/wire.rs",
+            "src/lit.rs",
+        ]);
+        let (omitted, extra) = compute_drift(&declared, &modified);
+        assert!(omitted.is_empty(), "all declared satisfied (2 wildcards + 1 literal)");
+        assert!(extra.is_empty(), "charter/AILOG paths in scope; gen/wire matches glob");
     }
 
     #[test]

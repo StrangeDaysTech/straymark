@@ -1,7 +1,7 @@
 # StrayMark — Paridad Windows/PowerShell y el rol de Microsoft Coreutils
 
-**Versión:** 0.1 (análisis especulativo — sin decisión tomada; insumo para futuro issue/ADR/Charter)
-**Fecha:** 3 de junio de 2026
+**Versión:** 0.2 — **Opción A ejecutada** en [#237](https://github.com/StrangeDaysTech/straymark/issues/237) (fw-4.26.0 / cli-3.23.0): `charter drift` portado a Rust nativo, `check-charter-drift.sh` deprecado. Microsoft Coreutils descartado como vehículo de paridad (sigue siendo ergonomía opcional del adoptante, §5). Pendiente sin ejecutar: verificación empírica de §6.3 antes de cualquier mención en `ADOPTION-GUIDE.md`.
+**Fecha:** 3 de junio de 2026 (v0.1) · 12 de junio de 2026 (v0.2)
 **Autor:** Jose Villaseñor Montfort — StrangeDaysTech
 **Propósito:** Evaluar la viabilidad de usar el recién anunciado `microsoft/coreutils` (Build 2026) para emparejar la experiencia StrayMark en equipos Windows/PowerShell, e identificar cuál es realmente la ruta de menor costo hacia la paridad.
 **Documentos relacionados:** `ADR-2026-06-03-followups-first-class.md` (precedente de cristalización bash → CLI nativo), `2026-05-03-cli-roadmap.md` (items diferidos con criterio de salida explícito), `CHANGELOG.md` (entrada "pure-Rust fallback for Windows-without-bash deferred until requested").

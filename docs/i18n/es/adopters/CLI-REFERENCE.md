@@ -47,8 +47,8 @@ StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.25.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.22.0` | El binario `straymark` |
+| Framework | `fw-` | `fw-4.26.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| CLI | `cli-` | `cli-3.23.0` | El binario `straymark` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
 
@@ -513,7 +513,7 @@ $ straymark charter close CHARTER-01
 
 #### `straymark charter drift <CHARTER-ID> [--range <REV..REV>] [--no-ailog-suppress] [--no-batch-ledger-check] [--path <dir>]`
 
-Detecta drift archivo-vs-commit al cierre del Charter. Envuelve el script del framework `.straymark/scripts/check-charter-drift.sh` (cero falsos positivos validados empíricamente en PLAN-05 retrospectivo + PLAN-06 prospectivo en Sentinel). El valor agregado del CLI sobre el script crudo es la **AILOG-awareness**: los paths reportados como "declarados pero no modificados" se silencian cuando aparecen en la sección `## Risk` / `## Riesgos` / `## 风险` de algún AILOG referenciado por `originating_ailogs` del Charter. Usa `--no-ailog-suppress` para deshabilitarlo.
+Detecta drift archivo-vs-commit al cierre del Charter. **Nativo en Rust desde cli-3.23.0** (#237) — ya no delega en el (ahora deprecado) `.straymark/scripts/check-charter-drift.sh`, así que corre en Windows-nativo (sin WSL, sin Git Bash). La propiedad de cero falsos positivos (PLAN-05 retrospectivo + PLAN-06 prospectivo en Sentinel) se preserva mediante la suite de tests de equivalencia con el script. El valor agregado del CLI sobre el script crudo es la **AILOG-awareness**: los paths reportados como "declarados pero no modificados" se silencian cuando aparecen en la sección `## Risk` / `## Riesgos` / `## 风险` de algún AILOG referenciado por `originating_ailogs` del Charter. Usa `--no-ailog-suppress` para deshabilitarlo.
 
 **Gate de Batch Ledger** *(cli-3.13.0+)*. Cuando el Charter está en estado `in-progress` o `closed`, el comando también revisa cada AILOG originante por entradas `## Batch Ledger` que sigan en `(pending)` y falla con un diagnóstico claro listando los batches faltantes. Los AILOGs sin ledger no contribuyen — la sección es opt-in. Usa `--no-batch-ledger-check` para bypass (pensado para adopters que consolidan la ledger post-close).
 

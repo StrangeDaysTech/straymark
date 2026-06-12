@@ -7,6 +7,20 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.26.0 / CLI 3.23.0 — `charter drift` is native Rust (Windows-native parity)
+
+Closes the last functional Windows-native gap ([#237](https://github.com/StrangeDaysTech/straymark/issues/237)): `straymark charter drift` no longer delegates to a bash script, so it runs without WSL or Git Bash.
+
+### Changed (CLI)
+
+- **`charter drift` ported to native Rust**: the command previously shelled out to `.straymark/scripts/check-charter-drift.sh` and failed on Windows-native (no `bash` in PATH). It now computes the declared-vs-modified set-difference in-process — declared files via `charter_files.rs` (already a byte-for-byte port of the script's awk extraction), modified files via `git diff --name-only`, plus the ellipsis/glob wildcard matching and the report. The deleted intermediate (parsing the script's stdout) removes a bug class. **AILOG-aware suppression, the Batch Ledger gate, all flags, exit codes, and output are unchanged** — preserved by the integration suite, which now runs on every platform (no bash gate) and doubles as the script-equivalence guarantee. The zero-false-positives property (Sentinel PLAN-05/PLAN-06) is retained.
+
+### Deprecated (Framework)
+
+- **`.straymark/scripts/check-charter-drift.sh`** is deprecated and unmaintained as of fw-4.26.0 / cli-3.23.0. It is no longer invoked by the CLI; it remains as a reference prototype (it seeded `charter_files.rs` and the native drift logic) and will be removed in a future release. Microsoft Coreutils was evaluated and rejected as a Windows script-parity vehicle (no shell, no `sed`/`awk`, preview status) — see the proposal under `docs/decisions/proposals/`.
+
+---
+
 ## CLI 3.22.0 — `charter close` reconciles follow-ups and offers TDE promotion (RFC #135 Tier 3)
 
 Closes the loop between Charter close and the follow-ups registry — the last open tier of the follow-ups automation roadmap ([#135](https://github.com/StrangeDaysTech/straymark/issues/135)), unblocked now that drift detection is reliable (cli-3.21.0, #229/#231).
