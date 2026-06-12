@@ -1,15 +1,12 @@
-//! Integration tests for `straymark charter drift`. Requires a real git repo
-//! and `bash` in PATH; tests are skipped on Windows runners that lack bash.
+//! Integration tests for `straymark charter drift`. Requires a real git repo.
+//! Native Rust since cli-3.23.0 (#237) — no bash dependency; runs on every
+//! platform (these fixtures double as the script-equivalence guarantee).
 
 use assert_cmd::Command;
 use predicates::prelude::*;
 use std::path::Path;
 use std::process::Command as StdCommand;
 use tempfile::TempDir;
-
-/// Inline copy of the framework's check-charter-drift.sh — the integration
-/// path expects the script under `.straymark/scripts/`.
-const DRIFT_SCRIPT: &str = include_str!("../../dist/.straymark/scripts/check-charter-drift.sh");
 
 const CHARTER_TEMPLATE: &str = r#"---
 charter_id: CHARTER-NN
@@ -30,18 +27,9 @@ trigger: "[1-line]"
 1. Sync.
 "#;
 
-fn bash_available() -> bool {
-    StdCommand::new("bash")
-        .arg("--version")
-        .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false)
-}
-
 fn setup_straymark(dir: &Path) {
     let straymark = dir.join(".straymark");
     std::fs::create_dir_all(straymark.join("templates").join("charter")).unwrap();
-    std::fs::create_dir_all(straymark.join("scripts")).unwrap();
     std::fs::create_dir_all(straymark.join("07-ai-audit/agent-logs")).unwrap();
     std::fs::write(straymark.join("config.yml"), "language: en\n").unwrap();
     std::fs::write(
@@ -52,15 +40,8 @@ fn setup_straymark(dir: &Path) {
         CHARTER_TEMPLATE,
     )
     .unwrap();
-    let script_path = straymark.join("scripts").join("check-charter-drift.sh");
-    std::fs::write(&script_path, DRIFT_SCRIPT).unwrap();
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let mut perms = std::fs::metadata(&script_path).unwrap().permissions();
-        perms.set_mode(0o755);
-        std::fs::set_permissions(&script_path, perms).unwrap();
-    }
+    // No drift script is written: `charter drift` is native Rust since
+    // cli-3.23.0 (#237) and no longer delegates to bash.
 }
 
 fn git(dir: &Path, args: &[&str]) {
@@ -93,10 +74,6 @@ fn write_charter_with_files(dir: &Path, declared: &[&str], originating_ailog: Op
 
 #[test]
 fn charter_drift_clean_when_declared_matches_modified() {
-    if !bash_available() {
-        eprintln!("skipping: bash not available");
-        return;
-    }
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
     write_charter_with_files(dir.path(), &["src/foo.rs"], None);
@@ -121,10 +98,6 @@ fn charter_drift_clean_when_declared_matches_modified() {
 
 #[test]
 fn charter_drift_detects_declared_but_not_modified() {
-    if !bash_available() {
-        eprintln!("skipping: bash not available");
-        return;
-    }
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
     write_charter_with_files(dir.path(), &["src/foo.rs", "src/bar.rs"], None);
@@ -157,10 +130,6 @@ fn charter_drift_detects_declared_but_not_modified() {
 /// separate commands with separate rule codes.
 #[test]
 fn charter_drift_does_not_emit_charter_files_exist_rule() {
-    if !bash_available() {
-        eprintln!("skipping: bash not available");
-        return;
-    }
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
     // Declare a path that never exists on disk — drift's concern is the git
@@ -187,10 +156,6 @@ fn charter_drift_does_not_emit_charter_files_exist_rule() {
 
 #[test]
 fn charter_drift_ailog_suppression_clears_documented_paths() {
-    if !bash_available() {
-        eprintln!("skipping: bash not available");
-        return;
-    }
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
 
@@ -256,10 +221,6 @@ Done.
 
 #[test]
 fn charter_drift_no_ailog_suppress_disables_suppression() {
-    if !bash_available() {
-        eprintln!("skipping: bash not available");
-        return;
-    }
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
 
@@ -325,10 +286,6 @@ fn charter_drift_no_ailog_suppress_emits_info_line_when_n_zero() {
     // nothing the AILOG-aware filter would have suppressed (N=0), we
     // still emit one INFO line confirming the flag was honored. Closes
     // the byte-identical-output ambiguity Sentinel CHARTER-02 reported.
-    if !bash_available() {
-        eprintln!("skipping: bash not available");
-        return;
-    }
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
     write_charter_with_files(dir.path(), &["src/foo.rs"], None);
@@ -364,9 +321,6 @@ fn charter_drift_no_ailog_suppress_emits_info_line_when_n_nonzero() {
     // would have suppressed (N>0), the INFO line names the count and
     // lists each path that was bypassed (with the AILOG ID that documents
     // the risk). The drift itself is still surfaced as failure exit.
-    if !bash_available() {
-        return;
-    }
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
 
@@ -434,9 +388,6 @@ fn charter_drift_default_stays_silent_when_n_zero() {
     // output stays minimal — adding ceremony there is what (a)
     // "always-on" would have done, which we explicitly rejected per
     // the Sentinel CHARTER-06 vote.
-    if !bash_available() {
-        return;
-    }
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
     write_charter_with_files(dir.path(), &["src/foo.rs"], None);
@@ -466,10 +417,6 @@ fn charter_drift_resolves_glob_wildcards_in_declared_paths() {
     // (e.g. `AILOG-*.md` for parameterized sets). Pre-fix the script
     // extracted the literal "AILOG-*.md" and reported it as drift; now
     // it expands `*` to a regex match against the modified files.
-    if !bash_available() {
-        eprintln!("skipping: bash not available");
-        return;
-    }
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
 
@@ -530,10 +477,6 @@ fn charter_drift_ignores_path_references_in_change_column() {
     // deliverable → false-positive omission warning. This test pins the fix:
     // a Charter that mentions `docs/plans/README.md` in column 2 should
     // declare only the column-1 paths.
-    if !bash_available() {
-        eprintln!("skipping: bash not available");
-        return;
-    }
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
 
