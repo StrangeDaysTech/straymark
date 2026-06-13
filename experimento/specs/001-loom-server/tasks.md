@@ -59,8 +59,8 @@
   (FR8, S4)
 - [x] T2.4 — Server-side filters `type/status/risk/tag/from/to` on `/api/graph`; UI
   controls. (FR9, S6)
-- [ ] T2.5 — Acceptance + CHANGELOG → `0.2.0` complete; post-merge tag
-  `loom-0.2.0` pending.
+- [x] T2.5 — Acceptance + CHANGELOG → `0.2.0` complete; post-merge tag
+  `loom-0.2.0` pushed and released (4-platform assets, `--latest=false`).
 
 ## M3 — Rich, Infranodus-like (`loom-0.3.0`)
 
