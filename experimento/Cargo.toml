@@ -1,0 +1,30 @@
+[package]
+name = "straymark-loom"
+version = "0.1.0"
+edition = "2021"
+description = "Loom — StrayMark's experimental knowledge-graph visualization server (localhost development dashboard)"
+license = "MIT"
+repository = "https://github.com/StrangeDaysTech/straymark"
+authors = ["Strange Days Tech, S.A.S."]
+# GitHub-release-only while experimental (plan.md §6): no crates.io publish.
+publish = false
+
+[[bin]]
+name = "straymark-loom"
+path = "src/main.rs"
+
+[dependencies]
+straymark-core = { version = "0.2.0", path = "../core" }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "signal", "fs"] }
+axum = { version = "0.8", features = ["ws"] }
+notify-debouncer-full = "0.5"
+rust-embed = "8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+mime_guess = "2"
+colored = "2"
+
+[dev-dependencies]
+tempfile = "3"

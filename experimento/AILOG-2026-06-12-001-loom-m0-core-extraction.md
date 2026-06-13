@@ -83,7 +83,8 @@ Completed 2026-06-12 — this AILOG's PR. Regression oracle green (see
 
 ### Batch 2 — M1: walking skeleton (`loom-0.1.0`)
 
-(pending)
+Completed 2026-06-12 — see `AILOG-2026-06-12-002` (the M1 AILOG with its own
+verification table). Ships `loom-0.1.0` + `cli-3.24.0` (+ core 0.2.0).
 
 ### Batch 3 — M2: analytics + panels (`loom-0.2.0`)
 

@@ -12,20 +12,9 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Added
-- Intention documents seeding the component: `README.md` (Loom reframed as a multi-view
-  development dashboard), the SpecKit set `specs/001-loom-server/{spec,plan,tasks}.md`
-  (Knowledge Graph view) and `specs/002-architecture-plan/spec.md` (Architecture Plan view —
-  "you are here" status overlay), the dogfood work-block Charter `CHARTER-01-loom-server.md`,
-  and this changelog. Architecture decisions recorded in
-  `docs/decisions/ADR-2026-06-02-loom-stack.md` (stack) and
-  `docs/decisions/ADR-2026-06-02-002-architecture-plan-format.md` (plan model/format).
-
-### Planned — 0.1.0 (M1, walking skeleton — Knowledge Graph view)
-- `straymark loom serve` launches a loopback-only axum server that watches `.straymark/`
-  (or `docs/`), builds the typed knowledge graph via the shared `straymark-core` crate, and
-  serves a Sigma.js + graphology force-directed web UI with live filesystem updates over
-  WebSocket and node-thread highlighting.
+### Planned — 0.2.0 (M2, analytics + panels)
+- Louvain community coloring, corpus stats panel (orphans, dangling references),
+  server-side filters (`type/status/risk/tag/from/to`) on `/api/graph`.
 
 ### Planned — Architecture Plan view (Spec 002)
 - A1: `straymark-core` "you are here" status projection (component state by file-glob match
@@ -35,4 +24,38 @@ project adheres to [Semantic Versioning](https://semver.org/).
   overlay, layer toggle, component panel, and cross-linking with the Knowledge Graph.
 - A3 (north star): axonometric/BIM exploded-layers view.
 
-[Unreleased]: https://github.com/StrangeDaysTech/straymark/compare/HEAD...HEAD
+## [0.1.0] — 2026-06-12 (M1, walking skeleton — Knowledge Graph view)
+
+### Added
+
+- **Server** (`straymark-loom`, axum + tokio): builds the typed knowledge graph via the
+  shared `straymark-core` crate (FR1/FR2 — same parser as the CLI, NFR1 verified against
+  `straymark audit`) and serves the Spec 001 §4 API: `GET /api/graph`, `/api/node/:id`,
+  `/api/node/:id/thread?depth=N`, `/api/stats` (counts, orphans, dangling references),
+  `/healthz`, and `WS /api/stream`.
+- **Live updates** (FR6/§5): `notify` watcher with 250ms debounce; settled `.md` changes
+  rebuild the snapshot and push a `rebuild` event — measured ~255ms from save to an open
+  browser, well under the 1s acceptance bound.
+- **Security** (FR7/NFR4): binds `127.0.0.1` exclusively (refuses anything else), rejects
+  non-loopback `Host` headers (anti DNS-rebinding), read-only by construction; unparseable
+  (mid-save) documents are skipped, never fatal.
+- **Web UI** (FR4/FR5, Vite + TypeScript + graphology + Sigma.js, embedded via rust-embed):
+  force-directed graph (ForceAtlas2) colored by document type, sized by degree;
+  selecting a node lights its full thread and dims the rest (no relayout); node detail
+  panel (metadata + body excerpt); type legend; corpus counters; WS auto-reconnect;
+  positions preserved across rebuilds. `--assets-dir` overrides the embedded bundle for
+  frontend development.
+- **CLI launcher**: `straymark loom serve` (cli-3.24.0) downloads the platform binary from
+  the latest `loom-*` release on first use, caches it in `~/.straymark/bin/`, prints the
+  EXPERIMENTAL banner, and spawns it (download-on-demand = the opt-in gate).
+- **CI**: `.github/workflows/release-loom.yml` — frontend built in CI and embedded;
+  4-platform matrix; GitHub-release-only (`--latest=false`, no crates.io while experimental).
+
+### Milestone trail
+
+- M0 (the `straymark-core` extraction this release builds on) shipped as `cli-3.23.1`
+  (PR #239) together with the component's intention docs (README, SpecKit sets 001/002,
+  `CHARTER-01-loom-server`, ADR-2026-06-02-001/-002).
+
+[Unreleased]: https://github.com/StrangeDaysTech/straymark/compare/loom-0.1.0...HEAD
+[0.1.0]: https://github.com/StrangeDaysTech/straymark/releases/tag/loom-0.1.0

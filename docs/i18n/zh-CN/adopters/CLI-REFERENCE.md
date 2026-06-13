@@ -48,7 +48,8 @@ StrayMark 为每个组件使用**独立的版本标签**：
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
 | Framework | `fw-` | `fw-4.26.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.23.1` | `straymark` 二进制文件 |
+| CLI | `cli-` | `cli-3.24.0` | `straymark` 二进制文件 |
+| Loom（实验性） | `loom-` | `loom-0.1.0` | `straymark-loom` 可视化服务器，由 `straymark loom serve` 按需下载 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
 
@@ -1201,6 +1202,39 @@ StrayMark CLI
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/straymark
   Website:           https://strangedays.tech
+```
+
+---
+
+### `straymark loom serve [path] [--port <端口>] [--no-open]` *(cli-3.24.0+，实验性)*
+
+启动 **Loom** —— 实验性知识图谱可视化服务器：一个仅回环、只读的 Web 仪表板，将项目的 StrayMark 文档渲染为实时力导向图（节点按文档类型着色、按连接度调整大小；选中节点会点亮其完整的关系线索；对被监视的 `.md` 文件的编辑会在一秒内更新已打开的浏览器）。
+
+> ⚠️ **Loom 是实验性的（v0）。** 其 API、CLI 接口乃至其存在本身都可能在没有弃用周期的情况下更改或移除。`straymark-loom` 二进制文件**不**捆绑在 CLI 中 —— 首次使用时从 `loom-*` GitHub 发布按需下载，并缓存在 `~/.straymark/bin/`。下载门槛*就是*选择加入的边界。
+
+**参数和标志：**
+
+| 参数/标志 | 默认值 | 描述 |
+|---|---|---|
+| `path` | `.`（当前目录） | 项目目录。如果存在 `.straymark/` 子目录则监视它，否则监视目录本身 |
+| `--port` | `7700` | 在 `127.0.0.1` 上服务的端口 |
+| `--no-open` | 关 | 不自动打开浏览器 |
+
+**安全态势：** 仅绑定 `127.0.0.1`（否则拒绝启动），拒绝非回环 `Host` 头（防 DNS 重绑定），且从不写入被监视的目录。
+
+**示例：**
+
+```bash
+$ straymark loom serve
+
+  ⚠  LOOM IS EXPERIMENTAL (v0)
+     Unstable: API, CLI surface, and on-disk layout may change or be
+     removed without a deprecation cycle. Loopback-only. Read-only.
+
+ℹ Downloading Loom 0.1.0 (x86_64-unknown-linux-gnu) — first use is opt-in by download
+✔ Loom 0.1.0 cached at ~/.straymark/bin/straymark-loom
+loom: watching /project/.straymark (142 docs, 318 links)
+loom: serving http://127.0.0.1:7700
 ```
 
 ---

@@ -43,10 +43,11 @@ fn build_client() -> Result<reqwest::blocking::Client> {
     builder.build().context("Failed to create HTTP client")
 }
 
-/// Strip known tag prefixes (fw-, cli-, v) and return the version string
+/// Strip known tag prefixes (fw-, cli-, loom-, v) and return the version string
 pub fn strip_tag_prefix(tag: &str) -> &str {
     tag.strip_prefix("fw-")
         .or_else(|| tag.strip_prefix("cli-"))
+        .or_else(|| tag.strip_prefix("loom-"))
         .or_else(|| tag.strip_prefix("v"))
         .unwrap_or(tag)
 }

@@ -7,6 +7,28 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Loom 0.1.0 / CLI 3.24.0 — Loom M1: the walking skeleton ships
+
+First release of **Loom**, StrayMark's EXPERIMENTAL third component (`CHARTER-01-loom-server` M1): a loopback-only, read-only web dashboard that renders the project's document graph live in the browser.
+
+### Added (Loom)
+
+- **`straymark-loom 0.1.0`** (`loom-0.1.0`, GitHub-release-only): axum + tokio server that discovers and parses StrayMark documents via the shared `straymark-core` crate, builds the typed knowledge graph, and serves `GET /api/graph`, `/api/node/:id`, `/api/node/:id/thread?depth=N`, `/api/stats`, `/healthz`, and `WS /api/stream` over `127.0.0.1` only (Spec 001 §4).
+- **Live rebuilds**: a `notify` watcher (250ms debounce) re-parses on settled `.md` changes and pushes a `rebuild` event over the WebSocket — an open browser reflects an edit in well under 1 second (measured ~255ms).
+- **Web UI** (Sigma.js + graphology, embedded via rust-embed — adopters never run npm): force-directed graph colored by document type and sized by degree; selecting a node lights up its full thread (transitive in/out relationships) and dims the rest; node detail panel with metadata and body excerpt; live type legend and corpus counters.
+- **Security posture** (Spec 001 FR7/NFR4): binds `127.0.0.1` exclusively, rejects non-loopback `Host` headers (anti DNS-rebinding), read-only by construction.
+- **`release-loom.yml`**: 4-platform build matrix with the frontend compiled in CI and embedded; releases marked `--latest=false`.
+
+### Added (CLI)
+
+- **`straymark loom serve [path] [--port] [--no-open]`**: download-on-demand launcher — fetches the latest `loom-*` release binary for the host platform on first use (the download gate *is* the experimental opt-in boundary), caches it under `~/.straymark/bin/`, prints a loud EXPERIMENTAL banner, and launches it pointed at the project. The CLI gains no axum/tokio dependency. Falls back to the cached binary when offline.
+
+### Added (core)
+
+- `straymark-core 0.2.0`: `Graph::thread(id, depth)` — the connected neighborhood of a node (Spec 001 §3.3), powering `/api/node/:id/thread` and the UI's thread highlighting.
+
+---
+
 ## CLI 3.23.1 — `straymark-core` extraction (Loom M0)
 
 First milestone of the experimental **Loom** component (`experimento/`, `CHARTER-01-loom-server`): the document model and traceability graph move into a shared crate so the CLI and the upcoming Loom visualization server parse StrayMark documents with exactly the same code (`ADR-2026-06-02-001`). **No user-facing behavior changes** — the full test suite and the `straymark audit` output are byte-for-byte identical pre/post refactor.

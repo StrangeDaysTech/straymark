@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Loom — StrayMark knowledge graph</title>
+    <style>
+      :root {
+        --bg: #14161c;
+        --panel: #1c1f27;
+        --text: #d6d9e0;
+        --muted: #8b91a0;
+        --accent: #e8833a;
+      }
+      * { box-sizing: border-box; margin: 0; }
+      html, body { height: 100%; }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+        overflow: hidden;
+      }
+      #graph { position: absolute; inset: 0; }
+      header {
+        position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+        display: flex; align-items: center; gap: 12px;
+        padding: 10px 16px;
+        background: linear-gradient(to bottom, rgba(20,22,28,.95), rgba(20,22,28,0));
+        pointer-events: none;
+      }
+      header h1 { font-size: 16px; font-weight: 650; letter-spacing: .02em; }
+      header h1 span { color: var(--accent); }
+      .badge {
+        font-size: 10px; font-weight: 700; letter-spacing: .08em;
+        color: #14161c; background: var(--accent);
+        padding: 2px 7px; border-radius: 999px; text-transform: uppercase;
+      }
+      #counts { color: var(--muted); font-size: 12px; }
+      #status { margin-left: auto; font-size: 12px; color: var(--muted); }
+      #status.live::before { content: "●"; color: #4caf78; margin-right: 5px; }
+      #status.down::before { content: "●"; color: #c75050; margin-right: 5px; }
+      #selection {
+        position: absolute; right: 14px; top: 54px; z-index: 10;
+        width: 300px; max-height: calc(100% - 80px); overflow: auto;
+        background: var(--panel); border: 1px solid #2a2e3a; border-radius: 10px;
+        padding: 14px 16px; display: none;
+      }
+      #selection.open { display: block; }
+      #selection .doc-type { font-size: 11px; font-weight: 700; letter-spacing: .06em; }
+      #selection h2 { font-size: 14px; margin: 4px 0 8px; }
+      #selection .meta { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+      #selection p { color: var(--text); font-size: 12px; white-space: pre-wrap; }
+      #legend {
+        position: absolute; left: 14px; bottom: 14px; z-index: 10;
+        background: var(--panel); border: 1px solid #2a2e3a; border-radius: 10px;
+        padding: 10px 14px; font-size: 11px; color: var(--muted);
+        display: flex; flex-wrap: wrap; gap: 6px 14px; max-width: 420px;
+      }
+      #legend i {
+        display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+        margin-right: 5px; vertical-align: -1px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="graph"></div>
+    <header>
+      <h1><span>Loom</span> · knowledge graph</h1>
+      <span class="badge">experimental</span>
+      <span id="counts"></span>
+      <span id="status">connecting…</span>
+    </header>
+    <aside id="selection"></aside>
+    <footer id="legend"></footer>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

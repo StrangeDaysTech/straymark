@@ -218,6 +218,90 @@ impl Graph {
     pub fn dangling_edges(&self) -> impl Iterator<Item = &Edge> {
         self.edges.iter().filter(|e| !e.resolved)
     }
+
+    /// The thread of a node (Spec 001 §3.3, story S2): *"everything it links
+    /// to and everything that links to it, transitively"* — its transitive
+    /// **descendants** (following out-edges) plus its transitive **ancestors**
+    /// (following in-edges), optionally bounded by `depth` per direction.
+    ///
+    /// Deliberately NOT the undirected connected component: that would also
+    /// pull in "siblings" (documents merely co-citing a shared neighbor), and
+    /// in tightly-linked corpora it degenerates into highlighting everything.
+    /// The thread is the node's line of reasoning, not its neighborhood.
+    ///
+    /// Returns the node ids and edge indices (into [`Graph::edges`]) to
+    /// highlight. The edge set is every edge whose endpoints both belong to
+    /// the thread, plus the dangling out-edges of thread members.
+    pub fn thread(&self, id: &str, depth: Option<usize>) -> Option<Thread> {
+        let &start = self.node_index.get(id)?;
+
+        let mut in_thread = vec![false; self.nodes.len()];
+        let mut node_ids = Vec::new();
+        in_thread[start] = true;
+        node_ids.push(self.nodes[start].id.clone());
+
+        // Two bounded BFS passes: forward over out-edges, backward over
+        // in-edges. `Forward` follows what the document links to; `Backward`
+        // follows what links to the document.
+        for forward in [true, false] {
+            let mut visited = vec![false; self.nodes.len()];
+            visited[start] = true;
+            let mut frontier = vec![start];
+            let mut level = 0usize;
+            while !frontier.is_empty() && depth.map_or(true, |d| level < d) {
+                let mut next = Vec::new();
+                for idx in frontier {
+                    let edges = if forward { &self.out_edges[idx] } else { &self.in_edges[idx] };
+                    for &e in edges {
+                        let edge = &self.edges[e];
+                        let neighbor = if forward { edge.target.as_str() } else { edge.source.as_str() };
+                        if let Some(&n) = self.node_index.get(neighbor) {
+                            if !visited[n] {
+                                visited[n] = true;
+                                if !in_thread[n] {
+                                    in_thread[n] = true;
+                                    node_ids.push(self.nodes[n].id.clone());
+                                }
+                                next.push(n);
+                            }
+                        }
+                    }
+                }
+                frontier = next;
+                level += 1;
+            }
+        }
+
+        // Highlight every edge internal to the thread (including ones not
+        // walked, e.g. an ancestor linking directly to a descendant), plus
+        // dangling out-edges of thread members.
+        let edge_ids: Vec<usize> = self
+            .edges
+            .iter()
+            .enumerate()
+            .filter(|(_, edge)| {
+                let src_in = self.node_index.get(edge.source.as_str()).is_some_and(|&i| in_thread[i]);
+                if !src_in {
+                    return false;
+                }
+                match self.node_index.get(edge.target.as_str()) {
+                    Some(&t) => in_thread[t],
+                    None => !edge.resolved, // dangling out-edge of a member
+                }
+            })
+            .map(|(i, _)| i)
+            .collect();
+
+        Some(Thread { node_ids, edge_ids })
+    }
+}
+
+/// The highlight set for a node's thread (Spec 001 §3.3): node ids plus edge
+/// indices into [`Graph::edges`].
+#[derive(Debug, Clone, Serialize)]
+pub struct Thread {
+    pub node_ids: Vec<String>,
+    pub edge_ids: Vec<usize>,
 }
 
 #[cfg(test)]
@@ -374,6 +458,130 @@ mod tests {
         assert!(e.resolved);
         assert_eq!(e.source, "ADR-2026-03-05-001");
         assert_eq!(e.target, "AILOG-2026-03-03-001");
+    }
+
+    #[test]
+    fn test_thread_full_component_and_depth() {
+        // REQ → ADR → AILOG chain; TDE isolated.
+        let req = make_doc(
+            "REQ-1-a.md",
+            DocType::Req,
+            Frontmatter {
+                id: Some("REQ-1".into()),
+                related: Some(vec!["ADR-1".into()]),
+                ..Default::default()
+            },
+        );
+        let adr = make_doc(
+            "ADR-1-b.md",
+            DocType::Adr,
+            Frontmatter {
+                id: Some("ADR-1".into()),
+                related: Some(vec!["AILOG-1".into()]),
+                ..Default::default()
+            },
+        );
+        let ailog = make_doc(
+            "AILOG-1-c.md",
+            DocType::Ailog,
+            Frontmatter {
+                id: Some("AILOG-1".into()),
+                ..Default::default()
+            },
+        );
+        let tde = make_doc(
+            "TDE-1-d.md",
+            DocType::Tde,
+            Frontmatter {
+                id: Some("TDE-1".into()),
+                ..Default::default()
+            },
+        );
+        let docs = [&req, &adr, &ailog, &tde];
+        let g = Graph::build(&docs);
+
+        // Full component from the middle node reaches both ends, not the orphan.
+        let t = g.thread("ADR-1", None).unwrap();
+        let mut nodes = t.node_ids.clone();
+        nodes.sort();
+        assert_eq!(nodes, vec!["ADR-1", "AILOG-1", "REQ-1"]);
+        assert_eq!(t.edge_ids.len(), 2);
+
+        // Depth 1 from REQ: only the direct neighbor.
+        let t1 = g.thread("REQ-1", Some(1)).unwrap();
+        let mut nodes1 = t1.node_ids.clone();
+        nodes1.sort();
+        assert_eq!(nodes1, vec!["ADR-1", "REQ-1"]);
+
+        // Unknown id → None; isolated node → itself only.
+        assert!(g.thread("NOPE", None).is_none());
+        let t_orphan = g.thread("TDE-1", None).unwrap();
+        assert_eq!(t_orphan.node_ids, vec!["TDE-1"]);
+        assert!(t_orphan.edge_ids.is_empty());
+    }
+
+    #[test]
+    fn test_thread_excludes_siblings() {
+        // A → C ← B: B is a "sibling" of A (co-cites C) — not part of A's
+        // line of reasoning, so it must NOT light up (S2 semantics).
+        let a = make_doc(
+            "REQ-A-a.md",
+            DocType::Req,
+            Frontmatter {
+                id: Some("REQ-A".into()),
+                related: Some(vec!["ADR-C".into()]),
+                ..Default::default()
+            },
+        );
+        let b = make_doc(
+            "REQ-B-b.md",
+            DocType::Req,
+            Frontmatter {
+                id: Some("REQ-B".into()),
+                related: Some(vec!["ADR-C".into()]),
+                ..Default::default()
+            },
+        );
+        let c = make_doc(
+            "ADR-C-c.md",
+            DocType::Adr,
+            Frontmatter {
+                id: Some("ADR-C".into()),
+                ..Default::default()
+            },
+        );
+        let docs = [&a, &b, &c];
+        let g = Graph::build(&docs);
+
+        let t = g.thread("REQ-A", None).unwrap();
+        let mut nodes = t.node_ids.clone();
+        nodes.sort();
+        assert_eq!(nodes, vec!["ADR-C", "REQ-A"]); // B excluded
+        assert_eq!(t.edge_ids, vec![0]); // only A→C, not B→C
+
+        // From C, both citers are ancestors — they DO light up.
+        let tc = g.thread("ADR-C", None).unwrap();
+        let mut nodes_c = tc.node_ids.clone();
+        nodes_c.sort();
+        assert_eq!(nodes_c, vec!["ADR-C", "REQ-A", "REQ-B"]);
+    }
+
+    #[test]
+    fn test_thread_includes_dangling_edges() {
+        let doc = make_doc(
+            "ADR-1-a.md",
+            DocType::Adr,
+            Frontmatter {
+                id: Some("ADR-1".into()),
+                related: Some(vec!["MISSING-1".into()]),
+                ..Default::default()
+            },
+        );
+        let docs = [&doc];
+        let g = Graph::build(&docs);
+        let t = g.thread("ADR-1", None).unwrap();
+        assert_eq!(t.node_ids, vec!["ADR-1"]);
+        assert_eq!(t.edge_ids, vec![0]); // the dangling edge belongs to the thread
     }
 
     #[test]
