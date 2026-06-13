@@ -408,13 +408,8 @@ function renderLegend(): void {
       ${hidden > 0 ? ` · ${escapeHtml(t('legend.hidden', { n: hidden }))}` : ''}
     </div>
     <div class="community-list">${buttons}</div>`;
-  legendEl.querySelectorAll<HTMLElement>('[data-community]').forEach((button) => {
-    button.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      focusCommunity(Number(button.dataset.community));
-    });
-  });
+  // Click handling is delegated on the stable #legend container (see below),
+  // so it survives the innerHTML rewrite this function performs.
 }
 
 function focusCommunity(community: number): void {
@@ -476,18 +471,8 @@ function renderStats(stats: ApiStats): void {
       <summary>${escapeHtml(t('stats.dangling'))} (${stats.dangling_references.length})</summary>
       <ul>${dangling}</ul>
     </details>`;
-  bindNodeLinks(statsEl);
-  statsEl.querySelectorAll<HTMLElement>('details > summary').forEach((summary) => {
-    summary.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const details = summary.parentElement as HTMLDetailsElement;
-      details.open = !details.open;
-      const section = details.dataset.section!;
-      if (details.open) openStatsSections.add(section);
-      else openStatsSections.delete(section);
-    });
-  });
+  // Click handling is delegated on the stable #stats container (see below), so
+  // it survives the innerHTML rewrite this function performs on every rebuild.
 }
 
 async function select(nodeId: string): Promise<void> {
@@ -694,6 +679,39 @@ renderer.on('clickNode', ({ node }) => void select(node));
 renderer.on('clickStage', clearSelection);
 renderer.on('enterNode', ({ node }) => { hovered = node; renderer.refresh(); });
 renderer.on('leaveNode', () => { hovered = null; renderer.refresh(); });
+
+// Delegated click handling on the stable panel containers. renderStats /
+// renderLegend rewrite their innerHTML on every rebuild, so per-button listeners
+// would be destroyed mid-interaction (swallowing clicks under frequent updates).
+// The container elements persist, so one listener each stays valid.
+statsEl.addEventListener('click', (event) => {
+  const el = event.target as HTMLElement;
+  const summary = el.closest('summary');
+  if (summary && statsEl.contains(summary)) {
+    const details = summary.parentElement as HTMLDetailsElement;
+    const section = details.dataset.section;
+    if (section) {
+      // The native <details> toggle runs after this handler; mirror its result
+      // into the persisted open-section set so a later re-render restores it.
+      if (details.open) openStatsSections.delete(section);
+      else openStatsSections.add(section);
+    }
+    return; // let the browser toggle the <details> natively
+  }
+  const link = el.closest<HTMLElement>('[data-node]');
+  if (link) {
+    event.preventDefault();
+    void focusNode(link.dataset.node!);
+  }
+});
+
+legendEl.addEventListener('click', (event) => {
+  const button = (event.target as HTMLElement).closest<HTMLElement>('[data-community]');
+  if (button) {
+    event.preventDefault();
+    focusCommunity(Number(button.dataset.community));
+  }
+});
 
 filterForm.addEventListener('submit', (event) => {
   event.preventDefault();

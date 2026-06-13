@@ -46,10 +46,15 @@ pub fn watch(
                     // Diff against the previous snapshot so clients patch
                     // (preserve layout) instead of re-laying out the graph.
                     let prev_api = snapshot.read().expect("snapshot lock poisoned").api.clone();
-                    let event = next.delta_event(&prev_api);
+                    let delta = next.api.diff(&prev_api);
                     *snapshot.write().expect("snapshot lock poisoned") = next;
-                    // No receivers (no open browser) is fine — ignore the error.
-                    let _ = events.send(event);
+                    // Suppress no-op rebuilds (a file's mtime moved but its
+                    // content did not): broadcasting them would churn every open
+                    // client's panels and swallow clicks for nothing.
+                    if !delta.is_noop(&prev_api) {
+                        // No receivers (no open browser) is fine — ignore the error.
+                        let _ = events.send(delta.to_event());
+                    }
                 }
                 Err(err) => {
                     eprintln!("loom: rebuild failed (will retry on next change): {err:#}");

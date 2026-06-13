@@ -2593,7 +2593,7 @@ dependencies = [
 
 [[package]]
 name = "straymark-core"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "serde",
@@ -2603,7 +2603,7 @@ dependencies = [
 
 [[package]]
 name = "straymark-loom"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "axum",

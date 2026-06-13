@@ -31,7 +31,7 @@ pub struct CachedDoc {
 
 /// An edge as served by the API: the core edge plus its stable index id
 /// (thread highlighting addresses edges by this id).
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct ApiEdge {
     pub id: usize,
     #[serde(flatten)]
@@ -197,6 +197,29 @@ impl ApiGraph {
     }
 }
 
+impl GraphDelta {
+    /// True when this delta changes nothing versus `prev` — no node added,
+    /// removed or changed, and the same edge set. A rebuild can be a no-op when
+    /// a file's modification time moved but its content did not (an editor save
+    /// without changes, a formatter, a `touch`, a cloud-sync rewrite). The
+    /// watcher suppresses these so open clients are not re-rendered needlessly.
+    pub fn is_noop(&self, prev: &ApiGraph) -> bool {
+        self.added.is_empty()
+            && self.removed.is_empty()
+            && self.changed.is_empty()
+            && self.edges == prev.edges
+    }
+
+    /// Serialize as the `{event:"delta", …}` WS message.
+    pub fn to_event(&self) -> String {
+        let mut value = serde_json::to_value(self).unwrap_or_default();
+        if let Some(obj) = value.as_object_mut() {
+            obj.insert("event".into(), serde_json::json!("delta"));
+        }
+        value.to_string()
+    }
+}
+
 /// One rebuilt view of the corpus.
 pub struct Snapshot {
     /// The core graph (kept for thread queries).
@@ -280,16 +303,6 @@ impl Snapshot {
         serde_json::json!({ "event": "rebuild", "graph": &self.api }).to_string()
     }
 
-    /// The serialized WS `delta` event: this snapshot's graph diffed against
-    /// `prev` (T3.1). Sent on settled filesystem changes so open clients patch
-    /// rather than re-layout.
-    pub fn delta_event(&self, prev: &ApiGraph) -> String {
-        let mut value = serde_json::to_value(self.api.diff(prev)).unwrap_or_default();
-        if let Some(obj) = value.as_object_mut() {
-            obj.insert("event".into(), serde_json::json!("delta"));
-        }
-        value.to_string()
-    }
 }
 
 fn build_api_view(graph: &Graph) -> ApiGraph {
@@ -526,9 +539,12 @@ mod tests {
         assert_eq!(delta.changed.iter().map(|n| n.id.as_str()).collect::<Vec<_>>(), vec!["REQ-1"]);
 
         // The delta event is valid JSON tagged `delta`.
-        let event: serde_json::Value = serde_json::from_str(&next.delta_event(&prev.api)).unwrap();
+        let event: serde_json::Value =
+            serde_json::from_str(&next.api.diff(&prev.api).to_event()).unwrap();
         assert_eq!(event["event"], "delta");
         assert_eq!(event["removed"][0], "ADR-1");
+        // An identical rebuild produces a no-op delta.
+        assert!(next.api.diff(&next.api).is_noop(&next.api));
     }
 
     #[test]
