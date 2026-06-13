@@ -48,7 +48,7 @@ impl EdgeType {
 
 /// One node per discovered document, carrying the metadata the visualization
 /// surfaces need (Spec 001 §3.1).
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Node {
     /// Frontmatter `id`, falling back to the filename stem.
     pub id: String,
@@ -248,7 +248,7 @@ impl Graph {
             visited[start] = true;
             let mut frontier = vec![start];
             let mut level = 0usize;
-            while !frontier.is_empty() && depth.map_or(true, |d| level < d) {
+            while !frontier.is_empty() && depth.is_none_or(|d| level < d) {
                 let mut next = Vec::new();
                 for idx in frontier {
                     let edges = if forward { &self.out_edges[idx] } else { &self.in_edges[idx] };
@@ -294,6 +294,154 @@ impl Graph {
 
         Some(Thread { node_ids, edge_ids })
     }
+
+    /// Dependency cycles among documents (Spec 001 §3.3): strongly-connected
+    /// components over the **resolved directed semantic** edges
+    /// (`SUPERSEDES`, `ORIGINATES_FROM`). `RELATED_TO` is symmetric by intent
+    /// and never reported; unresolved (dangling/external) edges cannot form a
+    /// cycle. A component is a cycle when it has more than one member, or a
+    /// single document with a semantic self-edge (e.g. a doc superseding
+    /// itself). Such a cycle is a corpus defect (e.g. A supersedes B supersedes
+    /// A). Deterministic: components and their members keep graph node order.
+    pub fn cycles(&self) -> Vec<Cycle> {
+        let node_ids: Vec<String> = self.nodes.iter().map(|n| n.id.clone()).collect();
+        cycles_in(&node_ids, &self.edges)
+    }
+}
+
+/// Edge types that express a *directed dependency*; a cycle among them is a
+/// corpus defect. `RELATED_TO` (symmetric) and the unresolved/external kinds
+/// are excluded (Spec 001 §3.3).
+fn is_semantic(edge_type: EdgeType) -> bool {
+    matches!(edge_type, EdgeType::Supersedes | EdgeType::OriginatesFrom)
+}
+
+/// Dependency cycles among a set of nodes (by id) connected by `edges`, over
+/// the resolved directed semantic edges only. Reusable by both the full graph
+/// ([`Graph::cycles`]) and a filtered/induced view, which only has the node
+/// ids and the edge list. Deterministic: members keep `node_ids` order and
+/// components are returned by smallest member index.
+pub fn cycles_in(node_ids: &[String], edges: &[Edge]) -> Vec<Cycle> {
+    let n = node_ids.len();
+    let index: HashMap<&str, usize> = node_ids
+        .iter()
+        .enumerate()
+        .map(|(i, id)| (id.as_str(), i))
+        .collect();
+
+    // Semantic adjacency (node idx → target node idxs), resolved only.
+    let mut adj: Vec<Vec<usize>> = vec![Vec::new(); n];
+    for edge in edges {
+        if edge.resolved && is_semantic(edge.edge_type) {
+            if let (Some(&s), Some(&t)) = (
+                index.get(edge.source.as_str()),
+                index.get(edge.target.as_str()),
+            ) {
+                adj[s].push(t);
+            }
+        }
+    }
+
+    let mut cycles: Vec<Cycle> = tarjan_scc(&adj)
+        .into_iter()
+        .filter_map(|mut comp| {
+            let is_cycle = comp.len() > 1 || (comp.len() == 1 && adj[comp[0]].contains(&comp[0]));
+            if !is_cycle {
+                return None;
+            }
+            comp.sort_unstable(); // node_ids order within the component
+            let members: std::collections::HashSet<usize> = comp.iter().copied().collect();
+
+            // Distinct semantic edge types internal to the component, in edge
+            // declaration order (deterministic).
+            let mut edge_types: Vec<EdgeType> = Vec::new();
+            for edge in edges {
+                if edge.resolved
+                    && is_semantic(edge.edge_type)
+                    && index
+                        .get(edge.source.as_str())
+                        .is_some_and(|s| members.contains(s))
+                    && index
+                        .get(edge.target.as_str())
+                        .is_some_and(|t| members.contains(t))
+                    && !edge_types.contains(&edge.edge_type)
+                {
+                    edge_types.push(edge.edge_type);
+                }
+            }
+
+            Some(Cycle {
+                node_ids: comp.iter().map(|&i| node_ids[i].clone()).collect(),
+                edge_types,
+            })
+        })
+        .collect();
+
+    cycles.sort_by_key(|c| {
+        c.node_ids
+            .iter()
+            .filter_map(|id| index.get(id.as_str()).copied())
+            .min()
+            .unwrap_or(usize::MAX)
+    });
+    cycles
+}
+
+/// Iterative Tarjan's strongly-connected-components over an adjacency list.
+/// Iterative (explicit stack) so deep semantic chains can't overflow the call
+/// stack. Components are returned in discovery order.
+fn tarjan_scc(adj: &[Vec<usize>]) -> Vec<Vec<usize>> {
+    let n = adj.len();
+    let mut index_of: Vec<Option<usize>> = vec![None; n];
+    let mut lowlink: Vec<usize> = vec![0; n];
+    let mut on_stack: Vec<bool> = vec![false; n];
+    let mut scc_stack: Vec<usize> = Vec::new();
+    let mut next_index = 0usize;
+    let mut sccs: Vec<Vec<usize>> = Vec::new();
+
+    for root in 0..n {
+        if index_of[root].is_some() {
+            continue;
+        }
+        // DFS frame: (node, next child cursor).
+        let mut call_stack: Vec<(usize, usize)> = vec![(root, 0)];
+        while let Some(&(node, cursor)) = call_stack.last() {
+            if cursor == 0 {
+                index_of[node] = Some(next_index);
+                lowlink[node] = next_index;
+                next_index += 1;
+                scc_stack.push(node);
+                on_stack[node] = true;
+            }
+            if cursor < adj[node].len() {
+                call_stack.last_mut().unwrap().1 += 1;
+                let w = adj[node][cursor];
+                match index_of[w] {
+                    None => call_stack.push((w, 0)),
+                    Some(wi) if on_stack[w] => lowlink[node] = lowlink[node].min(wi),
+                    _ => {}
+                }
+            } else {
+                if lowlink[node] == index_of[node].unwrap() {
+                    let mut comp = Vec::new();
+                    loop {
+                        let w = scc_stack.pop().unwrap();
+                        on_stack[w] = false;
+                        comp.push(w);
+                        if w == node {
+                            break;
+                        }
+                    }
+                    sccs.push(comp);
+                }
+                call_stack.pop();
+                if let Some(&(parent, _)) = call_stack.last() {
+                    lowlink[parent] = lowlink[parent].min(lowlink[node]);
+                }
+            }
+        }
+    }
+    sccs
 }
 
 /// The highlight set for a node's thread (Spec 001 §3.3): node ids plus edge
@@ -302,6 +450,16 @@ impl Graph {
 pub struct Thread {
     pub node_ids: Vec<String>,
     pub edge_ids: Vec<usize>,
+}
+
+/// A dependency cycle (strongly-connected component) over the directed
+/// semantic edges — see [`Graph::cycles`].
+#[derive(Debug, Clone, Serialize)]
+pub struct Cycle {
+    /// Member document ids, in graph node order.
+    pub node_ids: Vec<String>,
+    /// The distinct semantic edge types participating in the cycle.
+    pub edge_types: Vec<EdgeType>,
 }
 
 #[cfg(test)]
@@ -600,5 +758,96 @@ mod tests {
         let targets: Vec<&str> = g.edges.iter().map(|e| e.target.as_str()).collect();
         // Declaration order of the `related` list is preserved.
         assert_eq!(targets, vec!["B-2", "B-1"]);
+    }
+
+    #[test]
+    fn test_cycles_supersession_loop_reported() {
+        // A supersedes B, B supersedes A — a real corpus defect.
+        let a = make_doc(
+            "ADR-A-a.md",
+            DocType::Adr,
+            Frontmatter {
+                id: Some("ADR-A".into()),
+                supersedes: Some(vec!["ADR-B".into()]),
+                ..Default::default()
+            },
+        );
+        let b = make_doc(
+            "ADR-B-b.md",
+            DocType::Adr,
+            Frontmatter {
+                id: Some("ADR-B".into()),
+                supersedes: Some(vec!["ADR-A".into()]),
+                ..Default::default()
+            },
+        );
+        let docs = [&a, &b];
+        let g = Graph::build(&docs);
+
+        let cycles = g.cycles();
+        assert_eq!(cycles.len(), 1);
+        assert_eq!(cycles[0].node_ids, vec!["ADR-A", "ADR-B"]); // graph order
+        assert_eq!(cycles[0].edge_types, vec![EdgeType::Supersedes]);
+    }
+
+    #[test]
+    fn test_cycles_related_pair_not_reported() {
+        // A ↔ B via `related` is symmetric by intent, not a dependency cycle.
+        let a = make_doc(
+            "REQ-A-a.md",
+            DocType::Req,
+            Frontmatter {
+                id: Some("REQ-A".into()),
+                related: Some(vec!["REQ-B".into()]),
+                ..Default::default()
+            },
+        );
+        let b = make_doc(
+            "REQ-B-b.md",
+            DocType::Req,
+            Frontmatter {
+                id: Some("REQ-B".into()),
+                related: Some(vec!["REQ-A".into()]),
+                ..Default::default()
+            },
+        );
+        let docs = [&a, &b];
+        let g = Graph::build(&docs);
+        assert!(g.cycles().is_empty());
+    }
+
+    #[test]
+    fn test_cycles_self_supersession_reported() {
+        let a = make_doc(
+            "ADR-A-a.md",
+            DocType::Adr,
+            Frontmatter {
+                id: Some("ADR-A".into()),
+                supersedes: Some(vec!["ADR-A".into()]),
+                ..Default::default()
+            },
+        );
+        let docs = [&a];
+        let g = Graph::build(&docs);
+        let cycles = g.cycles();
+        assert_eq!(cycles.len(), 1);
+        assert_eq!(cycles[0].node_ids, vec!["ADR-A"]);
+    }
+
+    #[test]
+    fn test_cycles_dangling_semantic_edge_is_not_a_cycle() {
+        // A supersedes a missing id — unresolved, so no cycle.
+        let a = make_doc(
+            "ADR-A-a.md",
+            DocType::Adr,
+            Frontmatter {
+                id: Some("ADR-A".into()),
+                supersedes: Some(vec!["ADR-GHOST".into()]),
+                ..Default::default()
+            },
+        );
+        let docs = [&a];
+        let g = Graph::build(&docs);
+        assert!(g.cycles().is_empty());
     }
 }

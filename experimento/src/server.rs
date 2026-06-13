@@ -30,6 +30,9 @@ pub struct AppState {
     pub snapshot: Arc<RwLock<Arc<Snapshot>>>,
     pub events: broadcast::Sender<String>,
     pub assets_dir: Option<PathBuf>,
+    /// The project's resolved UI language (`en` / `es` / `zh-CN`), served at
+    /// `/api/meta` so the SPA localizes itself (T3.5/NFR5).
+    pub locale: String,
 }
 
 pub fn router(state: AppState) -> Router {
@@ -38,6 +41,7 @@ pub fn router(state: AppState) -> Router {
         .route("/api/node/{id}", get(api_node))
         .route("/api/node/{id}/thread", get(api_thread))
         .route("/api/stats", get(api_stats))
+        .route("/api/meta", get(api_meta))
         .route("/api/stream", get(api_stream))
         .route("/healthz", get(|| async { "ok" }))
         .fallback(get(serve_asset))
@@ -100,6 +104,16 @@ async fn api_graph(State(state): State<AppState>, Query(filters): Query<GraphFil
 
 async fn api_stats(State(state): State<AppState>) -> Response {
     axum::Json(&current(&state).api.stats).into_response()
+}
+
+/// Project metadata the SPA needs at boot: the resolved UI locale (T3.5) and
+/// the experimental marker.
+async fn api_meta(State(state): State<AppState>) -> Response {
+    axum::Json(serde_json::json!({
+        "locale": state.locale,
+        "experimental": true,
+    }))
+    .into_response()
 }
 
 async fn api_node(State(state): State<AppState>, AxumPath(id): AxumPath<String>) -> Response {

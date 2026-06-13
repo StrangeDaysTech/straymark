@@ -20,6 +20,36 @@ project adheres to [Semantic Versioning](https://semver.org/).
   overlay, layer toggle, component panel, and cross-linking with the Knowledge Graph.
 - A3 (north star): axonometric/BIM exploded-layers view.
 
+## [0.3.0] — 2026-06-13 (M3, rich UI)
+
+### Added
+
+- **Incremental rebuild + WS `delta` events** (NFR2): a parse cache re-parses only
+  files whose modification time changed; the watcher diffs the new graph against the
+  previous one and pushes `{event:"delta", added, removed, changed, edges, stats}`. The
+  SPA patches the graph in place, preserving the layout of unchanged documents instead of
+  re-laying out on every edit. The initial WS sync remains a full `rebuild`.
+- **Cycle / SCC reporting** (spec §3.3): `straymark-core` detects dependency cycles
+  (strongly-connected components) over the resolved directed semantic edges
+  (`SUPERSEDES`, `ORIGINATES_FROM`); `RELATED_TO` is symmetric and never reported.
+  Surfaced in `/api/stats` as `cycles` and listed in the corpus stats panel.
+- **Centrality-based node sizing**: a header selector sizes nodes by Betweenness
+  (default — highlights bridge documents), PageRank, or Degree, computed client-side.
+- **Search, pin, open-in-editor**: a search box centers the camera on a matched
+  document; "Pin subgraph" isolates the selected document's thread as a working set;
+  the node panel offers VS Code / Cursor deep-links and a copy-path button (client-side
+  only — the server stays strictly read-only).
+- **UI internationalization** (NFR5): all interface strings move behind a string table
+  (`en` / `es` / `zh-CN`); the active language is the project's configured language,
+  resolved by the shared `straymark-core` config logic (same as `straymark explore`) and
+  served at the new `GET /api/meta` endpoint.
+
+### Changed
+
+- Language resolution (`resolve_language`, `detect_os_locale`, `parse_posix_locale`) moved
+  from the CLI into `straymark-core` (`core::config`); the CLI now delegates, so the CLI
+  and Loom share one source of truth (`straymark-core` 0.2.0 → 0.3.0).
+
 ## [0.2.0] — 2026-06-13 (M2, analytics + panels)
 
 ### Added
@@ -76,6 +106,7 @@ project adheres to [Semantic Versioning](https://semver.org/).
   (PR #239) together with the component's intention docs (README, SpecKit sets 001/002,
   `CHARTER-01-loom-server`, ADR-2026-06-02-001/-002).
 
-[Unreleased]: https://github.com/StrangeDaysTech/straymark/compare/loom-0.2.0...HEAD
+[Unreleased]: https://github.com/StrangeDaysTech/straymark/compare/loom-0.3.0...HEAD
+[0.3.0]: https://github.com/StrangeDaysTech/straymark/releases/tag/loom-0.3.0
 [0.2.0]: https://github.com/StrangeDaysTech/straymark/releases/tag/loom-0.2.0
 [0.1.0]: https://github.com/StrangeDaysTech/straymark/releases/tag/loom-0.1.0

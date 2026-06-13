@@ -11,16 +11,19 @@ use notify_debouncer_full::notify::RecursiveMode;
 use notify_debouncer_full::{new_debouncer, DebounceEventResult};
 use tokio::sync::broadcast;
 
-use crate::snapshot::Snapshot;
+use crate::snapshot::{ParseCache, Snapshot};
 
 pub const DEBOUNCE: Duration = Duration::from_millis(250);
 
 /// Spawns the watcher. Returns the debouncer handle — drop it and the
-/// watching stops, so the caller must keep it alive.
+/// watching stops, so the caller must keep it alive. `cache` is the warm
+/// parse cache from the initial build, threaded in so the first change is
+/// already incremental (T3.1).
 pub fn watch(
     watch_dir: &Path,
     snapshot: Arc<RwLock<Arc<Snapshot>>>,
     events: broadcast::Sender<String>,
+    mut cache: ParseCache,
 ) -> Result<impl Sized> {
     let dir = watch_dir.to_path_buf();
     let mut debouncer = new_debouncer(
@@ -37,10 +40,13 @@ pub fn watch(
             if !relevant {
                 return;
             }
-            match Snapshot::build(&dir) {
+            match Snapshot::build_cached(&dir, &mut cache) {
                 Ok(next) => {
                     let next = Arc::new(next);
-                    let event = next.rebuild_event();
+                    // Diff against the previous snapshot so clients patch
+                    // (preserve layout) instead of re-laying out the graph.
+                    let prev_api = snapshot.read().expect("snapshot lock poisoned").api.clone();
+                    let event = next.delta_event(&prev_api);
                     *snapshot.write().expect("snapshot lock poisoned") = next;
                     // No receivers (no open browser) is fine — ignore the error.
                     let _ = events.send(event);

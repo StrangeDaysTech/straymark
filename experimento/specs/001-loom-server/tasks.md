@@ -64,12 +64,16 @@
 
 ## M3 — Rich, Infranodus-like (`loom-0.3.0`)
 
-- [ ] T3.1 — Incremental rebuild (only changed files) + WS `delta` events. (NFR2)
-- [ ] T3.2 — Cycle/SCC reporting over semantic edges. (spec §3.3)
-- [ ] T3.3 — Centrality-based node sizing.
-- [ ] T3.4 — Search, "pin subgraph", "open in editor" (uses node `path`).
-- [ ] T3.5 — UI i18n driven by the project's configured language. (NFR5)
-- [ ] T3.6 — Acceptance; CHANGELOG → `0.3.0`; tag `loom-0.3.0`.
+- [x] T3.1 — Incremental rebuild (mtime-keyed parse cache) + WS `delta` events;
+  SPA patches in place. (NFR2)
+- [x] T3.2 — Cycle/SCC reporting over resolved semantic edges (`core::cycles_in`,
+  Tarjan); surfaced in `/api/stats` + stats panel. (spec §3.3)
+- [x] T3.3 — Centrality-based node sizing (selector: betweenness/pagerank/degree).
+- [x] T3.4 — Search (camera focus), "pin subgraph", "open in editor" (VS Code/Cursor
+  deep-links + copy-path, client-side; server stays read-only).
+- [x] T3.5 — UI i18n (`en`/`es`/`zh-CN`) driven by the project's configured language;
+  resolution moved to `core::config`, served at `/api/meta`. (NFR5)
+- [ ] T3.6 — Acceptance + CHANGELOG → `0.3.0` complete; post-merge tag `loom-0.3.0`.
 
 ## Graduation (post-M3, evaluated against the Charter's criteria)
 

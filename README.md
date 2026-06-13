@@ -279,7 +279,7 @@ StrayMark uses independent version tags for each component:
 | --- | --- | --- | --- |
 | Framework | `fw-` | `fw-4.26.0` | Templates (12 types), governance, directives, Charter template + schema |
 | CLI | `cli-` | `cli-3.24.0` | The `straymark` binary |
-| Loom (EXPERIMENTAL) | `loom-` | `loom-0.2.0` | The `straymark-loom` visualization server, downloaded on demand by `straymark loom serve` |
+| Loom (EXPERIMENTAL) | `loom-` | `loom-0.3.0` | The `straymark-loom` visualization server, downloaded on demand by `straymark loom serve` |
 
 Check installed versions with `straymark status` or `straymark about`.
 
