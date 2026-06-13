@@ -7,6 +7,24 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Loom 0.2.0 — M2 analytics and panels
+
+Completes Loom M2 (`CHARTER-01-loom-server`): the walking skeleton becomes an analytical
+dashboard while remaining loopback-only, read-only, and independently versioned.
+
+### Added (Loom)
+
+- Louvain community detection and cluster coloring over the undirected document graph,
+  with a compact interactive legend labeled by representative document titles.
+- Corpus stats panel with counts by type/status/risk, navigable orphan documents, and
+  dangling references.
+- Expanded node summary panel with clickable incoming/outgoing links, source path, and
+  explicit truncated-excerpt signaling.
+- Server-side `/api/graph` filters for type, status, risk, tag, and inclusive date range,
+  with UI controls and filtered-view live rebuilds.
+
+---
+
 ## Loom 0.1.0 / CLI 3.24.0 — Loom M1: the walking skeleton ships
 
 First release of **Loom**, StrayMark's EXPERIMENTAL third component (`CHARTER-01-loom-server` M1): a loopback-only, read-only web dashboard that renders the project's document graph live in the browser.

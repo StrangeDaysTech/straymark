@@ -53,13 +53,14 @@
 
 ## M2 — Analytics + panels (`loom-0.2.0`) — FR8–FR10
 
-- [ ] T2.1 — Louvain communities → `node.community` → cluster coloring.
-- [ ] T2.2 — Node summary panel (metadata + body excerpt + clickable in/out links). (S5)
-- [ ] T2.3 — Corpus stats panel: counts by type/risk, orphan list, dangling-reference list.
+- [x] T2.1 — Louvain communities → `node.community` → cluster coloring.
+- [x] T2.2 — Node summary panel (metadata + body excerpt + clickable in/out links). (S5)
+- [x] T2.3 — Corpus stats panel: counts by type/risk, orphan list, dangling-reference list.
   (FR8, S4)
-- [ ] T2.4 — Server-side filters `type/status/risk/tag/from/to` on `/api/graph`; UI
+- [x] T2.4 — Server-side filters `type/status/risk/tag/from/to` on `/api/graph`; UI
   controls. (FR9, S6)
-- [ ] T2.5 — Acceptance; CHANGELOG → `0.2.0`; tag `loom-0.2.0`.
+- [ ] T2.5 — Acceptance + CHANGELOG → `0.2.0` complete; post-merge tag
+  `loom-0.2.0` pending.
 
 ## M3 — Rich, Infranodus-like (`loom-0.3.0`)
 

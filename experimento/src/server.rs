@@ -16,7 +16,7 @@ use rust_embed::RustEmbed;
 use serde::Deserialize;
 use tokio::sync::broadcast;
 
-use crate::snapshot::{ApiEdge, Snapshot};
+use crate::snapshot::{ApiEdge, GraphFilters, Snapshot};
 
 /// Frontend assets built by Vite into `web/dist/` and embedded at compile
 /// time (NFR3 — adopters never run npm). Empty during development; use
@@ -86,21 +86,23 @@ fn is_loopback_host(host: &str) -> bool {
 }
 
 fn current(state: &AppState) -> Arc<Snapshot> {
-    state.snapshot.read().expect("snapshot lock poisoned").clone()
+    state
+        .snapshot
+        .read()
+        .expect("snapshot lock poisoned")
+        .clone()
 }
 
-async fn api_graph(State(state): State<AppState>) -> Response {
-    axum::Json(&current(&state).api).into_response()
+async fn api_graph(State(state): State<AppState>, Query(filters): Query<GraphFilters>) -> Response {
+    let snap = current(&state);
+    axum::Json(snap.api.filtered(&filters)).into_response()
 }
 
 async fn api_stats(State(state): State<AppState>) -> Response {
     axum::Json(&current(&state).api.stats).into_response()
 }
 
-async fn api_node(
-    State(state): State<AppState>,
-    AxumPath(id): AxumPath<String>,
-) -> Response {
+async fn api_node(State(state): State<AppState>, AxumPath(id): AxumPath<String>) -> Response {
     let snap = current(&state);
     let Some(node) = snap.graph.node(&id) else {
         return (StatusCode::NOT_FOUND, "unknown document id").into_response();
@@ -124,6 +126,7 @@ async fn api_node(
         "out_edges": out_edges,
         "in_edges": in_edges,
         "excerpt": snap.excerpts.get(&id),
+        "excerpt_truncated": snap.excerpt_truncated.get(&id).copied().unwrap_or(false),
     }))
     .into_response()
 }
@@ -148,10 +151,7 @@ async fn api_thread(
 /// WS /api/stream — pushes the full current graph on connect, then a
 /// `rebuild` event on every settled filesystem change (M1: full snapshots;
 /// M3 will add deltas).
-async fn api_stream(
-    State(state): State<AppState>,
-    ws: WebSocketUpgrade,
-) -> Response {
+async fn api_stream(State(state): State<AppState>, ws: WebSocketUpgrade) -> Response {
     ws.on_upgrade(move |socket| stream_events(socket, state))
 }
 

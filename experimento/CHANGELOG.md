@@ -12,10 +12,6 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Planned — 0.2.0 (M2, analytics + panels)
-- Louvain community coloring, corpus stats panel (orphans, dangling references),
-  server-side filters (`type/status/risk/tag/from/to`) on `/api/graph`.
-
 ### Planned — Architecture Plan view (Spec 002)
 - A1: `straymark-core` "you are here" status projection (component state by file-glob match
   over active/closed Charters, drift, TDE, declared-vs-wired) + `straymark architecture
@@ -23,6 +19,29 @@ project adheres to [Semantic Versioning](https://semver.org/).
 - A2: maxGraph rendering of a human-authored `plan.drawio` with a non-destructive status
   overlay, layer toggle, component panel, and cross-linking with the Knowledge Graph.
 - A3 (north star): axonometric/BIM exploded-layers view.
+
+## [0.2.0] — 2026-06-13 (M2, analytics + panels)
+
+### Added
+
+- **Louvain community coloring** over the graph's undirected projection, with cluster
+  colors and a compact interactive legend of the largest communities. Labels use a
+  representative document title; clicking a community focuses its subgraph.
+- **Corpus stats panel** with counts by type/status/risk plus navigable orphan and
+  dangling-reference lists.
+- **Node summary panel** with metadata, body excerpt, and clickable incoming/outgoing
+  relationship endpoints. The panel shows the source path and explicitly identifies
+  truncated excerpts instead of implying that they are complete documents.
+- **Server-side graph filters** for `type`, `status`, `risk`, `tag`, and inclusive
+  `from`/`to` created-date bounds. Filtered responses retain dangling references from
+  matching sources and recalculate their stats.
+- Two filter-behavior tests plus excerpt-truncation coverage, bringing the Loom suite to
+  6 tests.
+
+### Changed
+
+- The web UI now refetches the active filtered view after live rebuild events while
+  preserving the existing thread-highlight and no-reload workflow.
 
 ## [0.1.0] — 2026-06-12 (M1, walking skeleton — Knowledge Graph view)
 
@@ -57,5 +76,6 @@ project adheres to [Semantic Versioning](https://semver.org/).
   (PR #239) together with the component's intention docs (README, SpecKit sets 001/002,
   `CHARTER-01-loom-server`, ADR-2026-06-02-001/-002).
 
-[Unreleased]: https://github.com/StrangeDaysTech/straymark/compare/loom-0.1.0...HEAD
+[Unreleased]: https://github.com/StrangeDaysTech/straymark/compare/loom-0.2.0...HEAD
+[0.2.0]: https://github.com/StrangeDaysTech/straymark/releases/tag/loom-0.2.0
 [0.1.0]: https://github.com/StrangeDaysTech/straymark/releases/tag/loom-0.1.0
