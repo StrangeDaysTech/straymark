@@ -1,0 +1,10 @@
+[workspace]
+resolver = "2"
+members = ["core", "cli"]
+
+# Shared release profile (moved from cli/Cargo.toml when the workspace was
+# introduced in Loom M0 — profiles are only honored at the workspace root).
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true

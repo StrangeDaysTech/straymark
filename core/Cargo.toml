@@ -1,0 +1,17 @@
+[package]
+name = "straymark-core"
+version = "0.1.0"
+edition = "2021"
+description = "Shared document model and knowledge graph for StrayMark — parses governance documents and builds their typed traceability graph"
+license = "MIT"
+repository = "https://github.com/StrangeDaysTech/straymark"
+homepage = "https://strangedays.tech"
+readme = "README.md"
+keywords = ["straymark", "documentation", "governance", "ai", "knowledge-graph"]
+categories = ["development-tools", "parser-implementations"]
+authors = ["Strange Days Tech, S.A.S."]
+
+[dependencies]
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"

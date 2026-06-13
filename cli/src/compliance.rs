@@ -1,7 +1,7 @@
 use serde::Serialize;
 use std::path::Path;
 
-use crate::document::{StrayMarkDocument, DocType};
+use straymark_core::document::{StrayMarkDocument, DocType};
 
 /// The 12 NIST AI 600-1 GenAI risk categories (canonical identifiers)
 pub const NIST_GENAI_CATEGORIES: &[&str] = &[
@@ -1672,7 +1672,7 @@ pub fn check_china_csl(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::document::Frontmatter;
+    use straymark_core::document::Frontmatter;
     use std::path::PathBuf;
 
     fn make_doc(

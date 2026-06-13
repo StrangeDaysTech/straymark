@@ -12,7 +12,6 @@ mod charter_schema;
 mod commands;
 mod compliance;
 mod config;
-mod document;
 mod download;
 mod followups;
 mod followups_schema;

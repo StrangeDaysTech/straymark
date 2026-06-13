@@ -204,6 +204,12 @@ pub struct Frontmatter {
     pub iso_42001_clause: Option<Vec<u8>>,
     pub tags: Option<Vec<String>>,
     pub related: Option<Vec<String>>,
+    /// Documents this one supersedes (graph edge `SUPERSEDES`).
+    pub supersedes: Option<Vec<String>>,
+    /// Alternatives documented elsewhere (graph edge `DOCUMENTS_ALTERNATIVE`).
+    pub alternatives_documented: Option<Vec<String>>,
+    /// AILOGs a document originates from (graph edge `ORIGINATES_FROM`).
+    pub originating_ailogs: Option<Vec<String>>,
     // INC-specific
     pub severity: Option<String>,
     // ETH-specific

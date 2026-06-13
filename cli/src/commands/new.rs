@@ -5,7 +5,7 @@ use dialoguer::{theme::ColorfulTheme, Input, Select};
 use std::path::PathBuf;
 
 use crate::config::StrayMarkConfig;
-use crate::document::DocType;
+use straymark_core::document::DocType;
 use crate::utils;
 
 pub fn run(path: &str, doc_type_arg: Option<&str>, title_arg: Option<&str>) -> Result<()> {

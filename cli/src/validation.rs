@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use crate::config::StrayMarkConfig;
-use crate::document::{self, StrayMarkDocument, DocType};
+use straymark_core::document::{self, StrayMarkDocument, DocType};
 
 /// Severity of a validation issue
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1295,7 +1295,7 @@ pub fn apply_fixes(doc: &StrayMarkDocument) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::document::Frontmatter;
+    use straymark_core::document::Frontmatter;
 
     fn make_doc(filename: &str, doc_type: DocType, fm: Frontmatter, body: &str) -> StrayMarkDocument {
         StrayMarkDocument {

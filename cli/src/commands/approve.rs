@@ -16,7 +16,7 @@ use chrono::Local;
 use colored::Colorize;
 use std::path::{Path, PathBuf};
 
-use crate::document;
+use straymark_core::document;
 use crate::prompts;
 use crate::utils;
 

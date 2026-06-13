@@ -97,7 +97,8 @@ jobs:
         if: matrix.archive == 'tar.gz'
         shell: bash
         run: |
-          BINARY=cli/target/${{ matrix.target }}/release/straymark
+          # Workspace root target/ since Loom M0 (cli/ is a workspace member)
+          BINARY=target/${{ matrix.target }}/release/straymark
           ARCHIVE=straymark-cli-v${{ needs.resolve-version.outputs.version }}-${{ matrix.target }}.tar.gz
           tar czf "$ARCHIVE" -C "$(dirname "$BINARY")" "$(basename "$BINARY")"
           echo "ARCHIVE=$ARCHIVE" >> "$GITHUB_ENV"
@@ -106,7 +107,8 @@ jobs:
         if: matrix.archive == 'zip'
         shell: bash
         run: |
-          BINARY=cli/target/${{ matrix.target }}/release/straymark.exe
+          # Workspace root target/ since Loom M0 (cli/ is a workspace member)
+          BINARY=target/${{ matrix.target }}/release/straymark.exe
           ARCHIVE=straymark-cli-v${{ needs.resolve-version.outputs.version }}-${{ matrix.target }}.zip
           cp "$BINARY" straymark.exe
           7z a "$ARCHIVE" straymark.exe
@@ -181,7 +183,21 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Publish to crates.io
+      - name: Publish straymark-core (if version not yet on crates.io)
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+        shell: bash
+        run: |
+          # straymark-cli depends on straymark-core by version; the core crate
+          # must exist on crates.io before the CLI can be published.
+          CORE_VERSION=$(grep '^version' core/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          if curl -fsSL "https://crates.io/api/v1/crates/straymark-core/$CORE_VERSION" | grep -q '"num"'; then
+            echo "straymark-core $CORE_VERSION already published — skipping"
+          else
+            cargo publish --manifest-path core/Cargo.toml --allow-dirty
+          fi
+
+      - name: Publish straymark-cli to crates.io
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
         run: cargo publish --manifest-path cli/Cargo.toml --allow-dirty

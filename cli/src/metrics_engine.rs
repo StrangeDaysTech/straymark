@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 use serde::Serialize;
 
-use crate::document::{StrayMarkDocument, DocType};
+use straymark_core::document::{StrayMarkDocument, DocType};
 
 /// Time period for metrics calculation
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -301,7 +301,7 @@ fn trend_direction(current: usize, previous: usize) -> TrendDirection {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::document::Frontmatter;
+    use straymark_core::document::Frontmatter;
     use std::path::PathBuf;
 
     fn make_doc(

@@ -3,7 +3,7 @@ use chrono::Local;
 use colored::Colorize;
 use std::path::PathBuf;
 
-use crate::document;
+use straymark_core::document;
 use crate::metrics_engine::{self, MetricsReport, Period, TrendDirection};
 use crate::utils;
 
