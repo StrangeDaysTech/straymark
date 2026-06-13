@@ -94,6 +94,7 @@ yarn.lock
 # CLI Build Artifacts
 # =============================================================================
 
+/target/
 cli/target/
 dist-staging/
 *.tar.gz

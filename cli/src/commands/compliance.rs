@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use crate::compliance::{self, CheckStatus, ComplianceReport, Standard};
 use crate::config::StrayMarkConfig;
-use crate::document;
+use straymark_core::document;
 use crate::utils;
 
 pub fn run(

@@ -176,11 +176,11 @@ fn run_staged(project_root: &std::path::Path, straymark_dir: &std::path::Path) -
 }
 
 fn apply_fixes(straymark_dir: &std::path::Path) {
-    let paths = crate::document::discover_documents(straymark_dir);
+    let paths = straymark_core::document::discover_documents(straymark_dir);
     let mut fixed_count = 0;
 
     for path in &paths {
-        if let Ok(doc) = crate::document::parse_document(path) {
+        if let Ok(doc) = straymark_core::document::parse_document(path) {
             if let Some(new_content) = validation::apply_fixes(&doc) {
                 if std::fs::write(path, new_content).is_ok() {
                     println!(

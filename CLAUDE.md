@@ -1,14 +1,23 @@
 # StrayMark — Development Instructions
 
-This is the StrayMark project repository. It contains two main components:
+This is the StrayMark project repository. It contains two main components, plus one experimental:
 
 - **Framework** (`dist/`): documentation templates, governance policies, and agent directives
 - **CLI** (`cli/`): the `straymark` Rust binary that manages the framework in user projects
+- **Loom** (`experimento/`, EXPERIMENTAL): knowledge-graph/architecture visualization server — see `experimento/README.md` and `experimento/CHARTER-01-loom-server.md`
+
+The Rust code is a **Cargo workspace** (root `Cargo.toml`, members `core` + `cli`): `straymark-core` holds the shared document model and knowledge graph (one parser for the CLI and Loom); `Cargo.lock` and `[profile.release]` live at the workspace root; build artifacts land in the root `target/`.
 
 ## Project Structure
 
 ```
 straymark/
+├── Cargo.toml              # Workspace root (members: core, cli) + release profile
+├── Cargo.lock
+├── core/                   # straymark-core: shared document model + typed knowledge graph
+│   └── src/
+│       ├── document.rs     # DocType, Frontmatter, parse_document, discover_documents
+│       └── graph.rs        # Typed, bidirectional, orphan-preserving graph builder
 ├── cli/                    # Rust CLI source code
 │   ├── src/
 │   │   ├── main.rs         # Entry point, command routing
@@ -23,8 +32,7 @@ straymark/
 │   │   ├── self_update.rs  # CLI auto-update
 │   │   └── utils.rs        # Output helpers, file hashing
 │   ├── tests/              # Integration tests
-│   ├── Cargo.toml
-│   └── Cargo.lock
+│   └── Cargo.toml
 ├── dist/                   # Framework distribution files
 │   ├── .straymark/          # Templates, governance, config
 │   ├── STRAYMARK.md         # Unified governance rules
@@ -59,7 +67,7 @@ Edit `cli/Cargo.toml`:
 version = "X.Y.Z"
 ```
 
-Run `cargo check` in `cli/` to update `Cargo.lock`.
+Run `cargo check` at the repo root to update the workspace `Cargo.lock`.
 
 Update version references in all docs that mention version numbers:
 - `docs/adopters/CLI-REFERENCE.md` (EN — versioning table + example outputs)
@@ -78,7 +86,7 @@ Update `CHANGELOG.md` (root) following [Keep a Changelog](https://keepachangelog
 
 ```bash
 git checkout -b chore/bump-cli-X.Y.Z
-git add cli/Cargo.toml cli/Cargo.lock docs/
+git add cli/Cargo.toml Cargo.lock docs/
 git commit -m "chore: bump CLI version to X.Y.Z"
 # Push, create PR, merge to main
 ```

@@ -4,7 +4,8 @@ use chrono::NaiveDate;
 use serde::Serialize;
 
 use crate::compliance::{self, ComplianceReport};
-use crate::document::StrayMarkDocument;
+use straymark_core::document::StrayMarkDocument;
+use straymark_core::graph::{EdgeType, Graph};
 
 /// A single entry in the audit timeline
 #[derive(Debug, Clone, Serialize)]
@@ -135,35 +136,36 @@ fn build_timeline(docs: &[&StrayMarkDocument]) -> Vec<TimelineEntry> {
     entries
 }
 
-/// Build traceability chains from document relationships
+/// Build traceability chains from document relationships.
+///
+/// Since Loom M0 this is a projection over the shared typed graph
+/// (`straymark_core::graph`): the legacy chain view keeps only resolved
+/// `RELATED_TO` edges between documents with explicit frontmatter ids, so the
+/// audit output is unchanged while the full graph (typed edges, orphans,
+/// dangling references, bidirectional adjacency) is available to other
+/// consumers (the Loom server).
 fn build_traceability(docs: &[&StrayMarkDocument]) -> Vec<TraceabilityChain> {
-    // Build lookup by ID and by filename stem
-    let mut doc_by_id: HashMap<String, &StrayMarkDocument> = HashMap::new();
-    let mut referenced_ids: HashSet<String> = HashSet::new();
+    let graph = Graph::build(docs);
 
-    for doc in docs {
-        if let Some(id) = &doc.frontmatter.id {
-            doc_by_id.insert(id.clone(), doc);
-        }
-    }
-
-    // Build adjacency: id -> list of ids it references
+    // Legacy adjacency: id -> ids it references via resolved RELATED_TO edges,
+    // both endpoints carrying explicit frontmatter ids.
     let mut adjacency: HashMap<String, Vec<String>> = HashMap::new();
-    for doc in docs {
-        if let Some(id) = &doc.frontmatter.id {
-            if let Some(related) = &doc.frontmatter.related {
-                let refs: Vec<String> = related
-                    .iter()
-                    .filter(|r| doc_by_id.contains_key(r.as_str()))
-                    .cloned()
-                    .collect();
-                for r in &refs {
-                    referenced_ids.insert(r.clone());
-                }
-                if !refs.is_empty() {
-                    adjacency.insert(id.clone(), refs);
-                }
-            }
+    let mut referenced_ids: HashSet<String> = HashSet::new();
+    for node in &graph.nodes {
+        if !node.has_explicit_id {
+            continue;
+        }
+        let refs: Vec<String> = graph
+            .out_edges(&node.id)
+            .filter(|e| e.edge_type == EdgeType::RelatedTo && e.resolved)
+            .filter(|e| graph.node(&e.target).is_some_and(|t| t.has_explicit_id))
+            .map(|e| e.target.clone())
+            .collect();
+        for r in &refs {
+            referenced_ids.insert(r.clone());
+        }
+        if !refs.is_empty() {
+            adjacency.insert(node.id.clone(), refs);
         }
     }
 
@@ -173,9 +175,11 @@ fn build_traceability(docs: &[&StrayMarkDocument]) -> Vec<TraceabilityChain> {
     }
 
     // Find root nodes: documents that are not referenced by others
-    let root_ids: Vec<String> = docs
+    let root_ids: Vec<String> = graph
+        .nodes
         .iter()
-        .filter_map(|d| d.frontmatter.id.clone())
+        .filter(|n| n.has_explicit_id)
+        .map(|n| n.id.clone())
         .filter(|id| !referenced_ids.contains(id))
         .filter(|id| adjacency.contains_key(id))
         .collect();
@@ -189,19 +193,15 @@ fn build_traceability(docs: &[&StrayMarkDocument]) -> Vec<TraceabilityChain> {
             continue;
         }
 
-        let root_doc = match doc_by_id.get(root_id.as_str()) {
-            Some(d) => d,
+        let root_doc = match graph.node(root_id) {
+            Some(n) => n,
             None => continue,
         };
 
         let root_node = TraceabilityNode {
             id: root_id.clone(),
-            doc_type: root_doc.doc_type.prefix().to_string(),
-            title: root_doc
-                .frontmatter
-                .title
-                .clone()
-                .unwrap_or_else(|| "Untitled".into()),
+            doc_type: root_doc.doc_type.clone(),
+            title: root_doc.title.clone(),
         };
 
         let mut chain_nodes = Vec::new();
@@ -226,15 +226,11 @@ fn build_traceability(docs: &[&StrayMarkDocument]) -> Vec<TraceabilityChain> {
             visited.insert(current_id.clone());
             globally_visited.insert(current_id.clone());
 
-            if let Some(doc) = doc_by_id.get(current_id.as_str()) {
+            if let Some(node) = graph.node(&current_id) {
                 chain_nodes.push(TraceabilityNode {
                     id: current_id.clone(),
-                    doc_type: doc.doc_type.prefix().to_string(),
-                    title: doc
-                        .frontmatter
-                        .title
-                        .clone()
-                        .unwrap_or_else(|| "Untitled".into()),
+                    doc_type: node.doc_type.clone(),
+                    title: node.title.clone(),
                 });
 
                 if let Some(refs) = adjacency.get(&current_id) {
@@ -333,7 +329,7 @@ pub fn generate_audit(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::document::{DocType, Frontmatter};
+    use straymark_core::document::{DocType, Frontmatter};
     use std::path::PathBuf;
 
     fn make_doc(filename: &str, doc_type: DocType, fm: Frontmatter) -> StrayMarkDocument {

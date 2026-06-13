@@ -1,0 +1,88 @@
+{
+    "id": "116698488515037678",
+    "created_at": "2026-06-05T16:40:20.163Z",
+    "in_reply_to_id": null,
+    "in_reply_to_account_id": null,
+    "sensitive": false,
+    "spoiler_text": "",
+    "visibility": "public",
+    "language": "en",
+    "uri": "https://social.coop/users/cwebber/statuses/116698488515037678",
+    "url": "https://social.coop/@cwebber/116698488515037678",
+    "replies_count": 68,
+    "reblogs_count": 403,
+    "favourites_count": 157,
+    "quotes_count": 4,
+    "edited_at": null,
+    "content": "<p>The proliferation of genAI has made my life</p>",
+    "reblog": null,
+    "application": null,
+    "account": {
+        "id": "113482993316443450",
+        "username": "cwebber",
+        "acct": "cwebber",
+        "display_name": "Christine Lemmer-Webber",
+        "locked": false,
+        "bot": false,
+        "discoverable": true,
+        "indexable": true,
+        "group": false,
+        "created_at": "2024-11-14T00:00:00.000Z",
+        "note": "<p>Executive Director of <span class=\"h-card\" translate=\"no\"><a href=\"https://social.coop/@spritely\" class=\"u-url mention\">@<span>spritely</span></a></span> (but this is a personal account). I&#39;m here to fix the Internet.<br />ActivityPub co-author, co-host of @fossandcrafts@octodon.social. Lisp sourceress, decentralized network architect, occasional Blender artist. she/her <a href=\"https://dustycloud.org/\" target=\"_blank\" rel=\"nofollow noopener\" translate=\"no\"><span class=\"invisible\">https://</span><span class=\"\">dustycloud.org/</span><span class=\"invisible\"></span></a></p><p>Recently moved here from @cwebber@octodon.social</p><p>Lovely banner sketch by <span class=\"h-card\" translate=\"no\"><a href=\"https://mastodon.art/@juliaro\" class=\"u-url mention\">@<span>juliaro</span></a></span> <a href=\"https://mastodon.art/@juliaro/114489465896761273\" target=\"_blank\" rel=\"nofollow noopener\" translate=\"no\"><span class=\"invisible\">https://</span><span class=\"ellipsis\">mastodon.art/@juliaro/11448946</span><span class=\"invisible\">5896761273</span></a></p>",
+        "url": "https://social.coop/@cwebber",
+        "uri": "https://social.coop/users/cwebber",
+        "avatar": "https://social-coop-media.ams3.cdn.digitaloceanspaces.com/accounts/avatars/113/482/993/316/443/450/original/95a5b61306aead37.jpg",
+        "avatar_static": "https://social-coop-media.ams3.cdn.digitaloceanspaces.com/accounts/avatars/113/482/993/316/443/450/original/95a5b61306aead37.jpg",
+        "header": "https://social-coop-media.ams3.cdn.digitaloceanspaces.com/accounts/headers/113/482/993/316/443/450/original/2c79023b89004d47.png",
+        "header_static": "https://social-coop-media.ams3.cdn.digitaloceanspaces.com/accounts/headers/113/482/993/316/443/450/original/2c79023b89004d47.png",
+        "followers_count": 16359,
+        "following_count": 841,
+        "statuses_count": 12355,
+        "last_status_at": "2026-06-06",
+        "hide_collections": null,
+        "noindex": false,
+        "emojis": [],
+        "roles": [],
+        "fields": []
+    },
+    "media_attachments": [],
+    "mentions": [],
+    "tags": [],
+    "emojis": [],
+    "quote": null,
+    "card": null,
+    "poll": {
+        "id": "441088",
+        "expires_at": "2026-06-06T16:40:20.159Z",
+        "expired": true,
+        "multiple": false,
+        "votes_count": 4712,
+        "voters_count": 4712,
+        "options": [
+            {
+                "title": "Better",
+                "votes_count": 116
+            },
+            {
+                "title": "Worse",
+                "votes_count": 3564
+            },
+            {
+                "title": "No difference",
+                "votes_count": 327
+            },
+            {
+                "title": "Better and worse",
+                "votes_count": 705
+            }
+        ],
+        "emojis": []
+    },
+    "quote_approval": {
+        "automatic": [
+            "public"
+        ],
+        "manual": [],
+        "current_user": "denied"
+    }
+}

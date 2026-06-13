@@ -7,6 +7,22 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.23.1 — `straymark-core` extraction (Loom M0)
+
+First milestone of the experimental **Loom** component (`experimento/`, `CHARTER-01-loom-server`): the document model and traceability graph move into a shared crate so the CLI and the upcoming Loom visualization server parse StrayMark documents with exactly the same code (`ADR-2026-06-02-001`). **No user-facing behavior changes** — the full test suite and the `straymark audit` output are byte-for-byte identical pre/post refactor.
+
+### Added (CLI)
+
+- **`straymark-core` crate** (published to crates.io): `core::document` (the document model, moved verbatim from `cli/src/document.rs`) and `core::graph` — a typed, bidirectional, orphan-preserving knowledge graph over frontmatter cross-links (`related`, `supersedes`, `alternatives_documented`, `api_changes`, `originating_ailogs`), with dangling references kept as first-class `resolved: false` edges (Loom Spec 001 §3).
+- New optional frontmatter fields parsed (additive): `supersedes`, `alternatives_documented`, `originating_ailogs`.
+
+### Changed (CLI)
+
+- The repository root is now a Cargo **workspace** (`core` + `cli`); `[profile.release]` and `Cargo.lock` live at the root. Release binaries are built from `target/` (workspace) instead of `cli/target/` — `release-cli.yml` adjusted accordingly, and it now publishes `straymark-core` before `straymark-cli`.
+- `audit_engine::build_traceability` is now a projection over `straymark_core::graph` (same output, one graph builder for all consumers).
+
+---
+
 ## Framework 4.26.0 / CLI 3.23.0 — `charter drift` is native Rust (Windows-native parity)
 
 Closes the last functional Windows-native gap ([#237](https://github.com/StrangeDaysTech/straymark/issues/237)): `straymark charter drift` no longer delegates to a bash script, so it runs without WSL or Git Bash.

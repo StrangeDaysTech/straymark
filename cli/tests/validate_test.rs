@@ -498,8 +498,9 @@ fn test_new_templates_exist_in_dist() {
 /// F2.QA.02.02 — Verify straymark new supports all 12 document types via DocType::ALL
 #[test]
 fn test_new_supports_all_doc_types() {
+    // document.rs lives in the straymark-core crate since Loom M0
     let source_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("src/document.rs");
+        .join("../core/src/document.rs");
 
     let content = std::fs::read_to_string(&source_path).expect("Cannot read document.rs");
 
