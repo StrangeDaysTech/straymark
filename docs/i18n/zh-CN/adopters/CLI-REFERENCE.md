@@ -49,7 +49,7 @@ StrayMark 为每个组件使用**独立的版本标签**：
 |------|----------|------|----------|
 | Framework | `fw-` | `fw-4.26.0` | 模板（12 种类型）、治理文档、指令 |
 | CLI | `cli-` | `cli-3.24.0` | `straymark` 二进制文件 |
-| Loom（实验性） | `loom-` | `loom-0.4.0` | `straymark-loom` 可视化服务器，由 `straymark loom serve` 按需下载 |
+| Loom（实验性） | `loom-` | `loom-0.4.1` | `straymark-loom` 可视化服务器，由 `straymark loom serve` 按需下载 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
 
@@ -1231,8 +1231,8 @@ $ straymark loom serve
      Unstable: API, CLI surface, and on-disk layout may change or be
      removed without a deprecation cycle. Loopback-only. Read-only.
 
-ℹ Downloading Loom 0.4.0 (x86_64-unknown-linux-gnu) — first use is opt-in by download
-✔ Loom 0.4.0 cached at ~/.straymark/bin/straymark-loom
+ℹ Downloading Loom 0.4.1 (x86_64-unknown-linux-gnu) — first use is opt-in by download
+✔ Loom 0.4.1 cached at ~/.straymark/bin/straymark-loom
 loom: watching /project/.straymark (142 docs, 318 links)
 loom: serving http://127.0.0.1:7700
 ```

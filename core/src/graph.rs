@@ -79,7 +79,7 @@ impl Node {
 /// A directed, typed edge. `source`/`target` are node ids; an edge whose
 /// target id is not present in the corpus is kept with `resolved: false`
 /// (a dangling reference — a first-class signal, never silently dropped).
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Edge {
     pub source: String,
     pub target: String,

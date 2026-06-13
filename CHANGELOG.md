@@ -7,6 +7,20 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Loom 0.4.1 — fix: panel click responsiveness under filesystem churn
+
+### Fixed (Loom)
+
+- The watcher no longer broadcasts a WebSocket update when a rebuild yields an identical graph
+  (a file's mtime moved but its content did not — an editor save, formatter, `touch`, or
+  cloud-sync rewrite). These no-op broadcasts re-rendered open clients' side panels
+  continuously and swallowed clicks on dangling-reference links, community buttons and stats
+  sections.
+- The stats and legend panels use event delegation on their stable containers instead of
+  per-button listeners, so clicks survive the panels' innerHTML rewrites under frequent updates.
+
+---
+
 ## Loom 0.4.0 — connectivity: reference normalization + entity nodes
 
 Closes the Loom connectivity follow-ups (R1 + R2). On the Sentinel corpus, 330 of 395

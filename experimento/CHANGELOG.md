@@ -20,6 +20,21 @@ project adheres to [Semantic Versioning](https://semver.org/).
   overlay, layer toggle, component panel, and cross-linking with the Knowledge Graph.
 - A3 (north star): axonometric/BIM exploded-layers view.
 
+## [0.4.1] — 2026-06-13 (fix: panel click responsiveness under filesystem churn)
+
+### Fixed
+
+- The watcher no longer broadcasts a WebSocket update when a rebuild produces an
+  **identical** graph (a file's modification time moved but its content did not — an editor
+  save without changes, a formatter, a `touch`, a cloud-sync rewrite). Such no-op broadcasts
+  re-rendered every open client's side panels continuously, destroying their freshly-bound
+  click handlers and making actionable items (dangling-reference links, community buttons,
+  stats sections) feel unresponsive.
+- The stats and legend panels now use **event delegation** on their stable container elements
+  instead of binding a listener per rendered button. Clicks survive the innerHTML rewrite the
+  panels perform on every rebuild, so they keep working even under legitimately frequent
+  updates.
+
 ## [0.4.0] — 2026-06-13 (connectivity: reference normalization + entity nodes)
 
 Closes the M1 connectivity follow-ups (R1 + R2) surfaced by dogfooding against the Sentinel
@@ -133,7 +148,8 @@ corpus, where 330 of 395 references were dangling. All changes are in the shared
   (PR #239) together with the component's intention docs (README, SpecKit sets 001/002,
   `CHARTER-01-loom-server`, ADR-2026-06-02-001/-002).
 
-[Unreleased]: https://github.com/StrangeDaysTech/straymark/compare/loom-0.4.0...HEAD
+[Unreleased]: https://github.com/StrangeDaysTech/straymark/compare/loom-0.4.1...HEAD
+[0.4.1]: https://github.com/StrangeDaysTech/straymark/releases/tag/loom-0.4.1
 [0.4.0]: https://github.com/StrangeDaysTech/straymark/releases/tag/loom-0.4.0
 [0.3.0]: https://github.com/StrangeDaysTech/straymark/releases/tag/loom-0.3.0
 [0.2.0]: https://github.com/StrangeDaysTech/straymark/releases/tag/loom-0.2.0
