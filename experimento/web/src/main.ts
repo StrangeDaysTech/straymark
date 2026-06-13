@@ -79,6 +79,8 @@ const TYPE_COLORS: Record<string, string> = {
   REQ: '#4caf78', TES: '#3cbfb4', INC: '#c75050', TDE: '#b06a4f',
   SEC: '#d4607f', MCARD: '#7f9ad4', SBOM: '#8aa455', DPIA: '#b07fd4',
   PIPIA: '#c08fb0', CACFILE: '#a0788f', TC260RA: '#90a0b8', AILABEL: '#74b89a',
+  // R2 — non-document entities.
+  CHARTER: '#e6a817', PLAN: '#7e8fd4', AUDIT: '#bf6f8f',
 };
 const FALLBACK_COLOR = '#8b91a0';
 const DIM_NODE = '#2c303b';

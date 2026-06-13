@@ -144,8 +144,11 @@ fn build_timeline(docs: &[&StrayMarkDocument]) -> Vec<TimelineEntry> {
 /// audit output is unchanged while the full graph (typed edges, orphans,
 /// dangling references, bidirectional adjacency) is available to other
 /// consumers (the Loom server).
-fn build_traceability(docs: &[&StrayMarkDocument]) -> Vec<TraceabilityChain> {
-    let graph = Graph::build(docs);
+fn build_traceability(
+    docs: &[&StrayMarkDocument],
+    entities: &[straymark_core::entities::Entity],
+) -> Vec<TraceabilityChain> {
+    let graph = Graph::build_with_entities(docs, entities);
 
     // Legacy adjacency: id -> ids it references via resolved RELATED_TO edges,
     // both endpoints carrying explicit frontmatter ids.
@@ -287,7 +290,10 @@ pub fn generate_audit(
 
     let total_docs = filtered.len();
     let timeline = build_timeline(&filtered);
-    let traceability_chains = build_traceability(&filtered);
+    // Charters, plans and audit reviews enrich the traceability graph so
+    // references to them resolve (R2). Shared with Loom via `straymark-core`.
+    let entities = straymark_core::entities::discover_entities(straymark_dir);
+    let traceability_chains = build_traceability(&filtered, &entities);
     let risk_dist = risk_distribution(&filtered);
 
     // Compliance summary (run all checkers on full doc set)

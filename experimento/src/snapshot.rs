@@ -9,6 +9,7 @@ use std::time::SystemTime;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use straymark_core::document::{discover_documents, parse_document, StrayMarkDocument};
+use straymark_core::entities::discover_entities;
 use straymark_core::graph::{cycles_in, Cycle, Edge, Graph, Node};
 
 /// How much of a document body `/api/node/:id` returns.
@@ -247,10 +248,13 @@ impl Snapshot {
             }
         }
 
-        // Build from the cached docs, in discovery order.
+        // Build from the cached docs, in discovery order. Charters, plans and
+        // audit reviews (R2) are discovered fresh each rebuild — there are few
+        // of them, so they are not cached.
         let doc_refs: Vec<&StrayMarkDocument> =
             paths.iter().filter_map(|p| cache.get(p).map(|c| &c.doc)).collect();
-        let graph = Graph::build(&doc_refs);
+        let entities = discover_entities(watch_dir);
+        let graph = Graph::build_with_entities(&doc_refs, &entities);
 
         let mut excerpts = BTreeMap::new();
         let mut excerpt_truncated = BTreeMap::new();

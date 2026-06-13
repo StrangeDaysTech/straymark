@@ -20,6 +20,33 @@ project adheres to [Semantic Versioning](https://semver.org/).
   overlay, layer toggle, component panel, and cross-linking with the Knowledge Graph.
 - A3 (north star): axonometric/BIM exploded-layers view.
 
+## [0.4.0] — 2026-06-13 (connectivity: reference normalization + entity nodes)
+
+Closes the M1 connectivity follow-ups (R1 + R2) surfaced by dogfooding against the Sentinel
+corpus, where 330 of 395 references were dangling. All changes are in the shared
+`straymark-core` graph builder, so `straymark audit` gains the same connectivity.
+
+### Added
+
+- **Charter / plan / audit nodes** (R2): a new `straymark-core::entities` module discovers
+  `.straymark/charters/*.md` (by `charter_id`), `.straymark/plans/PLAN-*.telemetry.yaml`
+  (by `plan_id`), and `.straymark/audits/*/review.md`, and `Graph::build_with_entities`
+  injects them as `CHARTER` / `PLAN` / `AUDIT` nodes. References by `CHARTER-NN`, full
+  `charter_id`, `PLAN-NN`, or audit path now resolve instead of dangling.
+
+### Changed
+
+- **Reference normalization** (R1): the graph builder resolves an edge target by exact id
+  and, failing that, by unique file basename, unique relative-path suffix, `CHARTER-NN`
+  prefix, or the leading dated id prefix — never resolving an ambiguous match. Resolved
+  targets are canonicalized to the node id.
+
+### Result (Sentinel, measured)
+
+- Dangling references **330 → 87**; nodes **131 → 193** (+41 charters, +5 plans, +16 audits);
+  orphans **2 → 0**. The remaining ~87 are references to files outside the governance corpus
+  (`.specify/memory/…`, `constitution.md`), which correctly stay dangling.
+
 ## [0.3.0] — 2026-06-13 (M3, rich UI)
 
 ### Added
@@ -106,7 +133,8 @@ project adheres to [Semantic Versioning](https://semver.org/).
   (PR #239) together with the component's intention docs (README, SpecKit sets 001/002,
   `CHARTER-01-loom-server`, ADR-2026-06-02-001/-002).
 
-[Unreleased]: https://github.com/StrangeDaysTech/straymark/compare/loom-0.3.0...HEAD
+[Unreleased]: https://github.com/StrangeDaysTech/straymark/compare/loom-0.4.0...HEAD
+[0.4.0]: https://github.com/StrangeDaysTech/straymark/releases/tag/loom-0.4.0
 [0.3.0]: https://github.com/StrangeDaysTech/straymark/releases/tag/loom-0.3.0
 [0.2.0]: https://github.com/StrangeDaysTech/straymark/releases/tag/loom-0.2.0
 [0.1.0]: https://github.com/StrangeDaysTech/straymark/releases/tag/loom-0.1.0

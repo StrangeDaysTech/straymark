@@ -11,11 +11,12 @@
 //! order (per document, fields in a fixed order; within a field, list order).
 
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 
 use crate::document::StrayMarkDocument;
+use crate::entities::Entity;
 
 /// The frontmatter field an edge was derived from (Spec 001 §3.2).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
@@ -125,6 +126,8 @@ fn resolve_target(
     raw: &str,
     node_index: &HashMap<String, usize>,
     by_filename: &HashMap<String, Option<usize>>,
+    by_path_suffix: &HashMap<String, Option<usize>>,
+    by_charter_prefix: &HashMap<String, Option<usize>>,
 ) -> Option<usize> {
     // a) Exact id (the common, canonical case).
     if let Some(&i) = node_index.get(raw) {
@@ -138,7 +141,22 @@ fn resolve_target(
     if let Some(Some(i)) = by_filename.get(&format!("{base}.md")) {
         return Some(*i);
     }
-    // c) By the leading dated id prefix (`TYPE-YYYY-MM-DD-NNN`) of the basename,
+    // c) By relative path suffix (R2): a path-style reference like
+    //    `.straymark/audits/CHARTER-13/review.md`, where the basename alone
+    //    (`review.md`) is shared across many documents.
+    let norm = raw.replace('\\', "/");
+    let norm = norm.trim_start_matches("./").trim_start_matches('/');
+    if let Some(Some(i)) = by_path_suffix.get(norm) {
+        return Some(*i);
+    }
+    // d) By `CHARTER-NN` prefix (R2): `CHARTER-15` → the charter whose
+    //    `charter_id` starts with `CHARTER-15-` (boundary-safe).
+    if let Some(prefix) = charter_prefix_of(raw) {
+        if let Some(Some(i)) = by_charter_prefix.get(prefix) {
+            return Some(*i);
+        }
+    }
+    // e) By the leading dated id prefix (`TYPE-YYYY-MM-DD-NNN`) of the basename,
     //    e.g. `AILOG-2026-05-07-041-some-slug.md` → id `AILOG-2026-05-07-041`.
     if let Some(id) = leading_id(base) {
         if let Some(&i) = node_index.get(id) {
@@ -146,6 +164,39 @@ fn resolve_target(
         }
     }
     None
+}
+
+/// Insert `idx` under `key` unless the key is already taken — a shared key maps
+/// to `None` and never resolves, so a reference is never wired to the wrong node.
+fn insert_unique(map: &mut HashMap<String, Option<usize>>, key: String, idx: usize) {
+    map.entry(key).and_modify(|slot| *slot = None).or_insert(Some(idx));
+}
+
+/// Component-wise suffixes of `path` (deepest first capped at 6 levels), joined
+/// with `/`, for resolving path-style references against node paths.
+fn path_suffixes(path: &Path) -> Vec<String> {
+    let comps: Vec<&str> = path
+        .components()
+        .filter_map(|c| c.as_os_str().to_str())
+        .collect();
+    let start = comps.len().saturating_sub(6);
+    (start..comps.len()).map(|s| comps[s..].join("/")).collect()
+}
+
+/// Extract the `CHARTER-NN` prefix from a charter id or reference
+/// (`CHARTER-15` and `CHARTER-15-auth-…` both → `CHARTER-15`). Boundary-safe:
+/// the digit run must end at the string end or a `-`, so `CHARTER-15` never
+/// matches `CHARTER-150`.
+fn charter_prefix_of(raw: &str) -> Option<&str> {
+    let rest = raw.strip_prefix("CHARTER-")?;
+    let digits_end = rest.find(|c: char| !c.is_ascii_digit()).unwrap_or(rest.len());
+    if digits_end == 0 {
+        return None;
+    }
+    if digits_end < rest.len() && rest.as_bytes()[digits_end] != b'-' {
+        return None;
+    }
+    Some(&raw[.."CHARTER-".len() + digits_end])
 }
 
 /// If `base` starts with a StrayMark dated id (`TYPE-YYYY-MM-DD-NNN`: ASCII
@@ -181,9 +232,17 @@ impl Graph {
     /// orphan documents become isolated nodes; references to ids absent from
     /// the corpus become `resolved: false` edges.
     pub fn build(docs: &[&StrayMarkDocument]) -> Graph {
+        Graph::build_with_entities(docs, &[])
+    }
+
+    /// Like [`Graph::build`] but also injects non-document [`Entity`] nodes
+    /// (charters, plans, audit reviews — R2), appended after the documents, so
+    /// references to them resolve instead of dangling. Entity links become
+    /// edges resolved with the same reference-normalization fallbacks.
+    pub fn build_with_entities(docs: &[&StrayMarkDocument], entities: &[Entity]) -> Graph {
         let mut graph = Graph::default();
 
-        // Pass 1 — nodes, in input order.
+        // Pass 1a — document nodes, in input order.
         for doc in docs {
             let (id, has_explicit_id) = match &doc.frontmatter.id {
                 Some(id) => (id.clone(), true),
@@ -220,50 +279,93 @@ impl Graph {
             graph.in_edges.push(Vec::new());
         }
 
-        // Fallback index for references written by file basename/path instead
-        // of by id (R1). A basename shared by more than one document maps to
-        // `None`, so it never resolves to the wrong node.
-        let mut by_filename: HashMap<String, Option<usize>> = HashMap::new();
-        for (idx, doc) in docs.iter().enumerate() {
-            let base = doc
-                .path
-                .file_name()
-                .and_then(|s| s.to_str())
-                .unwrap_or(doc.filename.as_str())
-                .to_string();
-            by_filename
-                .entry(base)
-                .and_modify(|slot| *slot = None)
-                .or_insert(Some(idx));
+        // Pass 1b — entity nodes (charters/plans/audits), after the documents.
+        for ent in entities {
+            let node = Node {
+                id: ent.id.clone(),
+                has_explicit_id: true,
+                doc_type: ent.doc_type.clone(),
+                title: ent.title.clone(),
+                status: ent.status.clone(),
+                risk_level: "unset".into(),
+                created: None,
+                agent: None,
+                tags: Vec::new(),
+                path: ent.path.clone(),
+                degree_in: 0,
+                degree_out: 0,
+            };
+            graph.node_index.entry(ent.id.clone()).or_insert(graph.nodes.len());
+            graph.nodes.push(node);
+            graph.out_edges.push(Vec::new());
+            graph.in_edges.push(Vec::new());
         }
 
-        // Pass 2 — typed edges, in declaration order.
+        // Reference-resolution indices over ALL nodes (R1 basename + R2 path
+        // suffix + R2 `CHARTER-NN` prefix). A shared key maps to `None` and is
+        // never used, so a reference is never wired to the wrong node.
+        let mut by_filename: HashMap<String, Option<usize>> = HashMap::new();
+        let mut by_path_suffix: HashMap<String, Option<usize>> = HashMap::new();
+        let mut by_charter_prefix: HashMap<String, Option<usize>> = HashMap::new();
+        for (idx, node) in graph.nodes.iter().enumerate() {
+            if let Some(base) = node.path.file_name().and_then(|s| s.to_str()) {
+                insert_unique(&mut by_filename, base.to_string(), idx);
+            }
+            for suffix in path_suffixes(&node.path) {
+                insert_unique(&mut by_path_suffix, suffix, idx);
+            }
+            if node.doc_type == "CHARTER" {
+                if let Some(prefix) = charter_prefix_of(&node.id) {
+                    insert_unique(&mut by_charter_prefix, prefix.to_string(), idx);
+                }
+            }
+        }
+
+        // Edge specs in declaration order: documents first, then entities.
+        let mut specs: Vec<(usize, EdgeType, String)> = Vec::new();
         for (source_idx, doc) in docs.iter().enumerate() {
-            let source_id = graph.nodes[source_idx].id.clone();
             for (edge_type, targets) in edge_sources(doc) {
                 for target in targets {
-                    let target_idx = resolve_target(target, &graph.node_index, &by_filename);
-                    // Canonicalize the stored target to the resolved node's id
-                    // so a reference written by filename/path points at the real
-                    // node (the UI, audit, threads and cycles all key on id).
-                    let target_str = match target_idx {
-                        Some(t) => graph.nodes[t].id.clone(),
-                        None => target.clone(),
-                    };
-                    let edge_idx = graph.edges.len();
-                    graph.edges.push(Edge {
-                        source: source_id.clone(),
-                        target: target_str,
-                        edge_type,
-                        resolved: target_idx.is_some(),
-                    });
-                    graph.out_edges[source_idx].push(edge_idx);
-                    graph.nodes[source_idx].degree_out += 1;
-                    if let Some(t) = target_idx {
-                        graph.in_edges[t].push(edge_idx);
-                        graph.nodes[t].degree_in += 1;
-                    }
+                    specs.push((source_idx, edge_type, target.clone()));
                 }
+            }
+        }
+        for (ei, ent) in entities.iter().enumerate() {
+            let source_idx = docs.len() + ei;
+            for (edge_type, target) in &ent.links {
+                specs.push((source_idx, *edge_type, target.clone()));
+            }
+        }
+
+        // Pass 2 — create typed edges, resolving each target.
+        for (source_idx, edge_type, target) in specs {
+            let source_id = graph.nodes[source_idx].id.clone();
+            let target_idx = resolve_target(
+                &target,
+                &graph.node_index,
+                &by_filename,
+                &by_path_suffix,
+                &by_charter_prefix,
+            );
+            // Canonicalize the stored target to the resolved node's id so a
+            // reference written by filename/path/prefix points at the real node
+            // (the UI, audit, threads and cycles all key on id).
+            let target_str = match target_idx {
+                Some(t) => graph.nodes[t].id.clone(),
+                None => target.clone(),
+            };
+            let edge_idx = graph.edges.len();
+            graph.edges.push(Edge {
+                source: source_id,
+                target: target_str,
+                edge_type,
+                resolved: target_idx.is_some(),
+            });
+            graph.out_edges[source_idx].push(edge_idx);
+            graph.nodes[source_idx].degree_out += 1;
+            if let Some(t) = target_idx {
+                graph.in_edges[t].push(edge_idx);
+                graph.nodes[t].degree_in += 1;
             }
         }
 
@@ -552,7 +654,19 @@ pub struct Cycle {
 mod tests {
     use super::*;
     use crate::document::{DocType, Frontmatter};
+    use crate::entities::Entity;
     use std::path::PathBuf;
+
+    fn charter_entity(id: &str, path: &str) -> Entity {
+        Entity {
+            id: id.into(),
+            doc_type: "CHARTER".into(),
+            title: id.into(),
+            status: "closed".into(),
+            path: PathBuf::from(path),
+            links: Vec::new(),
+        }
+    }
 
     fn make_doc(filename: &str, doc_type: DocType, fm: Frontmatter) -> StrayMarkDocument {
         StrayMarkDocument {
@@ -1034,5 +1148,134 @@ mod tests {
         let g = Graph::build(&docs);
         let e = g.edges.iter().find(|e| e.source == "REQ-2026-03-01-001").unwrap();
         assert!(!e.resolved);
+    }
+
+    #[test]
+    fn test_entity_charter_resolves_by_prefix_and_full_id() {
+        let req = make_doc(
+            "REQ-2026-03-01-001-x.md",
+            DocType::Req,
+            Frontmatter {
+                id: Some("REQ-2026-03-01-001".into()),
+                // CHARTER-15 (short prefix) and the full charter_id of another.
+                related: Some(vec!["CHARTER-15".into(), "CHARTER-16-other".into()]),
+                ..Default::default()
+            },
+        );
+        let c15 = charter_entity("CHARTER-15-auth", ".straymark/charters/15-auth.md");
+        let c16 = charter_entity("CHARTER-16-other", ".straymark/charters/16-other.md");
+        let docs = [&req];
+        let g = Graph::build_with_entities(&docs, &[c15, c16]);
+
+        let targets: Vec<&str> = g
+            .out_edges("REQ-2026-03-01-001")
+            .map(|e| e.target.as_str())
+            .collect();
+        assert_eq!(targets, vec!["CHARTER-15-auth", "CHARTER-16-other"]);
+        assert!(g.out_edges("REQ-2026-03-01-001").all(|e| e.resolved));
+        assert_eq!(g.node("CHARTER-15-auth").unwrap().doc_type, "CHARTER");
+    }
+
+    #[test]
+    fn test_entity_charter_prefix_is_boundary_safe() {
+        // CHARTER-1 must not resolve to CHARTER-15.
+        let req = make_doc(
+            "REQ-2026-03-01-001-x.md",
+            DocType::Req,
+            Frontmatter {
+                id: Some("REQ-2026-03-01-001".into()),
+                related: Some(vec!["CHARTER-1".into()]),
+                ..Default::default()
+            },
+        );
+        let c15 = charter_entity("CHARTER-15-auth", ".straymark/charters/15-auth.md");
+        let docs = [&req];
+        let g = Graph::build_with_entities(&docs, &[c15]);
+        assert!(!g.edges.iter().any(|e| e.resolved));
+    }
+
+    #[test]
+    fn test_entity_audit_resolves_by_path_suffix_when_basename_ambiguous() {
+        let adr = make_doc(
+            "ADR-2026-03-02-001-x.md",
+            DocType::Adr,
+            Frontmatter {
+                id: Some("ADR-2026-03-02-001".into()),
+                related: Some(vec![".straymark/audits/CHARTER-13/review.md".into()]),
+                ..Default::default()
+            },
+        );
+        // Two audits share the `review.md` basename → basename is ambiguous, so
+        // resolution must use the relative path suffix.
+        let a13 = Entity {
+            id: "audits/CHARTER-13/review.md".into(),
+            doc_type: "AUDIT".into(),
+            title: "Audit — CHARTER-13".into(),
+            status: "reviewed".into(),
+            path: PathBuf::from("/x/.straymark/audits/CHARTER-13/review.md"),
+            links: Vec::new(),
+        };
+        let a14 = Entity {
+            id: "audits/CHARTER-14/review.md".into(),
+            doc_type: "AUDIT".into(),
+            title: "Audit — CHARTER-14".into(),
+            status: "reviewed".into(),
+            path: PathBuf::from("/x/.straymark/audits/CHARTER-14/review.md"),
+            links: Vec::new(),
+        };
+        let docs = [&adr];
+        let g = Graph::build_with_entities(&docs, &[a13, a14]);
+        let e = g.edges.iter().find(|e| e.source == "ADR-2026-03-02-001").unwrap();
+        assert!(e.resolved);
+        assert_eq!(e.target, "audits/CHARTER-13/review.md");
+    }
+
+    #[test]
+    fn test_entity_plan_resolves_by_id_and_links_wire() {
+        let adr = make_doc(
+            "ADR-2026-03-02-001-x.md",
+            DocType::Adr,
+            Frontmatter {
+                id: Some("ADR-2026-03-02-001".into()),
+                related: Some(vec!["PLAN-01".into()]),
+                ..Default::default()
+            },
+        );
+        let plan = Entity {
+            id: "PLAN-01".into(),
+            doc_type: "PLAN".into(),
+            title: "Deploy".into(),
+            status: "closed".into(),
+            path: PathBuf::from(".straymark/plans/PLAN-01.telemetry.yaml"),
+            links: Vec::new(),
+        };
+        // A charter whose originating_ailogs link wires to a real AILOG node.
+        let ailog = make_doc(
+            "AILOG-2026-05-11-043-x.md",
+            DocType::Ailog,
+            Frontmatter {
+                id: Some("AILOG-2026-05-11-043".into()),
+                ..Default::default()
+            },
+        );
+        let charter = Entity {
+            id: "CHARTER-15-auth".into(),
+            doc_type: "CHARTER".into(),
+            title: "Auth".into(),
+            status: "closed".into(),
+            path: PathBuf::from(".straymark/charters/15-auth.md"),
+            links: vec![(EdgeType::OriginatesFrom, "AILOG-2026-05-11-043".into())],
+        };
+        let docs = [&adr, &ailog];
+        let g = Graph::build_with_entities(&docs, &[plan, charter]);
+
+        let plan_edge = g.edges.iter().find(|e| e.target == "PLAN-01").unwrap();
+        assert!(plan_edge.resolved);
+        // The charter's originating_ailogs link resolved to the AILOG node.
+        let incoming: Vec<&str> = g
+            .in_edges("AILOG-2026-05-11-043")
+            .map(|e| e.source.as_str())
+            .collect();
+        assert_eq!(incoming, vec!["CHARTER-15-auth"]);
     }
 }

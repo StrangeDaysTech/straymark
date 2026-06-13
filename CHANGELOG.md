@@ -7,6 +7,31 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Loom 0.4.0 — connectivity: reference normalization + entity nodes
+
+Closes the Loom connectivity follow-ups (R1 + R2). On the Sentinel corpus, 330 of 395
+references were dangling. The fixes live in the shared `straymark-core` graph builder, so
+`straymark audit` gains the same connectivity.
+
+### Added (Loom)
+
+- Charter / plan / audit nodes (R2): `straymark-core::entities` discovers
+  `.straymark/charters/*.md`, `plans/PLAN-*.telemetry.yaml` and `audits/*/review.md`, and
+  `Graph::build_with_entities` injects them as `CHARTER` / `PLAN` / `AUDIT` nodes so
+  references to them resolve.
+
+### Changed (Loom)
+
+- Reference normalization (R1): the graph builder resolves edge targets by exact id and then
+  by unique file basename, unique relative-path suffix, `CHARTER-NN` prefix, or leading dated
+  id prefix (never an ambiguous match); resolved targets are canonicalized to the node id.
+
+Result on Sentinel: dangling references **330 → 87**, nodes **131 → 193**, orphans **2 → 0**.
+The remaining references are to files outside the governance corpus and correctly stay
+dangling. `straymark-core` → 0.4.0 (CLI dependency bumped to match).
+
+---
+
 ## Loom 0.3.0 — M3 rich UI
 
 Completes Loom M3 (`CHARTER-01-loom-server`): the analytical dashboard becomes a rich
