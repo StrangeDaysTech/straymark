@@ -73,7 +73,8 @@
   deep-links + copy-path, client-side; server stays read-only).
 - [x] T3.5 — UI i18n (`en`/`es`/`zh-CN`) driven by the project's configured language;
   resolution moved to `core::config`, served at `/api/meta`. (NFR5)
-- [ ] T3.6 — Acceptance + CHANGELOG → `0.3.0` complete; post-merge tag `loom-0.3.0`.
+- [x] T3.6 — Acceptance + CHANGELOG → `0.3.0` complete; post-merge tag `loom-0.3.0`
+  pushed and released (4-platform assets, `--latest=false`).
 
 ## Graduation (post-M3, evaluated against the Charter's criteria)
 
