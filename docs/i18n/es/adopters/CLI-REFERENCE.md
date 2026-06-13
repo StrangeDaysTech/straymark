@@ -48,7 +48,8 @@ StrayMark usa **tags de versión independientes** para cada componente:
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
 | Framework | `fw-` | `fw-4.26.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.23.1` | El binario `straymark` |
+| CLI | `cli-` | `cli-3.24.0` | El binario `straymark` |
+| Loom (EXPERIMENTAL) | `loom-` | `loom-0.1.0` | El servidor de visualización `straymark-loom`, descargado bajo demanda por `straymark loom serve` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
 
@@ -1068,6 +1069,39 @@ StrayMark CLI
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/straymark
   Website:           https://strangedays.tech
+```
+
+---
+
+### `straymark loom serve [path] [--port <puerto>] [--no-open]` *(cli-3.24.0+, EXPERIMENTAL)*
+
+Lanza **Loom**, el servidor EXPERIMENTAL de visualización del grafo de conocimiento: un dashboard web solo-loopback y solo-lectura que renderiza los documentos StrayMark del proyecto como un grafo de fuerzas en vivo (nodos coloreados por tipo de documento, dimensionados por conectividad; seleccionar un nodo ilumina todo su hilo de relaciones; las ediciones a archivos `.md` vigilados actualizan el navegador abierto en menos de un segundo).
+
+> ⚠️ **Loom es EXPERIMENTAL (v0).** Su API, superficie de CLI y su propia existencia pueden cambiar o eliminarse sin ciclo de deprecación. El binario `straymark-loom` **no** viene incluido en el CLI — se descarga bajo demanda de los releases `loom-*` de GitHub en el primer uso y se cachea en `~/.straymark/bin/`. La puerta de descarga *es* la frontera de opt-in.
+
+**Argumentos y flags:**
+
+| Argumento/Flag | Default | Descripción |
+|---|---|---|
+| `path` | `.` (directorio actual) | Directorio del proyecto. Loom vigila su subdirectorio `.straymark/` si existe; si no, el directorio mismo |
+| `--port` | `7700` | Puerto en `127.0.0.1` donde servir |
+| `--no-open` | off | No abrir el navegador automáticamente |
+
+**Postura de seguridad:** liga exclusivamente a `127.0.0.1` (rehúsa arrancar de otro modo), rechaza headers `Host` no-loopback (anti DNS-rebinding) y nunca escribe en el directorio vigilado.
+
+**Ejemplo:**
+
+```bash
+$ straymark loom serve
+
+  ⚠  LOOM IS EXPERIMENTAL (v0)
+     Unstable: API, CLI surface, and on-disk layout may change or be
+     removed without a deprecation cycle. Loopback-only. Read-only.
+
+ℹ Downloading Loom 0.1.0 (x86_64-unknown-linux-gnu) — first use is opt-in by download
+✔ Loom 0.1.0 cached at ~/.straymark/bin/straymark-loom
+loom: watching /project/.straymark (142 docs, 318 links)
+loom: serving http://127.0.0.1:7700
 ```
 
 ---

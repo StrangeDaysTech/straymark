@@ -280,6 +280,27 @@ enum Commands {
         #[command(subcommand)]
         command: FollowupsCommands,
     },
+    /// Loom — EXPERIMENTAL knowledge-graph visualization server (downloaded on demand)
+    Loom {
+        #[command(subcommand)]
+        command: LoomCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum LoomCommands {
+    /// Launch the Loom server for a project (downloads the binary on first use)
+    Serve {
+        /// Project directory (defaults to the current directory)
+        #[arg(default_value = ".")]
+        path: String,
+        /// Port on 127.0.0.1 to serve on
+        #[arg(long, default_value_t = 7700)]
+        port: u16,
+        /// Do not open the browser automatically
+        #[arg(long)]
+        no_open: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -846,6 +867,11 @@ fn main() {
             FollowupsCommands::Recount { path } => commands::followups::recount::run(&path),
             FollowupsCommands::Promote { fu_id, title, path } => {
                 commands::followups::promote::run(&path, &fu_id, title.as_deref())
+            }
+        },
+        Commands::Loom { command } => match command {
+            LoomCommands::Serve { path, port, no_open } => {
+                commands::loom::serve::run(&path, port, no_open)
             }
         },
     };

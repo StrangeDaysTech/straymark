@@ -220,7 +220,7 @@ fn perform_github_update() -> Result<()> {
 }
 
 /// Extract a binary from a tar.gz archive
-fn extract_from_tar_gz(archive: &Path, dest: &Path, binary_name: &str) -> Result<PathBuf> {
+pub(crate) fn extract_from_tar_gz(archive: &Path, dest: &Path, binary_name: &str) -> Result<PathBuf> {
     let file = std::fs::File::open(archive).context("Failed to open archive")?;
     let decoder = flate2::read::GzDecoder::new(file);
     let mut tar = tar::Archive::new(decoder);
@@ -245,7 +245,7 @@ fn extract_from_tar_gz(archive: &Path, dest: &Path, binary_name: &str) -> Result
 
 /// Extract a binary from a zip archive
 #[allow(dead_code)]
-fn extract_from_zip(archive: &Path, dest: &Path, binary_name: &str) -> Result<PathBuf> {
+pub(crate) fn extract_from_zip(archive: &Path, dest: &Path, binary_name: &str) -> Result<PathBuf> {
     let file = std::fs::File::open(archive).context("Failed to open archive")?;
     let mut zip = zip::ZipArchive::new(file).context("Failed to read ZIP archive")?;
 

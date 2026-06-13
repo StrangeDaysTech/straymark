@@ -33,13 +33,19 @@ straymark/
 │   │   └── utils.rs        # Output helpers, file hashing
 │   ├── tests/              # Integration tests
 │   └── Cargo.toml
+├── experimento/            # Loom (EXPERIMENTAL): straymark-loom server crate
+│   ├── src/                # axum server + notify watcher
+│   ├── web/                # Sigma.js + graphology frontend (Vite/TS, built in CI only)
+│   ├── specs/              # SpecKit sets (001 knowledge graph, 002 architecture plan)
+│   └── CHARTER-01-loom-server.md
 ├── dist/                   # Framework distribution files
 │   ├── .straymark/          # Templates, governance, config
 │   ├── STRAYMARK.md         # Unified governance rules
 │   └── dist-manifest.yml   # What gets installed
 ├── docs/                   # Project documentation (EN + ES + zh-CN)
 ├── .github/workflows/      # CI/CD
-│   ├── release-cli.yml     # Build + release CLI binaries
+│   ├── release-cli.yml     # Build + release CLI binaries (publishes straymark-core first)
+│   ├── release-loom.yml    # Build + release Loom binaries (loom-* tags; npm build step; no crates.io)
 │   └── release-framework.yml
 └── README.md
 ```
@@ -186,6 +192,15 @@ gh release view fw-X.Y.Z --json assets --jq '.assets[].name'
 
 Users can now run `straymark update-framework` to get the new version.
 
+## Release Workflow — Loom (EXPERIMENTAL)
+
+Loom releases are GitHub-release-only (no crates.io while experimental). Tag format: `loom-X.Y.Z`.
+
+1. Bump `version` in `experimento/Cargo.toml` and update `experimento/CHANGELOG.md`.
+2. Commit via PR (same rules as any change).
+3. `git tag loom-X.Y.Z && git push origin loom-X.Y.Z` — `release-loom.yml` verifies the version matches the tag, builds the frontend (`npm ci && npm run build` in `experimento/web/`, embedded via rust-embed), compiles the same 4-platform matrix as the CLI, and uploads `straymark-loom-vX.Y.Z-<target>.{tar.gz,zip}` assets. The release is marked `--latest=false` so CLI update flows are unaffected.
+4. Verify: `gh release view loom-X.Y.Z --json assets --jq '.assets[].name'` (4 binaries). `straymark loom serve` picks the new version automatically (version marker in `~/.straymark/bin/`).
+
 ## Git Workflow
 
 ### Rules
@@ -251,6 +266,7 @@ Users can now run `straymark update-framework` to get the new version.
 | `straymark followups promote FU-NNN` | Elevate an entry to a TDE document with `promoted_from_followup` traceability |
 | `straymark audit [path]` | Generate audit trail reports with timeline and traceability |
 | `straymark explore [path]` | Interactive TUI documentation browser |
+| `straymark loom serve [path] [--port] [--no-open]` | Launch Loom, the EXPERIMENTAL knowledge-graph visualization server (binary downloaded on demand from `loom-*` releases, cached in `~/.straymark/bin/`) |
 | `straymark about` | Show version and license info |
 
 ## Development

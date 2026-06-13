@@ -12,6 +12,7 @@ pub mod explore;
 pub mod followups;
 pub mod init;
 pub mod install_skills;
+pub mod loom;
 pub mod metrics;
 pub mod new;
 pub mod remove;
