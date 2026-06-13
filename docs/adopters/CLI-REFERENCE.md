@@ -49,7 +49,7 @@ StrayMark uses **independent version tags** for each component:
 |-----------|-----------|---------|------------------|
 | Framework | `fw-` | `fw-4.26.0` | Templates (12 types), governance docs, directives, Charter template + schema |
 | CLI | `cli-` | `cli-3.24.0` | The `straymark` binary |
-| Loom (EXPERIMENTAL) | `loom-` | `loom-0.1.0` | The `straymark-loom` visualization server, downloaded on demand by `straymark loom serve` |
+| Loom (EXPERIMENTAL) | `loom-` | `loom-0.2.0` | The `straymark-loom` visualization server, downloaded on demand by `straymark loom serve` |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
 
@@ -1385,7 +1385,7 @@ StrayMark CLI
 
 ### `straymark loom serve [path] [--port <port>] [--no-open]` *(cli-3.24.0+, EXPERIMENTAL)*
 
-Launch **Loom**, the EXPERIMENTAL knowledge-graph visualization server: a loopback-only, read-only web dashboard that renders the project's StrayMark documents as a live force-directed graph (nodes colored by document type, sized by connectivity; selecting a node lights up its whole thread of relationships; edits to watched `.md` files update the open browser in under a second).
+Launch **Loom**, the EXPERIMENTAL knowledge-graph visualization server: a loopback-only, read-only web dashboard that renders the project's StrayMark documents as a live force-directed graph (nodes colored by Louvain community and sized by connectivity; node and corpus-stat panels; server-side metadata/date filters; selecting a node lights up its whole thread of relationships; edits to watched `.md` files update the open browser in under a second).
 
 > ⚠️ **Loom is EXPERIMENTAL (v0).** Its API, CLI surface, and very existence may change or be removed without a deprecation cycle. The `straymark-loom` binary is **not** bundled into the CLI — it is downloaded on demand from the `loom-*` GitHub releases on first use and cached under `~/.straymark/bin/`. The download gate *is* the opt-in boundary.
 
@@ -1408,8 +1408,8 @@ $ straymark loom serve
      Unstable: API, CLI surface, and on-disk layout may change or be
      removed without a deprecation cycle. Loopback-only. Read-only.
 
-ℹ Downloading Loom 0.1.0 (x86_64-unknown-linux-gnu) — first use is opt-in by download
-✔ Loom 0.1.0 cached at ~/.straymark/bin/straymark-loom
+ℹ Downloading Loom 0.2.0 (x86_64-unknown-linux-gnu) — first use is opt-in by download
+✔ Loom 0.2.0 cached at ~/.straymark/bin/straymark-loom
 loom: watching /project/.straymark (142 docs, 318 links)
 loom: serving http://127.0.0.1:7700
 ```

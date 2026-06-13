@@ -1,7 +1,7 @@
 {
   "name": "straymark-loom-web",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "graphology": "^0.26.0",
+    "graphology-communities-louvain": "^2.0.2",
     "graphology-layout": "^0.6.1",
     "graphology-layout-forceatlas2": "^0.10.1",
     "sigma": "^3.0.2"
