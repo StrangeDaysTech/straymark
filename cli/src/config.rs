@@ -122,13 +122,9 @@ impl StrayMarkConfig {
     /// `straymark new`, and `straymark status` so they all agree on which
     /// language to use.
     pub fn resolve_language(project_root: &Path) -> String {
-        let config_path = project_root.join(".straymark/config.yml");
-        if config_path.exists() {
-            return Self::load(project_root)
-                .map(|c| c.language)
-                .unwrap_or_else(|_| default_language());
-        }
-        crate::utils::detect_os_locale().unwrap_or_else(default_language)
+        // Single source of truth shared with Loom: `straymark-core` owns the
+        // resolution logic (config `language` key → OS locale → "en").
+        straymark_core::config::resolve_language(project_root)
     }
 }
 

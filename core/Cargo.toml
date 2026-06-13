@@ -1,6 +1,6 @@
 [package]
 name = "straymark-core"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "Shared document model and knowledge graph for StrayMark — parses governance documents and builds their typed traceability graph"
 license = "MIT"
@@ -15,3 +15,6 @@ authors = ["Strange Days Tech, S.A.S."]
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }
 serde_yaml = "0.9"
+
+[dev-dependencies]
+tempfile = "3"

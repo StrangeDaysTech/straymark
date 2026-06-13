@@ -104,40 +104,6 @@ pub fn resolve_project_root(path: &str) -> Option<ResolvedPath> {
     None
 }
 
-/// Read `$LC_ALL` (preferred when set) or `$LANG` and map a POSIX locale
-/// string like `zh_CN.UTF-8` or `es_MX` to one of the languages StrayMark
-/// supports (`en`, `es`, `zh-CN`). Returns `None` when no env var is set
-/// or when the territory points at an unsupported variant (e.g.,
-/// Traditional Chinese in `zh_TW` / `zh_HK`). Callers fall back to `"en"`.
-pub fn detect_os_locale() -> Option<String> {
-    let raw = std::env::var("LC_ALL")
-        .ok()
-        .filter(|v| !v.is_empty())
-        .or_else(|| std::env::var("LANG").ok().filter(|v| !v.is_empty()))?;
-    parse_posix_locale(&raw)
-}
-
-/// Parse a POSIX locale string (e.g. `zh_CN.UTF-8`, `es`, `C`) and map it
-/// to a StrayMark-supported language code. Public for unit testing.
-pub fn parse_posix_locale(raw: &str) -> Option<String> {
-    // Strip charset (`.UTF-8`) and modifier (`@euro`) suffixes first.
-    let trimmed = raw.split('.').next()?.split('@').next()?;
-    if trimmed.is_empty() {
-        return None;
-    }
-    let mut parts = trimmed.splitn(2, '_');
-    let lang = parts.next()?;
-    let territory = parts.next();
-    match (lang, territory) {
-        ("zh", Some("CN")) | ("zh", Some("SG")) | ("zh", None) => Some("zh-CN".to_string()),
-        // Traditional Chinese (TW / HK / MO) — StrayMark only ships zh-CN.
-        ("zh", _) => None,
-        ("es", _) => Some("es".to_string()),
-        ("en", _) | ("C", _) | ("POSIX", _) => Some("en".to_string()),
-        _ => None,
-    }
-}
-
 /// Resolve `<dir>/<filename>` honoring an optional translation under
 /// `<dir>/i18n/<lang>/<filename>`. When `lang` is `"en"` (or any value where
 /// the localized variant is absent), returns the root path unchanged. This is
@@ -323,54 +289,6 @@ mod tests {
 
         let resolved = resolve_localized_path(dir, "FOO.md", "zh-CN");
         assert_eq!(resolved, dir.join("FOO.md"));
-    }
-
-    #[test]
-    fn parse_posix_locale_zh_cn() {
-        assert_eq!(parse_posix_locale("zh_CN.UTF-8"), Some("zh-CN".into()));
-        assert_eq!(parse_posix_locale("zh_CN"), Some("zh-CN".into()));
-        assert_eq!(parse_posix_locale("zh_SG.UTF-8"), Some("zh-CN".into()));
-        // Bare "zh" with no territory: assume Simplified.
-        assert_eq!(parse_posix_locale("zh"), Some("zh-CN".into()));
-    }
-
-    #[test]
-    fn parse_posix_locale_traditional_chinese_unsupported() {
-        // We don't ship Traditional translations — those should fall back
-        // through to "en" via the caller's None handling, not silently
-        // claim Simplified.
-        assert_eq!(parse_posix_locale("zh_TW.UTF-8"), None);
-        assert_eq!(parse_posix_locale("zh_HK.UTF-8"), None);
-    }
-
-    #[test]
-    fn parse_posix_locale_spanish_any_territory() {
-        assert_eq!(parse_posix_locale("es_MX.UTF-8"), Some("es".into()));
-        assert_eq!(parse_posix_locale("es_ES"), Some("es".into()));
-        assert_eq!(parse_posix_locale("es_AR.UTF-8"), Some("es".into()));
-    }
-
-    #[test]
-    fn parse_posix_locale_english_and_pseudo() {
-        assert_eq!(parse_posix_locale("en_US.UTF-8"), Some("en".into()));
-        assert_eq!(parse_posix_locale("en"), Some("en".into()));
-        assert_eq!(parse_posix_locale("C"), Some("en".into()));
-        assert_eq!(parse_posix_locale("POSIX"), Some("en".into()));
-    }
-
-    #[test]
-    fn parse_posix_locale_unsupported_returns_none() {
-        // French isn't translated yet; caller must fall back to "en".
-        assert_eq!(parse_posix_locale("fr_FR.UTF-8"), None);
-        assert_eq!(parse_posix_locale("ja_JP.UTF-8"), None);
-        assert_eq!(parse_posix_locale(""), None);
-    }
-
-    #[test]
-    fn parse_posix_locale_strips_charset_and_modifier() {
-        // `@modifier` after the charset (or before it) appears in some
-        // locales; we strip whatever follows the first `@` or `.`.
-        assert_eq!(parse_posix_locale("es_ES@euro"), Some("es".into()));
     }
 
     #[test]

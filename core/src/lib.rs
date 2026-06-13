@@ -5,5 +5,6 @@
 //! exactly the same code: one parser, structurally no drift
 //! (`ADR-2026-06-02-001`).
 
+pub mod config;
 pub mod document;
 pub mod graph;

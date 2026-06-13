@@ -260,7 +260,7 @@ StrayMark 为每个组件使用独立的版本标签：
 |------|----------|------|----------|
 | Framework | `fw-` | `fw-4.26.0` | 模板（12 种类型）、治理文档、指令、Charter 模板 + schema |
 | CLI | `cli-` | `cli-3.24.0` | `straymark` 二进制文件 |
-| Loom（实验性） | `loom-` | `loom-0.2.0` | `straymark-loom` 可视化服务器，由 `straymark loom serve` 按需下载 |
+| Loom（实验性） | `loom-` | `loom-0.3.0` | `straymark-loom` 可视化服务器，由 `straymark loom serve` 按需下载 |
 
 使用 `straymark status` 或 `straymark about` 查看已安装的版本。
 

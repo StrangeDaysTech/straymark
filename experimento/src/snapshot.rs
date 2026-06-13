@@ -2,16 +2,31 @@
 //! serializable API view (Spec 001 §3–§4). Rebuilt on every settled
 //! filesystem change.
 
-use std::collections::BTreeMap;
-use std::path::Path;
+use std::collections::{BTreeMap, HashMap, HashSet};
+use std::path::{Path, PathBuf};
+use std::time::SystemTime;
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use straymark_core::document::{discover_documents, parse_document, StrayMarkDocument};
-use straymark_core::graph::{Edge, Graph, Node};
+use straymark_core::graph::{cycles_in, Cycle, Edge, Graph, Node};
 
 /// How much of a document body `/api/node/:id` returns.
 const EXCERPT_CHARS: usize = 600;
+
+/// Parsed-document cache keyed by path, used to make rebuilds incremental
+/// (Spec 001 NFR2 / T3.1): on a filesystem change only changed files are
+/// re-parsed; unchanged files reuse their cached parse. The graph itself is
+/// still rebuilt in full from the (mostly cached) document set — that is
+/// in-memory and cheap; file IO + frontmatter parsing is the real cost
+/// (plan.md §8 R2).
+pub type ParseCache = BTreeMap<PathBuf, CachedDoc>;
+
+/// A parsed document plus the modification time it was parsed at.
+pub struct CachedDoc {
+    mtime: Option<SystemTime>,
+    doc: StrayMarkDocument,
+}
 
 /// An edge as served by the API: the core edge plus its stable index id
 /// (thread highlighting addresses edges by this id).
@@ -33,6 +48,8 @@ pub struct Stats {
     pub by_risk: BTreeMap<String, usize>,
     pub orphans: Vec<String>,
     pub dangling_references: Vec<ApiEdge>,
+    /// Dependency cycles over the resolved semantic edges (T3.2, spec §3.3).
+    pub cycles: Vec<Cycle>,
 }
 
 /// What `/api/graph` returns (and what `rebuild` events push over the WS).
@@ -40,6 +57,24 @@ pub struct Stats {
 pub struct ApiGraph {
     pub nodes: Vec<Node>,
     pub edges: Vec<ApiEdge>,
+    pub stats: Stats,
+}
+
+/// An incremental update pushed over the WS (`delta` event, T3.1). Nodes are
+/// patched in place so the client preserves layout positions for unchanged
+/// documents; edges are sent in full (cheap to redraw, and edge ids are
+/// positional so a wholesale replace is the robust choice).
+#[derive(Debug, Clone, Serialize)]
+pub struct GraphDelta {
+    /// Documents new since the previous snapshot.
+    pub added: Vec<Node>,
+    /// Ids of documents removed since the previous snapshot.
+    pub removed: Vec<String>,
+    /// Documents whose metadata changed (same id, different fields).
+    pub changed: Vec<Node>,
+    /// The complete new edge set.
+    pub edges: Vec<ApiEdge>,
+    /// The recomputed corpus stats.
     pub stats: Stats,
 }
 
@@ -126,6 +161,39 @@ impl ApiGraph {
             stats,
         }
     }
+
+    /// Diff this (new) graph against a previous one, producing the incremental
+    /// `delta` payload (T3.1). Nodes are compared by id; a node present in both
+    /// but with different fields is `changed`. Edges are carried in full.
+    pub fn diff(&self, prev: &ApiGraph) -> GraphDelta {
+        let prev_by_id: HashMap<&str, &Node> =
+            prev.nodes.iter().map(|n| (n.id.as_str(), n)).collect();
+        let cur_ids: HashSet<&str> = self.nodes.iter().map(|n| n.id.as_str()).collect();
+
+        let mut added = Vec::new();
+        let mut changed = Vec::new();
+        for node in &self.nodes {
+            match prev_by_id.get(node.id.as_str()) {
+                None => added.push(node.clone()),
+                Some(prev_node) if *prev_node != node => changed.push(node.clone()),
+                Some(_) => {}
+            }
+        }
+        let removed: Vec<String> = prev
+            .nodes
+            .iter()
+            .filter(|n| !cur_ids.contains(n.id.as_str()))
+            .map(|n| n.id.clone())
+            .collect();
+
+        GraphDelta {
+            added,
+            removed,
+            changed,
+            edges: self.edges.clone(),
+            stats: self.stats.clone(),
+        }
+    }
 }
 
 /// One rebuilt view of the corpus.
@@ -141,21 +209,52 @@ pub struct Snapshot {
 }
 
 impl Snapshot {
-    /// Discover, parse, and build — the same code path as the CLI (FR1/NFR1).
+    /// Cold build (test helper): parses every document. Production always goes
+    /// through [`Snapshot::build_cached`] with a persistent cache.
+    #[cfg(test)]
     pub fn build(watch_dir: &Path) -> Result<Snapshot> {
+        let mut cache = ParseCache::new();
+        Snapshot::build_cached(watch_dir, &mut cache)
+    }
+
+    /// Incremental build (T3.1/NFR2): re-parse only files whose modification
+    /// time changed since they were last cached; reuse the cached parse for
+    /// the rest. The graph is still rebuilt in full from the resulting
+    /// document set (cheap, in-memory). Unparseable files are skipped, never
+    /// fatal — a half-saved document must not take the dashboard down mid-edit.
+    pub fn build_cached(watch_dir: &Path, cache: &mut ParseCache) -> Result<Snapshot> {
         let paths = discover_documents(watch_dir);
-        // Unparseable files are skipped, never fatal: a half-saved document
-        // must not take the dashboard down mid-edit.
-        let docs: Vec<StrayMarkDocument> = paths
-            .iter()
-            .filter_map(|p| parse_document(p).ok())
-            .collect();
-        let doc_refs: Vec<&StrayMarkDocument> = docs.iter().collect();
+        let present: HashSet<&Path> = paths.iter().map(|p| p.as_path()).collect();
+        // Forget files that no longer exist.
+        cache.retain(|p, _| present.contains(p.as_path()));
+
+        for path in &paths {
+            let mtime = std::fs::metadata(path).and_then(|m| m.modified()).ok();
+            let needs_parse = match cache.get(path) {
+                Some(cached) => mtime.is_none() || cached.mtime != mtime,
+                None => true,
+            };
+            if needs_parse {
+                match parse_document(path) {
+                    Ok(doc) => {
+                        cache.insert(path.clone(), CachedDoc { mtime, doc });
+                    }
+                    // Drop any stale entry so a later valid save is picked up.
+                    Err(_) => {
+                        cache.remove(path);
+                    }
+                }
+            }
+        }
+
+        // Build from the cached docs, in discovery order.
+        let doc_refs: Vec<&StrayMarkDocument> =
+            paths.iter().filter_map(|p| cache.get(p).map(|c| &c.doc)).collect();
         let graph = Graph::build(&doc_refs);
 
         let mut excerpts = BTreeMap::new();
         let mut excerpt_truncated = BTreeMap::new();
-        for (node, doc) in graph.nodes.iter().zip(docs.iter()) {
+        for (node, doc) in graph.nodes.iter().zip(doc_refs.iter()) {
             let body = doc.body.trim();
             let excerpt: String = body.chars().take(EXCERPT_CHARS).collect();
             excerpts.insert(node.id.clone(), excerpt);
@@ -171,9 +270,21 @@ impl Snapshot {
         })
     }
 
-    /// The serialized WS rebuild event.
+    /// The serialized WS `rebuild` event (full snapshot — sent on initial
+    /// connect).
     pub fn rebuild_event(&self) -> String {
         serde_json::json!({ "event": "rebuild", "graph": &self.api }).to_string()
+    }
+
+    /// The serialized WS `delta` event: this snapshot's graph diffed against
+    /// `prev` (T3.1). Sent on settled filesystem changes so open clients patch
+    /// rather than re-layout.
+    pub fn delta_event(&self, prev: &ApiGraph) -> String {
+        let mut value = serde_json::to_value(self.api.diff(prev)).unwrap_or_default();
+        if let Some(obj) = value.as_object_mut() {
+            obj.insert("event".into(), serde_json::json!("delta"));
+        }
+        value.to_string()
     }
 }
 
@@ -207,6 +318,9 @@ fn build_stats(nodes: &[Node], edges: &[ApiEdge]) -> Stats {
         *by_risk.entry(node.risk_level.clone()).or_insert(0) += 1;
     }
 
+    let node_ids: Vec<String> = nodes.iter().map(|n| n.id.clone()).collect();
+    let raw_edges: Vec<Edge> = edges.iter().map(|e| e.edge.clone()).collect();
+
     Stats {
         total_docs: nodes.len(),
         total_edges: edges.len(),
@@ -219,6 +333,7 @@ fn build_stats(nodes: &[Node], edges: &[ApiEdge]) -> Stats {
             .map(|node| node.id.clone())
             .collect(),
         dangling_references: edges.iter().filter(|e| !e.edge.resolved).cloned().collect(),
+        cycles: cycles_in(&node_ids, &raw_edges),
     }
 }
 
@@ -339,6 +454,94 @@ mod tests {
         assert!(filtered.edges.is_empty());
         assert_eq!(filtered.stats.by_type.get("ADR"), Some(&1));
         assert_eq!(filtered.stats.total_docs, 1);
+    }
+
+    #[test]
+    fn test_build_cached_matches_cold_build_and_reuses_parses() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        write(
+            &root.join("REQ-2026-03-01-001-login.md"),
+            "---\nid: REQ-1\ntitle: Login\nrelated: [ADR-1]\n---\nbody\n",
+        );
+        write(
+            &root.join("ADR-2026-03-02-001-jwt.md"),
+            "---\nid: ADR-1\ntitle: JWT\n---\nbody\n",
+        );
+
+        let cold = Snapshot::build(root).unwrap();
+        let mut cache = ParseCache::new();
+        let warm = Snapshot::build_cached(root, &mut cache).unwrap();
+        assert_eq!(cache.len(), 2);
+        // Same nodes/edges as the cold build.
+        assert_eq!(warm.api.nodes.len(), cold.api.nodes.len());
+        assert_eq!(warm.api.edges.len(), cold.api.edges.len());
+
+        // A second build with the unchanged cache yields the same graph and a
+        // cache of the same size (reuse, no growth).
+        let again = Snapshot::build_cached(root, &mut cache).unwrap();
+        assert_eq!(cache.len(), 2);
+        assert_eq!(again.api.stats.total_docs, 2);
+
+        // Removing a file drops it from the cache on the next build.
+        std::fs::remove_file(root.join("ADR-2026-03-02-001-jwt.md")).unwrap();
+        let shrunk = Snapshot::build_cached(root, &mut cache).unwrap();
+        assert_eq!(cache.len(), 1);
+        assert_eq!(shrunk.api.stats.total_docs, 1);
+    }
+
+    #[test]
+    fn test_diff_detects_added_removed_changed() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        write(
+            &root.join("REQ-2026-03-01-001-login.md"),
+            "---\nid: REQ-1\ntitle: Login\nstatus: draft\n---\nbody\n",
+        );
+        write(
+            &root.join("ADR-2026-03-02-001-jwt.md"),
+            "---\nid: ADR-1\ntitle: JWT\n---\nbody\n",
+        );
+        let prev = Snapshot::build(root).unwrap();
+
+        // Change REQ-1's status, remove ADR-1, add a new TDE.
+        write(
+            &root.join("REQ-2026-03-01-001-login.md"),
+            "---\nid: REQ-1\ntitle: Login\nstatus: approved\n---\nbody\n",
+        );
+        std::fs::remove_file(root.join("ADR-2026-03-02-001-jwt.md")).unwrap();
+        write(
+            &root.join("TDE-2026-04-01-001-debt.md"),
+            "---\nid: TDE-1\ntitle: Debt\n---\nbody\n",
+        );
+        let next = Snapshot::build(root).unwrap();
+
+        let delta = next.api.diff(&prev.api);
+        assert_eq!(delta.added.iter().map(|n| n.id.as_str()).collect::<Vec<_>>(), vec!["TDE-1"]);
+        assert_eq!(delta.removed, vec!["ADR-1"]);
+        assert_eq!(delta.changed.iter().map(|n| n.id.as_str()).collect::<Vec<_>>(), vec!["REQ-1"]);
+
+        // The delta event is valid JSON tagged `delta`.
+        let event: serde_json::Value = serde_json::from_str(&next.delta_event(&prev.api)).unwrap();
+        assert_eq!(event["event"], "delta");
+        assert_eq!(event["removed"][0], "ADR-1");
+    }
+
+    #[test]
+    fn test_stats_report_supersession_cycle() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        write(
+            &root.join("ADR-2026-03-01-001-a.md"),
+            "---\nid: ADR-A\ntitle: A\nsupersedes: [ADR-B]\n---\nbody\n",
+        );
+        write(
+            &root.join("ADR-2026-03-02-001-b.md"),
+            "---\nid: ADR-B\ntitle: B\nsupersedes: [ADR-A]\n---\nbody\n",
+        );
+        let snap = Snapshot::build(root).unwrap();
+        assert_eq!(snap.api.stats.cycles.len(), 1);
+        assert_eq!(snap.api.stats.cycles[0].node_ids, vec!["ADR-A", "ADR-B"]);
     }
 
     #[test]

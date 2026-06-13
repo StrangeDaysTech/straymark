@@ -18,7 +18,7 @@ use colored::Colorize;
 use tokio::sync::broadcast;
 
 use server::AppState;
-use snapshot::Snapshot;
+use snapshot::{ParseCache, Snapshot};
 
 #[derive(Parser)]
 #[command(
@@ -43,23 +43,37 @@ struct Args {
     assets_dir: Option<PathBuf>,
 }
 
-/// `.straymark/` when the project has one, else the directory itself
-/// (this source repo dogfoods on `docs/` & co. without a root install).
-fn resolve_watch_dir(path: &str) -> Result<PathBuf> {
+/// Returns `(project_root, watch_dir)`. The watch dir is `.straymark/` when the
+/// project has one, else the directory itself (this source repo dogfoods on
+/// `docs/` & co. without a root install). The project root is the directory
+/// that may hold `.straymark/config.yml` (for the UI language).
+fn resolve_paths(path: &str) -> Result<(PathBuf, PathBuf)> {
     let base = PathBuf::from(path)
         .canonicalize()
         .with_context(|| format!("cannot resolve project path {path}"))?;
     let straymark = base.join(".straymark");
-    Ok(if straymark.is_dir() { straymark } else { base })
+    let watch_dir = if straymark.is_dir() {
+        straymark
+    } else {
+        base.clone()
+    };
+    Ok((base, watch_dir))
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
-    let watch_dir = resolve_watch_dir(&args.path)?;
+    let (project_root, watch_dir) = resolve_paths(&args.path)?;
 
+    // The project's configured UI language, resolved by the shared core logic
+    // (same as `straymark explore`) so Loom's UI matches the CLI (T3.5/NFR5).
+    let locale = straymark_core::config::resolve_language(&project_root);
+
+    // Warm parse cache: the initial build seeds it so the first edit is
+    // already incremental (T3.1).
+    let mut cache = ParseCache::new();
     let initial = Arc::new(
-        Snapshot::build(&watch_dir)
+        Snapshot::build_cached(&watch_dir, &mut cache)
             .with_context(|| format!("initial graph build failed for {}", watch_dir.display()))?,
     );
     let doc_count = initial.api.stats.total_docs;
@@ -69,13 +83,14 @@ async fn main() -> Result<()> {
     let (events, _) = broadcast::channel::<String>(16);
 
     // Keep the handle alive for the lifetime of the server (drop = unwatch).
-    let _debouncer = watcher::watch(&watch_dir, snapshot.clone(), events.clone())
+    let _debouncer = watcher::watch(&watch_dir, snapshot.clone(), events.clone(), cache)
         .context("failed to start the filesystem watcher")?;
 
     let state = AppState {
         snapshot,
         events,
         assets_dir: args.assets_dir,
+        locale,
     };
 
     // FR7: loopback bind only. If 127.0.0.1 cannot be bound, refuse to start —

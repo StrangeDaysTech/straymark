@@ -7,6 +7,30 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Loom 0.3.0 — M3 rich UI
+
+Completes Loom M3 (`CHARTER-01-loom-server`): the analytical dashboard becomes a rich
+exploration tool while remaining loopback-only and read-only.
+
+### Added (Loom)
+
+- Incremental rebuild with WebSocket `delta` events: a parse cache re-parses only changed
+  files and the SPA patches the graph in place, preserving layout for unchanged documents.
+- Dependency-cycle (SCC) reporting over the resolved semantic edges (`SUPERSEDES`,
+  `ORIGINATES_FROM`), surfaced in `/api/stats` and the stats panel.
+- Centrality-based node sizing with a selector (Betweenness — default, PageRank, Degree).
+- Search with camera focus, "Pin subgraph" to isolate a thread, and VS Code / Cursor
+  deep-links plus copy-path in the node panel (client-side; the server stays read-only).
+- UI internationalization (`en` / `es` / `zh-CN`) driven by the project's configured
+  language, served at the new `GET /api/meta` endpoint.
+
+### Changed (Loom)
+
+- Project language resolution moved into `straymark-core` (`core::config`); the CLI now
+  delegates to it, so the CLI and Loom share one source of truth (`straymark-core` → 0.3.0).
+
+---
+
 ## Loom 0.2.0 — M2 analytics and panels
 
 Completes Loom M2 (`CHARTER-01-loom-server`): the walking skeleton becomes an analytical
