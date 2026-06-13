@@ -114,6 +114,68 @@ fn edge_sources(
     .filter_map(|(et, list)| list.map(|l| (et, l)))
 }
 
+/// Resolve an edge target to a node index (R1 — reference normalization).
+/// Tries, in order: the exact `id`; the document's file **basename** (with or
+/// without a trailing `.md`); and the leading StrayMark dated **id prefix**
+/// extracted from the basename. The filename fallbacks resolve only when the
+/// match is **unique** (`by_filename` stores `None` for shared basenames), so a
+/// reference is never wired to the wrong document. Returns `None` (→ a dangling
+/// reference) when nothing matches.
+fn resolve_target(
+    raw: &str,
+    node_index: &HashMap<String, usize>,
+    by_filename: &HashMap<String, Option<usize>>,
+) -> Option<usize> {
+    // a) Exact id (the common, canonical case).
+    if let Some(&i) = node_index.get(raw) {
+        return Some(i);
+    }
+    // b) By file basename, tolerating a missing `.md` extension.
+    let base = raw.rsplit(['/', '\\']).next().unwrap_or(raw);
+    if let Some(Some(i)) = by_filename.get(base) {
+        return Some(*i);
+    }
+    if let Some(Some(i)) = by_filename.get(&format!("{base}.md")) {
+        return Some(*i);
+    }
+    // c) By the leading dated id prefix (`TYPE-YYYY-MM-DD-NNN`) of the basename,
+    //    e.g. `AILOG-2026-05-07-041-some-slug.md` → id `AILOG-2026-05-07-041`.
+    if let Some(id) = leading_id(base) {
+        if let Some(&i) = node_index.get(id) {
+            return Some(i);
+        }
+    }
+    None
+}
+
+/// If `base` starts with a StrayMark dated id (`TYPE-YYYY-MM-DD-NNN`: ASCII
+/// uppercase type, then 4-2-2-3 digit groups separated by `-`), return that
+/// prefix slice; otherwise `None`. Hand-rolled (core has no regex dependency).
+fn leading_id(base: &str) -> Option<&str> {
+    let bytes = base.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() && bytes[i].is_ascii_uppercase() {
+        i += 1;
+    }
+    if i == 0 {
+        return None; // no TYPE segment
+    }
+    for &len in &[4usize, 2, 2, 3] {
+        if i >= bytes.len() || bytes[i] != b'-' {
+            return None;
+        }
+        i += 1;
+        let start = i;
+        while i < bytes.len() && bytes[i].is_ascii_digit() {
+            i += 1;
+        }
+        if i - start != len {
+            return None;
+        }
+    }
+    Some(&base[..i])
+}
+
 impl Graph {
     /// Build the graph from parsed documents. Never drops a node or an edge:
     /// orphan documents become isolated nodes; references to ids absent from
@@ -158,16 +220,40 @@ impl Graph {
             graph.in_edges.push(Vec::new());
         }
 
+        // Fallback index for references written by file basename/path instead
+        // of by id (R1). A basename shared by more than one document maps to
+        // `None`, so it never resolves to the wrong node.
+        let mut by_filename: HashMap<String, Option<usize>> = HashMap::new();
+        for (idx, doc) in docs.iter().enumerate() {
+            let base = doc
+                .path
+                .file_name()
+                .and_then(|s| s.to_str())
+                .unwrap_or(doc.filename.as_str())
+                .to_string();
+            by_filename
+                .entry(base)
+                .and_modify(|slot| *slot = None)
+                .or_insert(Some(idx));
+        }
+
         // Pass 2 — typed edges, in declaration order.
         for (source_idx, doc) in docs.iter().enumerate() {
             let source_id = graph.nodes[source_idx].id.clone();
             for (edge_type, targets) in edge_sources(doc) {
                 for target in targets {
-                    let target_idx = graph.node_index.get(target.as_str()).copied();
+                    let target_idx = resolve_target(target, &graph.node_index, &by_filename);
+                    // Canonicalize the stored target to the resolved node's id
+                    // so a reference written by filename/path points at the real
+                    // node (the UI, audit, threads and cycles all key on id).
+                    let target_str = match target_idx {
+                        Some(t) => graph.nodes[t].id.clone(),
+                        None => target.clone(),
+                    };
                     let edge_idx = graph.edges.len();
                     graph.edges.push(Edge {
                         source: source_id.clone(),
-                        target: target.clone(),
+                        target: target_str,
                         edge_type,
                         resolved: target_idx.is_some(),
                     });
@@ -849,5 +935,104 @@ mod tests {
         let docs = [&a];
         let g = Graph::build(&docs);
         assert!(g.cycles().is_empty());
+    }
+
+    #[test]
+    fn test_resolve_reference_by_filename() {
+        // REQ references the ADR by its FILE NAME, not its id (R1).
+        let req = make_doc(
+            "REQ-2026-03-01-001-login.md",
+            DocType::Req,
+            Frontmatter {
+                id: Some("REQ-2026-03-01-001".into()),
+                related: Some(vec!["ADR-2026-03-02-001-jwt.md".into()]),
+                ..Default::default()
+            },
+        );
+        let adr = make_doc(
+            "ADR-2026-03-02-001-jwt.md",
+            DocType::Adr,
+            Frontmatter {
+                id: Some("ADR-2026-03-02-001".into()),
+                ..Default::default()
+            },
+        );
+        let docs = [&req, &adr];
+        let g = Graph::build(&docs);
+
+        assert_eq!(g.edges.len(), 1);
+        assert!(g.edges[0].resolved);
+        // The stored target is canonicalized to the node's id.
+        assert_eq!(g.edges[0].target, "ADR-2026-03-02-001");
+        assert_eq!(g.dangling_edges().count(), 0);
+        // Bidirectional adjacency is wired as for any resolved edge.
+        let incoming: Vec<&str> = g
+            .in_edges("ADR-2026-03-02-001")
+            .map(|e| e.source.as_str())
+            .collect();
+        assert_eq!(incoming, vec!["REQ-2026-03-01-001"]);
+    }
+
+    #[test]
+    fn test_resolve_reference_by_id_prefix() {
+        // The reference uses a different descriptive slug than the actual file,
+        // but the leading dated id matches → resolves by id prefix (R1).
+        let ailog = make_doc(
+            "AILOG-2026-05-07-041-real-slug.md",
+            DocType::Ailog,
+            Frontmatter {
+                id: Some("AILOG-2026-05-07-041".into()),
+                ..Default::default()
+            },
+        );
+        let adr = make_doc(
+            "ADR-2026-05-08-001-x.md",
+            DocType::Adr,
+            Frontmatter {
+                id: Some("ADR-2026-05-08-001".into()),
+                related: Some(vec!["AILOG-2026-05-07-041-some-other-slug.md".into()]),
+                ..Default::default()
+            },
+        );
+        let docs = [&ailog, &adr];
+        let g = Graph::build(&docs);
+        let e = g.edges.iter().find(|e| e.source == "ADR-2026-05-08-001").unwrap();
+        assert!(e.resolved);
+        assert_eq!(e.target, "AILOG-2026-05-07-041");
+    }
+
+    #[test]
+    fn test_ambiguous_filename_stays_dangling() {
+        // Two documents share the same basename → a reference by that basename
+        // must NOT be resolved (could be either; never guess).
+        let a = make_doc(
+            "review.md",
+            DocType::Ailog,
+            Frontmatter {
+                id: Some("A-1".into()),
+                ..Default::default()
+            },
+        );
+        let b = make_doc(
+            "review.md",
+            DocType::Ailog,
+            Frontmatter {
+                id: Some("B-1".into()),
+                ..Default::default()
+            },
+        );
+        let c = make_doc(
+            "REQ-2026-03-01-001-x.md",
+            DocType::Req,
+            Frontmatter {
+                id: Some("REQ-2026-03-01-001".into()),
+                related: Some(vec!["review.md".into()]),
+                ..Default::default()
+            },
+        );
+        let docs = [&a, &b, &c];
+        let g = Graph::build(&docs);
+        let e = g.edges.iter().find(|e| e.source == "REQ-2026-03-01-001").unwrap();
+        assert!(!e.resolved);
     }
 }
