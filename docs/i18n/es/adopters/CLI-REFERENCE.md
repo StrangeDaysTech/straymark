@@ -49,7 +49,7 @@ StrayMark usa **tags de versión independientes** para cada componente:
 |------------|---------------|---------|-------------|
 | Framework | `fw-` | `fw-4.26.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
 | CLI | `cli-` | `cli-3.24.0` | El binario `straymark` |
-| Loom (EXPERIMENTAL) | `loom-` | `loom-0.3.0` | El servidor de visualización `straymark-loom`, descargado bajo demanda por `straymark loom serve` |
+| Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.0` | El servidor de visualización `straymark-loom`, descargado bajo demanda por `straymark loom serve` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
 
@@ -1098,8 +1098,8 @@ $ straymark loom serve
      Unstable: API, CLI surface, and on-disk layout may change or be
      removed without a deprecation cycle. Loopback-only. Read-only.
 
-ℹ Downloading Loom 0.3.0 (x86_64-unknown-linux-gnu) — first use is opt-in by download
-✔ Loom 0.3.0 cached at ~/.straymark/bin/straymark-loom
+ℹ Downloading Loom 0.4.0 (x86_64-unknown-linux-gnu) — first use is opt-in by download
+✔ Loom 0.4.0 cached at ~/.straymark/bin/straymark-loom
 loom: watching /project/.straymark (142 docs, 318 links)
 loom: serving http://127.0.0.1:7700
 ```

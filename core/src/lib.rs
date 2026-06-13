@@ -7,4 +7,5 @@
 
 pub mod config;
 pub mod document;
+pub mod entities;
 pub mod graph;
