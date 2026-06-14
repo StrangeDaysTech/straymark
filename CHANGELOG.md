@@ -7,6 +7,24 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Loom 0.4.2 — R3: legibility at 100+ nodes
+
+### Added (Loom)
+
+- "Hide isolated" header toggle: hides nodes with no resolved edges (singletons, orphans) so
+  the connected graph stands out; shows the hidden count.
+- "Labels" header toggle: turn node labels off for a pure-structure view.
+- On-screen zoom / fit-to-view controls (bottom-right) for precise navigation; trackpad/wheel
+  pinch zoom is also gentler (lower `zoomingRatio`).
+
+### Changed (Loom)
+
+- Node-label density is capped so 100+ node graphs stay legible — only the most prominent node
+  per screen region is labeled (centrality sizing keeps these meaningful), zooming reveals
+  more, and the hovered/selected node always shows its full label.
+
+---
+
 ## Loom 0.4.1 — fix: panel click responsiveness under filesystem churn
 
 ### Fixed (Loom)
