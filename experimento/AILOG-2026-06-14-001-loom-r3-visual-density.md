@@ -40,6 +40,10 @@ and **isolated nodes cluttering the canvas**. Frontend-only; ships as `loom-0.4.
    consideration. The toggle shows the hidden count.
 4. **i18n** for the two controls (`view.labels`, `view.hideIsolated`) in en/es/zh-CN; listeners
    wired once (consistent with the 0.4.1 delegation fix).
+5. **On-screen zoom / fit controls** (bottom-right): zoom-in / zoom-out (`camera.animatedZoom`
+   /`animatedUnzoom` with an explicit step) and fit-to-view (`animatedReset`). Also lowered the
+   wheel/pinch `zoomingRatio` (1.7 → 1.4) — operator feedback that trackpad pinch zoom felt
+   over-accelerated on a multitouch (Magic Trackpad) device. i18n tooltips `zoom.in/out/reset`.
 
 ## Decisions Made
 

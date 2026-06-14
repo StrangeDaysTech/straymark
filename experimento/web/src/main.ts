@@ -133,6 +133,9 @@ const labelsLabelEl = document.getElementById('labels-label')!;
 const isolatedLabelEl = document.getElementById('isolated-label')!;
 const pinbarEl = document.getElementById('pinbar')!;
 const pinLabelEl = document.getElementById('pin-label')!;
+const zoomInEl = document.getElementById('zoom-in')!;
+const zoomOutEl = document.getElementById('zoom-out')!;
+const zoomResetEl = document.getElementById('zoom-reset')!;
 
 function drawDarkNodeHover(
   context: CanvasRenderingContext2D,
@@ -162,6 +165,10 @@ function drawDarkNodeHover(
 
 const renderer = new Sigma(graph, container, {
   defaultEdgeColor: '#3a3f4d',
+  // Gentler wheel/trackpad-pinch zoom (Sigma default is 1.7, which feels
+  // over-accelerated on a multitouch trackpad). The on-screen buttons use their
+  // own explicit step, so they stay snappy regardless.
+  zoomingRatio: 1.4,
   labelColor: { color: '#d6d9e0' },
   labelFont: 'system-ui',
   labelSize: 12,
@@ -707,6 +714,10 @@ function applyStaticI18n(): void {
   document.getElementById('filter-clear')!.textContent = t('filter.clear');
   document.getElementById('pin-clear')!.textContent = t('pin.unpin');
   labelsLabelEl.textContent = t('view.labels');
+  for (const [el, key] of [[zoomInEl, 'zoom.in'], [zoomOutEl, 'zoom.out'], [zoomResetEl, 'zoom.reset']] as const) {
+    el.title = t(key);
+    el.setAttribute('aria-label', t(key));
+  }
   updateViewControls();
   statusEl.textContent = t('status.connecting');
 }
@@ -783,6 +794,18 @@ document.getElementById('pin-clear')!.addEventListener('click', () => {
   pinned = null;
   updatePinbar();
   renderer.refresh();
+});
+
+// On-screen zoom / center controls — precise alternative to trackpad pinch.
+const ZOOM_STEP = 1.6;
+zoomInEl.addEventListener('click', () => {
+  void renderer.getCamera().animatedZoom({ duration: 250, factor: ZOOM_STEP });
+});
+zoomOutEl.addEventListener('click', () => {
+  void renderer.getCamera().animatedUnzoom({ duration: 250, factor: ZOOM_STEP });
+});
+zoomResetEl.addEventListener('click', () => {
+  void renderer.getCamera().animatedReset({ duration: 350 });
 });
 
 function connect(): void {

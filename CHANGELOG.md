@@ -14,6 +14,8 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 - "Hide isolated" header toggle: hides nodes with no resolved edges (singletons, orphans) so
   the connected graph stands out; shows the hidden count.
 - "Labels" header toggle: turn node labels off for a pure-structure view.
+- On-screen zoom / fit-to-view controls (bottom-right) for precise navigation; trackpad/wheel
+  pinch zoom is also gentler (lower `zoomingRatio`).
 
 ### Changed (Loom)
 

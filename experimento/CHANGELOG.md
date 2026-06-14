@@ -27,6 +27,9 @@ project adheres to [Semantic Versioning](https://semver.org/).
 - **"Hide isolated" toggle** (header): hides nodes with no resolved edges (singletons,
   orphans) so the connected graph stands out; shows the hidden count.
 - **"Labels" toggle** (header): turn node labels off for a pure-structure view, on to restore.
+- **On-screen zoom / fit controls** (bottom-right): zoom in, zoom out, and fit-to-view buttons
+  for precise navigation. Trackpad/wheel pinch zoom is also gentler (lower `zoomingRatio`),
+  which felt over-accelerated on multitouch trackpads.
 
 ### Changed
 
