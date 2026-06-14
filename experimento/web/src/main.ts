@@ -112,6 +112,9 @@ let hovered: string | null = null;
 let focusedCommunity: number | null = null;
 let pinned: Set<string> | null = null;
 let sizingMode: SizingMode = 'betweenness';
+let showLabels = true;
+let hideIsolated = false;
+let isolated = new Set<string>();
 const openStatsSections = new Set<string>();
 
 const container = document.getElementById('graph')!;
@@ -124,6 +127,10 @@ const filterForm = document.getElementById('filters') as HTMLFormElement;
 const searchEl = document.getElementById('search') as HTMLInputElement;
 const searchResultsEl = document.getElementById('search-results')!;
 const sizingEl = document.getElementById('sizing') as HTMLSelectElement;
+const labelsToggle = document.getElementById('labels-toggle') as HTMLInputElement;
+const isolatedToggle = document.getElementById('isolated-toggle') as HTMLInputElement;
+const labelsLabelEl = document.getElementById('labels-label')!;
+const isolatedLabelEl = document.getElementById('isolated-label')!;
 const pinbarEl = document.getElementById('pinbar')!;
 const pinLabelEl = document.getElementById('pin-label')!;
 
@@ -158,14 +165,22 @@ const renderer = new Sigma(graph, container, {
   labelColor: { color: '#d6d9e0' },
   labelFont: 'system-ui',
   labelSize: 12,
-  labelRenderedSizeThreshold: 8,
+  // R3 — keep labels legible at 100+ nodes: only the most prominent node per
+  // grid cell is labeled, and nodes are sized by centrality, so the labels that
+  // survive are the important ones. Zooming in reveals more.
+  labelRenderedSizeThreshold: 10,
+  labelDensity: 0.6,
+  labelGridCellSize: 180,
   defaultDrawNodeHover: drawDarkNodeHover,
   nodeReducer(node, data) {
+    if (hideIsolated && isolated.has(node)) {
+      return { ...data, hidden: true };
+    }
     const expanded = node === hovered || node === selected;
     const label = expanded ? (data.fullLabel as string | undefined) ?? data.label : data.label;
     if (thread) {
       if (thread.nodes.has(node)) {
-        return { ...data, label, zIndex: 1, highlighted: node === selected };
+        return { ...data, label, forceLabel: expanded, zIndex: 1, highlighted: node === selected };
       }
       return { ...data, color: DIM_NODE, label: null, zIndex: 0 };
     }
@@ -176,7 +191,8 @@ const renderer = new Sigma(graph, container, {
       return { ...data, color: DIM_NODE, label: null, zIndex: 0 };
     }
     const lifted = focusedCommunity !== null || pinned !== null;
-    return { ...data, label, zIndex: lifted ? 1 : 0 };
+    // Selected/hovered node always shows its label, even under density culling.
+    return { ...data, label, forceLabel: expanded, zIndex: lifted ? 1 : 0 };
   },
   edgeReducer(edge, data) {
     if (thread) {
@@ -259,6 +275,20 @@ function applySizing(): void {
   });
 }
 
+/** Recompute the set of isolated nodes (no resolved/rendered edge) so the node
+ * reducer can hide them without an O(n) scan per frame (R3). */
+function recomputeIsolated(): void {
+  isolated = new Set<string>();
+  graph.forEachNode((id) => {
+    if (graph.degree(id) === 0) isolated.add(id);
+  });
+}
+
+/** Refresh the "hide isolated" control with the current isolated count. */
+function updateViewControls(): void {
+  isolatedLabelEl.textContent = `${t('view.hideIsolated')} (${isolated.size})`;
+}
+
 function addNodeFromApi(n: ApiNode, x: number, y: number): void {
   graph.addNode(n.id, {
     label: shortLabel(n.title),
@@ -307,9 +337,11 @@ function applyGraph(api: ApiGraph): void {
 
   if (selected && !graph.hasNode(selected)) clearSelection();
   if (pinned) reconcilePin();
+  recomputeIsolated();
   renderCounts(api.stats);
   renderLegend();
   renderStats(api.stats);
+  updateViewControls();
   renderer.refresh();
 }
 
@@ -352,9 +384,11 @@ function applyDelta(delta: GraphDelta): void {
 
   if (selected && !graph.hasNode(selected)) clearSelection();
   if (pinned) reconcilePin();
+  recomputeIsolated();
   renderCounts(delta.stats);
   renderLegend();
   renderStats(delta.stats);
+  updateViewControls();
   renderer.refresh();
 }
 
@@ -672,6 +706,8 @@ function applyStaticI18n(): void {
   document.getElementById('filter-submit')!.textContent = t('filter.submit');
   document.getElementById('filter-clear')!.textContent = t('filter.clear');
   document.getElementById('pin-clear')!.textContent = t('pin.unpin');
+  labelsLabelEl.textContent = t('view.labels');
+  updateViewControls();
   statusEl.textContent = t('status.connecting');
 }
 
@@ -730,6 +766,16 @@ searchEl.addEventListener('keydown', (event) => {
 sizingEl.addEventListener('change', () => {
   sizingMode = sizingEl.value as SizingMode;
   applySizing();
+  renderer.refresh();
+});
+
+labelsToggle.addEventListener('change', () => {
+  showLabels = labelsToggle.checked;
+  renderer.setSetting('renderLabels', showLabels);
+});
+
+isolatedToggle.addEventListener('change', () => {
+  hideIsolated = isolatedToggle.checked;
   renderer.refresh();
 });
 

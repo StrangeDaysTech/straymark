@@ -20,6 +20,21 @@ project adheres to [Semantic Versioning](https://semver.org/).
   overlay, layer toggle, component panel, and cross-linking with the Knowledge Graph.
 - A3 (north star): axonometric/BIM exploded-layers view.
 
+## [0.4.2] — 2026-06-14 (R3: legibility at 100+ nodes)
+
+### Added
+
+- **"Hide isolated" toggle** (header): hides nodes with no resolved edges (singletons,
+  orphans) so the connected graph stands out; shows the hidden count.
+- **"Labels" toggle** (header): turn node labels off for a pure-structure view, on to restore.
+
+### Changed
+
+- **Label density is capped** so 100+ node graphs stay legible: only the most prominent node
+  per screen region is labeled (nodes are sized by centrality, so the surviving labels are the
+  important ones); zooming in reveals more, and the hovered/selected node always shows its full
+  label (`labelDensity` / `labelGridCellSize` / `labelRenderedSizeThreshold` + `forceLabel`).
+
 ## [0.4.1] — 2026-06-13 (fix: panel click responsiveness under filesystem churn)
 
 ### Fixed
@@ -148,7 +163,8 @@ corpus, where 330 of 395 references were dangling. All changes are in the shared
   (PR #239) together with the component's intention docs (README, SpecKit sets 001/002,
   `CHARTER-01-loom-server`, ADR-2026-06-02-001/-002).
 
-[Unreleased]: https://github.com/StrangeDaysTech/straymark/compare/loom-0.4.1...HEAD
+[Unreleased]: https://github.com/StrangeDaysTech/straymark/compare/loom-0.4.2...HEAD
+[0.4.2]: https://github.com/StrangeDaysTech/straymark/releases/tag/loom-0.4.2
 [0.4.1]: https://github.com/StrangeDaysTech/straymark/releases/tag/loom-0.4.1
 [0.4.0]: https://github.com/StrangeDaysTech/straymark/releases/tag/loom-0.4.0
 [0.3.0]: https://github.com/StrangeDaysTech/straymark/releases/tag/loom-0.3.0

@@ -30,6 +30,8 @@
       #search-results .empty { color:var(--muted); font-size:11px; padding:4px 7px; }
       .sizing { display:flex; align-items:center; gap:5px; color:var(--muted); font-size:11px; }
       #sizing { color:var(--text); background:var(--panel); border:1px solid var(--border); border-radius:5px; padding:4px 6px; font-size:11px; }
+      .view { display:flex; align-items:center; gap:4px; color:var(--muted); font-size:11px; white-space:nowrap; cursor:pointer; }
+      .view input { accent-color:var(--accent); cursor:pointer; }
       #filters { display:flex; gap:5px; }
       #filters input { width:78px; color:var(--text); background:var(--panel); border:1px solid var(--border); border-radius:5px; padding:4px 6px; font-size:11px; }
       #filters input[type="date"] { width:112px; }
@@ -99,6 +101,8 @@
           <option value="degree">Degree</option>
         </select>
       </label>
+      <label class="view"><input type="checkbox" id="labels-toggle" checked /><span id="labels-label">Labels</span></label>
+      <label class="view"><input type="checkbox" id="isolated-toggle" /><span id="isolated-label">Hide isolated</span></label>
       <form id="filters">
         <input name="type" aria-label="Filter by type" />
         <input name="status" aria-label="Filter by status" />
