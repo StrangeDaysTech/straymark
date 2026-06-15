@@ -265,7 +265,8 @@ Loom releases are GitHub-release-only (no crates.io while experimental). Tag for
 | `straymark followups recount` | Recompute the CLI-owned counters after a manual-triage session (no AILOG scan, idempotent) |
 | `straymark followups promote FU-NNN` | Elevate an entry to a TDE document with `promoted_from_followup` traceability |
 | `straymark architecture generate [path] [--force] [--out DIR]` | EXPERIMENTAL (Loom A1.2) — write a first-draft `architecture/model.yml` + `plan.drawio` by mining codebase structure (top-level source dirs → components) enriched with ADR C4 diagrams + "Affected Components" tables. `--force` overwrites; `--out` overrides the default `.straymark/architecture/` |
-| `straymark architecture sync \| validate [path]` | EXPERIMENTAL — stubs (logic lands in Loom A1.3): `sync` appends new code/ADR components, `validate` reports model↔plan.drawio integrity signals |
+| `straymark architecture sync [path] [--out DIR] [--apply]` | EXPERIMENTAL (Loom A1.3) — append-only: detect new top-level source dirs / ADR components not yet covered by the model and append them to `model.yml` + `plan.drawio` (never clobbers human edits/geometry). Dry-run by default; `--apply` writes |
+| `straymark architecture validate [path] [--out DIR] [--output FMT]` | EXPERIMENTAL (Loom A1.3) — report model↔plan.drawio integrity signals (`undrawn`/`unmodeled`/`empty`) via `core::architecture::validate_model`. `--output text\|json\|markdown`; exits 1 when any signal is found (CI-gateable) |
 | `straymark audit [path]` | Generate audit trail reports with timeline and traceability |
 | `straymark explore [path]` | Interactive TUI documentation browser |
 | `straymark loom serve [path] [--port] [--no-open]` | Launch Loom, the EXPERIMENTAL knowledge-graph visualization server (binary downloaded on demand from `loom-*` releases, cached in `~/.straymark/bin/`) |
