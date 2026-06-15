@@ -7,7 +7,7 @@
 use anyhow::{anyhow, Result};
 use colored::Colorize;
 
-use crate::charter::{
+use straymark_core::charter::{
     self, display_origin, display_title, origin_kind, Charter, CharterStatus,
 };
 use crate::utils;
@@ -163,7 +163,7 @@ fn colorize_status(status: CharterStatus, text: &str) -> colored::ColoredString 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::charter::{CharterFrontmatter, EffortEstimate};
+    use straymark_core::charter::{CharterFrontmatter, EffortEstimate};
     use std::path::PathBuf;
 
     fn make(id: &str, status: CharterStatus, ailog: Option<Vec<String>>, spec: Option<String>) -> Charter {

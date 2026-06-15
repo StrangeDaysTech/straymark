@@ -30,7 +30,7 @@ use colored::Colorize;
 use std::path::{Path, PathBuf};
 
 use crate::audit_schema::AuditOutputSchema;
-use crate::charter::{self, Charter};
+use straymark_core::charter::{self, Charter};
 use crate::utils;
 
 /// Last-resort fallback when no upstream branch is reachable. Issued with a

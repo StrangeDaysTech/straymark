@@ -23,7 +23,7 @@ use anyhow::{Context, Result};
 use colored::Colorize;
 use std::path::{Path, PathBuf};
 
-use crate::charter::{discover_and_parse, Charter, CharterStatus};
+use straymark_core::charter::{discover_and_parse, Charter, CharterStatus};
 
 const DEFAULT_THRESHOLD: u32 = 6;
 const ROLLING_WINDOW: usize = 3;

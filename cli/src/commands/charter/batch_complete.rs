@@ -23,7 +23,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use colored::Colorize;
 
 use crate::ailog;
-use crate::charter;
+use straymark_core::charter;
 use crate::prompts;
 use crate::utils;
 

@@ -2,7 +2,7 @@ use anyhow::Result;
 use colored::Colorize;
 use std::path::{Path, PathBuf};
 
-use crate::charter::{self, CharterStatus};
+use straymark_core::charter::{self, CharterStatus};
 use crate::config::StrayMarkConfig;
 use crate::manifest::DistManifest;
 use crate::utils::{self, pad_right_visual, visual_width};

@@ -318,14 +318,14 @@ pub fn display_origin(fm: &CharterFrontmatter) -> String {
 pub fn next_charter_number(project_root: &Path) -> u32 {
     discover_charters(project_root)
         .iter()
-        .filter_map(charter_number_from_path)
+        .filter_map(|p| charter_number_from_path(p))
         .max()
         .map(|n| n + 1)
         .unwrap_or(1)
 }
 
 /// Extract the leading digits from a Charter filename (`05-foo.md` → 5).
-fn charter_number_from_path(p: &PathBuf) -> Option<u32> {
+fn charter_number_from_path(p: &Path) -> Option<u32> {
     let name = p.file_name()?.to_str()?;
     let prefix: String = name.chars().take_while(|c| c.is_ascii_digit()).collect();
     if prefix.is_empty() {
