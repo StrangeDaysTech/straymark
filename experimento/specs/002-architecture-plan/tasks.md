@@ -138,19 +138,33 @@
   drawio 3, generate 4), core 102, `--no-default-features` build clean, clippy clean (only
   pre-existing `assert_cmd` test deprecations).
 
-## A1.3 — `straymark architecture sync` + `validate` — FR7, FR9, spec §5, §3.3
+## A1.3 — `straymark architecture sync` + `validate` — FR7, FR9, spec §5, §3.3 — DONE
 
-- [ ] T3.1 — `validate`: parse `model.yml`, parse `plan.drawio` cell ids
-  (`straymark_component_id` attrs), walk disk for glob coverage → report the §3.3 integrity
-  signals (undrawn / unmodeled / empty) via `core::architecture::validate_model`. Human +
-  `--output json`. (FR9)
-- [ ] T3.2 — `sync`: detect **new** code dirs (vs current `model.yml` globs) and **new** ADR
-  components since last generation; **append** suggested components/links to `model.yml` and
-  **report** them — never clobber human edits, never overwrite `plan.drawio` geometry
-  (append-only new cells, auto-placed). (spec §5 sync, NFR1.)
-- [ ] T3.3 — Tests: `architecture validate` on a fixture with one undrawn + one unmodeled +
-  one empty component reports exactly those three; `sync` on a fixture with a new dir appends
-  one component and leaves existing cells byte-identical.
+> No tag/bump (rides A1.5). First a refactor: the shared scan/mining/render machinery moved
+> from `generate.rs` to `cli/src/commands/architecture/common.rs` so all three handlers agree.
+
+- [x] T3.1 — `validate.rs`: `parse_model` + new `drawio::parse_component_ids` (scans
+  `straymark_component_id="…"`, XML-unescaped) + on-disk glob coverage via `common` → the §3.3
+  signals through `core::architecture::validate_model`. `--output text|json|markdown` (local
+  `#[derive(Serialize)]` report, so the core `IntegritySignal` surface stays untouched until
+  A1.5). **Exits 1** on any signal / invalid / missing model (user-confirmed; CI-gateable).
+  Degrades to glob-coverage-only when `plan.drawio` is absent. (FR9)
+- [x] T3.2 — `sync.rs`: detect top-level source dirs not covered by an existing component's
+  globs (`dir_covered` via `core::drift::glob_match`; honors human-narrowed globs and renamed
+  ids), enrich the new ones from ADRs, then **append-only**. **Dry-run by default**
+  (user-confirmed); `--apply` text-appends component blocks to `model.yml` (EOF, preserving
+  every existing byte — validates with `parse_model_str` before writing) and inserts new cells
+  into `plan.drawio` via `drawio::append_cells` (below the existing geometry, existing cells
+  byte-identical). Never clobbers human edits/geometry (NFR1). (spec §5, NFR1.)
+- [x] T3.3 — Tests + e2e: `drawio` unit tests (`parse_component_ids` round-trip/unescape;
+  `append_cells` preserves the existing prefix byte-for-byte, adds one cell below max-y;
+  rejects non-DrawIO input); `sync::dir_covered` (covered dir not proposed; human-narrowed glob
+  still covers). E2E on this repo: `validate` on a model hand-edited to hold one undrawn + one
+  unmodeled + one empty reported exactly those three and exited 1 (text + json); `sync` on a
+  sandbox with a new dir reported it (dry-run), then `--apply` appended one component +
+  preserved the existing `model.yml`/`plan.drawio` prefix verbatim, and a follow-up `validate`
+  was consistent (exit 0). CLI 333 tests, core 102, `--no-default-features` build clean, clippy
+  clean (only pre-existing `assert_cmd`/CLI-debt warnings). CLAUDE.md rows refreshed.
 
 ## A1.4 — `straymark status --where` (textual "you are here") — spec §8, §14
 

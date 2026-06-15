@@ -308,18 +308,31 @@ enum ArchitectureCommands {
         #[arg(long)]
         out: Option<String>,
     },
-    /// Sync the model with new code dirs / ADR components (A1.3 — not yet
-    /// implemented).
+    /// Append new code dirs / ADR components to the model (append-only, never
+    /// clobbers human edits). Dry-run by default; --apply writes.
     Sync {
         /// Project directory (default: current directory)
         #[arg(default_value = ".")]
         path: String,
+        /// Directory holding the artifacts (default: <project>/.straymark/architecture)
+        #[arg(long)]
+        out: Option<String>,
+        /// Write the proposed additions (default is a dry-run report)
+        #[arg(long)]
+        apply: bool,
     },
-    /// Validate model ↔ plan.drawio integrity (A1.3 — not yet implemented).
+    /// Report model ↔ plan.drawio integrity signals (undrawn / unmodeled /
+    /// empty). Exits 1 when any signal is found.
     Validate {
         /// Project directory (default: current directory)
         #[arg(default_value = ".")]
         path: String,
+        /// Directory holding the artifacts (default: <project>/.straymark/architecture)
+        #[arg(long)]
+        out: Option<String>,
+        /// Output format
+        #[arg(long, default_value = "text", value_parser = ["text", "json", "markdown"])]
+        output: String,
     },
 }
 
@@ -909,9 +922,11 @@ fn main() {
             ArchitectureCommands::Generate { path, force, out } => {
                 commands::architecture::generate::run(&path, force, out.as_deref())
             }
-            ArchitectureCommands::Sync { path } => commands::architecture::sync::run(&path),
-            ArchitectureCommands::Validate { path } => {
-                commands::architecture::validate::run(&path)
+            ArchitectureCommands::Sync { path, out, apply } => {
+                commands::architecture::sync::run(&path, out.as_deref(), apply)
+            }
+            ArchitectureCommands::Validate { path, out, output } => {
+                commands::architecture::validate::run(&path, out.as_deref(), &output)
             }
         },
         Commands::Loom { command } => match command {

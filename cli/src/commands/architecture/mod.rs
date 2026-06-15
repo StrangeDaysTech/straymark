@@ -5,6 +5,7 @@
 //! are scaffolded as stubs here and filled in A1.3.
 
 pub mod adr_mining;
+pub mod common;
 pub mod drawio;
 pub mod generate;
 pub mod sync;
