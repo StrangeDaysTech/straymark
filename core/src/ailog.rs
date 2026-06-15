@@ -1,0 +1,155 @@
+//! Shared parser for an AILOG's `## Modified Files` section.
+//!
+//! Authored in Loom A1.1 (`002-architecture-plan`, the deferred A1.0 task T0.3).
+//! The architecture "you are here" projection derives a component's
+//! `implemented` state from the files a *closed* Charter's AILOGs actually
+//! touched; the file list lives in the AILOG's `## Modified Files` markdown
+//! table. This pure string parser extracts those paths so both the CLI
+//! (`status --where`, A1.4) and the Loom server (A2) read AILOG file sets with
+//! one extractor — the same "one parser, structurally no drift" discipline that
+//! moved charter/drift into `core` in A1.0.
+//!
+//! The AILOG template ships English-only (`dist/.straymark/templates/
+//! TEMPLATE-AILOG.md`), so unlike [`crate::charter_files`] (localized Charter
+//! template) we recognize a single heading. Path extraction reuses the shared
+//! [`crate::charter_files`] helpers so the two table extractors agree on what
+//! counts as a path.
+//!
+//! Limitation: brace-expansion cells like `` `core/{Cargo.toml,src/lib.rs}` ``
+//! are reported as the raw backtick token (not expanded). Callers matching such
+//! a token against globs will simply not match — acceptable for the projection,
+//! which treats a missing match as "not touched".
+
+use crate::charter_files::{first_backtick_token, looks_like_path};
+
+/// The `## Modified Files` heading (AILOG template is English-only).
+const SECTION_HEADING: &str = "Modified Files";
+
+/// Parse the `## Modified Files` section of an AILOG body and return the paths
+/// it lists. Recognizes the markdown-table form the template ships (column 1 =
+/// backtick path, remaining columns = lines/description). Non-path tokens
+/// (e.g. a backtick `cargo build` in a description) are filtered out via
+/// [`crate::charter_files::looks_like_path`]. Returns the raw declared token —
+/// wildcards (`*`, `...`) and brace groups are preserved for the caller.
+pub fn parse_modified_files(body: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut in_section = false;
+
+    for line in body.lines() {
+        let trimmed = line.trim_start();
+
+        if trimmed.starts_with("## ") {
+            if in_section {
+                // A new `## ` heading ends the section.
+                break;
+            }
+            let title = trimmed.trim_start_matches('#').trim();
+            if title == SECTION_HEADING {
+                in_section = true;
+            }
+            continue;
+        }
+
+        if !in_section || !trimmed.starts_with('|') {
+            continue;
+        }
+
+        // Markdown table row. split('|') yields a leading empty element.
+        let cols: Vec<&str> = line.split('|').collect();
+        if cols.len() < 2 {
+            continue;
+        }
+        let col1 = cols[1].trim();
+
+        // Skip separator rows (only dashes/colons/spaces).
+        if !col1.is_empty() && col1.chars().all(|c| matches!(c, '-' | ':' | ' ')) {
+            continue;
+        }
+        // Skip the header row.
+        let col1_plain = col1.trim_matches('*').trim();
+        if matches!(col1_plain, "File" | "Files") {
+            continue;
+        }
+
+        let Some(token) = first_backtick_token(col1) else {
+            continue;
+        };
+        if !looks_like_path(token) {
+            continue;
+        }
+        out.push(token.to_string());
+    }
+
+    out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_table_col1_backtick_paths() {
+        let body = r#"## Modified Files
+
+| File | Lines Changed (+/-) | Change Description |
+|------|--------------------|--------------------|
+| `core/src/graph.rs` | +396/-0 | New — typed bidirectional graph |
+| `cli/src/main.rs` | +2/-1 | Mechanical import churn |
+
+## Decisions Made
+"#;
+        assert_eq!(
+            parse_modified_files(body),
+            vec!["core/src/graph.rs", "cli/src/main.rs"]
+        );
+    }
+
+    #[test]
+    fn ignores_annotations_and_non_path_backticks() {
+        // A trailing "(root)" annotation does not break extraction; a backtick
+        // command in the description column is not picked up as a path.
+        let body = r#"## Modified Files
+
+| File | Lines | Change Description |
+|------|-------|--------------------|
+| `Cargo.toml` (root) | +10/-0 | workspace members; run `cargo build` |
+"#;
+        assert_eq!(parse_modified_files(body), vec!["Cargo.toml"]);
+    }
+
+    #[test]
+    fn skips_separator_and_header_rows() {
+        let body = "## Modified Files\n\n| File | Lines |\n| --- | --- |\n| `a.rs` | +1 |\n";
+        assert_eq!(parse_modified_files(body), vec!["a.rs"]);
+    }
+
+    #[test]
+    fn stops_at_next_heading() {
+        let body = r#"## Modified Files
+
+| File | Lines |
+|---|---|
+| `in.rs` | +1 |
+
+## Impact
+
+- `out.rs` should not be captured
+"#;
+        assert_eq!(parse_modified_files(body), vec!["in.rs"]);
+    }
+
+    #[test]
+    fn preserves_wildcards_raw() {
+        // A wildcard token is kept verbatim as long as it still looks like a
+        // path (ends in a recognized extension). A bare `dir/*` with no
+        // extension is filtered out by `looks_like_path`.
+        let body = "## Modified Files\n\n| File | Lines |\n|---|---|\n| `cli/src/commands/loom/*.rs` | +1 |\n";
+        assert_eq!(parse_modified_files(body), vec!["cli/src/commands/loom/*.rs"]);
+    }
+
+    #[test]
+    fn empty_when_section_absent() {
+        let body = "## Summary\n\nNo modified-files section here.\n";
+        assert!(parse_modified_files(body).is_empty());
+    }
+}

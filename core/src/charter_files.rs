@@ -35,7 +35,10 @@ pub struct DeclaredFile {
 /// Recognized source-file extensions, mirroring the grep filter in
 /// `check-charter-drift.sh`. A backtick token is treated as a declared path
 /// only when it ends in one of these or contains `.straymark/`.
-const RECOGNIZED_EXTENSIONS: &[&str] = &[
+///
+/// Shared with [`crate::ailog`] (the AILOG "Modified Files" parser) so the two
+/// markdown-table extractors agree on what counts as a path.
+pub(crate) const RECOGNIZED_EXTENSIONS: &[&str] = &[
     ".go", ".sql", ".yaml", ".yml", ".md", ".sh", ".ts", ".tsx", ".js", ".jsx",
     ".rs", ".py", ".java", ".kt", ".rb", ".cs", ".cpp", ".c", ".h", ".hpp",
     ".swift", ".toml", ".json", ".tf",
@@ -56,7 +59,7 @@ pub fn is_wildcard(path: &str) -> bool {
 
 /// True if a backtick token looks like a declared file path: it ends with a
 /// recognized extension, or references something under `.straymark/`.
-fn looks_like_path(token: &str) -> bool {
+pub(crate) fn looks_like_path(token: &str) -> bool {
     if token.contains(".straymark/") {
         return true;
     }
@@ -64,7 +67,7 @@ fn looks_like_path(token: &str) -> bool {
 }
 
 /// Extract the first backtick-quoted token from a string, if any.
-fn first_backtick_token(s: &str) -> Option<&str> {
+pub(crate) fn first_backtick_token(s: &str) -> Option<&str> {
     let start = s.find('`')? + 1;
     let rest = &s[start..];
     let end = rest.find('`')?;
