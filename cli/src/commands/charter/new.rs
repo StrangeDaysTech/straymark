@@ -14,7 +14,7 @@ use colored::Colorize;
 use dialoguer::{theme::ColorfulTheme, Input};
 use std::path::{Path, PathBuf};
 
-use crate::charter::{charters_dir, next_charter_number};
+use straymark_core::charter::{charters_dir, next_charter_number};
 use crate::config::StrayMarkConfig;
 use crate::utils;
 

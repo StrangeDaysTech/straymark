@@ -4,7 +4,7 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph, Widget, Wrap};
 
-use crate::charter::{CharterFrontmatter, CharterStatus, EffortEstimate};
+use straymark_core::charter::{CharterFrontmatter, CharterStatus, EffortEstimate};
 use crate::tui::app::{ActivePanel, App, MetaSelection};
 use crate::tui::document::{ConfidenceLevel, DocFrontMatter, DocStatus, DocumentMetadata, RiskLevel};
 use crate::tui::i18n_strings::t;
@@ -299,7 +299,7 @@ fn charter_lines(
     // Origin (single-line summary). The materialized "Related" block below
     // makes each origin link navigable; this top line just gives an at-a-glance
     // hint of where the charter came from.
-    let origin = crate::charter::display_origin(fm);
+    let origin = straymark_core::charter::display_origin(fm);
     let origin_style = if origin == "—" {
         Style::default().fg(theme::TEXT_DIM)
     } else {

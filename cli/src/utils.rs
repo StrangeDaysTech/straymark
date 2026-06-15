@@ -119,29 +119,11 @@ pub fn resolve_localized_path(dir: &Path, filename: &str, lang: &str) -> PathBuf
     dir.join(filename)
 }
 
-/// Split a markdown document into (frontmatter, body) at the first pair of `---`
-/// delimiters. Returns `None` if the document has no frontmatter block.
-/// Accepts both `\n` and `\r\n` line endings on the closing delimiter.
-/// Shared by the Charter parser (`crate::charter`) and the follow-ups
-/// registry parser (`crate::followups`) so both artifacts agree on what a
-/// frontmatter block is.
-pub fn split_frontmatter(content: &str) -> Option<(&str, &str)> {
-    // Opening delimiter: must be at the very start of the file.
-    let after_open = content.strip_prefix("---\n").or_else(|| content.strip_prefix("---\r\n"))?;
-    // Closing delimiter: find the first occurrence of `\n---\n` or `\r\n---\r\n`.
-    let (end, delim_len) = if let Some(idx) = after_open.find("\n---\n") {
-        (idx, 5)
-    } else if let Some(idx) = after_open.find("\r\n---\r\n") {
-        (idx, 7)
-    } else if let Some(idx) = after_open.find("\n---\r\n") {
-        (idx, 6)
-    } else {
-        return None;
-    };
-    let frontmatter = &after_open[..end];
-    let body = &after_open[end + delim_len..];
-    Some((frontmatter, body))
-}
+// `split_frontmatter` moved to `straymark_core::utils` in Loom A1.0 so the
+// architecture-plan projection and the Loom server share one definition.
+// Re-exported so the follow-ups registry parser (`crate::followups`) and
+// `crate::commands::approve` keep their `crate::utils::split_frontmatter` paths.
+pub use straymark_core::utils::split_frontmatter;
 
 /// Visual width of a string in terminal columns, accounting for double-wide
 /// characters (CJK, some emoji). This is the unit every TUI layout should

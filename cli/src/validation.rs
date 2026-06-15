@@ -136,7 +136,7 @@ pub fn validate_charters(project_root: &Path, straymark_dir: &Path) -> (Validati
         }
     };
 
-    let paths = crate::charter::discover_charters(project_root);
+    let paths = straymark_core::charter::discover_charters(project_root);
     let charter_count = paths.len();
 
     for path in &paths {
@@ -144,7 +144,7 @@ pub fn validate_charters(project_root: &Path, straymark_dir: &Path) -> (Validati
         // This preserves schema-level errors (bad enum, missing required) so
         // the schema validator sees them and emits rich hints, rather than
         // letting a typed-parse failure mask the actual cause.
-        let raw_yaml = match crate::charter::read_frontmatter_yaml(path) {
+        let raw_yaml = match straymark_core::charter::read_frontmatter_yaml(path) {
             Ok(y) => y,
             Err(e) => {
                 result.errors.push(ValidationIssue {
@@ -174,7 +174,7 @@ pub fn validate_charters(project_root: &Path, straymark_dir: &Path) -> (Validati
         // validation already caught problems, the typed parse may also fail —
         // in that case we skip ref checks (cannot trust the structure) but
         // we don't double-report (errors already in result via schema).
-        let typed: Option<crate::charter::CharterFrontmatter> =
+        let typed: Option<straymark_core::charter::CharterFrontmatter> =
             serde_yaml::from_value(raw_yaml).ok();
         let typed = match typed {
             Some(t) => t,
@@ -234,9 +234,9 @@ pub fn validate_charters(project_root: &Path, straymark_dir: &Path) -> (Validati
         // asks for. Emitted as a Warning (not Error): adopters mid-migration may
         // legitimately list not-yet-tagged new files, and warn-only matches the
         // REF-001 / REVIEW-PENDING precedent.
-        if let Ok(charter) = crate::charter::parse_charter(path) {
-            for declared in crate::charter_files::parse_files_to_modify(&charter.body) {
-                if declared.is_new || crate::charter_files::is_wildcard(&declared.path) {
+        if let Ok(charter) = straymark_core::charter::parse_charter(path) {
+            for declared in straymark_core::charter_files::parse_files_to_modify(&charter.body) {
+                if declared.is_new || straymark_core::charter_files::is_wildcard(&declared.path) {
                     continue;
                 }
                 if !project_root.join(&declared.path).exists() {

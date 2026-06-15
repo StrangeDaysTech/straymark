@@ -20,7 +20,7 @@ use chrono::Local;
 use colored::Colorize;
 use std::path::{Path, PathBuf};
 
-use crate::charter::{self, charters_dir, Charter, CharterStatus};
+use straymark_core::charter::{self, charters_dir, Charter, CharterStatus};
 use crate::followups;
 use crate::prompts;
 use crate::telemetry_schema::TelemetrySchema;
@@ -296,7 +296,7 @@ fn short_id(charter_id: &str) -> String {
 
 fn one_line_title(charter: &Charter) -> String {
     // Use the H1 title if available; fallback to the slug.
-    crate::charter::display_title(charter)
+    straymark_core::charter::display_title(charter)
 }
 
 /// Drive the operator through the full schema interactively. Returns the
@@ -309,13 +309,13 @@ fn drive_interactive_flow(charter: &Charter) -> Result<String> {
     );
     println!(
         "  Title: {}",
-        crate::charter::display_title(charter).dimmed()
+        straymark_core::charter::display_title(charter).dimmed()
     );
     println!("{}", "Press Enter to accept defaults; type to override.".dimmed());
     println!();
 
     let charter_id = short_id(&charter.frontmatter.charter_id);
-    let charter_title = crate::charter::display_title(charter);
+    let charter_title = straymark_core::charter::display_title(charter);
     let closed_at = Local::now().format("%Y-%m-%d").to_string();
 
     // ── Trigger ─────────────────────────────────────────────────────────

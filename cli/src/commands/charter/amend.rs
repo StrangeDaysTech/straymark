@@ -27,7 +27,7 @@ use colored::Colorize;
 use std::path::{Path, PathBuf};
 
 use crate::ailog::agent_logs_dir;
-use crate::charter::{discover_and_parse, find_by_id, CharterStatus};
+use straymark_core::charter::{discover_and_parse, find_by_id, CharterStatus};
 
 pub fn run(
     project_path: &str,

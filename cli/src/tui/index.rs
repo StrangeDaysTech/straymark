@@ -222,7 +222,7 @@ impl DocIndex {
                 // with a real GROUP_DEFS entry that always uses NN-name.
                 name: "_charters".to_string(),
                 label: t("Charters", language).to_string(),
-                path: crate::charter::charters_dir(project_root),
+                path: straymark_core::charter::charters_dir(project_root),
                 subgroups: Vec::new(),
                 files: charter_files,
             });
@@ -538,12 +538,12 @@ fn fallback_meta(path: &Path, content: Option<&str>) -> ScannedMeta {
 }
 
 /// Build TUI-compatible `DocEntry` records for all Charters in a project.
-/// Reuses `crate::charter` for discovery/parsing so the schema and the TUI
+/// Reuses `straymark_core::charter` for discovery/parsing so the schema and the TUI
 /// stay aligned on what "a Charter" means. Each entry carries the
 /// `charter_id` as its `id` so hyperlinks via `find_by_ref` resolve, and a
 /// "CH" badge so the nav tree distinguishes Charters from governance docs.
 fn scan_charters(project_root: &Path, relations: &mut RelationIndex) -> Vec<DocEntry> {
-    let paths = crate::charter::discover_charters(project_root);
+    let paths = straymark_core::charter::discover_charters(project_root);
     let mut entries = Vec::with_capacity(paths.len());
     for path in paths {
         let filename = path
@@ -552,9 +552,9 @@ fn scan_charters(project_root: &Path, relations: &mut RelationIndex) -> Vec<DocE
             .unwrap_or("")
             .to_string();
 
-        let entry = match crate::charter::parse_charter(&path) {
+        let entry = match straymark_core::charter::parse_charter(&path) {
             Ok(charter) => {
-                let title = crate::charter::display_title(&charter);
+                let title = straymark_core::charter::display_title(&charter);
                 let id = charter.frontmatter.charter_id.clone();
                 if !id.is_empty() {
                     relations

@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use std::path::Path;
 
-use crate::charter::{is_charter_filename, parse_charter, CharterFrontmatter};
+use straymark_core::charter::{is_charter_filename, parse_charter, CharterFrontmatter};
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -81,7 +81,7 @@ pub struct DocFrontMatter {
 /// related / confidence / risk). Charters use the `Charter` variant because
 /// their schema (declared|in-progress|closed status, effort_estimate, trigger,
 /// originating_ailogs/spec) is disjoint from governance docs — see
-/// `crate::charter::CharterFrontmatter`. Dispatch happens in `Document::load`
+/// `straymark_core::charter::CharterFrontmatter`. Dispatch happens in `Document::load`
 /// based on the file path so the panel can `match` instead of guessing.
 #[derive(Debug, Clone)]
 pub enum DocumentMetadata {
