@@ -166,22 +166,35 @@
   was consistent (exit 0). CLI 333 tests, core 102, `--no-default-features` build clean, clippy
   clean (only pre-existing `assert_cmd`/CLI-debt warnings). CLAUDE.md rows refreshed.
 
-## A1.4 — `straymark status --where` (textual "you are here") — spec §8, §14
+## A1.4 — `straymark status --where` (textual "you are here") — spec §8, §14 — DONE
 
-- [ ] T4.1 — Build `GovernanceState` in the CLI from the existing extractors now in `core`
-  (active/closed charters via `discover_and_parse`, declared files via `parse_files_to_modify`,
-  drift via `core::drift::compute_drift` against git-modified, TDE docs via
-  `discover_documents`+`DocType::Tde`+open status, wiring-gap via the declared-vs-wired
-  profile, on-disk inventory via `walk_source_files`).
-- [ ] T4.2 — `straymark status --where [path]`: load `architecture/model.yml` (if present),
-  call `core::architecture::project`, print the per-layer/per-component state with the active
-  ("you are here") components highlighted, plus the §8 "Where are we" summary (active charters
-  + declared-vs-modified progress + recent AILOGs + open debt). Degrade gracefully with a
-  helpful message if no `model.yml` exists (point to `architecture generate`).
-- [ ] T4.3 — **Consistency gate (NFR3):** the components flagged `active`/`in-progress` match
-  `straymark charter list --status in-progress` + `charter drift`; `implemented` matches
-  `charter list --status closed`. Add an integration test asserting this equivalence on a
-  fixture corpus. (spec §11.5 textual half.)
+> No tag/bump (rides A1.5). Lives in `cli/src/commands/architecture/where_view.rs` (reuses
+> `common::{resolve_root, artifact_paths, collect_source_files}`) so the projection consumer
+> sits beside `generate`/`sync`/`validate`. `--where` + `--out` are flags on `status`; without
+> `--where`, `status` is byte-for-byte unchanged. Loom A2's `/api/where` will build its own
+> `GovernanceState` and call the same pure `core::architecture::project`.
+
+- [x] T4.1 — `build_governance_state(root)`: active charter files via `discover_and_parse`
+  filtered to `in-progress` → `parse_files_to_modify`; closed charters likewise + folding in
+  `core::ailog::parse_modified_files` of their `originating_ailogs`; `in-progress` = declared ∩
+  git-modified (`git diff --name-only HEAD`, intersected via `core::drift::compute_drift` so it
+  matches `charter drift`); open TDEs via `discover_documents`+`DocType::Tde`+`related`;
+  on-disk via `common::collect_source_files`. **wiring-gap left empty** (needs an explicit
+  `declared-vs-wired` profile; not part of the §11.5 gate — documented in the module header to
+  avoid silent noise).
+- [x] T4.2 — `straymark status --where [path] [--out DIR]`: `parse_model` → `project` → render
+  per-layer/per-component badges with active components marked "← you are here", then the §8
+  summary (active Charter title + declared-vs-modified progress % + recent AILOGs + debt/uncharted
+  counts). Degrades to an `architecture generate` hint when no `model.yml` (success, not exit 1 —
+  it's a status view). `--out` mirrors the other `architecture` commands so a non-self-adopter
+  repo (model under `experimento/architecture/`) can dogfood.
+- [x] T4.3 — **Consistency gate (NFR3):** `cli/tests/architecture_where_test.rs` —
+  `where_is_consistent_with_charter_list` asserts on one fixture corpus that the `active`
+  component is exactly the one `charter list --status in-progress` reports and `implemented` is
+  exactly the `--status closed` one (with an uncommitted edit inside the active component → the
+  declared∩git-modified `in-progress` badge). Plus `where_marks_active_in_progress_and_implemented`
+  and `where_degrades_without_model`. CLI 335 unit + 3 integration tests, core 102, clippy clean
+  (only pre-existing `assert_cmd`/CLI-debt warnings). CLAUDE.md status row added.
 
 ## A1.5 — Dogfood, acceptance, docs, release
 

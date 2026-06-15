@@ -10,3 +10,4 @@ pub mod drawio;
 pub mod generate;
 pub mod sync;
 pub mod validate;
+pub mod where_view;

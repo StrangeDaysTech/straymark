@@ -252,6 +252,7 @@ Loom releases are GitHub-release-only (no crates.io while experimental). Tag for
 | `straymark update-cli` | Update the CLI binary |
 | `straymark remove [--full]` | Remove StrayMark from project |
 | `straymark status [path]` | Show installation health and doc stats |
+| `straymark status --where [path] [--out DIR]` | EXPERIMENTAL (Loom A1.4) — textual "you are here": load `architecture/model.yml`, project per-layer/per-component state (active/in-progress/implemented/has-debt/uncharted) from governance signals (charters + drift + open TDEs + on-disk inventory) via the pure `core::architecture::project`, highlight active components, and print the §8 "Where are we" summary. Degrades to a hint when no model exists. `--out` overrides the default `.straymark/architecture/` (lets you dogfood a non-installed repo) |
 | `straymark repair [path]` | Restore missing directories and framework files |
 | `straymark validate [path] [--staged]` | Validate documents for compliance and correctness |
 | `straymark new [path] [-t type] [--title]` | Create a new StrayMark document from a template |
