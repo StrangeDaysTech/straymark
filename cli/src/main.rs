@@ -283,6 +283,44 @@ enum Commands {
         #[command(subcommand)]
         command: LoomCommands,
     },
+    /// Architecture model — EXPERIMENTAL "you are here" map (Loom Spec 002)
+    Architecture {
+        #[command(subcommand)]
+        command: ArchitectureCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum ArchitectureCommands {
+    /// Generate a first-draft architecture/model.yml + plan.drawio by mining
+    /// the codebase structure (top-level source dirs → components) enriched
+    /// with the C4 diagrams and "Affected Components" tables in existing ADRs.
+    /// A rough seed the human then refines; re-running needs --force.
+    Generate {
+        /// Project directory (default: current directory)
+        #[arg(default_value = ".")]
+        path: String,
+        /// Overwrite an existing model.yml / plan.drawio
+        #[arg(long)]
+        force: bool,
+        /// Output directory for the artifacts (default:
+        /// <project>/.straymark/architecture)
+        #[arg(long)]
+        out: Option<String>,
+    },
+    /// Sync the model with new code dirs / ADR components (A1.3 — not yet
+    /// implemented).
+    Sync {
+        /// Project directory (default: current directory)
+        #[arg(default_value = ".")]
+        path: String,
+    },
+    /// Validate model ↔ plan.drawio integrity (A1.3 — not yet implemented).
+    Validate {
+        /// Project directory (default: current directory)
+        #[arg(default_value = ".")]
+        path: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -865,6 +903,15 @@ fn main() {
             FollowupsCommands::Recount { path } => commands::followups::recount::run(&path),
             FollowupsCommands::Promote { fu_id, title, path } => {
                 commands::followups::promote::run(&path, &fu_id, title.as_deref())
+            }
+        },
+        Commands::Architecture { command } => match command {
+            ArchitectureCommands::Generate { path, force, out } => {
+                commands::architecture::generate::run(&path, force, out.as_deref())
+            }
+            ArchitectureCommands::Sync { path } => commands::architecture::sync::run(&path),
+            ArchitectureCommands::Validate { path } => {
+                commands::architecture::validate::run(&path)
             }
         },
         Commands::Loom { command } => match command {
