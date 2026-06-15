@@ -1,6 +1,7 @@
 pub mod about;
 #[cfg(feature = "analyze")]
 pub mod analyze;
+pub mod architecture;
 #[cfg(feature = "analyze")]
 pub mod analyze_declared_vs_wired;
 pub mod approve;

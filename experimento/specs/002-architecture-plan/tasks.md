@@ -101,30 +101,42 @@
   parsing. `cargo test --workspace` green (core 102, cli 314, all integration suites);
   `cargo clippy -p straymark-core` clean. (NFR2 — globs only, no AST.)
 
-## A1.2 — `straymark architecture generate` (hybrid seed) — FR7, spec §5
+## A1.2 — `straymark architecture generate` (hybrid seed) — FR7, spec §5 — DONE
 
 > Writes `model.yml` + `plan.drawio`. The server stays read-only (NFR4); generation is the
-> CLI's job (spec §7).
+> CLI's job (spec §7). **No tag/bump** (rides A1.5). All in `cli/` — the command is not
+> feature-gated and builds with `--no-default-features`.
 
-- [ ] T2.1 — CLI wiring: `Architecture { #[command(subcommand)] }` in `main.rs` with
-  `Generate { path, --force }`, `Sync { path }`, `Validate { path }`; handler module
-  `cli/src/commands/architecture/{mod,generate,sync,validate}.rs`. (CLAUDE.md command table
-  gets a new row.)
-- [ ] T2.2 — Codebase-structure seed: reuse `analysis_engine::walk_source_files` inventory to
-  propose components from top-level dirs/modules; map each proposed component's `globs` to its
-  dir (`dir/**`). Seed `layers` from `DocType::directory()` stages 00–09 (user-renamable).
-  (spec §5 generate, §3.1.)
-- [ ] T2.3 — ADR enrichment: mine **C4 mermaid blocks** and **"Affected Components"** tables
-  from existing ADRs (`DocType::Adr` bodies) to enrich/rename proposed components and add
-  `links` edges. New parser `cli/src/commands/architecture/adr_mining.rs` (C4 container/
-  component lines + the markdown "Affected Components" table the ADR template ships). (spec §5)
-- [ ] T2.4 — Auto-layout `plan.drawio`: emit valid mxGraph XML with one cell per component,
-  grouped by layer (layered layout — dagre-style row-per-layer is enough for the seed; no JS
-  dependency, pure Rust emitter), each cell carrying `straymark_component_id`. Geometry is a
-  first draft the human re-arranges in DrawIO. (spec §3.2, §6; NFR1 — Loom only restyles.)
-- [ ] T2.5 — `--force` guard: refuse to overwrite an existing `model.yml`/`plan.drawio`
-  without `--force` (protects human edits). Idempotent dry default prints what it *would*
-  write.
+- [x] T2.1 — CLI wiring: `Architecture { #[command(subcommand)] command: ArchitectureCommands }`
+  in `main.rs` with `Generate { path, --force, --out }`, `Sync { path }`, `Validate { path }`;
+  handler module `cli/src/commands/architecture/{mod,generate,sync,validate,adr_mining,drawio}.rs`.
+  `sync`/`validate` are stubs that print "not yet implemented (A1.3)" so main.rs isn't re-touched
+  in A1.3. CLAUDE.md command table got two new rows. (User-confirmed: `--out` + lenient root.)
+- [x] T2.2 — Codebase-structure seed: a self-contained walker (NOT
+  `analysis_engine::walk_source_files`, which is `#[cfg(feature = "analyze")]` and would couple
+  the command to that feature) derives top-level source dirs → one component each, globs
+  `dir/**`. Layers seeded from `DocType::ALL` → `directory()` stage prefixes (01-requirements …
+  09-ai-models) plus an `unassigned` placeholder layer (order 0) where code components land for
+  the human to reassign. (spec §5, §3.1.)
+- [x] T2.3 — ADR enrichment: `cli/src/commands/architecture/adr_mining.rs` — hand-written
+  line parsers (no `pulldown-cmark`, which is `tui`-gated) for the `## Affected Components`
+  table and ```mermaid `C4Context|C4Container|C4Component` blocks (element `(id,"label",…)` +
+  `Rel(from,to,…)` lines, quote-aware arg split). Enriches matched components' labels and adds
+  `links` from C4 rels; unmatched ADR components are **reported, not appended** (keeps the seed
+  clean — refinement choice over the plan's append, avoids empty-glob noise). ADRs discovered
+  under `.straymark/` or, absent an install, `docs/decisions/` (so the A1.5 self-dogfood enriches
+  too). (spec §5)
+- [x] T2.4 — Auto-layout `plan.drawio`: `drawio.rs` pure-Rust mxGraph emitter — `<mxfile>` /
+  `<mxGraphModel>` with one `<object straymark_component_id="…">`-wrapped vertex per component,
+  laid out row-per-layer (by `Layer::order`), XML-escaped, deterministic geometry. Orphan-layer
+  components still emitted in a trailing row. (spec §3.2, §6; NFR1.)
+- [x] T2.5 — `--force` / `--out` guard: refuses to overwrite an existing `model.yml`/`plan.drawio`
+  without `--force`; the built model is round-tripped through
+  `straymark_core::architecture::parse_model_str` before writing so an invalid model is never
+  emitted. Verified e2e on this repo (`--out /tmp/...`: 4 components, 9 layers, 4 ADRs mined,
+  2 labels improved; re-run refused, `--force` rewrote). Tests: CLI 327 (13 new — adr_mining 6,
+  drawio 3, generate 4), core 102, `--no-default-features` build clean, clippy clean (only
+  pre-existing `assert_cmd` test deprecations).
 
 ## A1.3 — `straymark architecture sync` + `validate` — FR7, FR9, spec §5, §3.3
 

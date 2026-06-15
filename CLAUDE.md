@@ -264,6 +264,8 @@ Loom releases are GitHub-release-only (no crates.io while experimental). Tag for
 | `straymark followups drift [--apply] [--scan-all]` | Detect/extract AILOGs with unextracted follow-up content (native, anti-noise `suspected-closed`, recomputes CLI-owned counters even with zero extractions, upgrades v0→v1) |
 | `straymark followups recount` | Recompute the CLI-owned counters after a manual-triage session (no AILOG scan, idempotent) |
 | `straymark followups promote FU-NNN` | Elevate an entry to a TDE document with `promoted_from_followup` traceability |
+| `straymark architecture generate [path] [--force] [--out DIR]` | EXPERIMENTAL (Loom A1.2) — write a first-draft `architecture/model.yml` + `plan.drawio` by mining codebase structure (top-level source dirs → components) enriched with ADR C4 diagrams + "Affected Components" tables. `--force` overwrites; `--out` overrides the default `.straymark/architecture/` |
+| `straymark architecture sync \| validate [path]` | EXPERIMENTAL — stubs (logic lands in Loom A1.3): `sync` appends new code/ADR components, `validate` reports model↔plan.drawio integrity signals |
 | `straymark audit [path]` | Generate audit trail reports with timeline and traceability |
 | `straymark explore [path]` | Interactive TUI documentation browser |
 | `straymark loom serve [path] [--port] [--no-open]` | Launch Loom, the EXPERIMENTAL knowledge-graph visualization server (binary downloaded on demand from `loom-*` releases, cached in `~/.straymark/bin/`) |
