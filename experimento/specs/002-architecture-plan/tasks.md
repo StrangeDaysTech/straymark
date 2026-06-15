@@ -51,13 +51,14 @@
   `wildcard_satisfied_by` (+ their 3 unit tests) → `core/src/drift.rs` (`pub`). The CLI
   `drift` command keeps its git-range diff, AILOG suppression, and Batch-Ledger
   orchestration; it now `use straymark_core::drift::compute_drift`.
-- [~] T0.3 — **DEFERRED to A1.1.** `ailog.rs` stays in `cli` for now: the drift primitives
-  don't depend on it, and the projection's AILOG "Modified Files" parser is **new code**
-  (doesn't exist yet) that belongs in `core` when A1.1 authors the projection. Avoids moving
-  `ailog.rs` twice / churning A1.0 for no A1.0 benefit.
-- [~] T0.4 — **DEFERRED to A1.1.** No `glob`/`regex` dep added to `core`: the drift matchers
-  are custom string functions (no crate needed). `glob` lands in A1.1 when the projection
-  matches component globs against file paths. `serde_yaml` already present.
+- [x] T0.3 — **DONE in A1.1.** The projection's AILOG "Modified Files" parser was authored
+  fresh as a pure string parser `core::ailog::parse_modified_files(body) -> Vec<String>`
+  (reusing the shared `charter_files` path-extraction helpers). `cli/src/ailog.rs` (the
+  Batch-Ledger orchestration) stays in `cli` — the new parser is its own thing, not a move.
+- [x] T0.4 — **DONE in A1.1 (resolved by reuse, not a new dep).** No `glob`/`regex` crate
+  added: the projection matches component globs with the existing `core::drift::glob_match`,
+  keeping one matcher project-wide (NFR3 — the projection's `active`/`in-progress` line up
+  with `charter drift` by construction). `serde_yaml` already present.
 - [x] T0.5 — Updated `cli/` imports `crate::charter`/`crate::charter_files` →
   `straymark_core::…` (15 charter sites + 2 charter_files sites, word-boundary sed left
   `charter_schema` untouched); removed `mod charter;`/`mod charter_files;` from `main.rs`.
@@ -69,35 +70,36 @@
   `core` minor bump + `cli` minor bump + `Cargo.lock` + CHANGELOG + crates.io publish + tag
   all happen at **A1.5**. Dogfood AILOG: `experimento/AILOG-2026-06-14-002`.
 
-## A1.1 — Architecture model + status projection in `core` (library only, test-gated)
+## A1.1 — Architecture model + status projection in `core` (library only, test-gated — DONE)
 
 > The pure heart of A1. No user-facing command yet; lands as `core` lib code + unit tests
-> against hand-authored fixtures. FR1, FR2, FR9, NFR2.
+> against hand-authored fixtures. FR1, FR2, FR9, NFR2. **No tag/bump** (rides A1.5, per A1.0).
 
-- [ ] T1.1 — `core/src/architecture/model.rs`: `serde` structs for `model.yml` (spec §3.1) —
+- [x] T1.1 — `core/src/architecture/model.rs`: `serde` structs for `model.yml` (spec §3.1) —
   `ArchModel { version, layers: Vec<Layer>, components: Vec<Component> }`,
-  `Layer { id, label, order }`, `Component { id, label, layer, globs, links, docs, external }`.
-  `parse_model(path) -> Result<ArchModel>` with validation (unknown layer ref, dup ids,
-  empty globs warning). (FR1)
-- [ ] T1.2 — `core/src/architecture/projection.rs`: define the **pure** projection inputs as
-  a plain data struct so it has zero IO — `GovernanceState { active_charters, closed_charters,
-  charter_declared_files, drift_modified_files, tde_file_sets, wiring_gap_files,
-  on_disk_files }` (each a set/map of paths). (spec §4 "pure function of model + state".)
-- [ ] T1.3 — `ComponentState` enum + `project(model, state) -> Projection` mapping each
-  component to one or more states per spec §4 table: `active` (in-progress charter declared
-  files ∩ globs), `in-progress` (declared∩git-modified within an active component),
-  `implemented` (closed charter/AILOG files ∩ globs), `has-debt` (open TDE), `wiring-gap`
-  (declared-vs-wired findings in component), `uncharted` (globs match files on disk, no doc).
-  Glob match reuses `core::drift::glob_match`. (FR2, NFR3)
-- [ ] T1.4 — Layer-level rollup: per-layer summary (component counts by state) reusing
-  `metrics_engine` aggregate shapes where useful (counts by type/risk). (spec §4 last ¶)
-- [ ] T1.5 — Integrity signals (spec §3.3): `undrawn` (component in model, no DrawIO cell —
-  needs the plan; stub the cell-id set as an input for now), `unmodeled` (cell id not in
-  model), `empty` (globs match zero files on disk). Expose as `validate_model(model,
-  drawio_cell_ids, on_disk) -> Vec<IntegritySignal>`. (FR9)
-- [ ] T1.6 — Unit tests in `core`: fixture `model.yml` + synthetic `GovernanceState` →
-  assert each state derivation and each integrity signal. Glob edge cases (`**`, `*`,
-  trailing) covered. (NFR2 language-agnostic — globs only, no AST.)
+  `Layer { id, label, order }`, `Component { id, label, layer, globs, links, docs, external }`
+  (`links`/`docs`/`external` `#[serde(default)]`). `parse_model(path)` + I/O-free
+  `parse_model_str(content)` (mirrors `charter::parse_charter_str`) with `validate_structure`:
+  unknown layer ref + duplicate id are hard errors, empty-globs is a `ModelIssue` warning. (FR1)
+- [x] T1.2 — `core/src/architecture/projection.rs`: the **pure** projection inputs as a plain
+  data struct (zero IO) — `GovernanceState { active_charter_files, in_progress_files,
+  closed_charter_files, tde_files, wiring_gap_files, on_disk_files }` (each a `Vec<String>` of
+  paths; `#[derive(Default)]` so callers fill only what they have). (spec §4.)
+- [x] T1.3 — `ComponentState` enum + `project(model, state) -> Projection` mapping each
+  component to one or more states per spec §4 table: `active`, `in-progress` (refinement of
+  `active`), `implemented`, `has-debt`, `wiring-gap`, `uncharted` (on-disk match, no other
+  set — suppressed by any documented state). Glob match reuses `core::drift::glob_match`.
+  Deterministic (test asserts equal inputs → equal `Projection`). (FR2, NFR3)
+- [x] T1.4 — Layer-level rollup: `LayerRollup { layer_id, label, order, counts:
+  BTreeMap<ComponentState, usize> }` per layer, preserving model layer order. (spec §4 last ¶)
+- [x] T1.5 — Integrity signals (spec §3.3): `Undrawn` / `Unmodeled` / `Empty` via
+  `validate_model(model, drawio_cell_ids, on_disk) -> Vec<IntegritySignal>` (`drawio_cell_ids`
+  is a stub input until A1.3 parses `plan.drawio`). (FR9)
+- [x] T1.6 — Unit tests in `core` (21 new, inline `#[cfg(test)]`, no on-disk fixtures): each
+  state derivation, each integrity signal, glob edge cases (`**`/`*` span dirs; bare
+  trailing-slash literal matches nothing — documented gotcha), AILOG `## Modified Files`
+  parsing. `cargo test --workspace` green (core 102, cli 314, all integration suites);
+  `cargo clippy -p straymark-core` clean. (NFR2 — globs only, no AST.)
 
 ## A1.2 — `straymark architecture generate` (hybrid seed) — FR7, spec §5
 
