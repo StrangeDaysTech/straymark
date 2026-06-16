@@ -10,7 +10,7 @@ import pagerank from 'graphology-metrics/centrality/pagerank';
 import Sigma from 'sigma';
 
 import { setLocale, t } from './i18n';
-import { renderPlan, stateColor, LEGEND_STATES } from './plan';
+import { renderPlan, stateColor, LEGEND_STATES, setPlanHooks } from './plan';
 
 interface ApiNode {
   id: string;
@@ -848,6 +848,15 @@ function buildPlanLegend(): void {
 for (const b of viewTabs) {
   b.addEventListener('click', () => setView((b.dataset.view as View) ?? 'kg'));
 }
+
+// Cross-view bridge (FR8/§8): clicking a Charter in the plan's component panel
+// switches to the knowledge graph and selects that node (when present).
+setPlanHooks({
+  openNode: (nodeId: string) => {
+    setView('kg');
+    if (graph.hasNode(nodeId)) void select(nodeId);
+  },
+});
 
 // Deep-link the active view synchronously (independent of the async boot, so a
 // `#architecture` reload opens the plan immediately). `setView` falls back to

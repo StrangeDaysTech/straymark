@@ -100,6 +100,33 @@
       #plan-legend .pl-title { color:var(--text); font-weight:600; margin-bottom:6px; }
       #plan-legend .pl-row { display:flex; align-items:center; gap:6px; margin:3px 0; }
       #plan-legend .pl-sw { width:11px; height:11px; border-radius:3px; border:1px solid; flex:none; }
+      #plan-where { left:14px; top:62px; width:268px; max-height:calc(100% - 250px); display:none; }
+      body.view-plan #plan-where { display:block; }
+      #plan-where h2 { font-size:13px; margin:2px 0 8px; }
+      #plan-where .pw-row { margin:5px 0; }
+      #plan-where .pw-k { color:var(--muted); }
+      #plan-where .pw-charter { color:var(--accent); }
+      #plan-where .pw-bar { height:5px; background:#23262f; border-radius:3px; margin-top:4px; overflow:hidden; }
+      #plan-where .pw-bar i { display:block; height:100%; background:var(--accent); }
+      #plan-where .pw-layers { border-top:1px solid var(--border); margin-top:10px; padding-top:8px; }
+      #plan-where .pw-layer { display:flex; align-items:center; gap:6px; margin:3px 0; font-size:11px; cursor:pointer; }
+      #plan-where .pw-layer input { accent-color:var(--accent); cursor:pointer; }
+      #plan-where .pw-layer .pw-count { color:var(--muted); margin-left:auto; }
+      #plan-detail { right:14px; top:62px; width:316px; max-height:calc(100% - 84px); display:none; }
+      #plan-detail.open { display:block; }
+      #plan-detail .close { position:absolute; top:7px; right:10px; color:var(--muted); background:none; border:0; font-size:20px; }
+      #plan-detail h2 { font-size:14px; margin:2px 0 2px; }
+      #plan-detail .pd-layer { color:var(--muted); font-size:11px; margin-bottom:8px; }
+      #plan-detail .pd-badges { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:4px; }
+      #plan-detail .pd-badge { font-size:10px; font-weight:700; border-radius:4px; padding:2px 6px; border:1px solid; }
+      #plan-detail .pd-link { color:#8eb8ed; background:none; border:0; padding:0; text-align:left; font-size:inherit; cursor:pointer; }
+      #plan-detail .pd-link:hover { text-decoration:underline; }
+      #plan-detail ul { max-height:160px; overflow:auto; }
+      #plan-zoom { position:absolute; right:14px; bottom:14px; z-index:110; display:none; flex-direction:column; gap:6px; }
+      body.view-plan #plan-zoom { display:flex; }
+      #plan-zoom button { width:34px; height:34px; display:flex; align-items:center; justify-content:center; color:var(--text); background:var(--panel); border:1px solid var(--border); border-radius:8px; cursor:pointer; }
+      #plan-zoom button:hover { color:var(--accent); border-color:var(--accent); background:#242731; }
+      #plan-zoom svg { width:16px; height:16px; }
     </style>
   </head>
   <body>
@@ -150,6 +177,13 @@
       <button type="button" id="zoom-reset"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6V3h3M13 6V3h-3M3 10v3h3M13 10v3h-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
     <div id="plan-legend"></div>
+    <aside id="plan-where"></aside>
+    <aside id="plan-detail"></aside>
+    <div id="plan-zoom">
+      <button type="button" id="plan-zoom-in" title="Zoom in"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+      <button type="button" id="plan-zoom-out" title="Zoom out"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+      <button type="button" id="plan-zoom-fit" title="Fit to view"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6V3h3M13 6V3h-3M3 10v3h3M13 10v3h-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

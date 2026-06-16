@@ -299,11 +299,23 @@
   prod issue): the dogfood plan renders 4 boxes at their authored geometry with the cli→core /
   loom→core arrows, all `uncharted` (no Charters in this repo), KG chrome hidden. `tsc` + `vite
   build` clean.
-- [ ] **A2.4 — Frontend: toggles, panels, cross-view (FR4/FR5/FR8/§8).** Layer toggle
-  (show/hide cells by component `layer`), component detail panel (S2 — click a component →
-  Charters/docs/debt/owned files), shared "Where are we" panel (`/api/where`), and cross-view
-  linking (component → filter the KG to its docs; KG doc select → highlight components). Follow
-  the event-delegation-on-stable-container pattern (avoid the per-element-listener storm bug).
+- [x] **A2.4 — Frontend: toggles, panels, cross-view (FR4/FR5/FR8/§8).** **"Where are we"
+  panel** (`#plan-where`, left): active Charter, declared/touched progress bar, recent AILOGs,
+  open-debt count. **Layer toggle** (FR4): a checkbox per layer (with its cell count) hides/shows
+  that layer's cells via `model.setVisible` — the 2D "peel floors". **Component detail panel**
+  (`#plan-detail`, right, on cell click via `graph.addListener(InternalEvent.CLICK)`): label,
+  layer, state badges, owned files, and the **Charters that touch it** (server enriched
+  `component_detail` with `charters` = Charters whose declared files match the component's
+  globs). **Cross-view (FR8/§8):** each Charter in the detail panel is a button → `main.ts`'s
+  `setPlanHooks({openNode})` switches to the KG and `select`s that node (Charters are KG nodes).
+  Localized (en/es/zh-CN). Verified visually (CDP + swiftshader): a fixture with an in-progress +
+  a closed Charter renders Auth **active/green**, Billing **implemented/blue**, Web UI
+  **uncharted/grey**; the where panel + layer toggle (unchecking Frontend hides Web UI) + the
+  `component/{id}` payload (states + owned files + related Charters) all confirmed. 717 tests;
+  `tsc`+`vite build` clean. **Navigation:** fit-to-view on render (`FitPlugin.fitCenter`) so a
+  big plan fits any window, wheel-zoom, +/−/fit buttons, and left-button drag-to-pan
+  (`PanningHandler.useLeftButtonForPanning` + `ignoreCell`; `setPanning(true)` alone only pans on
+  the right button). Both surfaced during the Sentinel dogfood.
 - [ ] **A2.5 — Acceptance + release.** Spec §11.2 (lit/shaded/dimmed overlay), §11.3 (DrawIO
   round-trip lossless — edit `plan.drawio` in real DrawIO, reload, geometry + overlay intact),
   §11.4 (layer toggle), §11.6 (live overlay < ~1s). Dogfood on `experimento/architecture/`.
