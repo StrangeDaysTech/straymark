@@ -238,25 +238,56 @@
 
 ---
 
-## A2 — Architecture Plan view (skeleton; refine when A2 starts) — `loom-0.x`
+## A2 — Architecture Plan view (the visual "you are here") — `loom-0.5.0`
 
-- [ ] A2.1 — `GET /api/architecture`, `/api/architecture/component/:id`,
-  `/api/architecture/plan.drawio`, `/api/where` in the Loom server, reusing
-  `core::architecture::project` (server builds `GovernanceState` from `core` extractors — the
-  reason A1.0 moved them). (spec §7)
-- [ ] A2.2 — Watcher extension: rebuild + push architecture-status deltas on `.straymark/` or
-  `architecture/` changes over the shared `WS /api/stream`. (FR6)
-- [ ] A2.3 — `web/`: maxGraph (`@maxgraph/core`) loads `plan.drawio`, preserves geometry,
-  applies status as non-destructive cell-style overrides keyed on `straymark_component_id`.
-  (FR3, NFR1)
-- [ ] A2.4 — Layer toggle (FR4), component detail panel (FR5/S2), "Where are we" panel
-  (`/api/where`), cross-view linking with the KG (FR8/§8).
-- [ ] A2.5 — Acceptance: spec §11.2/3/4/6 (lit/shaded/dimmed overlay, DrawIO round-trip
-  lossless, layer toggle, live overlay < ~1s). CHANGELOG + `loom-0.x` tag.
+> **Release discipline (user-confirmed 2026-06-16):** single release. A2.0–A2.4 each merge
+> **tagless**, branched fresh from `main` (no stacked-PR-on-squash hazard); **A2.5** carries the
+> one `loom-0.5.0` tag covering all of A2 (the analog of A1.5 for the CLI track). Loom is dev-
+> tested with a local branch binary + `--assets-dir experimento/web/dist` (not `loom serve`,
+> which downloads the published release). The CLI/core are unaffected (`loom-*` is independent).
+
+- [x] **A2.0 — Refactor: `build_governance_state` → `core::architecture` (de-risk, CLI as
+  oracle).** New `core::architecture::gather` holds `build_governance_state(root)` + its helpers
+  (`git_modified_files`, the open-TDE/closed-AILOG/declared extractors) and the source-file
+  walker (`collect_source_files` + `EXCLUDED_DIRS`/`SOURCE_EXTENSIONS`). `agent_logs_dir` +
+  `find_ailog_file` moved from `cli/src/ailog.rs` to `core::ailog`. `cli`'s `where_view.rs` calls
+  `core::architecture::build_governance_state`; `common.rs` + `cli::ailog` re-export the moved
+  `core` fns so the call sites are unchanged. Regression oracle green: the 3 `status --where`
+  integration tests + the architecture-command suite byte-for-byte unchanged (710 tests). **core
+  bumped 0.5.0 → 0.6.0** (0.5.0 is already published, so the additive `gather`/`ailog` surface
+  can't ride the same version); `cli` + `experimento` core dep pins bumped. core 0.6.0 stays
+  **unpublished** until the next `cli-*` release publishes it (loom uses the local path).
+- [ ] **A2.1 — Server architecture endpoints (spec §7).** Add to the axum app
+  (`experimento/src/server.rs`): `GET /api/architecture` (`{layers, components, edges, status}`),
+  `/api/architecture/component/:id` (matched docs + charters + debt + owned files + state),
+  `/api/where` (active charters + declared-vs-modified progress + recent AILOGs + open debt),
+  `/api/architecture/plan.drawio` (the XML, status styles applied). Load `architecture/model.yml`
+  + `plan.drawio` from the watch dir; reuse `core::architecture::{parse_model,
+  build_governance_state, project, validate_model}`. Read-only (NFR4). New `serde::Serialize`
+  response types in the server (keep `core` surface stable). Server unit/integration tests.
+- [ ] **A2.2 — Watcher: architecture deltas (FR6).** Extend the shared watcher to rebuild +
+  push an architecture-status delta over `WS /api/stream` when `architecture/model.yml`,
+  `plan.drawio`, or the governance docs change. Apply the same no-op suppression
+  (`is_noop`-style) so identical reprojections don't broadcast. Fold the architecture snapshot
+  into `AppState` (or a sibling `Arc<RwLock<>>`).
+- [ ] **A2.3 — Frontend: maxGraph plan render (FR3, NFR1).** Add `@maxgraph/core` to
+  `web/package.json`. Introduce a top-level **view switch** (KG | Plan tabs) without rewriting
+  the Sigma monolith (`main.ts` stays; add `plan.ts` + a thin switcher). Load
+  `/api/architecture/plan.drawio` into maxGraph, **preserve the human geometry**, and apply the
+  §4 status as **non-destructive cell-style overrides** (fillColor/opacity/stroke/badge) keyed
+  on `straymark_component_id`. i18n strings via `i18n.ts`.
+- [ ] **A2.4 — Frontend: toggles, panels, cross-view (FR4/FR5/FR8/§8).** Layer toggle
+  (show/hide cells by component `layer`), component detail panel (S2 — click a component →
+  Charters/docs/debt/owned files), shared "Where are we" panel (`/api/where`), and cross-view
+  linking (component → filter the KG to its docs; KG doc select → highlight components). Follow
+  the event-delegation-on-stable-container pattern (avoid the per-element-listener storm bug).
+- [ ] **A2.5 — Acceptance + release.** Spec §11.2 (lit/shaded/dimmed overlay), §11.3 (DrawIO
+  round-trip lossless — edit `plan.drawio` in real DrawIO, reload, geometry + overlay intact),
+  §11.4 (layer toggle), §11.6 (live overlay < ~1s). Dogfood on `experimento/architecture/`.
+  `experimento/CHANGELOG.md` + bump `experimento/Cargo.toml`; PR → merge → tag **`loom-0.5.0`**.
+  Update spec §11 acceptance + the Loom memory note (A2 done, next = A3 axonometric north star).
 
 ## A3 — Axonometric/BIM exploded view (north star, post-MVP)
 
 - [ ] A3.1 — 2.5D stacked, explodable layers (the isometric "floors"). Pursued once the model
   is proven. (spec §12, §13.)
-</content>
-</invoke>

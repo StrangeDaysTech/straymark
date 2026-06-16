@@ -21,9 +21,52 @@
 //! which treats a missing match as "not touched".
 
 use crate::charter_files::{first_backtick_token, looks_like_path};
+use std::path::{Path, PathBuf};
 
 /// The `## Modified Files` heading (AILOG template is English-only).
 const SECTION_HEADING: &str = "Modified Files";
+
+/// Canonical sub-path (relative to project root) of the AILOG directory.
+/// Moved to `core` in Loom A2.0 so the CLI (`charter drift`, `batch_complete`,
+/// `status --where`) and the Loom server (A2) discover AILOGs one way.
+pub fn agent_logs_dir(project_root: &Path) -> PathBuf {
+    project_root
+        .join(".straymark")
+        .join("07-ai-audit")
+        .join("agent-logs")
+}
+
+/// Find the AILOG file matching the given AILOG ID. Searches recursively
+/// and matches by filename prefix. The id may be bare
+/// (`AILOG-2026-05-02-028b`) or include a slug
+/// (`AILOG-2026-05-02-028b-foo`); both resolve to the same file.
+pub fn find_ailog_file(agent_logs_dir: &Path, ailog_id: &str) -> Option<PathBuf> {
+    let prefix: String = ailog_id
+        .split('-')
+        .take(5) // "AILOG", "YYYY", "MM", "DD", "NNN[a-z]?"
+        .collect::<Vec<_>>()
+        .join("-");
+    walk_for_prefix(agent_logs_dir, &prefix)
+}
+
+fn walk_for_prefix(dir: &Path, prefix: &str) -> Option<PathBuf> {
+    let entries = std::fs::read_dir(dir).ok()?;
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            if let Some(found) = walk_for_prefix(&path, prefix) {
+                return Some(found);
+            }
+            continue;
+        }
+        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+            if name.starts_with(prefix) && name.ends_with(".md") {
+                return Some(path);
+            }
+        }
+    }
+    None
+}
 
 /// Parse the `## Modified Files` section of an AILOG body and return the paths
 /// it lists. Recognizes the markdown-table form the template ships (column 1 =
@@ -151,5 +194,28 @@ mod tests {
     fn empty_when_section_absent() {
         let body = "## Summary\n\nNo modified-files section here.\n";
         assert!(parse_modified_files(body).is_empty());
+    }
+
+    #[test]
+    fn agent_logs_dir_is_canonical_subpath() {
+        let root = Path::new("/proj");
+        assert_eq!(
+            agent_logs_dir(root),
+            Path::new("/proj/.straymark/07-ai-audit/agent-logs")
+        );
+    }
+
+    #[test]
+    fn find_ailog_file_matches_letter_suffix_id() {
+        // A bare id resolves to its slugged file, recursively.
+        let tmp = tempfile::TempDir::new().unwrap();
+        let agent_logs = tmp.path().join("agent-logs");
+        std::fs::create_dir_all(&agent_logs).unwrap();
+        let path = agent_logs.join("AILOG-2026-05-02-028b-collision.md");
+        std::fs::write(&path, "stub\n").unwrap();
+
+        let found = find_ailog_file(&agent_logs, "AILOG-2026-05-02-028b").unwrap();
+        assert_eq!(found, path);
+        assert!(find_ailog_file(&agent_logs, "AILOG-2026-05-02-999").is_none());
     }
 }

@@ -14,17 +14,12 @@ use straymark_core::drift::glob_match;
 use super::adr_mining;
 use crate::utils;
 
-/// Directories never scanned for components (build output, VCS, deps, docs).
-pub(crate) const EXCLUDED_DIRS: &[&str] = &[
-    ".straymark", ".git", "node_modules", "target", "vendor", "dist", "build",
-    ".venv", "__pycache__", ".github", "docs",
-];
-
-/// Extensions that mark a directory as holding source worth a component.
-pub(crate) const SOURCE_EXTENSIONS: &[&str] = &[
-    "rs", "py", "js", "ts", "jsx", "tsx", "java", "go", "cs", "cpp", "cc",
-    "cxx", "c", "h", "php", "kt", "swift",
-];
+// The source-file walker (`collect_source_files` + its `EXCLUDED_DIRS`/
+// `SOURCE_EXTENSIONS`) moved to `core::architecture::gather` in Loom A2.0 so the
+// CLI generator and the Loom server share one inventory scan. Re-exported so the
+// `common::collect_source_files` call sites (generate/sync/validate) are
+// unchanged.
+pub(crate) use straymark_core::architecture::collect_source_files;
 
 /// The placeholder layer code-derived components land in until the human
 /// assigns real layers.
@@ -85,38 +80,6 @@ pub(crate) fn top_level_source_dirs(root: &Path) -> Vec<String> {
         }
     }
     dirs.into_iter().collect()
-}
-
-/// Source files (paths relative to `root`), skipping excluded dirs.
-pub(crate) fn collect_source_files(root: &Path) -> Vec<PathBuf> {
-    fn walk(dir: &Path, root: &Path, out: &mut Vec<PathBuf>) {
-        let Ok(entries) = std::fs::read_dir(dir) else {
-            return;
-        };
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_dir() {
-                if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                    if !EXCLUDED_DIRS.contains(&name) {
-                        walk(&path, root, out);
-                    }
-                }
-            } else if path.is_file() {
-                let is_source = path
-                    .extension()
-                    .and_then(|e| e.to_str())
-                    .is_some_and(|ext| SOURCE_EXTENSIONS.contains(&ext));
-                if is_source {
-                    if let Ok(rel) = path.strip_prefix(root) {
-                        out.push(rel.to_path_buf());
-                    }
-                }
-            }
-        }
-    }
-    let mut out = Vec::new();
-    walk(root, root, &mut out);
-    out
 }
 
 /// A component proposed from a top-level source dir (`dir/**`, `unassigned`).
