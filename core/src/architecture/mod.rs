@@ -12,8 +12,10 @@
 pub mod gather;
 pub mod model;
 pub mod projection;
+pub mod scan;
 
-pub use gather::{build_governance_state, collect_source_files};
+pub use gather::{build_governance_state, collect_source_files, collect_source_files_with};
+pub use scan::{component_dir_for, resolve_scan_config, ScanConfig};
 pub use model::{parse_model, parse_model_str, validate_structure, ArchModel, Component, Layer, ModelIssue};
 pub use projection::{
     project, validate_model, ComponentProjection, ComponentState, GovernanceState,

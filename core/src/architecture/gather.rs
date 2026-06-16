@@ -19,20 +19,9 @@ use crate::ailog;
 use crate::architecture::projection::GovernanceState;
 use crate::charter::{self, Charter, CharterStatus};
 use crate::charter_files::parse_files_to_modify;
+use crate::architecture::scan::{resolve_scan_config, ScanConfig};
 use crate::document::{detect_doc_type, discover_documents, parse_document, DocType};
 use crate::drift::compute_drift;
-
-/// Directories never scanned for source (build output, VCS, deps, docs).
-pub const EXCLUDED_DIRS: &[&str] = &[
-    ".straymark", ".git", "node_modules", "target", "vendor", "dist", "build",
-    ".venv", "__pycache__", ".github", "docs",
-];
-
-/// Extensions that mark a file as source worth counting in the inventory.
-pub const SOURCE_EXTENSIONS: &[&str] = &[
-    "rs", "py", "js", "ts", "jsx", "tsx", "java", "go", "cs", "cpp", "cc",
-    "cxx", "c", "h", "php", "kt", "swift",
-];
 
 /// Gather the governance-derived file sets (Spec 002 §4) the pure projection
 /// consumes. All impure work (git, fs walk, document parsing) lives here; the
@@ -84,11 +73,18 @@ pub fn build_governance_state(root: &Path) -> GovernanceState {
     }
 }
 
-/// Source files (paths relative to `root`), skipping [`EXCLUDED_DIRS`]. Used for
-/// the on-disk inventory (the `uncharted` signal) and by the CLI generator to
-/// discover top-level component directories.
+/// Source files (paths relative to `root`), filtered by the project's
+/// [`ScanConfig`] (source extensions + excluded dirs, defaults ∪ the
+/// `architecture:` config section, #279). Used for the on-disk inventory (the
+/// `uncharted` signal) and by the CLI generator to discover component dirs.
 pub fn collect_source_files(root: &Path) -> Vec<PathBuf> {
-    fn walk(dir: &Path, root: &Path, out: &mut Vec<PathBuf>) {
+    collect_source_files_with(root, &resolve_scan_config(root))
+}
+
+/// [`collect_source_files`] with an explicit config (so a caller that already
+/// resolved one — e.g. the generator computing component dirs — reuses it).
+pub fn collect_source_files_with(root: &Path, cfg: &ScanConfig) -> Vec<PathBuf> {
+    fn walk(dir: &Path, root: &Path, cfg: &ScanConfig, out: &mut Vec<PathBuf>) {
         let Ok(entries) = std::fs::read_dir(dir) else {
             return;
         };
@@ -96,15 +92,15 @@ pub fn collect_source_files(root: &Path) -> Vec<PathBuf> {
             let path = entry.path();
             if path.is_dir() {
                 if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                    if !EXCLUDED_DIRS.contains(&name) {
-                        walk(&path, root, out);
+                    if !cfg.is_excluded_dir(name) {
+                        walk(&path, root, cfg, out);
                     }
                 }
             } else if path.is_file() {
                 let is_source = path
                     .extension()
                     .and_then(|e| e.to_str())
-                    .is_some_and(|ext| SOURCE_EXTENSIONS.contains(&ext));
+                    .is_some_and(|ext| cfg.is_source_ext(ext));
                 if is_source {
                     if let Ok(rel) = path.strip_prefix(root) {
                         out.push(rel.to_path_buf());
@@ -114,7 +110,7 @@ pub fn collect_source_files(root: &Path) -> Vec<PathBuf> {
         }
     }
     let mut out = Vec::new();
-    walk(root, root, &mut out);
+    walk(root, root, cfg, &mut out);
     out
 }
 

@@ -7,18 +7,20 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-use straymark_core::architecture::{ArchModel, Component, Layer};
+use straymark_core::architecture::{
+    collect_source_files_with, component_dir_for, resolve_scan_config, ArchModel, Component, Layer,
+};
 use straymark_core::document::{detect_doc_type, discover_documents, DocType};
 use straymark_core::drift::glob_match;
 
 use super::adr_mining;
 use crate::utils;
 
-// The source-file walker (`collect_source_files` + its `EXCLUDED_DIRS`/
-// `SOURCE_EXTENSIONS`) moved to `core::architecture::gather` in Loom A2.0 so the
-// CLI generator and the Loom server share one inventory scan. Re-exported so the
-// `common::collect_source_files` call sites (generate/sync/validate) are
-// unchanged.
+// The source-file walker + the component-dir shaping (extensions, excluded dirs,
+// container descent, build-scaffolding) live in `core::architecture::{gather,
+// scan}` (Loom A2.0; made config-driven in #279) so the CLI generator and the
+// Loom server share one inventory scan. Re-exported so the
+// `common::collect_source_files` call sites (validate/sync) are unchanged.
 pub(crate) use straymark_core::architecture::collect_source_files;
 
 /// The placeholder layer code-derived components land in until the human
@@ -65,47 +67,21 @@ pub(crate) fn artifact_paths(root: &Path, out: Option<&str>) -> (PathBuf, PathBu
     (out_dir, model, drawio)
 }
 
-/// Organizational directories that hold *other* components rather than being
-/// one themselves — the seed descends through them one level so an `internal/`
-/// or `src/` tree breaks out into real components instead of one giant blob
-/// (#273). A leaf like `cmd/` or `db/` is not a container and stays whole.
-pub(crate) const CONTAINER_DIRS: &[&str] =
-    &["internal", "src", "pkg", "lib", "libs", "app", "apps", "modules", "packages"];
-
-/// Distinct component directories under `root` that contain ≥1 source file. A
-/// component dir is the path up to and including the first **non-container**
-/// segment, so `internal/modules/agents/x.go` → `internal/modules/agents`,
-/// `internal/core/bus.go` → `internal/core`, and `cmd/main.go` → `cmd`.
+/// Distinct component directories under `root` that contain ≥1 source file,
+/// shaped by the project's [`ScanConfig`] (#273, #279): the seed descends
+/// through *container* dirs and skips build *scaffolding* (e.g. Maven
+/// `src/main/java`), so `internal/modules/agents/x.go` → `internal/modules/agents`,
+/// `cmd/main.go` → `cmd`, and `billing/src/main/java/…` → `billing`. The config
+/// is resolved once and reused for the file walk.
 pub(crate) fn source_component_dirs(root: &Path) -> Vec<String> {
+    let cfg = resolve_scan_config(root);
     let mut dirs: BTreeSet<String> = BTreeSet::new();
-    for rel in collect_source_files(root) {
-        if let Some(dir) = component_dir_for(&rel) {
+    for rel in collect_source_files_with(root, &cfg) {
+        if let Some(dir) = component_dir_for(&rel, &cfg) {
             dirs.insert(dir);
         }
     }
     dirs.into_iter().collect()
-}
-
-/// The component directory a source file belongs to: descend through container
-/// segments, stop at (and include) the first non-container one. Returns `None`
-/// for a root-level file (no directory to attribute it to).
-fn component_dir_for(rel: &Path) -> Option<String> {
-    let segs: Vec<String> = rel
-        .parent()?
-        .components()
-        .map(|c| c.as_os_str().to_string_lossy().to_string())
-        .collect();
-    if segs.is_empty() {
-        return None;
-    }
-    let mut taken: Vec<&str> = Vec::new();
-    for seg in &segs {
-        taken.push(seg);
-        if !CONTAINER_DIRS.contains(&seg.as_str()) {
-            break;
-        }
-    }
-    Some(taken.join("/"))
 }
 
 /// A component proposed from a source dir (`dir/**`, `unassigned`). The id is
@@ -456,22 +432,8 @@ mod tests {
         assert_eq!(c.globs, vec!["internal/modules/agents/**"]);
     }
 
-    #[test]
-    fn component_dir_descends_through_container_dirs() {
-        // #273: a container tree breaks out; a leaf dir stays whole.
-        let cases = [
-            ("internal/modules/agents/runner.go", Some("internal/modules/agents")),
-            ("internal/core/eventbus/bus.go", Some("internal/core")),
-            ("cmd/server/main.go", Some("cmd")),
-            ("db/seeds/seeds.go", Some("db")),
-            ("src/index.ts", Some("src")), // files directly under a container → the container
-            ("main.go", None),             // root-level file: no dir to attribute
-        ];
-        for (path, want) in cases {
-            let got = component_dir_for(Path::new(path));
-            assert_eq!(got.as_deref(), want, "for {path}");
-        }
-    }
+    // (component-dir descent + Maven scaffolding are tested in
+    // `core::architecture::scan` — the logic moved there in #279.)
 
     #[test]
     fn generated_model_passes_core_validation() {
