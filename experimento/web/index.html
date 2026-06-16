@@ -122,6 +122,11 @@
       #plan-detail .pd-link { color:#8eb8ed; background:none; border:0; padding:0; text-align:left; font-size:inherit; cursor:pointer; }
       #plan-detail .pd-link:hover { text-decoration:underline; }
       #plan-detail ul { max-height:160px; overflow:auto; }
+      #plan-zoom { position:absolute; right:14px; bottom:14px; z-index:110; display:none; flex-direction:column; gap:6px; }
+      body.view-plan #plan-zoom { display:flex; }
+      #plan-zoom button { width:34px; height:34px; display:flex; align-items:center; justify-content:center; color:var(--text); background:var(--panel); border:1px solid var(--border); border-radius:8px; cursor:pointer; }
+      #plan-zoom button:hover { color:var(--accent); border-color:var(--accent); background:#242731; }
+      #plan-zoom svg { width:16px; height:16px; }
     </style>
   </head>
   <body>
@@ -174,6 +179,11 @@
     <div id="plan-legend"></div>
     <aside id="plan-where"></aside>
     <aside id="plan-detail"></aside>
+    <div id="plan-zoom">
+      <button type="button" id="plan-zoom-in" title="Zoom in"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+      <button type="button" id="plan-zoom-out" title="Zoom out"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+      <button type="button" id="plan-zoom-fit" title="Fit to view"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6V3h3M13 6V3h-3M3 10v3h3M13 10v3h-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

@@ -312,7 +312,9 @@
   a closed Charter renders Auth **active/green**, Billing **implemented/blue**, Web UI
   **uncharted/grey**; the where panel + layer toggle (unchecking Frontend hides Web UI) + the
   `component/{id}` payload (states + owned files + related Charters) all confirmed. 717 tests;
-  `tsc`+`vite build` clean.
+  `tsc`+`vite build` clean. **Navigation:** fit-to-view on render (`FitPlugin.fitCenter`) so a
+  big plan fits any window, wheel-zoom, and +/−/fit buttons (a large plan was unreadable in a
+  small window — reported during the Sentinel dogfood).
 - [ ] **A2.5 — Acceptance + release.** Spec §11.2 (lit/shaded/dimmed overlay), §11.3 (DrawIO
   round-trip lossless — edit `plan.drawio` in real DrawIO, reload, geometry + overlay intact),
   §11.4 (layer toggle), §11.6 (live overlay < ~1s). Dogfood on `experimento/architecture/`.

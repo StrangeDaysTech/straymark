@@ -9,7 +9,14 @@
 //! doesn't round-trip DrawIO `<object>` user-cells in 0.23). Each vertex's cell
 //! id is its `straymark_component_id`, so a click maps straight to the model.
 
-import { Graph, InternalEvent, type Cell, type CellStyle, type EventObject } from '@maxgraph/core';
+import {
+  Graph,
+  InternalEvent,
+  FitPlugin,
+  type Cell,
+  type CellStyle,
+  type EventObject,
+} from '@maxgraph/core';
 import { t } from './i18n';
 
 interface ArchComponent {
@@ -157,7 +164,6 @@ export async function renderPlan(container: HTMLElement): Promise<void> {
       }
     }
   });
-  graph.center(true, true);
 
   graph.addListener(InternalEvent.CLICK, (_sender: unknown, evt: EventObject) => {
     const cell = evt.getProperty('cell') as Cell | null;
@@ -166,7 +172,34 @@ export async function renderPlan(container: HTMLElement): Promise<void> {
     else closeDetail();
   });
 
+  wireZoom(container);
+  fitView();
   renderWherePanel(arch.layers);
+}
+
+// ── Zoom / pan (so a big plan fits a small window) ───────────────────────────
+
+/** Scale + center the whole plan to fit the viewport (initial + Fit button). */
+function fitView(): void {
+  if (!graph) return;
+  graph.getPlugin<FitPlugin>('fit')?.fitCenter({ margin: 24 });
+}
+
+/** Wheel-zoom on the canvas + wire the zoom buttons (idempotent: `onclick`). */
+function wireZoom(container: HTMLElement): void {
+  container.onwheel = (e: WheelEvent) => {
+    if (!graph) return;
+    e.preventDefault();
+    if (e.deltaY < 0) graph.zoomIn();
+    else graph.zoomOut();
+  };
+  const onClick = (id: string, fn: () => void) => {
+    const el = document.getElementById(id);
+    if (el) el.onclick = fn;
+  };
+  onClick('plan-zoom-in', () => graph?.zoomIn());
+  onClick('plan-zoom-out', () => graph?.zoomOut());
+  onClick('plan-zoom-fit', () => fitView());
 }
 
 // ── Component detail panel (S2) ──────────────────────────────────────────────
