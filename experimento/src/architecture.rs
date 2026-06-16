@@ -18,6 +18,7 @@ use straymark_core::architecture::{
     build_governance_state, collect_source_files, parse_model, project, ArchModel, Projection,
 };
 use straymark_core::charter::{self, CharterStatus};
+use straymark_core::charter_files::parse_files_to_modify;
 use straymark_core::drift::glob_match;
 
 /// Default `architecture/` directory: the adopter `.straymark/architecture/`,
@@ -159,6 +160,17 @@ pub struct ComponentDetail {
     pub states: Vec<String>,
     /// Source files on disk that the component's globs own (S2).
     pub owned_files: Vec<String>,
+    /// Charters whose declared files fall in this component (S2 — "which
+    /// Charters touch it"). These are KG nodes, so the client can cross-link.
+    pub charters: Vec<RelatedCharter>,
+}
+
+/// A Charter that touches a component, with the id the KG node uses.
+#[derive(Serialize)]
+pub struct RelatedCharter {
+    pub charter_id: String,
+    pub title: String,
+    pub status: String,
 }
 
 /// Detail for one component, or `None` when no model / unknown id.
@@ -177,6 +189,22 @@ pub fn component_detail(project_root: &Path, arch_dir: &Path, id: &str) -> Optio
         .collect();
     owned_files.sort();
 
+    // Charters whose declared `## Files to modify` fall in this component.
+    let (charters, _errors) = charter::discover_and_parse(project_root);
+    let related: Vec<RelatedCharter> = charters
+        .iter()
+        .filter(|c| {
+            parse_files_to_modify(&c.body)
+                .iter()
+                .any(|f| comp.globs.iter().any(|g| glob_match(g, &f.path)))
+        })
+        .map(|c| RelatedCharter {
+            charter_id: c.frontmatter.charter_id.clone(),
+            title: charter::display_title(c),
+            status: c.frontmatter.status.as_str().to_string(),
+        })
+        .collect();
+
     Some(ComponentDetail {
         id: comp.id.clone(),
         label: comp.label.clone(),
@@ -187,6 +215,7 @@ pub fn component_detail(project_root: &Path, arch_dir: &Path, id: &str) -> Optio
         external: comp.external,
         states: states_of(&projection, &comp.id),
         owned_files,
+        charters: related,
     })
 }
 
@@ -386,6 +415,9 @@ components:
         let d = component_detail(tmp.path(), &arch(tmp.path()), "auth").unwrap();
         assert_eq!(d.label, "Auth");
         assert_eq!(d.owned_files, vec!["src/auth/login.rs"]);
+        // CHARTER-01 declares src/auth/login.rs → it touches the auth component.
+        assert_eq!(d.charters.len(), 1);
+        assert_eq!(d.charters[0].charter_id, "CHARTER-01");
         assert!(component_detail(tmp.path(), &arch(tmp.path()), "ghost").is_none());
     }
 
