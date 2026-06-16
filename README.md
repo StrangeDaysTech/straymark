@@ -277,8 +277,8 @@ StrayMark uses independent version tags for each component:
 
 | Component | Tag prefix | Example | Includes |
 | --- | --- | --- | --- |
-| Framework | `fw-` | `fw-4.26.0` | Templates (12 types), governance, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.25.0` | The `straymark` binary |
+| Framework | `fw-` | `fw-4.27.0` | Templates (12 types), governance, directives, Charter template + schema |
+| CLI | `cli-` | `cli-3.26.0` | The `straymark` binary |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | The `straymark-loom` visualization server, downloaded on demand by `straymark loom serve` |
 
 Check installed versions with `straymark status` or `straymark about`.
@@ -312,7 +312,7 @@ See [CLI Reference](https://github.com/StrangeDaysTech/straymark/blob/main/docs/
 ```bash
 # Download the latest framework release ZIP from GitHub
 # Go to https://github.com/StrangeDaysTech/straymark/releases
-# and download the latest fw-* release (e.g., fw-4.26.0)
+# and download the latest fw-* release (e.g., fw-4.27.0)
 
 # Extract and copy to your project
 unzip straymark-fw-*.zip -d your-project/
