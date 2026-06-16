@@ -105,6 +105,9 @@
       #plan-mode button { color:var(--muted); background:none; border:1px solid var(--border); border-radius:5px; padding:3px 9px; font-size:11px; font-weight:600; }
       #plan-mode button:hover { color:var(--text); }
       #plan-mode button.active { color:#14161c; background:var(--accent); border-color:var(--accent); }
+      #axon-explode { position:absolute; right:14px; bottom:14px; z-index:110; display:none; align-items:center; gap:9px; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:8px 13px; color:var(--muted); font-size:11px; }
+      body.view-plan.plan-3d #axon-explode { display:flex; }
+      #axon-explode input { width:130px; accent-color:var(--accent); cursor:pointer; }
       body.view-plan #plan-legend { display:block; }
       body.view-plan #graph, body.view-plan .kg-only, body.view-plan #stats, body.view-plan #legend, body.view-plan #selection, body.view-plan #zoom-controls { display:none !important; }
       #plan-legend { position:absolute; left:14px; bottom:14px; z-index:100; display:none; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:9px 11px; font-size:11px; color:var(--muted); }
@@ -199,6 +202,10 @@
       <button type="button" id="plan-zoom-in" title="Zoom in"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
       <button type="button" id="plan-zoom-out" title="Zoom out"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
       <button type="button" id="plan-zoom-fit" title="Fit to view"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6V3h3M13 6V3h-3M3 10v3h3M13 10v3h-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+    <div id="axon-explode">
+      <span id="axon-explode-label">Explode</span>
+      <input type="range" id="axon-explode-range" min="0" max="100" value="25" aria-label="Explode floors" />
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
