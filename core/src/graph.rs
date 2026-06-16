@@ -76,15 +76,61 @@ impl Node {
     }
 }
 
+/// How an *unresolved* edge target reads — so a genuine broken governance link
+/// is distinguished from a reference to a non-document artifact (issue #262:
+/// `related:` paths to code/specs/URLs were drowning the ~2 real broken links
+/// under ~90 structural false positives). Resolved edges always point at a
+/// document, so this is `None` for them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum RefKind {
+    /// Shaped like a StrayMark governance id/name; if unresolved, a genuine
+    /// broken link worth fixing (the hygiene signal).
+    Doc,
+    /// A path to a file/artifact in the repo (code, spec, audit, sidecar) — a
+    /// valid cross-reference that simply isn't a graph node.
+    File,
+    /// An external URL.
+    External,
+}
+
+/// Classify an **unresolved** edge target by shape — pure, no filesystem. Only
+/// meaningful when resolution failed; resolved edges are always documents.
+pub fn classify_reference(target: &str) -> RefKind {
+    let t = target.trim();
+    if t.starts_with("http://") || t.starts_with("https://") || t.starts_with("mailto:") {
+        return RefKind::External;
+    }
+    if t.contains('/') || t.contains('\\') || has_non_doc_extension(t) {
+        return RefKind::File;
+    }
+    RefKind::Doc
+}
+
+/// True when a separator-free token ends in a known non-`.md` file extension
+/// (`CHARTER-19.telemetry.yaml`, `events.go`) — i.e. a file, not a governance id.
+fn has_non_doc_extension(t: &str) -> bool {
+    const EXTS: &[&str] = &[
+        ".yaml", ".yml", ".json", ".toml", ".go", ".rs", ".py", ".ts", ".js",
+        ".tsx", ".jsx", ".sh", ".sql", ".png", ".svg", ".jpg", ".pdf", ".csv",
+        ".txt", ".lock", ".mod", ".sum", ".html", ".css",
+    ];
+    let lower = t.to_ascii_lowercase();
+    EXTS.iter().any(|e| lower.ends_with(e))
+}
+
 /// A directed, typed edge. `source`/`target` are node ids; an edge whose
 /// target id is not present in the corpus is kept with `resolved: false`
 /// (a dangling reference — a first-class signal, never silently dropped).
+/// `unresolved_kind` classifies the dangling ones (`None` when resolved).
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Edge {
     pub source: String,
     pub target: String,
     pub edge_type: EdgeType,
     pub resolved: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unresolved_kind: Option<RefKind>,
 }
 
 /// The typed, bidirectional document multigraph.
@@ -357,6 +403,11 @@ impl Graph {
             let edge_idx = graph.edges.len();
             graph.edges.push(Edge {
                 source: source_id,
+                // Classify the dangling ones by the *original* target the author
+                // wrote (before canonicalization), so a path/URL reads as such.
+                unresolved_kind: target_idx
+                    .is_none()
+                    .then(|| classify_reference(&target)),
                 target: target_str,
                 edge_type,
                 resolved: target_idx.is_some(),
@@ -1277,5 +1328,50 @@ mod tests {
             .map(|e| e.source.as_str())
             .collect();
         assert_eq!(incoming, vec!["CHARTER-15-auth"]);
+    }
+
+    #[test]
+    fn classify_reference_splits_doc_file_external() {
+        // Issue #262: only governance-id-shaped targets are "broken links".
+        // Governance ids (broken-link candidates).
+        assert_eq!(classify_reference("AILOG-2026-05-02-034"), RefKind::Doc);
+        assert_eq!(classify_reference("TDE-001"), RefKind::Doc);
+        assert_eq!(classify_reference("MISSING-1"), RefKind::Doc);
+        // File/artifact paths — valid cross-refs, not broken governance links.
+        assert_eq!(classify_reference("internal/modules/agents/safe_mode.go"), RefKind::File);
+        assert_eq!(classify_reference("specs/001-mvp/spec.md (US3)"), RefKind::File);
+        assert_eq!(classify_reference(".straymark/charters/29-x.md"), RefKind::File);
+        assert_eq!(classify_reference("CHARTER-19.telemetry.yaml"), RefKind::File); // ext, no slash
+        assert_eq!(classify_reference("db/migrations/028_x.sql"), RefKind::File);
+        // External URLs.
+        assert_eq!(classify_reference("https://github.com/org/repo/issues/119"), RefKind::External);
+        assert_eq!(classify_reference("http://example.com"), RefKind::External);
+    }
+
+    #[test]
+    fn unresolved_edges_carry_their_kind() {
+        let req = make_doc(
+            "REQ-2026-03-01-001-x.md",
+            DocType::Req,
+            Frontmatter {
+                id: Some("REQ-1".into()),
+                related: Some(vec![
+                    "GHOST-9".into(),                 // doc → broken
+                    "internal/x.go".into(),           // file
+                    "https://example.com".into(),     // external
+                ]),
+                ..Default::default()
+            },
+        );
+        let g = Graph::build(&[&req]);
+        let kinds: Vec<_> = g
+            .edges
+            .iter()
+            .filter(|e| !e.resolved)
+            .map(|e| (e.target.as_str(), e.unresolved_kind))
+            .collect();
+        assert!(kinds.contains(&("GHOST-9", Some(RefKind::Doc))));
+        assert!(kinds.contains(&("internal/x.go", Some(RefKind::File))));
+        assert!(kinds.contains(&("https://example.com", Some(RefKind::External))));
     }
 }

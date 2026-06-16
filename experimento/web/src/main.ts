@@ -47,7 +47,9 @@ interface ApiStats {
   by_status: Record<string, number>;
   by_risk: Record<string, number>;
   orphans: string[];
-  dangling_references: ApiEdge[];
+  broken_links: ApiEdge[];
+  file_references: number;
+  external_links: number;
   cycles: Cycle[];
 }
 
@@ -489,8 +491,8 @@ function bindNodeLinks(root: HTMLElement): void {
 }
 
 function renderStats(stats: ApiStats): void {
-  const dangling = stats.dangling_references
-    .map((edge) => `<li>${nodeButton(edge.source)} → <span>${escapeHtml(edge.target)}</span></li>`)
+  const broken = stats.broken_links
+    .map((edge) => `<li>${nodeButton(edge.source)} → <span class="dangling">${escapeHtml(edge.target)}</span></li>`)
     .join('');
   const cycles = stats.cycles
     .map((cycle) => `<li class="cycle">${cycle.node_ids.map(nodeButton).join(' ⟲ ')}</li>`)
@@ -510,9 +512,10 @@ function renderStats(stats: ApiStats): void {
       <ul>${stats.orphans.map((id) => `<li>${nodeButton(id)}</li>`).join('')}</ul>
     </details>
     <details data-section="dangling"${openStatsSections.has('dangling') ? ' open' : ''}>
-      <summary>${escapeHtml(t('stats.dangling'))} (${stats.dangling_references.length})</summary>
-      <ul>${dangling}</ul>
-    </details>`;
+      <summary>${escapeHtml(t('stats.broken'))} (${stats.broken_links.length})</summary>
+      <ul>${broken}</ul>
+    </details>
+    <div class="stat-refs">${escapeHtml(t('stats.fileRefs'))}: ${stats.file_references} · ${escapeHtml(t('stats.externalRefs'))}: ${stats.external_links}</div>`;
   // Click handling is delegated on the stable #stats container (see below), so
   // it survives the innerHTML rewrite this function performs on every rebuild.
 }

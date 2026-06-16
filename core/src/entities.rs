@@ -145,6 +145,17 @@ struct PlanFields {
     plan_id: Option<String>,
     plan_title: Option<String>,
     closed_at: Option<String>,
+    /// PLAN telemetry nests its relations (vs. AILOG's flat
+    /// `originating_ailogs: [ID]`): each entry is `{ ailog_id, … }`. Without
+    /// descending into this, a telemetry file is an edge-less orphan node
+    /// (issue #262 follow-up).
+    #[serde(default)]
+    originating_ailogs: Vec<OriginatingAilog>,
+}
+
+#[derive(Deserialize)]
+struct OriginatingAilog {
+    ailog_id: Option<String>,
 }
 
 fn discover_plans(straymark_dir: &Path, out: &mut Vec<Entity>) {
@@ -173,6 +184,13 @@ fn discover_plans(straymark_dir: &Path, out: &mut Vec<Entity>) {
         let Some(id) = fields.plan_id.filter(|s| !s.is_empty()) else {
             continue;
         };
+        // Nested telemetry relations → outgoing edges (PLAN → its AILOGs).
+        let mut links = Vec::new();
+        for oa in fields.originating_ailogs {
+            if let Some(aid) = oa.ailog_id.filter(|s| !s.is_empty()) {
+                links.push((EdgeType::OriginatesFrom, aid));
+            }
+        }
         out.push(Entity {
             title: fields.plan_title.unwrap_or_else(|| id.clone()),
             status: if fields.closed_at.is_some() {
@@ -183,7 +201,7 @@ fn discover_plans(straymark_dir: &Path, out: &mut Vec<Entity>) {
             id,
             doc_type: "PLAN".into(),
             path,
-            links: Vec::new(),
+            links,
         });
     }
 }
@@ -236,7 +254,7 @@ mod tests {
         );
         write(
             &sm.join("plans/PLAN-01.telemetry.yaml"),
-            "plan_telemetry:\n  plan_id: \"PLAN-01\"\n  plan_title: \"Deploy & governance\"\n  closed_at: \"2026-04-27\"\n",
+            "plan_telemetry:\n  plan_id: \"PLAN-01\"\n  plan_title: \"Deploy & governance\"\n  closed_at: \"2026-04-27\"\n  originating_ailogs:\n    - ailog_id: \"AILOG-2026-04-25-015\"\n      still_relevant_at_execution: true\n",
         );
 
         let mut entities = discover_entities(sm);
@@ -256,6 +274,12 @@ mod tests {
         assert_eq!(plan.id, "PLAN-01");
         assert_eq!(plan.title, "Deploy & governance");
         assert_eq!(plan.status, "closed");
+        // Issue #262 follow-up: the nested `originating_ailogs[].ailog_id`
+        // becomes an outgoing edge, so the PLAN node isn't an orphan.
+        assert_eq!(
+            plan.links,
+            vec![(EdgeType::OriginatesFrom, "AILOG-2026-04-25-015".to_string())]
+        );
     }
 
     #[test]
