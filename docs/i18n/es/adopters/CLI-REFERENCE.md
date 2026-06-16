@@ -48,7 +48,7 @@ StrayMark usa **tags de versión independientes** para cada componente:
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
 | Framework | `fw-` | `fw-4.26.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.24.0` | El binario `straymark` |
+| CLI | `cli-` | `cli-3.25.0` | El binario `straymark` |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | El servidor de visualización `straymark-loom`, descargado bajo demanda por `straymark loom serve` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
@@ -220,6 +220,47 @@ Documents:
   INC:     0
   ETH:     1
   Total:  30
+```
+
+---
+
+#### `straymark status --where [path] [--out <dir>]` *(cli-3.25.0+, EXPERIMENTAL)*
+
+El acompañante textual del **"estás aquí"** de la vista del Plan de Arquitectura de Loom (la mitad en terminal del dashboard). Carga `architecture/model.yml` y proyecta el estado de cada componente a partir de tus señales de gobernanza en vivo, de modo que puedas responder *"¿dónde estamos?"* sin abrir un navegador.
+
+> ⚠️ **EXPERIMENTAL (Loom v0).** Requiere un `architecture/model.yml` (ver `straymark architecture generate`). La forma de la salida puede cambiar sin ciclo de deprecación.
+
+| Flag | Default | Descripción |
+|---|---|---|
+| `--where` | off | Cambia `status` a la vista de proyección de arquitectura |
+| `--out <dir>` | `.straymark/architecture` | Directorio que contiene `model.yml` (apúntalo a otro sitio para proyectar un modelo mantenido fuera de `.straymark/`) |
+
+Cada componente se etiqueta con uno o más estados, derivados puramente de la gobernanza (sin nuevo frontmatter):
+
+- **`active`** — un Charter `in-progress` declara archivos que coinciden con el componente (← *estás aquí*);
+- **`in-progress`** — dentro de un componente activo, archivos declarados ya tocados (declarados ∩ modificados-en-git);
+- **`implemented`** — un Charter cerrado (y sus AILOGs) tocó el componente;
+- **`has-debt`** — un `TDE` abierto se relaciona con el componente;
+- **`uncharted`** — archivos en disco que ningún Charter o documento referencia.
+
+La vista termina con un **resumen "Where are we"**: el Charter activo, el progreso declarados-vs-modificados, los AILOGs recientes y la deuda abierta. Los flags `active`/`implemented` se alinean con `straymark charter list --status in-progress`/`--status closed` + `charter drift` por construcción (una sola proyección compartida).
+
+```
+$ straymark status --where
+
+  Where are we
+
+  Tooling (Rust workspace)
+    ▸ straymark-cli   [active] [in-progress]  ← you are here
+    · straymark-core  [implemented]
+
+  Visualization
+    · Loom            [has-debt]
+
+  Summary
+    Active Charter: A1.4 — status --where
+    Progress: 1/2 declared files touched (50%)
+    Debt: 1 component with open debt, 0 uncharted
 ```
 
 ---
@@ -1069,6 +1110,39 @@ StrayMark CLI
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/straymark
   Website:           https://strangedays.tech
+```
+
+---
+
+### `straymark architecture <generate|sync|validate>` *(cli-3.25.0+, EXPERIMENTAL)*
+
+Crea y mantén el **modelo de arquitectura** que alimenta la vista del Plan de Arquitectura de Loom (Spec 002): un `model.yml` semántico (componentes → globs de archivos + capas + enlaces) emparejado con un plano `plan.drawio`, vinculados por un `component_id` estable (la separación BIM "modelo vs dibujo"). La proyección textual sobre este modelo es `straymark status --where`; la superposición visual es Loom (A2).
+
+> ⚠️ **EXPERIMENTAL (Loom v0).** El esquema del modelo, las convenciones de DrawIO y la superficie de comandos pueden cambiar sin ciclo de deprecación. Los tres subcomandos operan sobre `.straymark/architecture/` por defecto; `--out <dir>` lo sobrescribe.
+
+**`straymark architecture generate [path] [--force] [--out <dir>]`** — escribe un primer borrador de `model.yml` + `plan.drawio` minando la estructura de tu base de código (un componente por directorio de fuentes de nivel superior, glob `dir/**`) enriquecido con señal de ADRs (los diagramas C4 Mermaid + las tablas "Affected Components" mejoran las etiquetas y añaden enlaces). Los componentes aterrizan en una capa `unassigned` de relleno y las etapas 00–09 de `.straymark` siembran la lista de capas — luego refinas a mano (reasignar/renombrar capas, ajustar globs, añadir enlaces). `--force` sobrescribe los artefactos existentes.
+
+**`straymark architecture sync [path] [--out <dir>] [--apply]`** — reconciliación **append-only** (solo-añadir): detecta nuevos directorios de fuentes de nivel superior / componentes de ADRs todavía no cubiertos por el modelo y los añade a `model.yml` + `plan.drawio`, sin **nunca** pisar las ediciones humanas ni la geometría de DrawIO. Dry-run por defecto; `--apply` escribe.
+
+**`straymark architecture validate [path] [--out <dir>] [--output <text|json|markdown>]`** — reporta señales de integridad modelo↔plan: **undrawn** (componente sin celda de DrawIO), **unmodeled** (una celda de DrawIO ausente del modelo), **empty** (globs que no coinciden con ningún archivo en disco). **Sale con 1** cuando se encuentra cualquier señal (gestionable en CI). Degrada a solo-cobertura-de-globs cuando `plan.drawio` está ausente.
+
+| Subcomando | Flags clave | ¿Escribe? |
+|---|---|---|
+| `generate` | `--force`, `--out` | Sí (rehúsa sobrescribir sin `--force`) |
+| `sync` | `--apply`, `--out` | Solo con `--apply` (append-only) |
+| `validate` | `--output`, `--out` | No (solo-lectura; sale con 1 ante cualquier señal) |
+
+**Ejemplo:**
+
+```bash
+$ straymark architecture generate
+✓ Wrote .straymark/architecture/model.yml (4 components, 9 layers)
+✓ Wrote .straymark/architecture/plan.drawio
+→ Mined 3 ADRs: 2 labels improved, 1 link added.
+→ Refine by hand: reassign components from `unassigned` to real layers, then open the plan in DrawIO.
+
+$ straymark architecture validate
+✓ Architecture model is consistent (4 components).
 ```
 
 ---

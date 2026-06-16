@@ -196,25 +196,45 @@
   and `where_degrades_without_model`. CLI 335 unit + 3 integration tests, core 102, clippy clean
   (only pre-existing `assert_cmd`/CLI-debt warnings). CLAUDE.md status row added.
 
-## A1.5 — Dogfood, acceptance, docs, release
+## A1.5 — Dogfood, acceptance, docs, release — DONE (tag `cli-3.25.0` rides this PR)
 
-- [ ] T5.1 — Run `straymark architecture generate` on this repo → commit a reviewed
-  `experimento/architecture/model.yml` + `experimento/architecture/plan.drawio` (the dogfood
-  artifacts; adopter home is `.straymark/architecture/`). Hand-refine to a legible first plan.
-- [ ] T5.2 — **Acceptance (spec §11, A1 subset):** §11.1 (`generate` yields editable
-  `model.yml`+`plan.drawio`) ✓; §11.5 textual half (`status --where` matches `charter list
-  --status in-progress` + drift) ✓; Validation Criteria "Generator usefulness" — record the
-  manual-edit count vs from-scratch. (Visual criteria §11.2/3/4/6 are **A2**.)
-- [ ] T5.3 — Docs: add `architecture generate|sync|validate` and `status --where` rows to the
-  CLI command table (CLAUDE.md is already updatable; also `docs/adopters/CLI-REFERENCE.md`
-  EN + `docs/i18n/{es,zh-CN}/adopters/CLI-REFERENCE.md`). Note experimental status.
-- [ ] T5.4 — Bump `core` minor (new `architecture` module surface) + `cli` minor; update
-  `Cargo.lock`; root `CHANGELOG.md` `## CLI X.Y.Z` with `### Added (CLI)`
-  (architecture command + `status --where`). PR → merge → tag `cli-X.Y.Z`. crates.io publish
-  of `straymark-core` rides the `cli-` release per the M0 decision.
-- [ ] T5.5 — Update `experimento/specs/002-architecture-plan/spec.md` §14 open questions:
-  mark resolved (artifact home confirmed; `status --where` shipped in A1). Update the Loom
-  memory note: A1 done, next = A2 (maxGraph render).
+> The track's one release: bumps `core` 0.4.1→**0.5.0** (new `architecture` surface) + `cli`
+> 3.24.0→**3.25.0** (architecture command + `status --where`), covering A1.0–A1.4 which all
+> merged without a tag. crates.io publish of `straymark-core` rides the `cli-3.25.0` release
+> per the M0 decision. **Branched fresh from `main` after A1.4 (#254) merged** (no
+> stacked-PR-on-squash hazard).
+
+- [x] T5.1 — Ran `straymark architecture generate --out experimento/architecture` on this repo
+  (no root `.straymark/`, so the dogfood home is `experimento/architecture/`; the adopter home
+  stays `.straymark/architecture/`). Seed = 4 components (cli/core/experimento/website, globs
+  `dir/**`) in the `unassigned` layer + 9 stage layers; ADR mining improved 2 labels.
+  Hand-refined to a legible first plan: the 9 stage placeholders → **3 real layers**
+  (tooling / visualization / web), components reassigned, 2 dependency links added
+  (`cli→core`, `experimento→core`), labels sharpened; `plan.drawio` cells regrouped by layer +
+  2 dependency edges. Component **ids kept stable** (the BIM join key) so model↔plan stays
+  consistent — `architecture validate` is **exit 0** (4 components, no signals).
+- [x] T5.2 — **Acceptance (spec §11, A1 subset):** §11.1 ✓ (`generate` yields a `model.yml` +
+  `plan.drawio` that `validate` accepts and a human refined). §11.5 textual half ✓ (the
+  `status --where` consistency gate `where_is_consistent_with_charter_list` asserts `active` =
+  `charter list --status in-progress` and `implemented` = `--status closed`; the dogfood repo
+  has no in-progress Charter so every component reads `uncharted`, the correct degenerate
+  answer). **Generator usefulness:** the seed supplied every component id, glob, the valid YAML,
+  and the entire `plan.drawio` (cells + ids + geometry) for free; the human work was ~8 semantic
+  edits (layer model + dependencies + labels) — from-scratch would have meant hand-writing ~46
+  lines of `model.yml` + ~30 of mxGraph XML. Visual criteria §11.2/3/4/6 are **A2**.
+- [x] T5.3 — Docs: `architecture generate|sync|validate` + `status --where` rows added to
+  `CLAUDE.md` (in the A1.x increments) and to `docs/adopters/CLI-REFERENCE.md` EN +
+  `docs/i18n/{es,zh-CN}/adopters/CLI-REFERENCE.md` (a `### architecture` section + a
+  `#### status --where` subsection, marked EXPERIMENTAL `cli-3.25.0+`). Versioning tables bumped
+  to `cli-3.25.0` across the 3 CLI-REFERENCE + 3 README files.
+- [x] T5.4 — Bumped `core` 0.4.1→0.5.0 + `cli` 3.24.0→3.25.0 (+ the `straymark-core` dep
+  references in `cli/Cargo.toml` and `experimento/Cargo.toml`); `cargo check --workspace`
+  refreshed `Cargo.lock` (workspace compiles, loom rebuilds against core 0.5.0). Root
+  `CHANGELOG.md` gained `## CLI 3.25.0 / Core 0.5.0` (Added CLI / Added Core / Changed Core).
+  PR → merge → tag `cli-3.25.0` (crates.io publish of `straymark-core` rides it).
+- [x] T5.5 — `spec.md` §14 open questions struck through + resolved (artifact home confirmed;
+  layer-seed confirmed; `status --where` shipped A1.4; auto-layout engine deferred to A2). Loom
+  memory note updated: A1 done, next = **A2** (maxGraph render).
 
 ---
 

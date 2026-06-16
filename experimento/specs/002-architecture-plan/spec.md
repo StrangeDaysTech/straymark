@@ -228,10 +228,20 @@ are linked:
 
 ## 14. Open questions
 
-- Home of the architecture artifacts for adopters: confirm `.straymark/architecture/`
-  (`model.yml` + `plan.drawio`).
-- Initial auto-layout engine for `generate` (elk.js vs dagre) — a `plan.md` HOW detail.
-- Whether layer defaults should hard-map to `.straymark` stages 00–09 or always start from
-  the project's own legend (recommend: seed from stages, let the user rename/regroup).
-- Whether `/api/where` should also power a CLI `straymark status --where` in the same A1
-  increment (recommended — shared pure projection makes it nearly free).
+- ~~Home of the architecture artifacts for adopters: confirm `.straymark/architecture/`
+  (`model.yml` + `plan.drawio`).~~ **RESOLVED (A1):** `.straymark/architecture/` is the
+  default for all three `architecture` subcommands and `status --where`; `--out <dir>`
+  overrides it (the StrayMark repo itself dogfoods to `experimento/architecture/` since it has
+  no root `.straymark/`).
+- ~~Initial auto-layout engine for `generate` (elk.js vs dagre).~~ **DEFERRED to A2:** A1's
+  `generate` emits `plan.drawio` with a simple Rust-side grid (no JS layout engine); a real
+  auto-layout pass belongs to the visual render (A2), where the engine choice is a `plan.md`
+  HOW detail.
+- ~~Whether layer defaults should hard-map to `.straymark` stages 00–09 or always start from
+  the project's own legend.~~ **RESOLVED (A1.2):** `generate` seeds the layer list from the
+  stages 00–09 plus a placeholder `unassigned` layer; the human renames/regroups during
+  refinement (confirmed by the dogfood — 9 seeded stages → 3 real layers).
+- ~~Whether `/api/where` should also power a CLI `straymark status --where` in the same A1
+  increment.~~ **RESOLVED (A1.4):** shipped. `status --where` and the future `/api/where` both
+  build a `GovernanceState` and call the one pure `core::architecture::project`, so the
+  textual and visual answers cannot disagree (NFR3).

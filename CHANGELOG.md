@@ -7,6 +7,46 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.25.0 / Core 0.5.0 — Architecture Plan track A1 (EXPERIMENTAL)
+
+The textual + authoring half of Loom's Architecture Plan view (Spec 002) — the operator's "where are we?" answered from the terminal, ahead of the visual overlay (A2). All surfaces are **EXPERIMENTAL (Loom v0)** and may change without a deprecation cycle.
+
+### Added (CLI)
+
+- `straymark architecture generate [path] [--force] [--out <dir>]` — write a first-draft
+  `architecture/model.yml` + `plan.drawio` by mining codebase structure (one component per
+  top-level source directory) enriched with ADR signal (C4 Mermaid diagrams + "Affected
+  Components" tables improve labels and add links).
+- `straymark architecture sync [path] [--out <dir>] [--apply]` — append-only reconciliation:
+  detect new source dirs / ADR components not yet in the model and append them to `model.yml`
+  + `plan.drawio` without clobbering human edits or DrawIO geometry. Dry-run by default.
+- `straymark architecture validate [path] [--out <dir>] [--output <text|json|markdown>]` —
+  report model↔plan integrity signals (`undrawn` / `unmodeled` / `empty`); exits 1 on any
+  signal (CI-gateable). Degrades to glob-coverage-only when `plan.drawio` is absent.
+- `straymark status --where [path] [--out <dir>]` — textual "you are here": projects each
+  component's state (`active` / `in-progress` / `implemented` / `has-debt` / `uncharted`) from
+  live governance signals (Charters + drift + open TDEs + on-disk inventory) and prints the
+  "Where are we" summary. The `active`/`implemented` flags line up with
+  `charter list --status in-progress`/`--status closed` + `charter drift` by construction.
+
+### Added (Core)
+
+- New `straymark_core::architecture` module: the typed `ArchModel` (`model.yml` parser +
+  structural validation) and the **pure** `(model + GovernanceState) -> Projection` status
+  function (zero I/O), shared by the CLI's `status --where` and the future Loom server so both
+  compute the same answer. Plus `validate_model` for the model↔plan integrity signals.
+- New `straymark_core::ailog::parse_modified_files` (the AILOG `## Modified Files` extractor
+  feeding the `implemented` state).
+
+### Changed (Core)
+
+- Governance primitives the projection depends on — Charter parsing (`charter`,
+  `charter_files`), the drift matcher (`drift`), and `split_frontmatter` (`utils`) — moved from
+  `straymark-cli` into `straymark-core` so the CLI and Loom share one extractor (no behavior
+  change; verified against the full regression suite).
+
+---
+
 ## Loom 0.4.2 — R3: legibility at 100+ nodes
 
 ### Added (Loom)

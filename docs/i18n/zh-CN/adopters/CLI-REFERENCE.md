@@ -48,7 +48,7 @@ StrayMark 为每个组件使用**独立的版本标签**：
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
 | Framework | `fw-` | `fw-4.26.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.24.0` | `straymark` 二进制文件 |
+| CLI | `cli-` | `cli-3.25.0` | `straymark` 二进制文件 |
 | Loom（实验性） | `loom-` | `loom-0.4.2` | `straymark-loom` 可视化服务器，由 `straymark loom serve` 按需下载 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
@@ -237,6 +237,47 @@ $ straymark status
   └──────────────────────────────┴───────┘
 
   → Run straymark explore to browse documentation interactively
+```
+
+---
+
+#### `straymark status --where [path] [--out <dir>]` *(cli-3.25.0+，实验性)*
+
+Loom 架构计划视图的文本版**"你在这里"**伴侣（仪表板的终端那一半）。加载 `architecture/model.yml`，并从你实时的治理信号中投影出每个组件的状态，因此你无需打开浏览器即可回答*"我们到哪儿了？"*。
+
+> ⚠️ **实验性（Loom v0）。** 需要一个 `architecture/model.yml`（参见 `straymark architecture generate`）。输出形态可能在没有弃用周期的情况下更改。
+
+| 标志 | 默认值 | 描述 |
+|---|---|---|
+| `--where` | 关 | 将 `status` 切换到架构投影视图 |
+| `--out <dir>` | `.straymark/architecture` | 存放 `model.yml` 的目录（指向别处可投影保存在 `.straymark/` 之外的模型） |
+
+每个组件都会被标记一个或多个状态，纯粹从治理派生（无需新的 frontmatter）：
+
+- **`active`** —— 某个 `in-progress` 的 Charter 声明了匹配该组件的文件（← *你在这里*）；
+- **`in-progress`** —— 在一个活跃组件中，已被改动的声明文件（声明 ∩ git 已修改）；
+- **`implemented`** —— 某个已关闭的 Charter（及其 AILOG）触及了该组件；
+- **`has-debt`** —— 某个开放的 `TDE` 与该组件相关；
+- **`uncharted`** —— 磁盘上没有任何 Charter 或文档引用的文件。
+
+该视图以一段**"我们到哪儿了"摘要**结尾：活跃的 Charter、声明与已修改的进度、近期的 AILOG，以及开放的债务。按构造，`active`/`implemented` 标志与 `straymark charter list --status in-progress`/`--status closed` + `charter drift` 一致（共享同一个投影）。
+
+```
+$ straymark status --where
+
+  Where are we
+
+  Tooling (Rust workspace)
+    ▸ straymark-cli   [active] [in-progress]  ← you are here
+    · straymark-core  [implemented]
+
+  Visualization
+    · Loom            [has-debt]
+
+  Summary
+    Active Charter: A1.4 — status --where
+    Progress: 1/2 declared files touched (50%)
+    Debt: 1 component with open debt, 0 uncharted
 ```
 
 ---
@@ -1202,6 +1243,39 @@ StrayMark CLI
   License:           MIT
   Repository:        https://github.com/StrangeDaysTech/straymark
   Website:           https://strangedays.tech
+```
+
+---
+
+### `straymark architecture <generate|sync|validate>` *(cli-3.25.0+，实验性)*
+
+编写并维护驱动 Loom 架构计划视图（Spec 002）的**架构模型**：一个语义化的 `model.yml`（组件 → 文件 glob + 层级 + 链接），搭配一份 `plan.drawio` 蓝图，二者由一个稳定的 `component_id` 关联（即 BIM 中"模型与图纸"的拆分）。该模型之上的文本投影是 `straymark status --where`；其可视化叠加层是 Loom（A2）。
+
+> ⚠️ **实验性（Loom v0）。** 模型 schema、DrawIO 约定以及命令接口都可能在没有弃用周期的情况下更改。三个子命令默认都操作 `.straymark/architecture/`；`--out <dir>` 可覆盖该路径。
+
+**`straymark architecture generate [path] [--force] [--out <dir>]`** —— 通过挖掘你的代码库结构（每个顶层源目录对应一个组件，glob `dir/**`）并结合 ADR 信号（C4 Mermaid 图 + "Affected Components" 表可改进标签并添加链接）来写出 `model.yml` + `plan.drawio` 的初稿。组件会落在占位的 `unassigned` 层，而 `.straymark` 的 00–09 阶段为层级列表提供种子 —— 之后你再手动精修（重新分配/重命名层级、收紧 glob、添加链接）。`--force` 会覆盖已有的产物。
+
+**`straymark architecture sync [path] [--out <dir>] [--apply]`** —— **仅追加**的对账：检测尚未被模型覆盖的新顶层源目录 / ADR 组件，并将它们追加到 `model.yml` + `plan.drawio`，**绝不**破坏人工编辑或 DrawIO 几何布局。默认为试运行；`--apply` 才会写入。
+
+**`straymark architecture validate [path] [--out <dir>] [--output <text|json|markdown>]`** —— 报告模型与计划之间的完整性信号：**undrawn**（组件没有对应的 DrawIO 单元格）、**unmodeled**（DrawIO 单元格在模型中不存在）、**empty**（glob 在磁盘上未匹配到任何文件）。一旦发现任何信号即**以 1 退出**（可用于 CI 门禁）。当 `plan.drawio` 缺失时，降级为仅做 glob 覆盖检查。
+
+| 子命令 | 关键标志 | 是否写入？ |
+|---|---|---|
+| `generate` | `--force`、`--out` | 是（没有 `--force` 时拒绝覆盖） |
+| `sync` | `--apply`、`--out` | 仅在 `--apply` 时（仅追加） |
+| `validate` | `--output`、`--out` | 否（只读；任何信号都以 1 退出） |
+
+**示例：**
+
+```bash
+$ straymark architecture generate
+✓ Wrote .straymark/architecture/model.yml (4 components, 9 layers)
+✓ Wrote .straymark/architecture/plan.drawio
+→ Mined 3 ADRs: 2 labels improved, 1 link added.
+→ Refine by hand: reassign components from `unassigned` to real layers, then open the plan in DrawIO.
+
+$ straymark architecture validate
+✓ Architecture model is consistent (4 components).
 ```
 
 ---
