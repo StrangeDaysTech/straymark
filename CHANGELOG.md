@@ -7,6 +7,27 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## [Unreleased]
+
+### Fixed (i18n robustness — #263)
+
+- **AILOG `## Modified Files` extractor** (`straymark-core`) now recognizes the heading in all
+  three shipped locales (`Modified Files` / `Archivos modificados` / `修改的文件`), matching the
+  Charter `Files to modify` extractor. A Spanish/Chinese-first AILOG no longer silently yields
+  an empty file set (which under-reported `implemented` state in `status --where` / Loom).
+- **Follow-ups `## Follow-ups` extractor** (`straymark followups drift`) now recognizes the
+  section heading in the shipped locales (`Follow-ups` / `Seguimientos` / `后续工作` / `后续`), so
+  drift extracts follow-ups from translated AILOGs instead of skipping the section.
+- **Slug generation** (`straymark new`, `charter new`, `followups promote`) is now Unicode-aware:
+  CJK and accented-Latin titles keep their characters instead of being vaporized to whatever
+  ASCII fragments they contained. Truncation counts characters, not bytes.
+
+Reference resolution was already slug-language-independent (it normalizes to the
+`TYPE-YYYY-MM-DD-NNN` core id), and no extractor uses `\b`/whitespace ID regexes — so those two
+risks from #263 needed no change.
+
+---
+
 ## CLI 3.25.0 / Core 0.5.0 — Architecture Plan track A1 (EXPERIMENTAL)
 
 The textual + authoring half of Loom's Architecture Plan view (Spec 002) — the operator's "where are we?" answered from the terminal, ahead of the visual overlay (A2). All surfaces are **EXPERIMENTAL (Loom v0)** and may change without a deprecation cycle.

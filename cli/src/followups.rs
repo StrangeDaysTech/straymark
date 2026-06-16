@@ -643,15 +643,22 @@ pub struct ExtractedFu {
     pub suspected_closed: bool,
 }
 
+/// The `## Follow-ups` section heading in the shipped locales (#263). A
+/// Spanish/Chinese-first adopter translates the heading; keying on the English
+/// literal silently skips the whole section, so `drift` extracts nothing and
+/// those follow-ups never reach the backlog. ASCII variants match
+/// case-insensitively; the es/zh forms have no case folding.
+const FOLLOWUP_HEADINGS: &[&str] = &["Follow-ups", "Follow-Ups", "Seguimientos", "后续工作", "后续"];
+
 /// Extract follow-up content from an AILOG body: top-level bullets of the
 /// `## Follow-ups` section plus any `R<N> (new, not in Charter)` risk lines.
 pub fn extract_followups_from_ailog(content: &str) -> Vec<ExtractedFu> {
     let mut out = Vec::new();
 
-    // ── `## Follow-ups` section bullets ──
-    if let Some(section) = extract_section(content, |h| {
-        h.eq_ignore_ascii_case("Follow-ups") || h.eq_ignore_ascii_case("Follow-Ups")
-    }) {
+    // ── `## Follow-ups` section bullets (locale-aware heading) ──
+    if let Some(section) =
+        extract_section(content, |h| FOLLOWUP_HEADINGS.iter().any(|x| h.eq_ignore_ascii_case(x)))
+    {
         // Group top-level bullets with their continuation lines so closure
         // markers on continuation lines are seen.
         let mut current: Option<String> = None;
@@ -1248,6 +1255,16 @@ Done.
             .find(|f| f.origin_section.contains("R3"))
             .unwrap();
         assert!(risk.origin_section.contains("(new, not in Charter)"));
+    }
+
+    #[test]
+    fn extract_followups_recognizes_localized_section_headings() {
+        // A Spanish or Chinese AILOG heading must still yield the bullets (#263):
+        // an English-literal match would extract nothing for those adopters.
+        let es = "# AILOG\n\n## Seguimientos\n\n- Extender cobertura E2E\n- Documentar el runbook\n";
+        let zh = "# AILOG\n\n## 后续工作\n\n- 扩展端到端测试覆盖\n- 编写部署手册\n";
+        assert_eq!(extract_followups_from_ailog(es).len(), 2);
+        assert_eq!(extract_followups_from_ailog(zh).len(), 2);
     }
 
     #[test]

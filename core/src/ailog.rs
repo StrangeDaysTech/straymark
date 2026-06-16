@@ -9,9 +9,12 @@
 //! one extractor — the same "one parser, structurally no drift" discipline that
 //! moved charter/drift into `core` in A1.0.
 //!
-//! The AILOG template ships English-only (`dist/.straymark/templates/
-//! TEMPLATE-AILOG.md`), so unlike [`crate::charter_files`] (localized Charter
-//! template) we recognize a single heading. Path extraction reuses the shared
+//! The AILOG template ships English-first (`dist/.straymark/templates/
+//! TEMPLATE-AILOG.md`), but adopters working in Spanish or Chinese translate
+//! the section heading, and a literal-English match silently skips those AILOGs
+//! — the implemented-state projection then under-reports for a non-English-first
+//! corpus (#263). So, like [`crate::charter_files`], we recognize the heading in
+//! all three shipped locales. Path extraction reuses the shared
 //! [`crate::charter_files`] helpers so the two table extractors agree on what
 //! counts as a path.
 //!
@@ -23,8 +26,8 @@
 use crate::charter_files::{first_backtick_token, looks_like_path};
 use std::path::{Path, PathBuf};
 
-/// The `## Modified Files` heading (AILOG template is English-only).
-const SECTION_HEADING: &str = "Modified Files";
+/// The `## Modified Files` heading in the three shipped locales (#263).
+const SECTION_HEADINGS: &[&str] = &["Modified Files", "Archivos modificados", "修改的文件"];
 
 /// Canonical sub-path (relative to project root) of the AILOG directory.
 /// Moved to `core` in Loom A2.0 so the CLI (`charter drift`, `batch_complete`,
@@ -87,7 +90,7 @@ pub fn parse_modified_files(body: &str) -> Vec<String> {
                 break;
             }
             let title = trimmed.trim_start_matches('#').trim();
-            if title == SECTION_HEADING {
+            if SECTION_HEADINGS.contains(&title) {
                 in_section = true;
             }
             continue;
@@ -194,6 +197,17 @@ mod tests {
     fn empty_when_section_absent() {
         let body = "## Summary\n\nNo modified-files section here.\n";
         assert!(parse_modified_files(body).is_empty());
+    }
+
+    #[test]
+    fn recognizes_spanish_and_chinese_headings() {
+        // A Spanish- or Chinese-first adopter translates the section heading; a
+        // literal-English match would silently skip the table and under-report
+        // implemented state (#263).
+        let es = "## Archivos modificados\n\n| Archivo | Líneas |\n|---|---|\n| `core/src/x.rs` | +1 |\n";
+        let zh = "## 修改的文件\n\n| 文件 | 行数 |\n|---|---|\n| `cli/src/y.rs` | +2 |\n";
+        assert_eq!(parse_modified_files(es), vec!["core/src/x.rs"]);
+        assert_eq!(parse_modified_files(zh), vec!["cli/src/y.rs"]);
     }
 
     #[test]
