@@ -257,14 +257,22 @@
   bumped 0.5.0 → 0.6.0** (0.5.0 is already published, so the additive `gather`/`ailog` surface
   can't ride the same version); `cli` + `experimento` core dep pins bumped. core 0.6.0 stays
   **unpublished** until the next `cli-*` release publishes it (loom uses the local path).
-- [ ] **A2.1 — Server architecture endpoints (spec §7).** Add to the axum app
-  (`experimento/src/server.rs`): `GET /api/architecture` (`{layers, components, edges, status}`),
-  `/api/architecture/component/:id` (matched docs + charters + debt + owned files + state),
-  `/api/where` (active charters + declared-vs-modified progress + recent AILOGs + open debt),
-  `/api/architecture/plan.drawio` (the XML, status styles applied). Load `architecture/model.yml`
-  + `plan.drawio` from the watch dir; reuse `core::architecture::{parse_model,
-  build_governance_state, project, validate_model}`. Read-only (NFR4). New `serde::Serialize`
-  response types in the server (keep `core` surface stable). Server unit/integration tests.
+- [x] **A2.1 — Server architecture endpoints (spec §7).** New `experimento/src/architecture.rs`
+  holds **axum-free, fixture-testable** builders (`build_architecture`, `component_detail`,
+  `build_where`, `read_plan_drawio`) reusing `core::architecture::{parse_model,
+  build_governance_state, project}` + `collect_source_files`/`glob_match`/`charter`/`ailog`; the
+  thin handlers in `server.rs` wrap them. Routes: `GET /api/architecture`
+  (`{model_present, layers (+per-state counts), components (+states), edges}`),
+  `/api/architecture/component/{id}` (meta + states + owned on-disk files), `/api/where`
+  (active charters + declared/touched progress + recent AILOGs + open-debt files),
+  `/api/architecture/plan.drawio` (raw XML, `application/xml`, geometry preserved — status is a
+  client overlay, NFR1). Read-only (NFR4); local `serde::Serialize` types keep the `core`
+  surface stable. **Added `--arch-dir`** to the loom binary + `AppState` (splits `project_root`
+  for governance/globs from the model dir) so the dogfood (`experimento/architecture/`, repo-root
+  globs) resolves — analogous to the CLI's `--out`. **Integrity signals (FR9) deferred** —
+  `validate_model` needs the `plan.drawio` cell ids; the DrawIO parser lives in the CLI and rides
+  the A2.3 frontend (move to `core` then). 5 fixture tests + e2e curl on the dogfood (4
+  components project `uncharted`, `component/cli` owns 104 files). 715 tests; clippy clean.
 - [ ] **A2.2 — Watcher: architecture deltas (FR6).** Extend the shared watcher to rebuild +
   push an architecture-status delta over `WS /api/stream` when `architecture/model.yml`,
   `plan.drawio`, or the governance docs change. Apply the same no-op suppression
