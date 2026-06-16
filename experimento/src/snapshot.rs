@@ -10,7 +10,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use straymark_core::document::{discover_documents, parse_document, StrayMarkDocument};
 use straymark_core::entities::discover_entities;
-use straymark_core::graph::{cycles_in, Cycle, Edge, Graph, Node};
+use straymark_core::graph::{cycles_in, Cycle, Edge, Graph, Node, RefKind};
 
 /// How much of a document body `/api/node/:id` returns.
 const EXCERPT_CHARS: usize = 600;
@@ -48,7 +48,16 @@ pub struct Stats {
     pub by_status: BTreeMap<String, usize>,
     pub by_risk: BTreeMap<String, usize>,
     pub orphans: Vec<String>,
-    pub dangling_references: Vec<ApiEdge>,
+    /// Genuinely broken **governance** links: unresolved references whose target
+    /// is shaped like a StrayMark doc id (the real hygiene signal). Issue #262:
+    /// references to repo files / external URLs are split out below so they don't
+    /// drown the few real broken links.
+    pub broken_links: Vec<ApiEdge>,
+    /// Count of unresolved references to repo files/artifacts (code, specs,
+    /// sidecars) — valid cross-references that simply aren't graph nodes.
+    pub file_references: usize,
+    /// Count of unresolved external (URL) references.
+    pub external_links: usize,
     /// Dependency cycles over the resolved semantic edges (T3.2, spec §3.3).
     pub cycles: Vec<Cycle>,
 }
@@ -349,7 +358,19 @@ fn build_stats(nodes: &[Node], edges: &[ApiEdge]) -> Stats {
             .filter(|node| node.is_orphan())
             .map(|node| node.id.clone())
             .collect(),
-        dangling_references: edges.iter().filter(|e| !e.edge.resolved).cloned().collect(),
+        broken_links: edges
+            .iter()
+            .filter(|e| e.edge.unresolved_kind == Some(RefKind::Doc))
+            .cloned()
+            .collect(),
+        file_references: edges
+            .iter()
+            .filter(|e| e.edge.unresolved_kind == Some(RefKind::File))
+            .count(),
+        external_links: edges
+            .iter()
+            .filter(|e| e.edge.unresolved_kind == Some(RefKind::External))
+            .count(),
         cycles: cycles_in(&node_ids, &raw_edges),
     }
 }
@@ -369,7 +390,7 @@ mod tests {
         let root = dir.path();
         write(
             &root.join("01-requirements/REQ-2026-03-01-001-login.md"),
-            "---\nid: REQ-2026-03-01-001\ntitle: Login\nstatus: approved\ncreated: 2026-03-01\nrisk_level: medium\nrelated: [ADR-2026-03-02-001, MISSING-1]\n---\n# Login body\n",
+            "---\nid: REQ-2026-03-01-001\ntitle: Login\nstatus: approved\ncreated: 2026-03-01\nrisk_level: medium\nrelated: [ADR-2026-03-02-001, MISSING-1, \"internal/auth/login.go\", \"https://example.com/x\"]\n---\n# Login body\n",
         );
         write(
             &root.join("02-design/decisions/ADR-2026-03-02-001-jwt.md"),
@@ -382,9 +403,14 @@ mod tests {
 
         let snap = Snapshot::build(root).unwrap();
         assert_eq!(snap.api.stats.total_docs, 3);
-        assert_eq!(snap.api.stats.total_edges, 2);
+        assert_eq!(snap.api.stats.total_edges, 4); // ADR (resolved) + 3 unresolved
         assert_eq!(snap.api.stats.orphans, vec!["TDE-2026-04-01-001"]);
-        assert_eq!(snap.api.stats.dangling_references.len(), 1);
+        // Issue #262: only MISSING-1 is a broken governance link; the file path
+        // and the URL are split out, not counted as broken.
+        assert_eq!(snap.api.stats.broken_links.len(), 1);
+        assert_eq!(snap.api.stats.broken_links[0].edge.target, "MISSING-1");
+        assert_eq!(snap.api.stats.file_references, 1);
+        assert_eq!(snap.api.stats.external_links, 1);
         assert_eq!(snap.api.stats.by_type.get("REQ"), Some(&1));
         assert!(snap.excerpts["ADR-2026-03-02-001"].contains("JWT body"));
         assert!(!snap.excerpt_truncated["ADR-2026-03-02-001"]);
@@ -586,6 +612,6 @@ mod tests {
         assert_eq!(filtered.nodes.len(), 1);
         assert_eq!(filtered.edges.len(), 1);
         assert!(!filtered.edges[0].edge.resolved);
-        assert_eq!(filtered.stats.dangling_references.len(), 1);
+        assert_eq!(filtered.stats.broken_links.len(), 1);
     }
 }
