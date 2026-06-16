@@ -68,8 +68,12 @@ pub struct Component {
 pub enum ModelIssue {
     /// A `component.layer` does not name any declared `Layer::id` (hard error).
     UnknownLayer { component: String, layer: String },
-    /// Two layers or two components share an id (hard error).
+    /// Two layers, or two components, share an id (hard error).
     DuplicateId { id: String },
+    /// A component id equals a layer id (hard error). Ids are the join keys and
+    /// must be unique *across* layers and components combined — a natural 1:1
+    /// `core` layer holding a `core` component is the common way to hit this.
+    LayerComponentCollision { id: String },
     /// A component declares no globs — it can never match files (warning).
     EmptyGlobs { component: String },
 }
@@ -107,24 +111,41 @@ pub fn parse_model_str(content: &str) -> Result<ArchModel> {
 /// Validate a model's internal shape, returning every issue (errors + the
 /// empty-globs warnings). `parse_model_str` rejects the model on the first
 /// error; callers wanting the warnings call this directly.
+///
+/// The invariants (the ones whose violation reads opaquely if you don't know
+/// them, #273):
+/// - **Ids are unique across layers and components combined.** A layer and a
+///   component may not share an id (`LayerComponentCollision`); two layers or
+///   two components may not either (`DuplicateId`).
+/// - **Every `component.layer` names a declared layer** (`UnknownLayer`).
+/// - There is **no** requirement that an `unassigned` layer exist, nor that any
+///   layer sit at `order: 0`. The generator seeds an `unassigned` layer at
+///   order 0, but a hand-authored model that assigns every component to a real
+///   layer and drops `unassigned` is perfectly valid. Layer `order` is a free
+///   `u32` used only for render sorting; gaps and arbitrary starts are fine.
 pub fn validate_structure(model: &ArchModel) -> Vec<ModelIssue> {
     let mut issues = Vec::new();
 
-    // Duplicate ids — across layers and across components (ids are the join
-    // keys; collisions make the joins ambiguous).
-    let mut seen: HashSet<&str> = HashSet::new();
-    for id in model
-        .layers
-        .iter()
-        .map(|l| l.id.as_str())
-        .chain(model.components.iter().map(|c| c.id.as_str()))
-    {
-        if !seen.insert(id) {
-            issues.push(ModelIssue::DuplicateId { id: id.to_string() });
+    // Ids are the join keys and must be unique across layers AND components
+    // combined. Distinguish the failure modes so the message is actionable
+    // (#273): a duplicate *within* one namespace vs. a layer↔component collision
+    // (the natural `core` layer + `core` component case) read very differently.
+    let mut layer_ids: HashSet<&str> = HashSet::new();
+    for l in &model.layers {
+        if !layer_ids.insert(l.id.as_str()) {
+            issues.push(ModelIssue::DuplicateId { id: l.id.clone() });
+        }
+    }
+    let mut comp_ids: HashSet<&str> = HashSet::new();
+    for c in &model.components {
+        if !comp_ids.insert(c.id.as_str()) {
+            issues.push(ModelIssue::DuplicateId { id: c.id.clone() });
+        }
+        if layer_ids.contains(c.id.as_str()) {
+            issues.push(ModelIssue::LayerComponentCollision { id: c.id.clone() });
         }
     }
 
-    let layer_ids: HashSet<&str> = model.layers.iter().map(|l| l.id.as_str()).collect();
     for c in &model.components {
         if !layer_ids.contains(c.layer.as_str()) {
             issues.push(ModelIssue::UnknownLayer {
@@ -148,6 +169,10 @@ fn model_issue_message(issue: &ModelIssue) -> String {
             "component `{component}` references unknown layer `{layer}`"
         ),
         ModelIssue::DuplicateId { id } => format!("duplicate id `{id}` in model"),
+        ModelIssue::LayerComponentCollision { id } => format!(
+            "component id `{id}` collides with layer id `{id}` — ids must be unique across \
+             layers and components; rename one (e.g. component `{id}` → `{id}-svc`)"
+        ),
         ModelIssue::EmptyGlobs { component } => {
             format!("component `{component}` declares no globs")
         }
@@ -220,7 +245,9 @@ components:
     }
 
     #[test]
-    fn rejects_duplicate_ids() {
+    fn rejects_layer_component_collision_with_specific_message() {
+        // A natural 1:1 `core` layer holding a `core` component (#273): the
+        // message must name the collision, not just say "duplicate id".
         let yaml = r#"
 version: 0
 layers:
@@ -228,10 +255,25 @@ layers:
 components:
   - { id: core, label: A, layer: core, globs: ["src/**"] }
 "#;
-        // Component id collides with a layer id.
+        let err = parse_model_str(yaml).unwrap_err().to_string();
+        assert!(err.contains("collides with layer id"), "got: {err}");
+        assert!(err.contains("core"), "got: {err}");
+    }
+
+    #[test]
+    fn rejects_duplicate_component_ids() {
+        // Two components sharing an id is a plain duplicate, not a collision.
+        let yaml = r#"
+version: 0
+layers:
+  - { id: l, label: L, order: 0 }
+components:
+  - { id: a, label: A, layer: l, globs: ["src/a/**"] }
+  - { id: a, label: A2, layer: l, globs: ["src/b/**"] }
+"#;
         let err = parse_model_str(yaml).unwrap_err().to_string();
         assert!(err.contains("duplicate id"), "got: {err}");
-        assert!(err.contains("core"), "got: {err}");
+        assert!(err.contains("`a`"), "got: {err}");
     }
 
     #[test]

@@ -955,7 +955,10 @@ fn main() {
     };
 
     if let Err(e) = result {
-        eprintln!("{} {}", "error:".red().bold(), e);
+        // `{:#}` prints anyhow's full context chain ("parsing model.yml:
+        // component id `core` collides with layer id `core`…") instead of only
+        // the outermost context, which used to bury the real reason (#273).
+        eprintln!("{} {:#}", "error:".red().bold(), e);
         std::process::exit(1);
     }
 }

@@ -32,7 +32,7 @@ pub fn run(path: &str, out: Option<&str>, apply: bool) -> Result<()> {
         .with_context(|| format!("parsing {}", model_path.display()))?;
 
     // New top-level source dirs not covered by any existing component.
-    let scanned = common::top_level_source_dirs(&root);
+    let scanned = common::source_component_dirs(&root);
     let on_disk: Vec<String> = common::collect_source_files(&root)
         .iter()
         .map(|p| p.to_string_lossy().replace('\\', "/"))
