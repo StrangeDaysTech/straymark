@@ -846,8 +846,18 @@ function setView(view: View): void {
   if (location.hash !== hash) {
     history.replaceState(null, '', hash || location.pathname + location.search);
   }
-  if (view === 'plan') renderArchitecture();
-  else disposeAxon(); // free the WebGL context when leaving the 3D view
+  if (view === 'plan') {
+    renderArchitecture();
+  } else {
+    disposeAxon(); // free the WebGL context when leaving the 3D view
+    // The #graph canvas was display:none while in the plan view, so Sigma never
+    // saw the resize back to full size — it renders blank until a zoom nudges
+    // it. Force a resize + refresh on the next frame (after the reflow).
+    requestAnimationFrame(() => {
+      renderer.resize(true);
+      renderer.refresh();
+    });
+  }
 }
 
 /** Switch the Architecture view between the 2D plan and the 3D axonometric. */
