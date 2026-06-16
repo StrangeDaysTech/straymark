@@ -12,8 +12,34 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Planned — Architecture Plan view (Spec 002)
-- A3 (north star): axonometric/BIM exploded-layers view.
+## [0.6.0] — 2026-06-16 (Axonometric / BIM exploded view — A3)
+
+The Spec 002 **north star**: a second projection of the same architecture model in real 3D. A
+`2D | 3D` toggle inside the Architecture tab swaps the maxGraph plan for a **Three.js**
+axonometric scene — each layer a stacked, translucent "floor", each component a box colored by
+the same §4 "you are here" status palette, dependency edges drawn as lines between boxes. This
+fully realizes Spec 002 (BIM "one model, many views"): the CLI authors structure
+(`architecture generate|sync|validate`), Loom renders it as both a 2D plan and a 3D exploded
+model, and the status overlay is always the one shared `core::architecture::project` projection.
+
+### Added (A3)
+- **Axonometric 3D view** (`web/src/axon.ts`): orthographic camera (true axonometric) +
+  `OrbitControls` (rotate/zoom/pan). Layers auto-laid-out per floor — the 3D view doesn't need
+  the human DrawIO geometry; it reads `/api/architecture`. `active` components glow (emissive);
+  every box gets crisp edge outlines. Leaving the view / switching mode `dispose()`s the GL
+  context (geometries, materials, renderers, listeners).
+- **Explode slider** (`#axon-explode`, localized): peels the floors apart on `y`
+  (`MIN_FLOOR_GAP..MAX_FLOOR_GAP`); dependency lines re-route to the boxes' new world positions
+  on every change — the BIM exploded view.
+- **Labels** via `CSS2DRenderer` (crisp HTML over the WebGL canvas): layer name per floor +
+  component name per box.
+- **Interaction**: raycast a no-drag click → the **shared** A2.4 component detail panel
+  (`showDetail` reused across the 2D plan and 3D view); hover highlights the box under the
+  pointer. The "where are we" + legend panels are shared with the 2D plan untouched.
+
+### Notes
+- Bundle grows ~600 KB (Three.js) — accepted for the experimental visual; the KG and 2D plan
+  paths are unaffected.
 
 ## [0.5.0] — 2026-06-16 (Architecture Plan view — A2)
 
