@@ -284,12 +284,21 @@
   `.drawio` (`is_architecture_relevant`); the KG still only rebuilds on `.md`. When `--arch-dir`
   points outside the watch dir, that dir is watched too. e2e (python `websockets`): flipping a
   Charter `in-progress`→`declared` delivers the `architecture` event; 717 tests; clippy clean.
-- [ ] **A2.3 — Frontend: maxGraph plan render (FR3, NFR1).** Add `@maxgraph/core` to
-  `web/package.json`. Introduce a top-level **view switch** (KG | Plan tabs) without rewriting
-  the Sigma monolith (`main.ts` stays; add `plan.ts` + a thin switcher). Load
-  `/api/architecture/plan.drawio` into maxGraph, **preserve the human geometry**, and apply the
-  §4 status as **non-destructive cell-style overrides** (fillColor/opacity/stroke/badge) keyed
-  on `straymark_component_id`. i18n strings via `i18n.ts`.
+- [x] **A2.3 — Frontend: maxGraph plan render (FR3, NFR1).** Added `@maxgraph/core` 0.23.
+  Top-level **view switch** (Knowledge Graph | Architecture tabs) in `index.html` + `main.ts`
+  (the Sigma monolith is untouched; `kg-only` controls hide via `body.view-plan` + `!important`
+  to beat id-specificity); new `plan.ts` does the render. The WS `architecture` signal (A2.2)
+  re-renders when the plan tab is active; `#architecture` deep-links the view. **Geometry: we
+  parse the DrawIO XML ourselves** (x/y/w/h per `<object straymark_component_id>`, edge
+  source/target) and recreate cells with maxGraph's stable `insertVertex`/`insertEdge` — the
+  experimental `ModelXmlSerializer` codec doesn't round-trip DrawIO `<object>` user-cells in
+  0.23 (it created only the empty layers). Status is applied as **non-destructive fill/stroke
+  colors** keyed on `straymark_component_id` (NFR1 — geometry is reproduced verbatim, status is
+  only ever a color). Legend + states + tabs localized (en/es/zh-CN). **Verified visually**
+  (headless Chrome via CDP + swiftshader — Sigma needs WebGL, which `--disable-gpu` lacks; not a
+  prod issue): the dogfood plan renders 4 boxes at their authored geometry with the cli→core /
+  loom→core arrows, all `uncharted` (no Charters in this repo), KG chrome hidden. `tsc` + `vite
+  build` clean.
 - [ ] **A2.4 — Frontend: toggles, panels, cross-view (FR4/FR5/FR8/§8).** Layer toggle
   (show/hide cells by component `layer`), component detail panel (S2 — click a component →
   Charters/docs/debt/owned files), shared "Where are we" panel (`/api/where`), and cross-view

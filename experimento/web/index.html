@@ -86,28 +86,47 @@
       #zoom-controls button:hover { color:var(--accent); border-color:var(--accent); background:#242731; }
       #zoom-controls svg { width:16px; height:16px; }
       @media (max-width:1240px) { #filters input { width:60px; } #filters input[type="date"] { display:none; } #search { width:110px; } }
+      /* ── Architecture Plan view (A2.3) ── */
+      #view-tabs { display:flex; gap:2px; }
+      #view-tabs button { color:var(--muted); background:none; border:0; border-bottom:2px solid transparent; padding:5px 9px; font-size:12px; font-weight:600; white-space:nowrap; }
+      #view-tabs button:hover { color:var(--text); }
+      #view-tabs button.active { color:var(--text); border-bottom-color:var(--accent); }
+      #plan { position:absolute; inset:0; z-index:0; display:none; background:var(--bg); cursor:grab; }
+      #plan .plan-empty { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:13px; text-align:center; padding:0 40px; }
+      body.view-plan #plan { display:block; }
+      body.view-plan #plan-legend { display:block; }
+      body.view-plan #graph, body.view-plan .kg-only, body.view-plan #stats, body.view-plan #legend, body.view-plan #selection, body.view-plan #zoom-controls { display:none !important; }
+      #plan-legend { position:absolute; left:14px; bottom:14px; z-index:100; display:none; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:9px 11px; font-size:11px; color:var(--muted); }
+      #plan-legend .pl-title { color:var(--text); font-weight:600; margin-bottom:6px; }
+      #plan-legend .pl-row { display:flex; align-items:center; gap:6px; margin:3px 0; }
+      #plan-legend .pl-sw { width:11px; height:11px; border-radius:3px; border:1px solid; flex:none; }
     </style>
   </head>
   <body>
     <div id="graph"></div>
+    <div id="plan"></div>
     <header>
       <h1><span class="brand">Loom</span> · <span id="subtitle">knowledge graph</span></h1>
       <span class="badge" id="badge">experimental</span>
-      <span id="counts"></span>
-      <div class="search-wrap">
+      <nav id="view-tabs">
+        <button type="button" data-view="kg" class="active" id="tab-kg">Knowledge Graph</button>
+        <button type="button" data-view="plan" id="tab-plan">Architecture</button>
+      </nav>
+      <span id="counts" class="kg-only"></span>
+      <div class="search-wrap kg-only">
         <input id="search" autocomplete="off" aria-label="Search" />
         <div id="search-results"></div>
       </div>
-      <label class="sizing"><span id="sizing-label">Size</span>
+      <label class="sizing kg-only"><span id="sizing-label">Size</span>
         <select id="sizing">
           <option value="betweenness">Betweenness</option>
           <option value="pagerank">PageRank</option>
           <option value="degree">Degree</option>
         </select>
       </label>
-      <label class="view"><input type="checkbox" id="labels-toggle" checked /><span id="labels-label">Labels</span></label>
-      <label class="view"><input type="checkbox" id="isolated-toggle" /><span id="isolated-label">Hide isolated</span></label>
-      <form id="filters">
+      <label class="view kg-only"><input type="checkbox" id="labels-toggle" checked /><span id="labels-label">Labels</span></label>
+      <label class="view kg-only"><input type="checkbox" id="isolated-toggle" /><span id="isolated-label">Hide isolated</span></label>
+      <form id="filters" class="kg-only">
         <input name="type" aria-label="Filter by type" />
         <input name="status" aria-label="Filter by status" />
         <input name="risk" aria-label="Filter by risk" />
@@ -118,7 +137,7 @@
         <button type="reset" id="filter-clear">Clear</button>
       </form>
       <div class="right">
-        <span id="pinbar"><span id="pin-label"></span><button type="button" id="pin-clear">Unpin</button></span>
+        <span id="pinbar" class="kg-only"><span id="pin-label"></span><button type="button" id="pin-clear">Unpin</button></span>
         <span id="status">connecting…</span>
       </div>
     </header>
@@ -130,6 +149,7 @@
       <button type="button" id="zoom-out"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
       <button type="button" id="zoom-reset"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6V3h3M13 6V3h-3M3 10v3h3M13 10v3h-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
+    <div id="plan-legend"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

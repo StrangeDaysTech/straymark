@@ -10,6 +10,7 @@ import pagerank from 'graphology-metrics/centrality/pagerank';
 import Sigma from 'sigma';
 
 import { setLocale, t } from './i18n';
+import { renderPlan, stateColor, LEGEND_STATES } from './plan';
 
 interface ApiNode {
   id: string;
@@ -695,8 +696,12 @@ function runSearch(): void {
 }
 
 function applyStaticI18n(): void {
-  document.getElementById('subtitle')!.textContent = t('app.subtitle');
+  document.getElementById('subtitle')!.textContent =
+    currentView === 'plan' ? t('plan.subtitle') : t('app.subtitle');
   document.getElementById('badge')!.textContent = t('app.experimental');
+  document.getElementById('tab-kg')!.textContent = t('tab.kg');
+  document.getElementById('tab-plan')!.textContent = t('tab.plan');
+  buildPlanLegend();
   searchEl.placeholder = t('search.placeholder');
   document.getElementById('sizing-label')!.textContent = t('size.label');
   sizingEl.options[0].text = t('size.betweenness');
@@ -808,6 +813,50 @@ zoomResetEl.addEventListener('click', () => {
   void renderer.getCamera().animatedReset({ duration: 350 });
 });
 
+// ── View switch: Knowledge Graph ⇄ Architecture Plan (A2.3) ──
+type View = 'kg' | 'plan';
+let currentView: View = 'kg';
+const planEl = document.getElementById('plan')!;
+const planLegendEl = document.getElementById('plan-legend')!;
+const viewTabs = Array.from(document.querySelectorAll<HTMLButtonElement>('#view-tabs button'));
+
+function setView(view: View): void {
+  if (view === currentView) return;
+  currentView = view;
+  document.body.classList.toggle('view-plan', view === 'plan');
+  for (const b of viewTabs) b.classList.toggle('active', b.dataset.view === view);
+  document.getElementById('subtitle')!.textContent =
+    view === 'plan' ? t('plan.subtitle') : t('app.subtitle');
+  // Deep-link the active view so the plan is shareable / reloadable.
+  const hash = view === 'plan' ? '#architecture' : '';
+  if (location.hash !== hash) {
+    history.replaceState(null, '', hash || location.pathname + location.search);
+  }
+  if (view === 'plan') void renderPlan(planEl);
+}
+
+/** The color legend for the plan's status overlay (localized). */
+function buildPlanLegend(): void {
+  planLegendEl.innerHTML =
+    `<div class="pl-title">${t('plan.legend')}</div>` +
+    LEGEND_STATES.map((s) => {
+      const c = stateColor(s);
+      return `<div class="pl-row"><span class="pl-sw" style="background:${c.fill};border-color:${c.stroke}"></span>${t('plan.state.' + s)}</div>`;
+    }).join('');
+}
+
+for (const b of viewTabs) {
+  b.addEventListener('click', () => setView((b.dataset.view as View) ?? 'kg'));
+}
+
+// Deep-link the active view synchronously (independent of the async boot, so a
+// `#architecture` reload opens the plan immediately). `setView` falls back to
+// the default locale until `boot()` resolves the project locale.
+if (location.hash === '#architecture') setView('plan');
+window.addEventListener('hashchange', () => {
+  setView(location.hash === '#architecture' ? 'plan' : 'kg');
+});
+
 function connect(): void {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   const ws = new WebSocket(`${proto}://${location.host}/api/stream`);
@@ -815,6 +864,11 @@ function connect(): void {
     const msg = JSON.parse(event.data);
     statusEl.textContent = t('status.live');
     statusEl.className = 'live';
+    // Architecture overlay deltas (A2.2) are independent of the KG filter.
+    if (msg.event === 'architecture') {
+      if (currentView === 'plan') void renderPlan(planEl);
+      return;
+    }
     if (filterQuery()) {
       // Under an active filter the unfiltered delta/rebuild is ambiguous;
       // refetch the filtered view.
