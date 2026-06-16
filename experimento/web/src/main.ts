@@ -11,6 +11,7 @@ import Sigma from 'sigma';
 
 import { setLocale, t } from './i18n';
 import { renderPlan, stateColor, LEGEND_STATES, setPlanHooks } from './plan';
+import { renderAxon, dispose as disposeAxon } from './axon';
 
 interface ApiNode {
   id: string;
@@ -818,10 +819,20 @@ zoomResetEl.addEventListener('click', () => {
 
 // ── View switch: Knowledge Graph ⇄ Architecture Plan (A2.3) ──
 type View = 'kg' | 'plan';
+type PlanMode = '2d' | '3d';
 let currentView: View = 'kg';
+let planMode: PlanMode = '2d';
 const planEl = document.getElementById('plan')!;
+const axonEl = document.getElementById('axon')!;
 const planLegendEl = document.getElementById('plan-legend')!;
 const viewTabs = Array.from(document.querySelectorAll<HTMLButtonElement>('#view-tabs button'));
+const planModeBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('#plan-mode button'));
+
+/** Render the Architecture view in the active projection (2D plan / 3D axon). */
+function renderArchitecture(): void {
+  if (planMode === '3d') void renderAxon(axonEl);
+  else void renderPlan(planEl);
+}
 
 function setView(view: View): void {
   if (view === currentView) return;
@@ -835,7 +846,32 @@ function setView(view: View): void {
   if (location.hash !== hash) {
     history.replaceState(null, '', hash || location.pathname + location.search);
   }
-  if (view === 'plan') void renderPlan(planEl);
+  if (view === 'plan') {
+    renderArchitecture();
+  } else {
+    disposeAxon(); // free the WebGL context when leaving the 3D view
+    // The #graph canvas was display:none while in the plan view, so Sigma never
+    // saw the resize back to full size — it renders blank until a zoom nudges
+    // it. Force a resize + refresh on the next frame (after the reflow).
+    requestAnimationFrame(() => {
+      renderer.resize(true);
+      renderer.refresh();
+    });
+  }
+}
+
+/** Switch the Architecture view between the 2D plan and the 3D axonometric. */
+function setPlanMode(mode: PlanMode): void {
+  if (mode === planMode) return;
+  planMode = mode;
+  document.body.classList.toggle('plan-3d', mode === '3d');
+  for (const b of planModeBtns) b.classList.toggle('active', b.dataset.mode === mode);
+  if (mode === '2d') disposeAxon(); // leaving 3D frees the GL context
+  if (currentView === 'plan') renderArchitecture();
+}
+
+for (const b of planModeBtns) {
+  b.addEventListener('click', () => setPlanMode((b.dataset.mode as PlanMode) ?? '2d'));
 }
 
 /** The color legend for the plan's status overlay (localized). */
@@ -878,7 +914,7 @@ function connect(): void {
     statusEl.className = 'live';
     // Architecture overlay deltas (A2.2) are independent of the KG filter.
     if (msg.event === 'architecture') {
-      if (currentView === 'plan') void renderPlan(planEl);
+      if (currentView === 'plan') renderArchitecture();
       return;
     }
     if (filterQuery()) {

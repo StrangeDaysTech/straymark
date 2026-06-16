@@ -330,7 +330,27 @@
   Visual criteria §11.2/3/4/6 done; A2 closes the Architecture Plan MVP. Next = **A3** (north
   star, axonometric/BIM exploded view).
 
-## A3 — Axonometric/BIM exploded view (north star, post-MVP)
+## A3 — Axonometric/BIM exploded view (north star) — `loom-0.6.0`
 
-- [ ] A3.1 — 2.5D stacked, explodable layers (the isometric "floors"). Pursued once the model
-  is proven. (spec §12, §13.)
+> User-confirmed render approach (2026-06-16): **Three.js (real WebGL 3D)** — orthographic
+> camera (true axonometric / parallel projection) + orbit controls, over a CSS-3D or
+> hand-rolled-iso alternative. A 3D **mode toggle (2D | 3D)** inside the Architecture tab — the
+> same model, a second projection (BIM "one model, many views"). Bundle grows ~600KB (Three.js);
+> accepted. Single release: A3.0–A3.2 merge tagless, A3.3 tags `loom-0.6.0`.
+
+- [x] **A3.0 — Axonometric render (skeleton).** `web/src/axon.ts`: a Three.js scene — each layer
+  is a stacked "floor" (a translucent slab) at `order * FLOOR_GAP`, each component a box on it,
+  colored by the §4 status (`stateColor`, same palette as 2D; `active` gets an emissive glow),
+  with crisp edge outlines. Orthographic camera (axonometric) + `OrbitControls` (rotate/zoom).
+  `#axon` container + a `2D | 3D` toggle (`#plan-mode`) in the Architecture tab; `body.plan-3d`
+  swaps `#plan`↔`#axon`; leaving the view / mode `dispose()`s the GL context. Fetches
+  `/api/architecture` (auto-laid-out per floor — the 3D view doesn't need the human DrawIO
+  geometry). Verified on Sentinel (7 floors stacked) + the demo (all 5 state colors). `tsc` +
+  `vite build` clean.
+- [ ] **A3.1 — Explode.** A slider that separates the floors vertically (the BIM peel-apart) +
+  cross-layer dependency connectors (the `links` as 3D lines between boxes).
+- [ ] **A3.2 — Interaction & labels.** Floor labels (layer names) + component labels (sprites),
+  click a box → the A2.4 component detail panel, hover highlight. Reuse the where/legend panels.
+- [ ] **A3.3 — Acceptance + release.** Dogfood; `experimento/CHANGELOG.md` + bump
+  `experimento/Cargo.toml` + `web/package.json`; PR → merge → tag **`loom-0.6.0`**. Update the
+  Loom memory note (A3 shipped — Spec 002 fully realized).
