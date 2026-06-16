@@ -37,7 +37,9 @@ interface ArchResponse {
   edges: ArchEdge[];
 }
 
-const PRIORITY = ['active', 'in-progress', 'implemented', 'has-debt', 'wiring-gap', 'uncharted'];
+// Must match plan.ts (#273): attention states (`has-debt`/`wiring-gap`) outrank
+// `implemented` so a box that is both does not paint over its debt.
+const PRIORITY = ['active', 'in-progress', 'has-debt', 'wiring-gap', 'implemented', 'uncharted'];
 
 const BOX_W = 4;
 const BOX_H = 1.4;
@@ -131,6 +133,13 @@ export async function renderAxon(container: HTMLElement, explode = 0.25): Promis
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.1;
+  // Default bindings (#269): left = rotate, right = pan, wheel = zoom. Captured
+  // as the reset target (position0/target0/zoom0) the moment controls are built.
+  controls.mouseButtons = {
+    LEFT: THREE.MOUSE.ROTATE,
+    MIDDLE: THREE.MOUSE.DOLLY,
+    RIGHT: THREE.MOUSE.PAN,
+  };
 
   const { floors, boxByComp, boxes } = buildFloors(scene, arch);
   const conns = buildConnections(scene, arch, boxByComp);
@@ -169,8 +178,20 @@ export async function renderAxon(container: HTMLElement, explode = 0.25): Promis
   dom.addEventListener('pointerdown', onDown);
   dom.addEventListener('pointerup', onUp);
   dom.addEventListener('pointermove', onMove);
+
+  // ── Shift + left-drag → pan (#269), for trackpads without a comfortable
+  // right-click. Hold Shift to swap the left button from rotate to pan. ──
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key !== 'Shift') return;
+    controls.mouseButtons.LEFT = e.type === 'keydown' ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
+  };
+  window.addEventListener('keydown', onKey);
+  window.addEventListener('keyup', onKey);
+
   s.cleanup = () => {
     window.removeEventListener('resize', onResize);
+    window.removeEventListener('keydown', onKey);
+    window.removeEventListener('keyup', onKey);
     dom.removeEventListener('pointerdown', onDown);
     dom.removeEventListener('pointerup', onUp);
     dom.removeEventListener('pointermove', onMove);
@@ -294,6 +315,21 @@ function applyExplode(s: Scene3D, amount: number): void {
 
 export function setExplode(amount: number): void {
   if (current) applyExplode(current, Math.max(0, Math.min(1, amount)));
+}
+
+/** Zoom the orthographic camera in/out (the on-screen `+`/`−` buttons, #269). */
+export function zoomAxon(direction: 'in' | 'out'): void {
+  if (!current) return;
+  const factor = direction === 'in' ? 1.25 : 1 / 1.25;
+  current.camera.zoom = Math.max(0.2, Math.min(8, current.camera.zoom * factor));
+  current.camera.updateProjectionMatrix();
+}
+
+/** Reset the camera to the initial axonometric framing (the "fit/reset" button,
+ *  #269). `OrbitControls.reset()` restores the position/target/zoom captured
+ *  when the controls were constructed. */
+export function resetAxonView(): void {
+  current?.controls.reset();
 }
 
 /** Raycast the pointer event against the component boxes. */

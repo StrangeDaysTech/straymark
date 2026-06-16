@@ -11,7 +11,7 @@ import Sigma from 'sigma';
 
 import { setLocale, t } from './i18n';
 import { renderPlan, stateColor, LEGEND_STATES, setPlanHooks } from './plan';
-import { renderAxon, dispose as disposeAxon, setExplode } from './axon';
+import { renderAxon, dispose as disposeAxon, setExplode, zoomAxon, resetAxonView } from './axon';
 
 interface ApiNode {
   id: string;
@@ -706,6 +706,10 @@ function applyStaticI18n(): void {
   document.getElementById('tab-kg')!.textContent = t('tab.kg');
   document.getElementById('tab-plan')!.textContent = t('tab.plan');
   document.getElementById('axon-explode-label')!.textContent = t('axon.explode');
+  document.getElementById('axon-help')!.textContent = t('axon.help');
+  document.getElementById('axon-zoom-in')!.setAttribute('title', t('zoom.in'));
+  document.getElementById('axon-zoom-out')!.setAttribute('title', t('zoom.out'));
+  document.getElementById('axon-reset')!.setAttribute('title', t('axon.reset'));
   buildPlanLegend();
   searchEl.placeholder = t('search.placeholder');
   document.getElementById('sizing-label')!.textContent = t('size.label');
@@ -877,6 +881,11 @@ for (const b of planModeBtns) {
 
 const axonExplode = document.getElementById('axon-explode-range') as HTMLInputElement | null;
 axonExplode?.addEventListener('input', () => setExplode(Number(axonExplode.value) / 100));
+
+// 3D nav controls (#269): zoom + reset view.
+document.getElementById('axon-zoom-in')?.addEventListener('click', () => zoomAxon('in'));
+document.getElementById('axon-zoom-out')?.addEventListener('click', () => zoomAxon('out'));
+document.getElementById('axon-reset')?.addEventListener('click', () => resetAxonView());
 
 /** The color legend for the plan's status overlay (localized). */
 function buildPlanLegend(): void {

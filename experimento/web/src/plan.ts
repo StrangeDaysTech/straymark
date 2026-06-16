@@ -67,7 +67,11 @@ const STATE_STYLE: Record<string, { fill: string; stroke: string }> = {
   'wiring-gap': { fill: '#6e2a24', stroke: '#c97a72' },
   uncharted: { fill: '#23262f', stroke: '#3a3f4d' },
 };
-const PRIORITY = ['active', 'in-progress', 'implemented', 'has-debt', 'wiring-gap', 'uncharted'];
+// Paint priority when a component carries several states (#273): a "you are
+// here" map must foreground the states that need attention — `has-debt` and
+// `wiring-gap` outrank `implemented`, otherwise a module that is both
+// implemented AND in debt paints calm blue and the debt overlay is never seen.
+const PRIORITY = ['active', 'in-progress', 'has-debt', 'wiring-gap', 'implemented', 'uncharted'];
 export const LEGEND_STATES = PRIORITY;
 
 let graph: Graph | null = null;

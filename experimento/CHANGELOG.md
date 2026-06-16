@@ -12,6 +12,21 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- **3D navigation discoverability** (#269): the axonometric view gained on-screen nav buttons
+  (zoom in / zoom out / reset-view via `OrbitControls.reset()`), a **Shift + left-drag → pan**
+  binding (for trackpads without a comfortable right-click), and a discreet, localized gesture
+  help line (*"drag: rotate · right-click / shift-drag: pan · wheel: zoom"*). Pan already worked
+  on right-drag; this makes it findable.
+
+### Changed
+- **Status overlay priority** (#273, part 4): a component carrying several states now paints the
+  one that needs attention — `has-debt` and `wiring-gap` rank **above** `implemented` in both the
+  2D plan and the 3D view (and in the legend). Previously a module that was both implemented and
+  in debt painted calm blue and the debt overlay was never visible. (The other half — mapping
+  open-TDE debt onto components in the projection — is a `straymark-core` change tracked
+  separately.)
+
 ## [0.6.0] — 2026-06-16 (Axonometric / BIM exploded view — A3)
 
 The Spec 002 **north star**: a second projection of the same architecture model in real 3D. A
