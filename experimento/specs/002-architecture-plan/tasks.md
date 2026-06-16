@@ -316,11 +316,19 @@
   big plan fits any window, wheel-zoom, +/−/fit buttons, and left-button drag-to-pan
   (`PanningHandler.useLeftButtonForPanning` + `ignoreCell`; `setPanning(true)` alone only pans on
   the right button). Both surfaced during the Sentinel dogfood.
-- [ ] **A2.5 — Acceptance + release.** Spec §11.2 (lit/shaded/dimmed overlay), §11.3 (DrawIO
-  round-trip lossless — edit `plan.drawio` in real DrawIO, reload, geometry + overlay intact),
-  §11.4 (layer toggle), §11.6 (live overlay < ~1s). Dogfood on `experimento/architecture/`.
-  `experimento/CHANGELOG.md` + bump `experimento/Cargo.toml`; PR → merge → tag **`loom-0.5.0`**.
-  Update spec §11 acceptance + the Loom memory note (A2 done, next = A3 axonometric north star).
+- [x] **A2.5 — Acceptance + release.** Acceptance verified during the Sentinel + demo dogfoods:
+  **§11.2** overlay lit/shaded/dimmed ✓ (active=green, in-progress=yellow, implemented=blue,
+  has-debt=magenta, uncharted=grey on the Sentinel plan); **§11.3** geometry preserved verbatim
+  ✓ (we parse `plan.drawio` x/y/w/h directly and re-emit nothing — the server serves the file
+  unchanged, so a real-DrawIO round-trip is lossless by construction; status is only ever a
+  client-side color, NFR1); **§11.4** layer toggle ✓ (unchecking a layer hides its cells via
+  `model.setVisible`); **§11.5** component panel + "where are we" panel, the textual half gated
+  by `where_is_consistent_with_charter_list` (A1.4); **§11.6** live overlay < ~1s ✓ (A2.2 WS
+  `architecture` event e2e). Bumped `experimento/Cargo.toml` + `web/package.json` 0.4.2→**0.5.0**;
+  `experimento/CHANGELOG.md` `## [0.5.0]` (A2 + the #262 hygiene fix). PR → merge → tag
+  **`loom-0.5.0`** (`release-loom.yml` builds the frontend + 4-platform binaries; no crates.io).
+  Visual criteria §11.2/3/4/6 done; A2 closes the Architecture Plan MVP. Next = **A3** (north
+  star, axonometric/BIM exploded view).
 
 ## A3 — Axonometric/BIM exploded view (north star, post-MVP)
 

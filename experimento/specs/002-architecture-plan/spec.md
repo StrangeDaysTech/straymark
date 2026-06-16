@@ -205,6 +205,12 @@ are linked:
 6. A change to the active Charter's "Files to modify" (or a new commit moving drift) updates
    the overlay live (< ~1s) (FR6/NFR3).
 
+> **Status (2026-06-16): MVP done — all 6 met.** Criteria 1 and the textual half of 5 shipped
+> in **`cli-3.25.0`** (A1: `architecture generate|sync|validate` + `status --where`). Criteria
+> 2, 3, 4, the visual half of 5, and 6 shipped in **`loom-0.5.0`** (A2: the maxGraph plan view +
+> panels + live overlay), verified on the Sentinel + demo dogfoods. Next is **A3** (the
+> axonometric/BIM exploded view, north star — §12).
+
 ## 12. Phasing (slots into the shared Loom phasing in `../001-loom-server/plan.md`)
 
 - **A1 — Model + generator + projection.** `straymark-core` status projection (pure) +

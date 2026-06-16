@@ -13,12 +13,43 @@ project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Planned — Architecture Plan view (Spec 002)
-- A1: `straymark-core` "you are here" status projection (component state by file-glob match
-  over active/closed Charters, drift, TDE, declared-vs-wired) + `straymark architecture
-  generate|sync|validate` + `/api/where`.
-- A2: maxGraph rendering of a human-authored `plan.drawio` with a non-destructive status
-  overlay, layer toggle, component panel, and cross-linking with the Knowledge Graph.
 - A3 (north star): axonometric/BIM exploded-layers view.
+
+## [0.5.0] — 2026-06-16 (Architecture Plan view — A2)
+
+The visual half of the Architecture Plan (Spec 002): the human-authored `plan.drawio` rendered
+with maxGraph and overlaid **live** with the "you are here" status the CLI's `status --where`
+computes — one shared projection (`core::architecture::project`), so the visual and textual
+answers can't disagree (NFR3). Plus a knowledge-graph hygiene fix (#262). (A1 — the CLI's
+`architecture generate|sync|validate` + `status --where` — shipped earlier under `cli-3.25.0`.)
+
+### Added
+- **Architecture Plan view** — a second top-level view (Knowledge Graph | Architecture tabs).
+  maxGraph loads `architecture/plan.drawio` preserving the human geometry (NFR1) and applies the
+  §4 status as non-destructive cell colors keyed on `straymark_component_id`.
+- **Server API** (Spec 002 §7): `GET /api/architecture`, `/api/architecture/component/{id}`,
+  `/api/where`, `/api/architecture/plan.drawio`; the watcher pushes an `architecture` delta over
+  the shared `WS /api/stream` when governance / `model.yml` / `plan.drawio` change (FR6).
+- **Panels & navigation**: a "where are we" panel (active Charter + declared-vs-modified
+  progress + recent AILOGs + open debt), a per-layer toggle, a component detail panel (states +
+  owned files + the Charters that touch it), and cross-view links into the Knowledge Graph;
+  fit-to-view, wheel-zoom, +/−/fit buttons, and left-button drag-to-pan.
+- `--arch-dir` flag on the loom binary (the model dir, split from the project root) so a
+  non-installed / dogfood layout resolves.
+- i18n (en / es / zh-CN) for every new UI string.
+
+### Changed
+- **Knowledge-graph hygiene (#262):** the dangling-references panel now classifies unresolved
+  targets — **broken governance links** (ids that should resolve) are split from **file
+  references** (paths to code/specs/sidecars) and **external links** (URLs). On the Sentinel
+  corpus this drops the panel from 92 false alarms to **0** real broken links. PLAN telemetry
+  (`*.telemetry.yaml`) **nested** relations (`plan_telemetry.originating_ailogs[].ailog_id`) are
+  now parsed into edges, de-orphaning the PLAN nodes.
+
+### Core
+- Requires `straymark-core` 0.6.0 — new `architecture::gather` (the impure
+  `build_governance_state` shared by the CLI and Loom) and `graph::{RefKind, classify_reference}`.
+  Built against the local workspace; published to crates.io with the next `cli-` release.
 
 ## [0.4.2] — 2026-06-14 (R3: legibility at 100+ nodes)
 
