@@ -243,6 +243,25 @@ pub fn read_plan_drawio(arch_dir: &Path) -> Option<String> {
     std::fs::read_to_string(arch_dir.join("plan.drawio")).ok()
 }
 
+// ── watcher support (A2.2) ───────────────────────────────────────────────────
+
+/// A stable JSON signature of the current architecture payload, for the
+/// watcher's no-op suppression: it broadcasts an `architecture` event only when
+/// this changes (a governance edit that actually moves a component's state, or a
+/// `model.yml`/`plan.drawio` change), never on a bare mtime touch.
+pub fn projection_signature(project_root: &Path, arch_dir: &Path) -> String {
+    serde_json::to_string(&build_architecture(project_root, arch_dir)).unwrap_or_default()
+}
+
+/// True when a changed path can affect the architecture overlay: governance
+/// markdown (`.md` → charters/AILOGs/TDEs), or the model / plan files.
+pub fn is_architecture_relevant(path: &Path) -> bool {
+    let ext = path.extension().and_then(|e| e.to_str());
+    matches!(ext, Some("md"))
+        || path.file_name().and_then(|n| n.to_str()) == Some("model.yml")
+        || ext == Some("drawio")
+}
+
 // ── shared helpers ───────────────────────────────────────────────────────────
 
 fn projected(project_root: &Path, model: &ArchModel) -> Projection {
@@ -385,5 +404,29 @@ components:
         assert!(read_plan_drawio(&arch(tmp.path())).unwrap().contains("mxfile"));
         let empty = tempfile::TempDir::new().unwrap();
         assert!(read_plan_drawio(&arch(empty.path())).is_none());
+    }
+
+    #[test]
+    fn signature_changes_when_governance_changes() {
+        let tmp = fixture();
+        let a = arch(tmp.path());
+        let sig1 = projection_signature(tmp.path(), &a);
+        // Flip the auth Charter in-progress → declared: auth is no longer active.
+        std::fs::write(
+            tmp.path().join(".straymark/charters/01-auth.md"),
+            "---\ncharter_id: CHARTER-01\nstatus: declared\neffort_estimate: M\ntrigger: \"t\"\n---\n\n# Charter: Auth\n\n## Files to modify\n\n| File | Change |\n|---|---|\n| `src/auth/login.rs` | edit |\n",
+        )
+        .unwrap();
+        let sig2 = projection_signature(tmp.path(), &a);
+        assert_ne!(sig1, sig2);
+    }
+
+    #[test]
+    fn architecture_relevance_filter() {
+        assert!(is_architecture_relevant(Path::new("x/CHARTER-01.md")));
+        assert!(is_architecture_relevant(Path::new("a/architecture/model.yml")));
+        assert!(is_architecture_relevant(Path::new("a/plan.drawio")));
+        assert!(!is_architecture_relevant(Path::new("a/.straymark/config.yml")));
+        assert!(!is_architecture_relevant(Path::new("a/notes.txt")));
     }
 }
