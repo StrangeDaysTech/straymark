@@ -234,4 +234,4 @@ Use a Level 1 (Context) diagram to illustrate:
 
 ---
 
-*StrayMark fw-4.26.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.27.0 | [Strange Days Tech](https://strangedays.tech)*

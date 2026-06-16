@@ -7,7 +7,12 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
-## [Unreleased]
+## Framework 4.27.0 / CLI 3.26.0 / Core 0.6.0 — 2026-06-16
+
+Audit-prompt hardening (#261), architecture-model DX + a meaningful `has-debt` overlay (#273),
+i18n-robust extractors (#263), and a follow-ups counter-integrity fix (#253). The framework ships
+under `fw-4.27.0`; the CLI + `straymark-core` under `cli-3.26.0` (core 0.6.0 published to
+crates.io). The Loom-side companion of #273's overlay ships in `loom-0.6.1`.
 
 ### Changed (architecture model DX — #273, EXPERIMENTAL)
 

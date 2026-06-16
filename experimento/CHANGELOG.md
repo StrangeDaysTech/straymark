@@ -12,6 +12,8 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.1] — 2026-06-16 (3D navigation + meaningful has-debt overlay)
+
 ### Added
 - **3D navigation discoverability** (#269): the axonometric view gained on-screen nav buttons
   (zoom in / zoom out / reset-view via `OrbitControls.reset()`), a **Shift + left-drag → pan**
