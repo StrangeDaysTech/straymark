@@ -13,6 +13,7 @@ import {
   Graph,
   InternalEvent,
   FitPlugin,
+  PanningHandler,
   type Cell,
   type CellStyle,
   type EventObject,
@@ -119,6 +120,13 @@ export async function renderPlan(container: HTMLElement): Promise<void> {
   graph.setCellsEditable(false);
   graph.setCellsResizable(false);
   graph.setConnectable(false);
+  // Drag-to-pan with the left button anywhere (cells are locked, so dragging
+  // a box pans rather than moves it; a plain click still opens its detail).
+  const panning = graph.getPlugin<PanningHandler>(PanningHandler.pluginId);
+  if (panning) {
+    panning.useLeftButtonForPanning = true;
+    panning.ignoreCell = true;
+  }
   const parent = graph.getDefaultParent();
   const cellByDomId = new Map<string, Cell>();
   cellsByLayer = new Map();
