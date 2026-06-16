@@ -111,6 +111,15 @@
       #axon-explode { position:absolute; right:14px; bottom:14px; z-index:110; display:none; align-items:center; gap:9px; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:8px 13px; color:var(--muted); font-size:11px; }
       body.view-plan.plan-3d #axon-explode { display:flex; }
       #axon-explode input { width:130px; accent-color:var(--accent); cursor:pointer; }
+      /* A3 nav controls (#269): zoom + reset, mirrors #plan-zoom but stacked above the explode pill */
+      #axon-nav { position:absolute; right:14px; bottom:62px; z-index:110; display:none; flex-direction:column; gap:6px; }
+      body.view-plan.plan-3d #axon-nav { display:flex; }
+      #axon-nav button { width:34px; height:34px; display:flex; align-items:center; justify-content:center; color:var(--text); background:var(--panel); border:1px solid var(--border); border-radius:8px; cursor:pointer; }
+      #axon-nav button:hover { color:var(--accent); border-color:var(--accent); background:#242731; }
+      #axon-nav svg { width:16px; height:16px; }
+      /* A3 gesture help line (#269) */
+      #axon-help { position:absolute; left:50%; transform:translateX(-50%); bottom:16px; z-index:110; display:none; color:var(--muted); font-size:11px; background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:5px 12px; white-space:nowrap; pointer-events:none; opacity:.92; }
+      body.view-plan.plan-3d #axon-help { display:block; }
       body.view-plan #plan-legend { display:block; }
       body.view-plan #graph, body.view-plan .kg-only, body.view-plan #stats, body.view-plan #legend, body.view-plan #selection, body.view-plan #zoom-controls { display:none !important; }
       #plan-legend { position:absolute; left:14px; bottom:14px; z-index:100; display:none; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:9px 11px; font-size:11px; color:var(--muted); }
@@ -210,6 +219,12 @@
       <span id="axon-explode-label">Explode</span>
       <input type="range" id="axon-explode-range" min="0" max="100" value="25" aria-label="Explode floors" />
     </div>
+    <div id="axon-nav">
+      <button type="button" id="axon-zoom-in" title="Zoom in"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+      <button type="button" id="axon-zoom-out" title="Zoom out"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+      <button type="button" id="axon-reset" title="Reset view"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6V3h3M13 6V3h-3M3 10v3h3M13 10v3h-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+    <div id="axon-help"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
