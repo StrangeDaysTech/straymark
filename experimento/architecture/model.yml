@@ -1,0 +1,41 @@
+# StrayMark architecture model (Loom Spec 002) — EXPERIMENTAL.
+# Dogfood plan for the StrayMark repo itself, seeded by
+# `straymark architecture generate` and hand-refined: the seed supplied every
+# component id, glob and the plan.drawio cells; the human work was the layer
+# semantics (the .straymark 00-09 stage placeholders → 3 real layers) and the
+# inter-component dependencies. Component ids are the stable BIM join key with
+# plan.drawio — rename labels/layers/globs freely, but keep the ids in sync.
+version: 0
+layers:
+  - { id: "tooling", label: "Tooling (Rust workspace)", order: 0 }
+  - { id: "visualization", label: "Visualization", order: 1 }
+  - { id: "web", label: "Web", order: 2 }
+components:
+  - id: "cli"
+    label: "straymark-cli"
+    layer: "tooling"
+    globs: ["cli/**"]
+    links: ["core"]
+    docs: []
+    external: false
+  - id: "core"
+    label: "straymark-core"
+    layer: "tooling"
+    globs: ["core/**"]
+    links: []
+    docs: []
+    external: false
+  - id: "experimento"
+    label: "Loom (experimental dashboard)"
+    layer: "visualization"
+    globs: ["experimento/**"]
+    links: ["core"]
+    docs: []
+    external: false
+  - id: "website"
+    label: "Website (straymark.dev)"
+    layer: "web"
+    globs: ["website/**"]
+    links: []
+    docs: []
+    external: false
