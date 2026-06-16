@@ -33,6 +33,15 @@ pub struct AppState {
     /// The project's resolved UI language (`en` / `es` / `zh-CN`), served at
     /// `/api/meta` so the SPA localizes itself (T3.5/NFR5).
     pub locale: String,
+    /// The project root (the dir that may hold `.straymark/`). The Architecture
+    /// Plan endpoints (A2.1) scan governance from here via
+    /// `core::architecture::build_governance_state`.
+    pub project_root: PathBuf,
+    /// Directory holding `model.yml` + `plan.drawio` (the `--arch-dir` override,
+    /// else `default_arch_dir(project_root)`). Split from `project_root` so the
+    /// model can live outside `.straymark/` (e.g. the dogfood) while globs still
+    /// resolve against the root.
+    pub arch_dir: PathBuf,
 }
 
 pub fn router(state: AppState) -> Router {
@@ -43,6 +52,10 @@ pub fn router(state: AppState) -> Router {
         .route("/api/stats", get(api_stats))
         .route("/api/meta", get(api_meta))
         .route("/api/stream", get(api_stream))
+        .route("/api/architecture", get(api_architecture))
+        .route("/api/architecture/component/{id}", get(api_architecture_component))
+        .route("/api/architecture/plan.drawio", get(api_architecture_plan))
+        .route("/api/where", get(api_where))
         .route("/healthz", get(|| async { "ok" }))
         .fallback(get(serve_asset))
         .layer(middleware::from_fn(reject_non_loopback_host))
@@ -114,6 +127,48 @@ async fn api_meta(State(state): State<AppState>) -> Response {
         "experimental": true,
     }))
     .into_response()
+}
+
+// ── Architecture Plan API (A2.1, Spec 002 §7) ───────────────────────────────
+
+/// GET /api/architecture — model + projected per-component / per-layer status.
+async fn api_architecture(State(state): State<AppState>) -> Response {
+    axum::Json(crate::architecture::build_architecture(
+        &state.project_root,
+        &state.arch_dir,
+    ))
+    .into_response()
+}
+
+/// GET /api/architecture/component/{id} — one component's detail + owned files.
+async fn api_architecture_component(
+    State(state): State<AppState>,
+    AxumPath(id): AxumPath<String>,
+) -> Response {
+    match crate::architecture::component_detail(&state.project_root, &state.arch_dir, &id) {
+        Some(detail) => axum::Json(detail).into_response(),
+        None => (StatusCode::NOT_FOUND, "unknown component id (or no model)").into_response(),
+    }
+}
+
+/// GET /api/architecture/plan.drawio — the raw DrawIO XML (geometry preserved;
+/// status is a client-side overlay, NFR1). 404 when no plan exists yet.
+async fn api_architecture_plan(State(state): State<AppState>) -> Response {
+    match crate::architecture::read_plan_drawio(&state.arch_dir) {
+        Some(xml) => (
+            [(header::CONTENT_TYPE, "application/xml; charset=utf-8")],
+            xml,
+        )
+            .into_response(),
+        None => (StatusCode::NOT_FOUND, "no plan.drawio — run `straymark architecture generate`")
+            .into_response(),
+    }
+}
+
+/// GET /api/where — the "where are we" summary (active charters, progress,
+/// recent AILOGs, open debt).
+async fn api_where(State(state): State<AppState>) -> Response {
+    axum::Json(crate::architecture::build_where(&state.project_root)).into_response()
 }
 
 async fn api_node(State(state): State<AppState>, AxumPath(id): AxumPath<String>) -> Response {

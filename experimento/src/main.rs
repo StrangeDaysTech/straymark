@@ -4,6 +4,7 @@
 //! Loopback-only, read-only: binds 127.0.0.1 exclusively, rejects
 //! non-loopback `Host` headers, and never writes to the watched directory.
 
+mod architecture;
 mod server;
 mod snapshot;
 mod watcher;
@@ -41,6 +42,13 @@ struct Args {
     /// bundle (frontend development).
     #[arg(long)]
     assets_dir: Option<PathBuf>,
+
+    /// Directory holding the architecture `model.yml` + `plan.drawio`. Defaults
+    /// to `<path>/.straymark/architecture/` (or `<path>/architecture/`). Override
+    /// when the model lives elsewhere — e.g. this repo dogfoods on
+    /// `experimento/architecture/` while globs resolve against the repo root.
+    #[arg(long)]
+    arch_dir: Option<PathBuf>,
 }
 
 /// Returns `(project_root, watch_dir)`. The watch dir is `.straymark/` when the
@@ -64,6 +72,10 @@ fn resolve_paths(path: &str) -> Result<(PathBuf, PathBuf)> {
 async fn main() -> Result<()> {
     let args = Args::parse();
     let (project_root, watch_dir) = resolve_paths(&args.path)?;
+    let arch_dir = match args.arch_dir {
+        Some(d) => d.canonicalize().unwrap_or(d),
+        None => architecture::default_arch_dir(&project_root),
+    };
 
     // The project's configured UI language, resolved by the shared core logic
     // (same as `straymark explore`) so Loom's UI matches the CLI (T3.5/NFR5).
@@ -91,6 +103,8 @@ async fn main() -> Result<()> {
         events,
         assets_dir: args.assets_dir,
         locale,
+        project_root,
+        arch_dir,
     };
 
     // FR7: loopback bind only. If 127.0.0.1 cannot be bound, refuse to start —
