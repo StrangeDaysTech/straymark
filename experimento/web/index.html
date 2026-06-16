@@ -98,6 +98,9 @@
       /* A3 — axonometric (3D) view, a second projection of the same model */
       #axon { position:absolute; inset:0; z-index:0; display:none; background:var(--bg); cursor:grab; }
       #axon .plan-empty { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:13px; text-align:center; padding:0 40px; }
+      /* CSS2D labels drawn over the WebGL canvas (A3.2) */
+      .axon-label { color:#cdd2dc; font:11px var(--font, system-ui), sans-serif; pointer-events:none; white-space:nowrap; text-shadow:0 1px 3px #000, 0 0 2px #000; }
+      .axon-floor-label { color:#8b91a0; font:600 11px var(--font, system-ui), sans-serif; pointer-events:none; white-space:nowrap; text-transform:uppercase; letter-spacing:.06em; text-shadow:0 1px 3px #000; }
       body.view-plan.plan-3d #axon { display:block; }
       body.view-plan.plan-3d #plan, body.view-plan.plan-3d #plan-zoom { display:none !important; }
       #plan-mode { display:none; gap:2px; margin-left:6px; }

@@ -212,7 +212,9 @@ function wireZoom(container: HTMLElement): void {
 
 // ── Component detail panel (S2) ──────────────────────────────────────────────
 
-async function showDetail(compId: string): Promise<void> {
+/** Open the component detail panel for `compId` — shared by the 2D plan (cell
+ * click) and the 3D axonometric view (box click). */
+export async function showDetail(compId: string): Promise<void> {
   const detail = await fetch(`/api/architecture/component/${encodeURIComponent(compId)}`)
     .then((r) => (r.ok ? (r.json() as Promise<ComponentDetail>) : null))
     .catch(() => null);

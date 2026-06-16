@@ -354,8 +354,15 @@
   explode change the lines are re-routed to the boxes' new world positions
   (`getWorldPosition` after `updateMatrixWorld`). Verified on Sentinel (7 floors separate, the
   dependency lines stretch across the gaps). `tsc` + `vite build` clean.
-- [ ] **A3.2 — Interaction & labels.** Floor labels (layer names) + component labels (sprites),
-  click a box → the A2.4 component detail panel, hover highlight. Reuse the where/legend panels.
-- [ ] **A3.3 — Acceptance + release.** Dogfood; `experimento/CHANGELOG.md` + bump
-  `experimento/Cargo.toml` + `web/package.json`; PR → merge → tag **`loom-0.6.0`**. Update the
-  Loom memory note (A3 shipped — Spec 002 fully realized).
+- [x] **A3.2 — Interaction & labels.** Floor labels (layer names) + component labels via
+  **`CSS2DRenderer`** (crisp HTML overlaid on the WebGL canvas, `pointer-events:none` so orbit/pick
+  fall through) — `.axon-floor-label` off each slab's left edge, `.axon-label` above each box.
+  **Raycasting** (`THREE.Raycaster` against the box meshes): a no-drag pointerup → `pick()` →
+  the **shared** A2.4 `showDetail()` (now `export`ed from `plan.ts`, reused by both projections);
+  pointermove → `setHover()` bumps the hovered box's `emissiveIntensity` (restored from a
+  per-box `baseEmissive`) + `cursor:pointer`. Reuses the where/legend panels untouched. Verified
+  on Sentinel (7 floor labels + 13 component labels; click `db` → Database detail with 16 charters
+  + 41 owned files). `tsc` + `vite build` clean.
+- [x] **A3.3 — Acceptance + release.** Dogfooded on Sentinel; `experimento/CHANGELOG.md` `[0.6.0]`
+  + bump `experimento/Cargo.toml` + `web/package.json` to 0.6.0; PR → merge → tag **`loom-0.6.0`**.
+  Loom memory note updated (A3 shipped — Spec 002 fully realized).
