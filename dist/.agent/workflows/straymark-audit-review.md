@@ -46,6 +46,8 @@ For each `.straymark/audits/<CHARTER-ID>/report-*.md`:
 
 Build a **master finding list** — every unique claim across all auditors, deduplicated when two auditors clearly describe the same thing.
 
+**Independence check (contamination guard).** Before you trust any convergence between auditors, scan each report for signs it read the *other* auditors' reports instead of auditing independently: explicit references to another `report-*.md`, another auditor named by model, a "comparison table of auditors", or language like "I independently verified all N findings from the prior <model> audit". A report that consolidates or cross-checks against its siblings is **contaminated** — its agreement is copied, not independent signal. Flag it, exclude it from the convergence/dedup math and from the auditor rating (step 5), and note the contamination in the review. The audit prompt forbids reading sibling reports, but a prompt rule is weak — verify it here.
+
 ### 3. Verify every finding against actual code
 
 This is the substantive step. For EACH finding in the master list:

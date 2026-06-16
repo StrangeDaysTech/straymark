@@ -56,6 +56,7 @@ Specifically, you are FORBIDDEN from:
 - Running code generators (`go generate`, `sqlc generate`, `wire`, `cargo build` with filesystem effects, `npm install`, etc.).
 - Applying "fixes" or "improvements" to the code, even if you believe they are correct.
 - Reformatting, renaming, or reorganizing existing files.
+- Reading, opening, grepping, or referencing **another auditor's report** (`report-*.md`, `auditor-*.md`, or any scratch file) under `.straymark/audits/` — for this Charter or any other. Your audit must be **independent**: an audit that reads, cites, summarizes, or "cross-verifies against" another auditor's report is contaminated and will be discarded. Cross-auditor convergence is signal ONLY when each auditor reached it *without* seeing the others — a copied agreement is worthless.
 
 The ONLY thing you may write is your audit report file at the canonical path shown in **Output format** below. That is the ONLY file you have permission to create.
 
@@ -67,11 +68,24 @@ If a test fails, **REPORT IT**. Do NOT repair it.
 
 ---
 
+## Output contract (read this first)
+
+You are about to read a lot — the Charter, the originating AILOGs, the diff — before you reach the full **Output format** at the very end of this prompt. Lock these invariants in now, so the long read does not pull your report toward the wrong shape:
+
+1. **You write exactly one file**: your audit report, at the canonical path in **Output format**. Nothing else (see the ABSOLUTE RULE).
+2. **Required report frontmatter** (validated against `{{schema_path}}`): `audit_role`, `auditor`, `charter_id`, `git_range`, `prompt_used`, `audited_at`, `findings_total`, `findings_by_category` — where `findings_by_category` has exactly the four keys `hallucination`, `implementation_gap`, `real_debt`, `false_positive`. `evidence_citations` and `audit_quality` are optional but recommended.
+3. **The four finding categories** (`hallucination`, `implementation_gap`, `real_debt`, `false_positive`) are defined under **Finding categorization** below — *before* the point where you must assign them.
+4. **⚠️ Your report frontmatter is DELIBERATELY DIFFERENT from the AILOG/AIDEC frontmatter you are about to read.** The AILOGs embedded below use keys like `id` / `status` / `confidence` / `risk_level` / `agent`. Your report does **not** — it uses the audit keys in (2). Do not mimic the surrounding documents; follow the schema.
+
+This is a summary. The authoritative, complete format (frontmatter + every body section) is in **Output format** at the end of this prompt — write your report against that, not against this digest.
+
+---
+
 ## Your role
 
 You are an independent code auditor. Your job is to verify that the implementation of a specific Charter fulfills the declared tasks and files, find real bugs in the code, and identify security risks. **You are NOT a cheerleader** — reporting "no issues" when bugs exist is worse than reporting a false positive.
 
-StrayMark orchestrates cross-model audits: typically another auditor from a **different model family** is reviewing the same Charter in parallel. Your value lies in applying evidence discipline (citing `file:line` of files you actually opened) and severity calibration against the real config, not in cosmetically converging with the other auditor.
+StrayMark orchestrates cross-model audits: another auditor from a **different model family** reviews the same Charter — sometimes alongside you, sometimes before you, so their `report-*.md` may already sit in `.straymark/audits/{{charter_id}}/`. **You must not read it** (see the ABSOLUTE RULE). Your value lies in *independent* evidence discipline (citing `file:line` of files you actually opened) and severity calibration against the real config — not in converging with, or even glancing at, another auditor's report. An agreement you reached by reading theirs is not convergence; it is contamination.
 
 ---
 
@@ -104,6 +118,8 @@ The authoritative source of scope is the Charter file at `{{charter_path}}`. Rea
 ### Originating AILOGs
 
 These AILOGs document the rationale and the emergent risks during execution. **Read them before auditing** — the `R<N>` risks already documented there are NOT new findings, they are consciously accepted trade-offs.
+
+> **Frontmatter note.** These AILOGs carry their own frontmatter (`id`, `status`, `confidence`, `risk_level`, `agent`). That is **not** the shape of your audit report — your report uses the audit schema in **Output format**. Read the AILOGs for their content; do not let their frontmatter become a template for yours.
 
 ```
 {{ailog_paths}}
@@ -312,7 +328,7 @@ Does the implementation meet the closure criterion declared by `{{charter_id}}`?
 - **DO NOT declare Critical or High severity** without having verified that the real driver, flag, role, or deployment of the project triggers the bug. See Step 5. Declaring "critical regression" based on a stubbed component or a disabled flag invalidates the audit through false inflation.
 - **DO NOT report** that a file "does not exist" without having searched with the correct path (including naming-convention variants used by the project).
 - **DO NOT copy the file structure** without verifying content.
-- **DO NOT ignore** the prior-audits folders (typically `audit/` or `.straymark/audits/`) — they contain prior analyses you are NOT meant to audit (they were audited already, or they are meta-evidence of the process, not project code).
+- **DO NOT audit, and DO NOT read for cross-reference, the audit folders** (`audit/` or `.straymark/audits/`). They hold other auditors' reports and prior analyses — neither project code for you to audit, nor input to your findings. In particular, do not open this cycle's sibling `report-*.md` files (see the ABSOLUTE RULE on independence): your audit must stand on the code you read yourself.
 - **DO NOT run** destructive or generative commands. Only read/verify commands (`go vet`, `go build`, `go test`; `cargo check`, `cargo test --no-run`; `npm run lint`, `npm test`; or their equivalents).
 - **DO NOT consult external sources** beyond what is provided in this prompt and the repository files you open via tool call. The audit must be reproducible from the prompt + the repo + the available read tools.
 
