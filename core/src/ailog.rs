@@ -129,9 +129,60 @@ pub fn parse_modified_files(body: &str) -> Vec<String> {
     out
 }
 
+/// All source paths an AILOG records as modified — the **union** of its
+/// `files_modified` frontmatter list and its `## Modified Files` table.
+///
+/// AILOGs in the wild carry one or the other (and often both): older / etapa
+/// logs frequently have only the frontmatter `files_modified` list and no
+/// markdown table, while some have only the table. Reading just one source
+/// silently drops a whole log's footprint — which is how the architecture
+/// `has-debt` overlay lit Identity/Core/Database (their AILOG had the table) but
+/// missed AuditTrail/CommsHub (theirs only had the frontmatter list). Takes the
+/// full document content (frontmatter + body); non-path entries are dropped via
+/// the shared [`crate::charter_files::looks_like_path`] filter.
+pub fn modified_files(content: &str) -> Vec<String> {
+    use std::collections::BTreeSet;
+    let mut set: BTreeSet<String> = BTreeSet::new();
+
+    let (fm, body) = crate::utils::split_frontmatter(content).unwrap_or(("", content));
+    if let Ok(value) = serde_yaml::from_str::<serde_yaml::Value>(fm) {
+        if let Some(seq) = value.get("files_modified").and_then(|v| v.as_sequence()) {
+            for entry in seq {
+                if let Some(s) = entry.as_str() {
+                    if looks_like_path(s) {
+                        set.insert(s.to_string());
+                    }
+                }
+            }
+        }
+    }
+    for f in parse_modified_files(body) {
+        set.insert(f);
+    }
+    set.into_iter().collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn modified_files_unions_frontmatter_list_and_table() {
+        // Frontmatter-only AILOG (no `## Modified Files` table) — the etapa-log
+        // shape that the table-only parser missed (#273).
+        let fm_only = "---\nid: AILOG-2026-04-12-006\nfiles_modified:\n  \
+            - internal/modules/audittrail/service.go\n  - db/migrations/005_x.sql\n  \
+            - not a path\n---\n\n## Summary\n\nNo table here.\n";
+        assert_eq!(
+            modified_files(fm_only),
+            vec!["db/migrations/005_x.sql", "internal/modules/audittrail/service.go"]
+        );
+
+        // Both sources present → union, deduped.
+        let both = "---\nfiles_modified:\n  - internal/a/x.go\n---\n\n## Modified Files\n\n\
+            | File | Lines |\n|---|---|\n| `internal/a/x.go` | +1 |\n| `internal/b/y.go` | +2 |\n";
+        assert_eq!(modified_files(both), vec!["internal/a/x.go", "internal/b/y.go"]);
+    }
 
     #[test]
     fn parses_table_col1_backtick_paths() {

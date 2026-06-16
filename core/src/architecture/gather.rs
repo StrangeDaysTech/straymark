@@ -21,7 +21,6 @@ use crate::charter::{self, Charter, CharterStatus};
 use crate::charter_files::parse_files_to_modify;
 use crate::document::{detect_doc_type, discover_documents, parse_document, DocType};
 use crate::drift::compute_drift;
-use crate::utils::split_frontmatter;
 
 /// Directories never scanned for source (build output, VCS, deps, docs).
 pub const EXCLUDED_DIRS: &[&str] = &[
@@ -152,10 +151,7 @@ fn closed_ailog_files(root: &Path, charters: &[Charter]) -> Vec<String> {
         for id in ids {
             if let Some(path) = ailog::find_ailog_file(&agent_logs_dir, id) {
                 if let Ok(content) = std::fs::read_to_string(&path) {
-                    let body = split_frontmatter(&content)
-                        .map(|(_, b)| b)
-                        .unwrap_or(&content);
-                    for f in ailog::parse_modified_files(body) {
+                    for f in ailog::modified_files(&content) {
                         set.insert(f);
                     }
                 }
@@ -236,8 +232,9 @@ fn open_tde_files(root: &Path) -> Vec<String> {
 }
 
 /// If `related` names an AILOG (by id, filename, or path), resolve it to its
-/// file and return the source paths in its `## Modified Files` section. Returns
-/// `None` when `related` is not an AILOG reference or the file can't be found.
+/// file and return the source paths it recorded as modified (frontmatter
+/// `files_modified` ∪ the `## Modified Files` table). Returns `None` when
+/// `related` is not an AILOG reference or the file can't be found.
 fn ailog_modified_files(logs_dir: &Path, related: &str) -> Option<Vec<String>> {
     let base = Path::new(related)
         .file_name()
@@ -247,8 +244,8 @@ fn ailog_modified_files(logs_dir: &Path, related: &str) -> Option<Vec<String>> {
         return None;
     }
     let path = ailog::find_ailog_file(logs_dir, base)?;
-    let body = std::fs::read_to_string(&path).ok()?;
-    Some(ailog::parse_modified_files(&body))
+    let content = std::fs::read_to_string(&path).ok()?;
+    Some(ailog::modified_files(&content))
 }
 
 /// A TDE is open unless its status reads as a resolved/closed terminal state.
@@ -321,10 +318,13 @@ mod tests {
         std::fs::create_dir_all(&logs).unwrap();
         std::fs::create_dir_all(&tdes).unwrap();
 
+        // This AILOG carries its modified files ONLY in the frontmatter list
+        // (no `## Modified Files` table) — the etapa-log shape that used to be
+        // missed, so the debt would never reach the component (#273).
         std::fs::write(
             logs.join("AILOG-2026-05-07-041-commshub.md"),
-            "---\nid: AILOG-2026-05-07-041\n---\n\n## Modified Files\n\n\
-             | File | Lines |\n|---|---|\n| `internal/modules/commshub/http.go` | +20 |\n",
+            "---\nid: AILOG-2026-05-07-041\nfiles_modified:\n  \
+             - internal/modules/commshub/http.go\n---\n\n## Summary\n\nno table.\n",
         )
         .unwrap();
         std::fs::write(

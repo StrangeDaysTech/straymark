@@ -19,10 +19,14 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
   no manual refinement needed. A non-container leaf (`cmd/`, `db/`) still stays whole.
 - **`has-debt` now maps onto components.** An open TDE's `related` frontmatter lists governance
   docs (AILOGs, audit reviews, Charters), not source paths, so the debt never matched a component
-  glob and the overlay was always empty. The projection now resolves each `related` AILOG to its
-  `## Modified Files` and feeds those source paths in, so debt lands on the components whose code
-  the referenced AILOGs touched. (The frontend half — painting `has-debt` over `implemented` —
-  ships with Loom.)
+  glob and the overlay was always empty. The projection now resolves each `related` AILOG to the
+  files it recorded as modified and feeds those source paths in, so debt lands on the components
+  whose code the referenced AILOGs touched. An AILOG's modified files are read as the **union** of
+  its `files_modified` frontmatter list and its `## Modified Files` table — older / etapa logs
+  often carry only the frontmatter list, so reading just the table silently dropped them (it lit
+  Identity/Core/Database but missed AuditTrail/CommsHub on Sentinel). The same union now also feeds
+  the `implemented` signal from closed-Charter AILOGs. (The frontend half — painting `has-debt`
+  over `implemented` — ships with Loom.)
 
 ### Fixed (architecture model DX — #273, EXPERIMENTAL)
 
