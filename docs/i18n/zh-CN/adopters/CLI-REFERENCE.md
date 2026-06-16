@@ -1253,7 +1253,19 @@ StrayMark CLI
 
 > ⚠️ **实验性（Loom v0）。** 模型 schema、DrawIO 约定以及命令接口都可能在没有弃用周期的情况下更改。三个子命令默认都操作 `.straymark/architecture/`；`--out <dir>` 可覆盖该路径。
 
-**`straymark architecture generate [path] [--force] [--out <dir>]`** —— 通过挖掘你的代码库结构（每个顶层源目录对应一个组件，glob `dir/**`）并结合 ADR 信号（C4 Mermaid 图 + "Affected Components" 表可改进标签并添加链接）来写出 `model.yml` + `plan.drawio` 的初稿。组件会落在占位的 `unassigned` 层，而 `.straymark` 的 00–09 阶段为层级列表提供种子 —— 之后你再手动精修（重新分配/重命名层级、收紧 glob、添加链接）。`--force` 会覆盖已有的产物。
+**`straymark architecture generate [path] [--force] [--out <dir>]`** —— 通过挖掘你的代码库结构（每个源目录对应一个组件，glob `dir/**`）并结合 ADR 信号（C4 Mermaid 图 + "Affected Components" 表可改进标签并添加链接）来写出 `model.yml` + `plan.drawio` 的初稿。挖掘器会向下穿过*容器*目录（`internal/`、`src/`、`pkg/`、`lib/`、`app/`、`modules/` 等），使得像 `internal/modules/<x>` 这样的树会拆分为真实的组件，而不是挤成一个大块；并会跳过构建*脚手架*（`src/main/java`、`src/main/kotlin` 等），从而把 Maven/Gradle 模块归属到其模块目录，而不是塌缩成单个 `main` 方块。组件会落在占位的 `unassigned` 层，而 `.straymark` 的 00–09 阶段为层级列表提供种子 —— 之后你再手动精修（重新分配/重命名层级、收紧 glob、添加链接）。`--force` 会覆盖已有的产物。
+
+> **按你的技术栈调整扫描（`config.yml`）。** 种子开箱即用就具备语言与结构感知，但你可以通过 `.straymark/config.yml` 中的 `architecture:` 区块为非默认生态扩展它。这些列表是**叠加式**的 —— 它们扩展内置默认值，绝不替换：
+>
+> ```yaml
+> architecture:
+>   source_extensions:   [rb, ex, exs, gleam]   # 添加种子应统计的语言
+>   container_dirs:      [services, domains]     # 额外要向下穿过的目录
+>   scaffolding_prefixes: [src/main/java]        # 额外要跳过的构建脚手架（已含 Maven/Gradle 默认值）
+>   excluded_dirs:       [generated]             # 额外要跳过的目录
+> ```
+>
+> 状态叠加本身（glob → 文件匹配）已经与语言无关；这里只塑造生成的种子。
 
 **`straymark architecture sync [path] [--out <dir>] [--apply]`** —— **仅追加**的对账：检测尚未被模型覆盖的新顶层源目录 / ADR 组件，并将它们追加到 `model.yml` + `plan.drawio`，**绝不**破坏人工编辑或 DrawIO 几何布局。默认为试运行；`--apply` 才会写入。
 

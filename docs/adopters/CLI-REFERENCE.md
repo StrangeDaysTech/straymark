@@ -1428,7 +1428,19 @@ Author and maintain the **architecture model** that powers Loom's Architecture P
 
 > ⚠️ **EXPERIMENTAL (Loom v0).** The model schema, DrawIO conventions, and command surface may change without a deprecation cycle. All three subcommands operate on `.straymark/architecture/` by default; `--out <dir>` overrides it.
 
-**`straymark architecture generate [path] [--force] [--out <dir>]`** — write a first-draft `model.yml` + `plan.drawio` by mining your codebase structure (one component per top-level source directory, glob `dir/**`) enriched with ADR signal (C4 Mermaid diagrams + "Affected Components" tables improve labels and add links). Components land in a placeholder `unassigned` layer and the `.straymark` stages 00–09 seed the layer list — you then refine by hand (reassign/rename layers, tighten globs, add links). `--force` overwrites existing artifacts.
+**`straymark architecture generate [path] [--force] [--out <dir>]`** — write a first-draft `model.yml` + `plan.drawio` by mining your codebase structure (one component per source directory, glob `dir/**`) enriched with ADR signal (C4 Mermaid diagrams + "Affected Components" tables improve labels and add links). The miner descends through *container* directories (`internal/`, `src/`, `pkg/`, `lib/`, `app/`, `modules/`, …) so a tree like `internal/modules/<x>` breaks out into real components instead of one blob, and it skips build *scaffolding* (`src/main/java`, `src/main/kotlin`, …) so a Maven/Gradle module is attributed to its module directory rather than collapsing to a single `main` box. Components land in a placeholder `unassigned` layer and the `.straymark` stages 00–09 seed the layer list — you then refine by hand (reassign/rename layers, tighten globs, add links). `--force` overwrites existing artifacts.
+
+> **Tuning the scan for your stack (`config.yml`).** The seed is language- and structure-aware out of the box, but you can extend it for non-default ecosystems via an `architecture:` section in `.straymark/config.yml`. Lists are **additive** — they extend the built-in defaults, never replace them:
+>
+> ```yaml
+> architecture:
+>   source_extensions:   [rb, ex, exs, gleam]   # add languages the seed should count
+>   container_dirs:      [services, domains]     # extra dirs to descend through
+>   scaffolding_prefixes: [src/main/java]        # extra build scaffolding to skip (Maven/Gradle defaults included)
+>   excluded_dirs:       [generated]             # extra dirs to skip
+> ```
+>
+> The status overlay itself (glob → file matching) is already language-agnostic; this only shapes the generated seed.
 
 **`straymark architecture sync [path] [--out <dir>] [--apply]`** — **append-only** reconciliation: detect new top-level source directories / ADR components not yet covered by the model and append them to `model.yml` + `plan.drawio`, **never** clobbering human edits or DrawIO geometry. Dry-run by default; `--apply` writes.
 

@@ -1120,7 +1120,19 @@ Crea y mantén el **modelo de arquitectura** que alimenta la vista del Plan de A
 
 > ⚠️ **EXPERIMENTAL (Loom v0).** El esquema del modelo, las convenciones de DrawIO y la superficie de comandos pueden cambiar sin ciclo de deprecación. Los tres subcomandos operan sobre `.straymark/architecture/` por defecto; `--out <dir>` lo sobrescribe.
 
-**`straymark architecture generate [path] [--force] [--out <dir>]`** — escribe un primer borrador de `model.yml` + `plan.drawio` minando la estructura de tu base de código (un componente por directorio de fuentes de nivel superior, glob `dir/**`) enriquecido con señal de ADRs (los diagramas C4 Mermaid + las tablas "Affected Components" mejoran las etiquetas y añaden enlaces). Los componentes aterrizan en una capa `unassigned` de relleno y las etapas 00–09 de `.straymark` siembran la lista de capas — luego refinas a mano (reasignar/renombrar capas, ajustar globs, añadir enlaces). `--force` sobrescribe los artefactos existentes.
+**`straymark architecture generate [path] [--force] [--out <dir>]`** — escribe un primer borrador de `model.yml` + `plan.drawio` minando la estructura de tu base de código (un componente por directorio de fuentes, glob `dir/**`) enriquecido con señal de ADRs (los diagramas C4 Mermaid + las tablas "Affected Components" mejoran las etiquetas y añaden enlaces). El minador desciende por directorios *contenedores* (`internal/`, `src/`, `pkg/`, `lib/`, `app/`, `modules/`, …) para que un árbol como `internal/modules/<x>` se desglose en componentes reales en vez de un solo bloque, y omite el *andamiaje* de build (`src/main/java`, `src/main/kotlin`, …) para que un módulo Maven/Gradle se atribuya a su directorio de módulo en lugar de colapsar en un único cajón `main`. Los componentes aterrizan en una capa `unassigned` de relleno y las etapas 00–09 de `.straymark` siembran la lista de capas — luego refinas a mano (reasignar/renombrar capas, ajustar globs, añadir enlaces). `--force` sobrescribe los artefactos existentes.
+
+> **Ajustar el escaneo a tu stack (`config.yml`).** El seed es consciente de lenguaje y estructura de fábrica, pero puedes extenderlo para ecosistemas no predeterminados mediante una sección `architecture:` en `.straymark/config.yml`. Las listas son **aditivas** — extienden los valores por defecto integrados, nunca los reemplazan:
+>
+> ```yaml
+> architecture:
+>   source_extensions:   [rb, ex, exs, gleam]   # añade lenguajes que el seed debe contar
+>   container_dirs:      [services, domains]     # dirs extra por los que descender
+>   scaffolding_prefixes: [src/main/java]        # andamiaje de build extra a omitir (defaults Maven/Gradle incluidos)
+>   excluded_dirs:       [generated]             # dirs extra a omitir
+> ```
+>
+> El overlay de estado en sí (matching glob → archivo) ya es agnóstico al lenguaje; esto solo da forma al seed generado.
 
 **`straymark architecture sync [path] [--out <dir>] [--apply]`** — reconciliación **append-only** (solo-añadir): detecta nuevos directorios de fuentes de nivel superior / componentes de ADRs todavía no cubiertos por el modelo y los añade a `model.yml` + `plan.drawio`, sin **nunca** pisar las ediciones humanas ni la geometría de DrawIO. Dry-run por defecto; `--apply` escribe.
 

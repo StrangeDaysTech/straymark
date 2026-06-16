@@ -7,6 +7,28 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## [Unreleased]
+
+### Changed (architecture scanner — language/structure-agnostic, #279, EXPERIMENTAL)
+
+- **`architecture generate` is now configurable and ecosystem-aware.** The source-file scan and
+  the component-dir shaping moved to a single `straymark-core::architecture::scan` module driven
+  by a `ScanConfig`, resolved from an optional **`architecture:` section in
+  `.straymark/config.yml`** (additive over built-in defaults):
+  - `source_extensions` — the seed now recognizes ~30 languages out of the box (added Ruby,
+    Elixir, Scala, Dart, Clojure, Vue, Svelte, Lua, Julia, Haskell, Erlang, OCaml, …); a project
+    in a non-default language is no longer an empty map, and adopters can add more.
+  - `scaffolding_prefixes` — build scaffolding like `src/main/java` / `src/main/kotlin` is skipped,
+    so a **Maven/Gradle** module is attributed to its module directory instead of collapsing the
+    whole project into a single `main` box (multi-module → one component per module).
+  - `container_dirs` / `excluded_dirs` — extend the descent/skip sets per project.
+- Defaults are unchanged for existing Go/Rust/JS layouts (Sentinel still seeds the same 14
+  components); the status overlay was already language-agnostic — this only shapes the seed.
+- `straymark-core` → **0.7.0** (additive: new public `scan` API). Publishes with the next `cli-`
+  release.
+
+---
+
 ## Framework 4.27.0 / CLI 3.26.0 / Core 0.6.0 — 2026-06-16
 
 Audit-prompt hardening (#261), architecture-model DX + a meaningful `has-debt` overlay (#273),
