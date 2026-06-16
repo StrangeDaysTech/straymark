@@ -1,13 +1,13 @@
 //! Axonometric / BIM exploded view (Loom A3, Spec 002 §12 north star): the
-//! architecture model rendered in 3D — each layer is a stacked "floor", each
-//! component a box on it, colored by the §4 "you are here" status. A real WebGL
-//! scene (Three.js) with an **orthographic** camera (true axonometric — parallel
-//! projection, no perspective) and orbit controls. Explode (separating the
-//! floors) and labels land in A3.1/A3.2.
+//! architecture model in 3D — each layer is a stacked "floor", each component a
+//! box on it, colored by the §4 "you are here" status. A real WebGL scene
+//! (Three.js) with an **orthographic** camera (true axonometric — parallel
+//! projection) and orbit controls.
 //!
-//! Same model as the 2D plan (`/api/architecture`); this is just a second view
-//! of it (the BIM "one model, many views"). Auto-laid-out per floor — the 3D
-//! view doesn't need the human `plan.drawio` geometry.
+//! A3.1 adds the **explode** (a slider that separates the floors vertically —
+//! the BIM "peel apart") and the **dependency lines** (the model's `links` as
+//! 3D connectors between boxes, redrawn as floors move). Labels + click-detail
+//! land in A3.2.
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -25,10 +25,15 @@ interface ArchLayer {
   label: string;
   order: number;
 }
+interface ArchEdge {
+  source: string;
+  target: string;
+}
 interface ArchResponse {
   model_present: boolean;
   layers: ArchLayer[];
   components: ArchComponent[];
+  edges: ArchEdge[];
 }
 
 const PRIORITY = ['active', 'in-progress', 'implemented', 'has-debt', 'wiring-gap', 'uncharted'];
@@ -38,8 +43,19 @@ const BOX_W = 4;
 const BOX_H = 1.4;
 const BOX_D = 3;
 const GAP_X = 2.4;
-const FLOOR_GAP = 6; // vertical spacing between floors (A3.1 makes this a slider)
 const SLAB_PAD = 2;
+const MIN_FLOOR_GAP = 3.2; // compact
+const MAX_FLOOR_GAP = 17; // fully exploded
+
+interface Floor {
+  group: THREE.Group;
+  index: number; // 0..n-1 bottom→top
+}
+interface Conn {
+  line: THREE.Line;
+  a: THREE.Object3D;
+  b: THREE.Object3D;
+}
 
 interface Scene3D {
   renderer: THREE.WebGLRenderer;
@@ -48,12 +64,15 @@ interface Scene3D {
   controls: OrbitControls;
   frame: number;
   onResize: () => void;
+  floors: Floor[];
+  conns: Conn[];
+  layerCount: number;
 }
 
 let current: Scene3D | null = null;
 
 /** (Re)render the axonometric view into `container`. Idempotent. */
-export async function renderAxon(container: HTMLElement): Promise<void> {
+export async function renderAxon(container: HTMLElement, explode = 0.25): Promise<void> {
   let arch: ArchResponse;
   try {
     arch = await fetch('/api/architecture').then((r) => r.json() as Promise<ArchResponse>);
@@ -75,7 +94,6 @@ export async function renderAxon(container: HTMLElement): Promise<void> {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#14161c');
 
-  // Orthographic camera = true axonometric (parallel) projection.
   const frustum = 26;
   const aspect = width / height;
   const camera = new THREE.OrthographicCamera(
@@ -104,7 +122,8 @@ export async function renderAxon(container: HTMLElement): Promise<void> {
   controls.dampingFactor = 0.1;
   controls.target.set(0, 0, 0);
 
-  buildFloors(scene, arch);
+  const { floors, boxByComp } = buildFloors(scene, arch);
+  const conns = buildConnections(scene, arch, boxByComp);
 
   const onResize = () => {
     const w = container.clientWidth || width;
@@ -119,32 +138,46 @@ export async function renderAxon(container: HTMLElement): Promise<void> {
   };
   window.addEventListener('resize', onResize);
 
-  const s: Scene3D = { renderer, scene, camera, controls, frame: 0, onResize };
+  const s: Scene3D = {
+    renderer,
+    scene,
+    camera,
+    controls,
+    frame: 0,
+    onResize,
+    floors,
+    conns,
+    layerCount: floors.length,
+  };
+  current = s;
+  applyExplode(s, explode);
+
   const tick = () => {
     controls.update();
     renderer.render(scene, camera);
     s.frame = requestAnimationFrame(tick);
   };
   tick();
-  current = s;
 }
 
-/** Build a stacked floor per layer with a box per component (centered). */
-function buildFloors(scene: THREE.Scene, arch: ArchResponse): void {
-  const layers = [...arch.layers].sort((a, b) => a.order - b.order);
-  // Center the whole stack vertically.
-  const yOffset = ((layers.length - 1) * FLOOR_GAP) / 2;
+/** Build a floor group per layer with a box per component; index the boxes. */
+function buildFloors(
+  scene: THREE.Scene,
+  arch: ArchResponse,
+): { floors: Floor[]; boxByComp: Map<string, THREE.Object3D> } {
+  const layers = [...arch.layers]
+    .sort((a, b) => a.order - b.order)
+    .filter((l) => arch.components.some((c) => c.layer === l.id));
+  const boxByComp = new Map<string, THREE.Object3D>();
+  const floors: Floor[] = [];
 
   layers.forEach((layer, i) => {
     const comps = arch.components.filter((c) => c.layer === layer.id);
-    if (comps.length === 0) return;
-    const y = i * FLOOR_GAP - yOffset;
+    const group = new THREE.Group();
 
-    // Row of boxes, centered on x.
     const rowWidth = comps.length * BOX_W + (comps.length - 1) * GAP_X;
     let x = -rowWidth / 2 + BOX_W / 2;
 
-    // Translucent slab = the "floor".
     const slab = new THREE.Mesh(
       new THREE.BoxGeometry(rowWidth + SLAB_PAD * 2, 0.25, BOX_D + SLAB_PAD * 2),
       new THREE.MeshStandardMaterial({
@@ -154,8 +187,8 @@ function buildFloors(scene: THREE.Scene, arch: ArchResponse): void {
         roughness: 0.9,
       }),
     );
-    slab.position.set(0, y - BOX_H / 2 - 0.4, 0);
-    scene.add(slab);
+    slab.position.set(0, -BOX_H / 2 - 0.4, 0);
+    group.add(slab);
 
     for (const comp of comps) {
       const state = pickState(comp.states);
@@ -170,18 +203,67 @@ function buildFloors(scene: THREE.Scene, arch: ArchResponse): void {
           metalness: 0.1,
         }),
       );
-      box.position.set(x, y, 0);
+      box.position.set(x, 0, 0);
       box.userData = { componentId: comp.id, label: comp.label };
-      // Crisp edge outline in the component's stroke color.
-      const edges = new THREE.LineSegments(
-        new THREE.EdgesGeometry(box.geometry),
-        new THREE.LineBasicMaterial({ color: new THREE.Color(palette.stroke) }),
+      box.add(
+        new THREE.LineSegments(
+          new THREE.EdgesGeometry(box.geometry),
+          new THREE.LineBasicMaterial({ color: new THREE.Color(palette.stroke) }),
+        ),
       );
-      box.add(edges);
-      scene.add(box);
+      group.add(box);
+      boxByComp.set(comp.id, box);
       x += BOX_W + GAP_X;
     }
+
+    scene.add(group);
+    floors.push({ group, index: i });
   });
+
+  return { floors, boxByComp };
+}
+
+/** One line per model edge (source → target component box). */
+function buildConnections(
+  scene: THREE.Scene,
+  arch: ArchResponse,
+  boxByComp: Map<string, THREE.Object3D>,
+): Conn[] {
+  const conns: Conn[] = [];
+  const material = new THREE.LineBasicMaterial({ color: 0x6b7280, transparent: true, opacity: 0.75 });
+  for (const edge of arch.edges) {
+    const a = boxByComp.get(edge.source);
+    const b = boxByComp.get(edge.target);
+    if (!a || !b) continue;
+    const geom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+    const line = new THREE.Line(geom, material);
+    scene.add(line);
+    conns.push({ line, a, b });
+  }
+  return conns;
+}
+
+/** Position the floors at the given explode amount (0 compact … 1 exploded)
+ * and re-route the dependency lines to the boxes' new world positions. */
+function applyExplode(s: Scene3D, amount: number): void {
+  const gap = MIN_FLOOR_GAP + amount * (MAX_FLOOR_GAP - MIN_FLOOR_GAP);
+  const yOffset = ((s.layerCount - 1) * gap) / 2;
+  for (const f of s.floors) {
+    f.group.position.y = f.index * gap - yOffset;
+  }
+  s.scene.updateMatrixWorld(true);
+  const pa = new THREE.Vector3();
+  const pb = new THREE.Vector3();
+  for (const c of s.conns) {
+    c.a.getWorldPosition(pa);
+    c.b.getWorldPosition(pb);
+    c.line.geometry.setFromPoints([pa.clone(), pb.clone()]);
+  }
+}
+
+/** Set the explode amount on the live scene (called by the slider). */
+export function setExplode(amount: number): void {
+  if (current) applyExplode(current, Math.max(0, Math.min(1, amount)));
 }
 
 function pickState(states: string[]): string {
@@ -198,7 +280,7 @@ export function dispose(): void {
   window.removeEventListener('resize', current.onResize);
   current.controls.dispose();
   current.scene.traverse((obj) => {
-    if (obj instanceof THREE.Mesh || obj instanceof THREE.LineSegments) {
+    if (obj instanceof THREE.Mesh || obj instanceof THREE.LineSegments || obj instanceof THREE.Line) {
       obj.geometry.dispose();
       const m = obj.material;
       if (Array.isArray(m)) m.forEach((mm) => mm.dispose());

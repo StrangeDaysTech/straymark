@@ -347,8 +347,13 @@
   `/api/architecture` (auto-laid-out per floor — the 3D view doesn't need the human DrawIO
   geometry). Verified on Sentinel (7 floors stacked) + the demo (all 5 state colors). `tsc` +
   `vite build` clean.
-- [ ] **A3.1 — Explode.** A slider that separates the floors vertically (the BIM peel-apart) +
-  cross-layer dependency connectors (the `links` as 3D lines between boxes).
+- [x] **A3.1 — Explode.** `axon.ts` refactored so each layer is a `THREE.Group` (a "floor")
+  movable on `y`; an **Explode slider** (`#axon-explode`, bottom-right, localized) drives
+  `setExplode(0..1)` → floor gap `MIN_FLOOR_GAP..MAX_FLOOR_GAP` (the BIM peel-apart). Each model
+  edge (`/api/architecture` `edges`) is a `THREE.Line` between the source/target boxes; on every
+  explode change the lines are re-routed to the boxes' new world positions
+  (`getWorldPosition` after `updateMatrixWorld`). Verified on Sentinel (7 floors separate, the
+  dependency lines stretch across the gaps). `tsc` + `vite build` clean.
 - [ ] **A3.2 — Interaction & labels.** Floor labels (layer names) + component labels (sprites),
   click a box → the A2.4 component detail panel, hover highlight. Reuse the where/legend panels.
 - [ ] **A3.3 — Acceptance + release.** Dogfood; `experimento/CHANGELOG.md` + bump

@@ -11,7 +11,7 @@ import Sigma from 'sigma';
 
 import { setLocale, t } from './i18n';
 import { renderPlan, stateColor, LEGEND_STATES, setPlanHooks } from './plan';
-import { renderAxon, dispose as disposeAxon } from './axon';
+import { renderAxon, dispose as disposeAxon, setExplode } from './axon';
 
 interface ApiNode {
   id: string;
@@ -705,6 +705,7 @@ function applyStaticI18n(): void {
   document.getElementById('badge')!.textContent = t('app.experimental');
   document.getElementById('tab-kg')!.textContent = t('tab.kg');
   document.getElementById('tab-plan')!.textContent = t('tab.plan');
+  document.getElementById('axon-explode-label')!.textContent = t('axon.explode');
   buildPlanLegend();
   searchEl.placeholder = t('search.placeholder');
   document.getElementById('sizing-label')!.textContent = t('size.label');
@@ -873,6 +874,9 @@ function setPlanMode(mode: PlanMode): void {
 for (const b of planModeBtns) {
   b.addEventListener('click', () => setPlanMode((b.dataset.mode as PlanMode) ?? '2d'));
 }
+
+const axonExplode = document.getElementById('axon-explode-range') as HTMLInputElement | null;
+axonExplode?.addEventListener('input', () => setExplode(Number(axonExplode.value) / 100));
 
 /** The color legend for the plan's status overlay (localized). */
 function buildPlanLegend(): void {
