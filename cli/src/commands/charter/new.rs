@@ -463,9 +463,11 @@ fn leading_sentences(s: &str, n: usize) -> String {
 /// at-or-before the limit, never producing a partial word fragment. Operators
 /// who want a fully custom slug pass `--slug` to override this function entirely.
 fn slugify(title: &str) -> String {
+    // Unicode-aware (#263): keep alphanumerics in any script (CJK, accented
+    // Latin, …), not just ASCII, so a non-English title is not vaporized.
     let lower = title.to_lowercase();
     let parts: Vec<&str> = lower
-        .split(|c: char| !c.is_ascii_alphanumeric())
+        .split(|c: char| !c.is_alphanumeric())
         .filter(|s| !s.is_empty())
         .collect();
     let slug = parts.join("-");

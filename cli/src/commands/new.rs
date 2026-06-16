@@ -156,15 +156,17 @@ fn select_type_interactive(china: bool) -> Result<DocType> {
 }
 
 fn slugify(title: &str) -> String {
+    // Unicode-aware (#263): keep alphanumerics in any script (CJK, accented
+    // Latin, …), not just ASCII — an ASCII-only filter vaporizes a Chinese or
+    // Spanish title down to whatever Latin fragments it happens to contain.
     let lower = title.to_lowercase();
     let parts: Vec<&str> = lower
-        .split(|c: char| !c.is_ascii_alphanumeric())
+        .split(|c: char| !c.is_alphanumeric())
         .filter(|s| !s.is_empty())
         .collect();
     let slug = parts.join("-");
-    // `slug` is built exclusively from ASCII alphanumerics joined by '-',
-    // so every char is 1 byte and byte-slicing the first 50 is safe. The
-    // `chars().take(50)` form keeps us robust if the filter ever changes.
+    // `slug` may now contain multi-byte chars, so we count by `chars()` and
+    // truncate with `chars().take(50)` (never byte-slice).
     if slug.chars().count() > 50 {
         let truncated: String = slug.chars().take(50).collect();
         truncated.trim_end_matches('-').to_string()
@@ -225,6 +227,20 @@ mod tests {
     fn test_slugify_truncates() {
         let long_title = "a".repeat(60);
         assert!(slugify(&long_title).len() <= 50);
+    }
+
+    #[test]
+    fn test_slugify_preserves_unicode() {
+        // #263: CJK and accented-Latin titles survive instead of being
+        // vaporized to whatever ASCII fragments they happen to contain.
+        assert_eq!(
+            slugify("Optimizar caché de configuración"),
+            "optimizar-caché-de-configuración"
+        );
+        assert_eq!(slugify("创建 API 端点"), "创建-api-端点");
+        // Truncation counts characters, not bytes, for multi-byte scripts.
+        let long_cjk = "字".repeat(60);
+        assert_eq!(slugify(&long_cjk).chars().count(), 50);
     }
 
     #[test]

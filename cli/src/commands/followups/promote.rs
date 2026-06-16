@@ -207,9 +207,12 @@ fn next_tde_sequence(tde_dir: &Path, today: &str) -> String {
 }
 
 fn slugify(title: &str) -> String {
+    // Unicode-aware (#263): keep alphanumerics in any script (CJK, accented
+    // Latin, …), not just ASCII — an ASCII-only filter vaporizes a Chinese or
+    // Spanish title down to whatever Latin fragments it happens to contain.
     let lower = title.to_lowercase();
     let parts: Vec<&str> = lower
-        .split(|c: char| !c.is_ascii_alphanumeric())
+        .split(|c: char| !c.is_alphanumeric())
         .filter(|s| !s.is_empty())
         .collect();
     let slug = parts.join("-");
