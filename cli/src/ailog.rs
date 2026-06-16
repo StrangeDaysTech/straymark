@@ -23,47 +23,14 @@
 //! surrounding whitespace — equals `(pending)` exactly, or is empty.
 
 use anyhow::{bail, Context, Result};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-/// Canonical sub-path (relative to project root) of the AILOG directory.
-pub fn agent_logs_dir(project_root: &Path) -> PathBuf {
-    project_root
-        .join(".straymark")
-        .join("07-ai-audit")
-        .join("agent-logs")
-}
-
-/// Find the AILOG file matching the given AILOG ID. Searches recursively
-/// and matches by filename prefix. The id may be bare
-/// (`AILOG-2026-05-02-028b`) or include a slug
-/// (`AILOG-2026-05-02-028b-foo`); both resolve to the same file.
-pub fn find_ailog_file(agent_logs_dir: &Path, ailog_id: &str) -> Option<PathBuf> {
-    let prefix: String = ailog_id
-        .split('-')
-        .take(5) // "AILOG", "YYYY", "MM", "DD", "NNN[a-z]?"
-        .collect::<Vec<_>>()
-        .join("-");
-    walk_for_prefix(agent_logs_dir, &prefix)
-}
-
-fn walk_for_prefix(dir: &Path, prefix: &str) -> Option<PathBuf> {
-    let entries = std::fs::read_dir(dir).ok()?;
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if path.is_dir() {
-            if let Some(found) = walk_for_prefix(&path, prefix) {
-                return Some(found);
-            }
-            continue;
-        }
-        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-            if name.starts_with(prefix) && name.ends_with(".md") {
-                return Some(path);
-            }
-        }
-    }
-    None
-}
+// AILOG file discovery (`agent_logs_dir`, `find_ailog_file`) moved to
+// `straymark_core::ailog` in Loom A2.0 so the CLI (`charter drift`,
+// `batch_complete`, `status --where`) and the Loom server (A2) resolve AILOG
+// files one way. Re-exported so the CLI's
+// `crate::ailog::{agent_logs_dir, find_ailog_file}` call sites are unchanged.
+pub use straymark_core::ailog::{agent_logs_dir, find_ailog_file};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BatchEntry {
@@ -380,17 +347,5 @@ Done on 2026-05-10. Files touched: a.rs, b.rs. Tests passing.
             is_pending: false,
         };
         assert!(ensure_pending(&entry).is_err());
-    }
-
-    #[test]
-    fn find_ailog_file_matches_letter_suffix_id() {
-        let tmp = tempfile::TempDir::new().unwrap();
-        let agent_logs = tmp.path().join("agent-logs");
-        std::fs::create_dir_all(&agent_logs).unwrap();
-        let path = agent_logs.join("AILOG-2026-05-02-028b-collision.md");
-        std::fs::write(&path, "stub\n").unwrap();
-
-        let found = find_ailog_file(&agent_logs, "AILOG-2026-05-02-028b").unwrap();
-        assert_eq!(found, path);
     }
 }
