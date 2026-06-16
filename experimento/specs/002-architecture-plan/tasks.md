@@ -273,11 +273,17 @@
   `validate_model` needs the `plan.drawio` cell ids; the DrawIO parser lives in the CLI and rides
   the A2.3 frontend (move to `core` then). 5 fixture tests + e2e curl on the dogfood (4
   components project `uncharted`, `component/cli` owns 104 files). 715 tests; clippy clean.
-- [ ] **A2.2 — Watcher: architecture deltas (FR6).** Extend the shared watcher to rebuild +
-  push an architecture-status delta over `WS /api/stream` when `architecture/model.yml`,
-  `plan.drawio`, or the governance docs change. Apply the same no-op suppression
-  (`is_noop`-style) so identical reprojections don't broadcast. Fold the architecture snapshot
-  into `AppState` (or a sibling `Arc<RwLock<>>`).
+- [x] **A2.2 — Watcher: architecture deltas (FR6).** The shared `notify` watcher now also
+  recomputes the architecture overlay on a settled change and broadcasts a small
+  `{"event":"architecture"}` **signal** over the existing `WS /api/stream` (the client refetches
+  `/api/architecture` + `/api/where` — a signal, not the payload, keeps the watcher decoupled
+  from the response shape; the projection is small so a refetch is cheap). **No-op suppression**
+  reuses the KG pattern: `architecture::projection_signature` (the `build_architecture` JSON) is
+  cached in the closure and compared, so a bare mtime touch that doesn't move any component's
+  state broadcasts nothing. Relevance widened from `.md`-only to `.md` ∪ `model.yml` ∪
+  `.drawio` (`is_architecture_relevant`); the KG still only rebuilds on `.md`. When `--arch-dir`
+  points outside the watch dir, that dir is watched too. e2e (python `websockets`): flipping a
+  Charter `in-progress`→`declared` delivers the `architecture` event; 717 tests; clippy clean.
 - [ ] **A2.3 — Frontend: maxGraph plan render (FR3, NFR1).** Add `@maxgraph/core` to
   `web/package.json`. Introduce a top-level **view switch** (KG | Plan tabs) without rewriting
   the Sigma monolith (`main.ts` stays; add `plan.ts` + a thin switcher). Load

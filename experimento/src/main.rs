@@ -95,8 +95,15 @@ async fn main() -> Result<()> {
     let (events, _) = broadcast::channel::<String>(16);
 
     // Keep the handle alive for the lifetime of the server (drop = unwatch).
-    let _debouncer = watcher::watch(&watch_dir, snapshot.clone(), events.clone(), cache)
-        .context("failed to start the filesystem watcher")?;
+    let _debouncer = watcher::watch(
+        &watch_dir,
+        &project_root,
+        &arch_dir,
+        snapshot.clone(),
+        events.clone(),
+        cache,
+    )
+    .context("failed to start the filesystem watcher")?;
 
     let state = AppState {
         snapshot,
