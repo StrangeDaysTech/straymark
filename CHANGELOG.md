@@ -9,6 +9,33 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ## [Unreleased]
 
+### Fixed (CLI)
+
+- `straymark followups` — the registry parser now detects well-formed `### FU-NNN` entry
+  headings that are **invisible to the counters** and surfaces them as a warning instead of
+  silently under-counting (#253). An entry goes invisible when its heading is glued to the
+  previous line (no blank line before `### `) or sits before the first `## Bucket:` section;
+  previously such an entry was dropped, so `recount` could report a clean "already in sync"
+  while the backlog actually held one more open entry than the counter said. The warning now
+  shows in `followups recount`, `status`, `list`, and `drift`.
+
+### Fixed (i18n robustness — #263)
+
+- **AILOG `## Modified Files` extractor** (`straymark-core`) now recognizes the heading in all
+  three shipped locales (`Modified Files` / `Archivos modificados` / `修改的文件`), matching the
+  Charter `Files to modify` extractor. A Spanish/Chinese-first AILOG no longer silently yields
+  an empty file set (which under-reported `implemented` state in `status --where` / Loom).
+- **Follow-ups `## Follow-ups` extractor** (`straymark followups drift`) now recognizes the
+  section heading in the shipped locales (`Follow-ups` / `Seguimientos` / `后续工作` / `后续`), so
+  drift extracts follow-ups from translated AILOGs instead of skipping the section.
+- **Slug generation** (`straymark new`, `charter new`, `followups promote`) is now Unicode-aware:
+  CJK and accented-Latin titles keep their characters instead of being vaporized to whatever
+  ASCII fragments they contained. Truncation counts characters, not bytes.
+
+Reference resolution was already slug-language-independent (it normalizes to the
+`TYPE-YYYY-MM-DD-NNN` core id), and no extractor uses `\b`/whitespace ID regexes — so those two
+risks from #263 needed no change.
+
 ### Changed (Framework — audit prompt hardening, #261)
 
 - **Auditor independence is now enforced in the audit prompt** (`audit-prompts/audit-prompt.md`,
