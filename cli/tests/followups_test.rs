@@ -480,6 +480,25 @@ fn recount_reconciles_counters_after_manual_triage_and_is_idempotent() {
 }
 
 #[test]
+fn recount_surfaces_invisible_glued_entry_instead_of_a_blind_in_sync(/* #253 */) {
+    // Reproduces the #253 failure mode: a well-formed entry whose `### FU-`
+    // heading is glued to the previous line is invisible to the counter parser,
+    // so `recount` would otherwise report a clean "in sync" while the file holds
+    // one more open entry than the counter says. The structural integrity check
+    // must surface it.
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    let registry = "---\nschema_version: v1\nfully_extracted_ailogs: []\ntotal_open: 1\ntotal_promoted: 0\ntotal_closed_in_session: 0\ntotal_phase_blocked: 0\ntotal_suspected_closed: 0\n---\n\n# Follow-ups Backlog\n\n## Bucket: operational\n\n### FU-157 — first entry\n- **Status**: open\n- Notes: this line has no trailing blank line.### FU-158 — glued, invisible\n- **Status**: open\n";
+    write_registry(&straymark, registry);
+
+    cmd()
+        .args(["followups", "recount", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("invisible to the counters"));
+}
+
+#[test]
 fn recount_errors_when_no_registry() {
     let tmp = TempDir::new().unwrap();
     scaffold(tmp.path());

@@ -245,6 +245,27 @@ pub fn parse_registry_str(path: &Path, content: &str) -> Result<Registry> {
     let mut warnings = Vec::new();
     let sections = parse_sections(body, &mut warnings);
 
+    // Structural integrity (#253): every well-formed `### FU-NNN` heading in the
+    // body should end up attached to a `## Bucket:` section. If the raw body
+    // holds more well-formed headings than the parser could attach, some entries
+    // are *invisible* to the counters — the silent-under-count failure mode where
+    // the pulse reports N while the file actually has N+k open entries. The two
+    // ways an entry goes invisible: its heading is glued to the previous line
+    // (no blank line, so it is not a line-start `### `), or it sits before the
+    // first `## ` section. Surface it loudly here so `recount`/`status`/`validate`
+    // all see it instead of trusting a blind counter.
+    let parsed_entries: usize = sections.iter().map(|s| s.entries.len()).sum();
+    let wellformed_headings = count_wellformed_entry_headings(body);
+    if wellformed_headings > parsed_entries {
+        warnings.push(format!(
+            "{} `### FU-NNN` heading(s) are not attached to any `## Bucket:` section and are \
+             invisible to the counters (counters will under-count). Likely cause: a heading glued \
+             to the previous line (missing blank line before `### `) or placed before the first \
+             `## ` section. Put each `### FU-NNN` on its own line inside a `## Bucket:` section.",
+            wellformed_headings - parsed_entries
+        ));
+    }
+
     Ok(Registry {
         path: path.to_path_buf(),
         frontmatter,
@@ -253,6 +274,27 @@ pub fn parse_registry_str(path: &Path, content: &str) -> Result<Registry> {
         sections,
         warnings,
     })
+}
+
+/// Count well-formed `### FU-NNN — desc` entry headings present anywhere in the
+/// raw body, including ones glued to a previous line (no leading newline) or
+/// sitting outside any `## ` section — i.e. headings [`parse_sections`] cannot
+/// see. The "heading text" runs from each `### FU-` occurrence to the end of its
+/// line; a malformed heading (no number) is not counted (it is reported
+/// separately by [`parse_entries`]), so this never double-counts. Used by
+/// [`parse_registry_str`] as a structural integrity check (#253).
+fn count_wellformed_entry_headings(body: &str) -> usize {
+    let mut count = 0usize;
+    let mut search_from = 0usize;
+    while let Some(rel) = body[search_from..].find("### FU-") {
+        let pos = search_from + rel;
+        let line_end = body[pos..].find('\n').map(|n| pos + n).unwrap_or(body.len());
+        if parse_entry_heading(&body[pos..line_end]).is_some() {
+            count += 1;
+        }
+        search_from = pos + "### FU-".len();
+    }
+    count
 }
 
 /// Split the body into `## ` sections and parse `### FU-` entries in each.
@@ -1120,6 +1162,42 @@ fully_extracted_ailogs: []
         assert_eq!(reg.entries().count(), 1);
         assert_eq!(reg.warnings.len(), 1);
         assert!(reg.warnings[0].contains("Malformed"));
+    }
+
+    #[test]
+    fn glued_entry_heading_is_invisible_but_surfaces_a_warning() {
+        // FU-158's heading is glued to FU-157's last line (no blank line before
+        // `### `), exactly the silent-under-count failure mode of #253: the
+        // parser sees one entry, the file holds two.
+        let content = "---\nschema_version: v1\nfully_extracted_ailogs: []\ntotal_open: 1\n---\n\n## Bucket: operational\n\n### FU-157 — first\n- **Status**: open\n- Notes: ends without a blank line.### FU-158 — glued second\n- **Status**: open\n";
+        let reg = parse(content);
+        // The glued FU-158 is invisible to the section parser …
+        assert_eq!(reg.entries().count(), 1);
+        // … but the structural integrity check surfaces it.
+        assert_eq!(reg.warnings.len(), 1);
+        assert!(reg.warnings[0].contains("invisible to the counters"));
+        assert!(reg.warnings[0].starts_with("1 `### FU-NNN`"));
+    }
+
+    #[test]
+    fn entry_before_first_section_surfaces_a_warning() {
+        // A well-formed entry placed before any `## ` section is also invisible.
+        let content = "---\nschema_version: v1\nfully_extracted_ailogs: []\ntotal_open: 0\n---\n\n### FU-200 — orphan above all sections\n- **Status**: open\n\n## Bucket: ready\n\n### FU-201 — in a section\n- **Status**: open\n";
+        let reg = parse(content);
+        assert_eq!(reg.entries().count(), 1);
+        assert_eq!(reg.warnings.len(), 1);
+        assert!(reg.warnings[0].contains("invisible to the counters"));
+    }
+
+    #[test]
+    fn well_formed_registry_has_no_integrity_warning() {
+        // Sanity: the integrity check must not false-positive on a clean file.
+        let reg = parse(V0_REGISTRY);
+        assert!(
+            reg.warnings.is_empty(),
+            "unexpected warnings: {:?}",
+            reg.warnings
+        );
     }
 
     #[test]

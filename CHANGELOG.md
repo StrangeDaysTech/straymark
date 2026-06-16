@@ -9,6 +9,16 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ## [Unreleased]
 
+### Fixed (CLI)
+
+- `straymark followups` — the registry parser now detects well-formed `### FU-NNN` entry
+  headings that are **invisible to the counters** and surfaces them as a warning instead of
+  silently under-counting (#253). An entry goes invisible when its heading is glued to the
+  previous line (no blank line before `### `) or sits before the first `## Bucket:` section;
+  previously such an entry was dropped, so `recount` could report a clean "already in sync"
+  while the backlog actually held one more open entry than the counter said. The warning now
+  shows in `followups recount`, `status`, `list`, and `drift`.
+
 ### Fixed (i18n robustness — #263)
 
 - **AILOG `## Modified Files` extractor** (`straymark-core`) now recognizes the heading in all
