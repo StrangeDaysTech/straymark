@@ -65,28 +65,57 @@ pub(crate) fn artifact_paths(root: &Path, out: Option<&str>) -> (PathBuf, PathBu
     (out_dir, model, drawio)
 }
 
-/// Distinct first-level directories under `root` that contain ≥1 source file.
-pub(crate) fn top_level_source_dirs(root: &Path) -> Vec<String> {
+/// Organizational directories that hold *other* components rather than being
+/// one themselves — the seed descends through them one level so an `internal/`
+/// or `src/` tree breaks out into real components instead of one giant blob
+/// (#273). A leaf like `cmd/` or `db/` is not a container and stays whole.
+pub(crate) const CONTAINER_DIRS: &[&str] =
+    &["internal", "src", "pkg", "lib", "libs", "app", "apps", "modules", "packages"];
+
+/// Distinct component directories under `root` that contain ≥1 source file. A
+/// component dir is the path up to and including the first **non-container**
+/// segment, so `internal/modules/agents/x.go` → `internal/modules/agents`,
+/// `internal/core/bus.go` → `internal/core`, and `cmd/main.go` → `cmd`.
+pub(crate) fn source_component_dirs(root: &Path) -> Vec<String> {
     let mut dirs: BTreeSet<String> = BTreeSet::new();
     for rel in collect_source_files(root) {
-        let mut comps = rel.components();
-        let first = comps.next();
-        // Require depth ≥ 2 so the first component is a directory, not a
-        // root-level file.
-        if comps.next().is_some() {
-            if let Some(c) = first {
-                dirs.insert(c.as_os_str().to_string_lossy().to_string());
-            }
+        if let Some(dir) = component_dir_for(&rel) {
+            dirs.insert(dir);
         }
     }
     dirs.into_iter().collect()
 }
 
-/// A component proposed from a top-level source dir (`dir/**`, `unassigned`).
+/// The component directory a source file belongs to: descend through container
+/// segments, stop at (and include) the first non-container one. Returns `None`
+/// for a root-level file (no directory to attribute it to).
+fn component_dir_for(rel: &Path) -> Option<String> {
+    let segs: Vec<String> = rel
+        .parent()?
+        .components()
+        .map(|c| c.as_os_str().to_string_lossy().to_string())
+        .collect();
+    if segs.is_empty() {
+        return None;
+    }
+    let mut taken: Vec<&str> = Vec::new();
+    for seg in &segs {
+        taken.push(seg);
+        if !CONTAINER_DIRS.contains(&seg.as_str()) {
+            break;
+        }
+    }
+    Some(taken.join("/"))
+}
+
+/// A component proposed from a source dir (`dir/**`, `unassigned`). The id is
+/// the kebab of the full path (`internal/core` → `internal-core`, unique across
+/// containers); the label is the title-cased leaf segment.
 pub(crate) fn component_from_dir(dir: &str) -> Component {
+    let leaf = dir.rsplit('/').next().unwrap_or(dir);
     Component {
         id: kebab(dir),
-        label: title_case(dir),
+        label: title_case(leaf),
         layer: UNASSIGNED.to_string(),
         globs: vec![format!("{dir}/**")],
         links: Vec::new(),
@@ -417,6 +446,31 @@ mod tests {
         assert_eq!(c.id, "cli");
         assert_eq!(c.globs, vec!["cli/**"]);
         assert_eq!(c.layer, UNASSIGNED);
+    }
+
+    #[test]
+    fn component_from_nested_dir_uses_path_id_and_leaf_label() {
+        let c = component_from_dir("internal/modules/agents");
+        assert_eq!(c.id, "internal-modules-agents");
+        assert_eq!(c.label, "Agents");
+        assert_eq!(c.globs, vec!["internal/modules/agents/**"]);
+    }
+
+    #[test]
+    fn component_dir_descends_through_container_dirs() {
+        // #273: a container tree breaks out; a leaf dir stays whole.
+        let cases = [
+            ("internal/modules/agents/runner.go", Some("internal/modules/agents")),
+            ("internal/core/eventbus/bus.go", Some("internal/core")),
+            ("cmd/server/main.go", Some("cmd")),
+            ("db/seeds/seeds.go", Some("db")),
+            ("src/index.ts", Some("src")), // files directly under a container → the container
+            ("main.go", None),             // root-level file: no dir to attribute
+        ];
+        for (path, want) in cases {
+            let got = component_dir_for(Path::new(path));
+            assert_eq!(got.as_deref(), want, "for {path}");
+        }
     }
 
     #[test]

@@ -9,6 +9,33 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ## [Unreleased]
 
+### Changed (architecture model DX — #273, EXPERIMENTAL)
+
+- **`architecture generate` mines a real component structure.** The seed now descends through
+  conventional *container* directories (`internal/`, `src/`, `pkg/`, `lib/`, `app/`, `modules/`, …)
+  instead of mapping each top-level dir to one component. A Go `internal/` tree that used to
+  collapse into a single `internal` blob now breaks out into `internal/core`,
+  `internal/integration`, `internal/modules/<each>`, etc. — matching Loom's own live derivation,
+  no manual refinement needed. A non-container leaf (`cmd/`, `db/`) still stays whole.
+- **`has-debt` now maps onto components.** An open TDE's `related` frontmatter lists governance
+  docs (AILOGs, audit reviews, Charters), not source paths, so the debt never matched a component
+  glob and the overlay was always empty. The projection now resolves each `related` AILOG to its
+  `## Modified Files` and feeds those source paths in, so debt lands on the components whose code
+  the referenced AILOGs touched. (The frontend half — painting `has-debt` over `implemented` —
+  ships with Loom.)
+
+### Fixed (architecture model DX — #273, EXPERIMENTAL)
+
+- **Opaque `error: parsing model.yml`.** Two distinct violations (a component id colliding with a
+  layer id; a component pointing at an unknown layer) used to fail with the same bare message
+  because the CLI printed only the outermost error context. It now prints anyhow's full chain
+  (`error: parsing …/model.yml: component id \`core\` collides with layer id \`core\` — …`), so
+  the reason, not just the file, is visible — across every command.
+- **Component↔layer id collisions get a specific message** (`component id \`core\` collides with
+  layer id \`core\` — rename one`) distinct from a plain duplicate id, and the model invariants
+  (ids unique across layers + components; no required `unassigned`-at-order-0 rule) are now
+  documented in `validate_structure`.
+
 ### Fixed (CLI)
 
 - `straymark followups` — the registry parser now detects well-formed `### FU-NNN` entry

@@ -188,13 +188,23 @@ fn git_modified_files(root: &Path) -> Vec<String> {
     v
 }
 
-/// Paths referenced by open `TDE` (technical-debt) documents — their `related`
-/// frontmatter. A TDE counts as open unless its status reads as resolved.
+/// Source paths attributable to open `TDE` (technical-debt) documents — the
+/// `has-debt` overlay input (§4). A TDE counts as open unless its status reads
+/// as resolved.
+///
+/// A TDE's `related` frontmatter lists *governance docs* (AILOGs, audit reviews,
+/// Charters) far more often than source paths, so matching `related` directly
+/// against component globs almost never lights up a component (#273). We bridge
+/// the gap: for each `related` entry that names an **AILOG**, resolve it to its
+/// file and pull that AILOG's `## Modified Files` — the code the debt actually
+/// lives in — and feed those source paths to the projection. Raw `related`
+/// entries are kept too (a TDE may list a source path directly).
 fn open_tde_files(root: &Path) -> Vec<String> {
     let straymark_dir = root.join(".straymark");
     if !straymark_dir.is_dir() {
         return Vec::new();
     }
+    let logs_dir = ailog::agent_logs_dir(root);
     let mut set: BTreeSet<String> = BTreeSet::new();
     for p in discover_documents(&straymark_dir) {
         let is_tde = p
@@ -211,12 +221,34 @@ fn open_tde_files(root: &Path) -> Vec<String> {
             }
             if let Some(related) = doc.frontmatter.related {
                 for r in related {
+                    // Transitively resolve an AILOG reference to the files it
+                    // modified, so the debt maps onto the components that own
+                    // those files.
+                    if let Some(files) = ailog_modified_files(&logs_dir, &r) {
+                        set.extend(files);
+                    }
                     set.insert(r);
                 }
             }
         }
     }
     set.into_iter().collect()
+}
+
+/// If `related` names an AILOG (by id, filename, or path), resolve it to its
+/// file and return the source paths in its `## Modified Files` section. Returns
+/// `None` when `related` is not an AILOG reference or the file can't be found.
+fn ailog_modified_files(logs_dir: &Path, related: &str) -> Option<Vec<String>> {
+    let base = Path::new(related)
+        .file_name()
+        .and_then(|n| n.to_str())?
+        .trim_end_matches(".md");
+    if !base.starts_with("AILOG-") {
+        return None;
+    }
+    let path = ailog::find_ailog_file(logs_dir, base)?;
+    let body = std::fs::read_to_string(&path).ok()?;
+    Some(ailog::parse_modified_files(&body))
 }
 
 /// A TDE is open unless its status reads as a resolved/closed terminal state.
@@ -273,5 +305,43 @@ mod tests {
         assert!(state.closed_charter_files.is_empty());
         assert!(state.tde_files.is_empty());
         assert!(state.wiring_gap_files.is_empty());
+    }
+
+    #[test]
+    fn open_tde_maps_to_source_via_related_ailog_modified_files() {
+        // #273 part 4: a TDE's `related` lists an AILOG (a doc, not source), so
+        // the debt must reach the code transitively — through that AILOG's
+        // `## Modified Files`. Here the open TDE references an AILOG that touched
+        // `internal/modules/commshub/http.go`, so that path must end up in
+        // `tde_files` (where component globs can then match it).
+        let tmp = tempfile::TempDir::new().unwrap();
+        let root = tmp.path();
+        let logs = root.join(".straymark/07-ai-audit/agent-logs");
+        let tdes = root.join(".straymark/06-evolution/technical-debt");
+        std::fs::create_dir_all(&logs).unwrap();
+        std::fs::create_dir_all(&tdes).unwrap();
+
+        std::fs::write(
+            logs.join("AILOG-2026-05-07-041-commshub.md"),
+            "---\nid: AILOG-2026-05-07-041\n---\n\n## Modified Files\n\n\
+             | File | Lines |\n|---|---|\n| `internal/modules/commshub/http.go` | +20 |\n",
+        )
+        .unwrap();
+        std::fs::write(
+            tdes.join("TDE-2026-05-11-002-commshub-coverage.md"),
+            "---\nid: TDE-2026-05-11-002\nstatus: identified\nrelated:\n  \
+             - AILOG-2026-05-07-041-commshub.md\n---\n\n# debt\n",
+        )
+        .unwrap();
+
+        let state = build_governance_state(root);
+        assert!(
+            state
+                .tde_files
+                .iter()
+                .any(|f| f == "internal/modules/commshub/http.go"),
+            "expected the AILOG's modified file in tde_files, got: {:?}",
+            state.tde_files
+        );
     }
 }

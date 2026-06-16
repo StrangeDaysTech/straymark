@@ -29,7 +29,7 @@ pub fn run(path: &str, force: bool, out: Option<&str>) -> Result<()> {
     }
 
     utils::info(&format!("Scanning {} for source structure…", root.display()));
-    let dirs = common::top_level_source_dirs(&root);
+    let dirs = common::source_component_dirs(&root);
     if dirs.is_empty() {
         bail!(
             "no source directories found under {} (nothing to model)",
