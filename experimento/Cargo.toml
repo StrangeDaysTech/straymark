@@ -14,7 +14,7 @@ name = "straymark-loom"
 path = "src/main.rs"
 
 [dependencies]
-straymark-core = { version = "0.6.0", path = "../core" }
+straymark-core = { version = "0.7.0", path = "../core" }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "signal", "fs"] }
 axum = { version = "0.8", features = ["ws"] }
 notify-debouncer-full = "0.5"

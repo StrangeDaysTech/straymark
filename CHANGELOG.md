@@ -7,7 +7,11 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
-## [Unreleased]
+## CLI 3.27.0 / Core 0.7.0 — 2026-06-16
+
+A language- and structure-agnostic, configurable seed for `architecture generate` (#279), plus a
+build-consistency fix (Loom's `straymark-core` dependency bound was left at `^0.6.0` after core
+bumped to 0.7.0).
 
 ### Changed (architecture scanner — language/structure-agnostic, #279, EXPERIMENTAL)
 
