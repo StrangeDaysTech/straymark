@@ -73,6 +73,14 @@ enum Commands {
         /// Target directory (default: current directory)
         #[arg(default_value = ".")]
         path: String,
+        /// Show the EXPERIMENTAL architecture "you are here" view (Loom A1.4):
+        /// per-component state from architecture/model.yml + governance signals
+        #[arg(long = "where")]
+        where_view: bool,
+        /// Directory holding the architecture artifacts when using --where
+        /// (default: <project>/.straymark/architecture)
+        #[arg(long)]
+        out: Option<String>,
     },
     /// Repair StrayMark structure by restoring missing directories and files
     Repair {
@@ -737,7 +745,17 @@ fn main() {
             doc_type,
             title,
         } => commands::new::run(&path, doc_type.as_deref(), title.as_deref()),
-        Commands::Status { path } => commands::status::run(&path),
+        Commands::Status {
+            path,
+            where_view,
+            out,
+        } => {
+            if where_view {
+                commands::architecture::where_view::run(&path, out.as_deref())
+            } else {
+                commands::status::run(&path)
+            }
+        }
         Commands::Repair { path } => commands::repair::run(&path),
         Commands::About => commands::about::run(),
         Commands::Approve {
