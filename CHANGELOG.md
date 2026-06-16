@@ -7,6 +7,29 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## [Unreleased]
+
+### Changed (Framework — audit prompt hardening, #261)
+
+- **Auditor independence is now enforced in the audit prompt** (`audit-prompts/audit-prompt.md`,
+  EN + ES). The ABSOLUTE RULE forbids reading, grepping, or referencing any other auditor's
+  `report-*.md` under `.straymark/audits/` — for this Charter or any other — because cross-model
+  convergence is signal only when each auditor reached it independently. The "Your role" and
+  "What you must NOT do" sections were reworded to match (a sibling report may already be on
+  disk; do not open it).
+- **The output contract is surfaced near the top** of the prompt (new "Output contract (read
+  this first)" section, right after the ABSOLUTE RULE) instead of only at the end of a long
+  prompt: required report frontmatter, the four finding categories, and an explicit warning that
+  the report frontmatter is **deliberately different** from the embedded AILOG/AIDEC frontmatter
+  the auditor reads (the mimicry that drifted real reports off-schema). A "Frontmatter note" was
+  also added beside the embedded AILOGs.
+- **`straymark-audit-review`** (skill, all runtimes) gained a **contamination guard**: it now
+  scans each report for signs it read its siblings (references to another `report-*.md`, a
+  cross-auditor comparison table, "I verified all N findings from the prior <model> audit") and
+  excludes contaminated reports from the convergence/dedup math and the auditor rating.
+
+---
+
 ## CLI 3.25.0 / Core 0.5.0 — Architecture Plan track A1 (EXPERIMENTAL)
 
 The textual + authoring half of Loom's Architecture Plan view (Spec 002) — the operator's "where are we?" answered from the terminal, ahead of the visual overlay (A2). All surfaces are **EXPERIMENTAL (Loom v0)** and may change without a deprecation cycle.
