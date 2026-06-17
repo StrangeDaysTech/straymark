@@ -46,7 +46,7 @@ struct Args {
     /// Directory holding the architecture `model.yml` + `plan.drawio`. Defaults
     /// to `<path>/.straymark/architecture/` (or `<path>/architecture/`). Override
     /// when the model lives elsewhere — e.g. this repo dogfoods on
-    /// `experimento/architecture/` while globs resolve against the repo root.
+    /// `experiment-loom/architecture/` while globs resolve against the repo root.
     #[arg(long)]
     arch_dir: Option<PathBuf>,
 }

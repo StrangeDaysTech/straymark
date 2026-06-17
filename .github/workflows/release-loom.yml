@@ -1,7 +1,7 @@
 name: Release Loom
 
 # Loom is EXPERIMENTAL: GitHub-release-only (no crates.io publish) while the
-# `loom-0.x` series lasts — see experimento/README.md and plan.md §6.
+# `loom-0.x` series lasts — see experiment-loom/README.md and plan.md §6.
 
 on:
   push:
@@ -82,28 +82,28 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: experimento/web/package-lock.json
+          cache-dependency-path: experiment-loom/web/package-lock.json
 
       - name: Verify Cargo.toml version matches tag
         shell: bash
         run: |
-          CARGO_VERSION=$(grep '^version' experimento/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          CARGO_VERSION=$(grep '^version' experiment-loom/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
           TAG_VERSION="${{ needs.resolve-version.outputs.version }}"
           if [ "$CARGO_VERSION" != "$TAG_VERSION" ]; then
-            echo "ERROR: experimento/Cargo.toml version ($CARGO_VERSION) does not match tag version ($TAG_VERSION)"
+            echo "ERROR: experiment-loom/Cargo.toml version ($CARGO_VERSION) does not match tag version ($TAG_VERSION)"
             exit 1
           fi
 
       - name: Build frontend (embedded via rust-embed)
         shell: bash
-        working-directory: experimento/web
+        working-directory: experiment-loom/web
         run: |
           npm ci
           npm run build
           test -f dist/index.html
 
       - name: Build release binary
-        run: cargo build --release --manifest-path experimento/Cargo.toml --target ${{ matrix.target }}
+        run: cargo build --release --manifest-path experiment-loom/Cargo.toml --target ${{ matrix.target }}
 
       - name: Package (Unix)
         if: matrix.archive == 'tar.gz'

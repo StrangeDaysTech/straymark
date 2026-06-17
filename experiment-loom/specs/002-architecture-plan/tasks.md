@@ -28,7 +28,7 @@
   projection makes the textual companion nearly free and is the headline value of A1 as a
   `cli-` increment.
 - **Dogfood home:** this source repo has no root `.straymark/`, so the architecture artifacts
-  live at `experimento/architecture/{model.yml,plan.drawio}` (adopter convention is
+  live at `experiment-loom/architecture/{model.yml,plan.drawio}` (adopter convention is
   `.straymark/architecture/`). spec §3.1, §14.
 
 ---
@@ -68,7 +68,7 @@
   `core`+`loom` clean (fixed one surfaced `ptr_arg` `&PathBuf`→`&Path` in the moved charter).
 - [x] T0.7 — **No version bump / no tag** (see header). A1.0 merges as its own PR; the
   `core` minor bump + `cli` minor bump + `Cargo.lock` + CHANGELOG + crates.io publish + tag
-  all happen at **A1.5**. Dogfood AILOG: `experimento/AILOG-2026-06-14-002`.
+  all happen at **A1.5**. Dogfood AILOG: `experiment-loom/AILOG-2026-06-14-002`.
 
 ## A1.1 — Architecture model + status projection in `core` (library only, test-gated — DONE)
 
@@ -187,7 +187,7 @@
   summary (active Charter title + declared-vs-modified progress % + recent AILOGs + debt/uncharted
   counts). Degrades to an `architecture generate` hint when no `model.yml` (success, not exit 1 —
   it's a status view). `--out` mirrors the other `architecture` commands so a non-self-adopter
-  repo (model under `experimento/architecture/`) can dogfood.
+  repo (model under `experiment-loom/architecture/`) can dogfood.
 - [x] T4.3 — **Consistency gate (NFR3):** `cli/tests/architecture_where_test.rs` —
   `where_is_consistent_with_charter_list` asserts on one fixture corpus that the `active`
   component is exactly the one `charter list --status in-progress` reports and `implemented` is
@@ -204,13 +204,13 @@
 > per the M0 decision. **Branched fresh from `main` after A1.4 (#254) merged** (no
 > stacked-PR-on-squash hazard).
 
-- [x] T5.1 — Ran `straymark architecture generate --out experimento/architecture` on this repo
-  (no root `.straymark/`, so the dogfood home is `experimento/architecture/`; the adopter home
-  stays `.straymark/architecture/`). Seed = 4 components (cli/core/experimento/website, globs
+- [x] T5.1 — Ran `straymark architecture generate --out experiment-loom/architecture` on this repo
+  (no root `.straymark/`, so the dogfood home is `experiment-loom/architecture/`; the adopter home
+  stays `.straymark/architecture/`). Seed = 4 components (cli/core/experiment-loom/website, globs
   `dir/**`) in the `unassigned` layer + 9 stage layers; ADR mining improved 2 labels.
   Hand-refined to a legible first plan: the 9 stage placeholders → **3 real layers**
   (tooling / visualization / web), components reassigned, 2 dependency links added
-  (`cli→core`, `experimento→core`), labels sharpened; `plan.drawio` cells regrouped by layer +
+  (`cli→core`, `experiment-loom→core`), labels sharpened; `plan.drawio` cells regrouped by layer +
   2 dependency edges. Component **ids kept stable** (the BIM join key) so model↔plan stays
   consistent — `architecture validate` is **exit 0** (4 components, no signals).
 - [x] T5.2 — **Acceptance (spec §11, A1 subset):** §11.1 ✓ (`generate` yields a `model.yml` +
@@ -228,7 +228,7 @@
   `#### status --where` subsection, marked EXPERIMENTAL `cli-3.25.0+`). Versioning tables bumped
   to `cli-3.25.0` across the 3 CLI-REFERENCE + 3 README files.
 - [x] T5.4 — Bumped `core` 0.4.1→0.5.0 + `cli` 3.24.0→3.25.0 (+ the `straymark-core` dep
-  references in `cli/Cargo.toml` and `experimento/Cargo.toml`); `cargo check --workspace`
+  references in `cli/Cargo.toml` and `experiment-loom/Cargo.toml`); `cargo check --workspace`
   refreshed `Cargo.lock` (workspace compiles, loom rebuilds against core 0.5.0). Root
   `CHANGELOG.md` gained `## CLI 3.25.0 / Core 0.5.0` (Added CLI / Added Core / Changed Core).
   PR → merge → tag `cli-3.25.0` (crates.io publish of `straymark-core` rides it).
@@ -243,7 +243,7 @@
 > **Release discipline (user-confirmed 2026-06-16):** single release. A2.0–A2.4 each merge
 > **tagless**, branched fresh from `main` (no stacked-PR-on-squash hazard); **A2.5** carries the
 > one `loom-0.5.0` tag covering all of A2 (the analog of A1.5 for the CLI track). Loom is dev-
-> tested with a local branch binary + `--assets-dir experimento/web/dist` (not `loom serve`,
+> tested with a local branch binary + `--assets-dir experiment-loom/web/dist` (not `loom serve`,
 > which downloads the published release). The CLI/core are unaffected (`loom-*` is independent).
 
 - [x] **A2.0 — Refactor: `build_governance_state` → `core::architecture` (de-risk, CLI as
@@ -255,9 +255,9 @@
   `core` fns so the call sites are unchanged. Regression oracle green: the 3 `status --where`
   integration tests + the architecture-command suite byte-for-byte unchanged (710 tests). **core
   bumped 0.5.0 → 0.6.0** (0.5.0 is already published, so the additive `gather`/`ailog` surface
-  can't ride the same version); `cli` + `experimento` core dep pins bumped. core 0.6.0 stays
+  can't ride the same version); `cli` + `experiment-loom` core dep pins bumped. core 0.6.0 stays
   **unpublished** until the next `cli-*` release publishes it (loom uses the local path).
-- [x] **A2.1 — Server architecture endpoints (spec §7).** New `experimento/src/architecture.rs`
+- [x] **A2.1 — Server architecture endpoints (spec §7).** New `experiment-loom/src/architecture.rs`
   holds **axum-free, fixture-testable** builders (`build_architecture`, `component_detail`,
   `build_where`, `read_plan_drawio`) reusing `core::architecture::{parse_model,
   build_governance_state, project}` + `collect_source_files`/`glob_match`/`charter`/`ailog`; the
@@ -268,7 +268,7 @@
   `/api/architecture/plan.drawio` (raw XML, `application/xml`, geometry preserved — status is a
   client overlay, NFR1). Read-only (NFR4); local `serde::Serialize` types keep the `core`
   surface stable. **Added `--arch-dir`** to the loom binary + `AppState` (splits `project_root`
-  for governance/globs from the model dir) so the dogfood (`experimento/architecture/`, repo-root
+  for governance/globs from the model dir) so the dogfood (`experiment-loom/architecture/`, repo-root
   globs) resolves — analogous to the CLI's `--out`. **Integrity signals (FR9) deferred** —
   `validate_model` needs the `plan.drawio` cell ids; the DrawIO parser lives in the CLI and rides
   the A2.3 frontend (move to `core` then). 5 fixture tests + e2e curl on the dogfood (4
@@ -324,8 +324,8 @@
   client-side color, NFR1); **§11.4** layer toggle ✓ (unchecking a layer hides its cells via
   `model.setVisible`); **§11.5** component panel + "where are we" panel, the textual half gated
   by `where_is_consistent_with_charter_list` (A1.4); **§11.6** live overlay < ~1s ✓ (A2.2 WS
-  `architecture` event e2e). Bumped `experimento/Cargo.toml` + `web/package.json` 0.4.2→**0.5.0**;
-  `experimento/CHANGELOG.md` `## [0.5.0]` (A2 + the #262 hygiene fix). PR → merge → tag
+  `architecture` event e2e). Bumped `experiment-loom/Cargo.toml` + `web/package.json` 0.4.2→**0.5.0**;
+  `experiment-loom/CHANGELOG.md` `## [0.5.0]` (A2 + the #262 hygiene fix). PR → merge → tag
   **`loom-0.5.0`** (`release-loom.yml` builds the frontend + 4-platform binaries; no crates.io).
   Visual criteria §11.2/3/4/6 done; A2 closes the Architecture Plan MVP. Next = **A3** (north
   star, axonometric/BIM exploded view).
@@ -363,6 +363,6 @@
   per-box `baseEmissive`) + `cursor:pointer`. Reuses the where/legend panels untouched. Verified
   on Sentinel (7 floor labels + 13 component labels; click `db` → Database detail with 16 charters
   + 41 owned files). `tsc` + `vite build` clean.
-- [x] **A3.3 — Acceptance + release.** Dogfooded on Sentinel; `experimento/CHANGELOG.md` `[0.6.0]`
-  + bump `experimento/Cargo.toml` + `web/package.json` to 0.6.0; PR → merge → tag **`loom-0.6.0`**.
+- [x] **A3.3 — Acceptance + release.** Dogfooded on Sentinel; `experiment-loom/CHANGELOG.md` `[0.6.0]`
+  + bump `experiment-loom/Cargo.toml` + `web/package.json` to 0.6.0; PR → merge → tag **`loom-0.6.0`**.
   Loom memory note updated (A3 shipped — Spec 002 fully realized).

@@ -8,7 +8,7 @@
 ## M0 — `straymark-core` extraction (ships as a `cli-` patch, no `loom-` tag)
 
 - [ ] T0.1 — Add root `/Cargo.toml` `[workspace]` (`members = ["core", "cli"]`; add
-  `experimento` later) and move `[profile.release]` (opt-level=z, lto, strip) to the root.
+  `experiment-loom` later) and move `[profile.release]` (opt-level=z, lto, strip) to the root.
 - [ ] T0.2 — Create `core/` crate `straymark-core`; **move** `document.rs` (`DocType`,
   `Frontmatter`, `StrayMarkDocument`, `parse_document`, `discover_documents`,
   `detect_doc_type`) from `cli/src/`.
@@ -28,7 +28,7 @@
 
 ## M1 — Walking skeleton (`loom-0.1.0`) — FR1–FR7
 
-- [ ] T1.1 — Add `experimento/` to workspace members; scaffold `experimento/Cargo.toml`
+- [ ] T1.1 — Add `experiment-loom/` to workspace members; scaffold `experiment-loom/Cargo.toml`
   (`straymark-loom`, deps: tokio, axum, notify/notify-debouncer-full, rust-embed, serde).
 - [ ] T1.2 — Build pipeline: `core::discover_documents` + parse → `core::graph::build` →
   `Arc<RwLock<Graph>>`. (FR1, FR2)
@@ -49,7 +49,7 @@
   step; `loom-*` trigger; no crates.io publish). (plan §6)
 - [ ] T1.11 — **Acceptance (spec §8):** all 6 M1 criteria pass, incl. NFR1 consistency
   (`/api/graph` ≡ `straymark audit`) and live-update < 1s.
-- [ ] T1.12 — `experimento/CHANGELOG.md` → `0.1.0`; PR; merge; tag `loom-0.1.0`.
+- [ ] T1.12 — `experiment-loom/CHANGELOG.md` → `0.1.0`; PR; merge; tag `loom-0.1.0`.
 
 ## M2 — Analytics + panels (`loom-0.2.0`) — FR8–FR10
 
@@ -79,5 +79,5 @@
 ## Graduation (post-M3, evaluated against the Charter's criteria)
 
 - [ ] G.1 — Confirm N=2 (a second independent adopter exercises Loom) per the Charter.
-- [ ] G.2 — Decide whether to graduate Loom out of `experimento/` and promote the brand
+- [ ] G.2 — Decide whether to graduate Loom out of `experiment-loom/` and promote the brand
   (rename folder, drop the EXPERIMENTAL banner, formalize support contract).

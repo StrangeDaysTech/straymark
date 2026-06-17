@@ -14,7 +14,7 @@
             <mxGeometry x="320" y="40" width="200" height="60" as="geometry" />
           </mxCell>
         </object>
-        <object label="Loom (experimental dashboard)" straymark_component_id="experimento" id="comp-experimento">
+        <object label="Loom (experimental dashboard)" straymark_component_id="experiment-loom" id="comp-experiment-loom">
           <mxCell style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
             <mxGeometry x="40" y="200" width="200" height="60" as="geometry" />
           </mxCell>
@@ -27,7 +27,7 @@
         <mxCell id="edge-cli-core" style="endArrow=block;html=1;" edge="1" parent="1" source="comp-cli" target="comp-core">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="edge-experimento-core" style="endArrow=block;html=1;" edge="1" parent="1" source="comp-experimento" target="comp-core">
+        <mxCell id="edge-experiment-loom-core" style="endArrow=block;html=1;" edge="1" parent="1" source="comp-experiment-loom" target="comp-core">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
       </root>
