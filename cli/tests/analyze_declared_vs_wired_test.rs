@@ -3,7 +3,7 @@
 
 #![cfg(feature = "analyze")]
 
-use assert_cmd::Command;
+use assert_cmd::{cargo_bin_cmd, Command};
 use predicates::prelude::*;
 use std::path::Path;
 use tempfile::TempDir;
@@ -27,7 +27,7 @@ fn setup_proxy_vs_interface(dir: &Path) {
 }
 
 fn run_inline(dir: &Path) -> Command {
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.args(["analyze", "declared-vs-wired"])
         .arg(dir.to_str().unwrap())
         .args(["--declared-glob", "client/**/*.rs"])
@@ -81,8 +81,7 @@ fn errors_without_profile_or_inline_flags() {
     let dir = TempDir::new().unwrap();
     setup_proxy_vs_interface(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["analyze", "declared-vs-wired"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -110,8 +109,7 @@ declared_vs_wired:
     )
     .unwrap();
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["analyze", "declared-vs-wired"])
         .arg(dir.path().to_str().unwrap())
         .args(["--profile", "dbus"])
@@ -128,8 +126,7 @@ fn bare_analyze_still_runs_complexity() {
     let dir = TempDir::new().unwrap();
     std::fs::write(dir.path().join("x.rs"), "fn simple() { let a = 1; }\n").unwrap();
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("analyze")
         .arg(dir.path().to_str().unwrap())
         .assert()

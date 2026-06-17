@@ -1,4 +1,4 @@
-use assert_cmd::Command;
+use assert_cmd::cargo_bin_cmd;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
@@ -85,7 +85,7 @@ When closing this Charter (post-merge):
 fn charter_new_requires_straymark_installed() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("charter")
         .arg("new")
         .arg("--title")
@@ -101,7 +101,7 @@ fn charter_new_no_origin_creates_file_with_defaults() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_charter_template(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("charter")
         .arg("new")
         .arg("--title")
@@ -137,8 +137,7 @@ fn charter_new_explicit_effort_is_substituted() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("new")
         .arg("--type")
@@ -161,8 +160,7 @@ fn charter_new_with_from_ailog_uncomments_origin() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("new")
         .arg("--title")
@@ -196,8 +194,7 @@ fn charter_new_with_from_spec_uncomments_origin() {
     std::fs::create_dir_all(&spec_dir).unwrap();
     std::fs::write(spec_dir.join("spec.md"), "# Test Spec\n").unwrap();
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("new")
         .arg("--title")
@@ -228,8 +225,7 @@ fn charter_new_rejects_both_origins_at_clap_level() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("new")
         .arg("--title")
@@ -249,8 +245,7 @@ fn charter_new_from_spec_rejects_missing_file() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("new")
         .arg("--title")
@@ -269,8 +264,7 @@ fn charter_new_increments_sequence_number() {
     setup_straymark_with_charter_template(dir.path());
 
     for (n, title) in [(1, "First"), (2, "Second"), (3, "Third")] {
-        Command::cargo_bin("straymark")
-            .unwrap()
+        cargo_bin_cmd!("straymark")
             .arg("charter")
             .arg("new")
             .arg("--title")
@@ -296,8 +290,7 @@ fn charter_new_rejects_invalid_effort_at_clap_level() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("new")
         .arg("--type")
@@ -330,8 +323,7 @@ fn charter_new_uses_es_template_when_config_says_es() {
         "---\ncharter_id: CHARTER-NN\nstatus: declared\neffort_estimate: M\ntrigger: \"[x]\"\n---\n\n# Charter: [TÍTULO BREVE]\n\nES body.\n",
     ).unwrap();
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("new")
         .arg("--title")
@@ -353,8 +345,7 @@ fn charter_new_uses_es_template_when_config_says_es() {
 #[test]
 fn charter_list_requires_straymark_installed() {
     let dir = TempDir::new().unwrap();
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("list")
         .arg(dir.path().to_str().unwrap())
@@ -367,8 +358,7 @@ fn charter_list_requires_straymark_installed() {
 fn charter_list_empty_when_no_charters() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_charter_template(dir.path());
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("list")
         .arg(dir.path().to_str().unwrap())
@@ -383,8 +373,7 @@ fn charter_list_shows_all_charters_by_default() {
     setup_straymark_with_charter_template(dir.path());
     create_three_charters(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("list")
         .arg(dir.path().to_str().unwrap())
@@ -405,8 +394,7 @@ fn charter_list_filter_status_declared() {
     let content = std::fs::read_to_string(&p).unwrap();
     std::fs::write(&p, content.replace("status: declared", "status: closed")).unwrap();
 
-    let out = Command::cargo_bin("straymark")
-        .unwrap()
+    let out = cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("list")
         .arg("--status")
@@ -429,8 +417,7 @@ fn charter_list_filter_origin_ailog() {
     std::fs::create_dir_all(&charters_dir).unwrap();
 
     // One Charter with --from-ailog (tested via the actual command).
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("new")
         .arg("--title")
@@ -442,8 +429,7 @@ fn charter_list_filter_origin_ailog() {
         .success();
 
     // One without origin.
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("new")
         .arg("--title")
@@ -452,8 +438,7 @@ fn charter_list_filter_origin_ailog() {
         .assert()
         .success();
 
-    let out = Command::cargo_bin("straymark")
-        .unwrap()
+    let out = cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("list")
         .arg("--origin")
@@ -474,8 +459,7 @@ fn charter_list_no_match_shows_friendly_message() {
     create_three_charters(dir.path());
 
     // All three are declared by default, so --status closed matches none.
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("list")
         .arg("--status")
@@ -493,8 +477,7 @@ fn charter_list_no_match_shows_friendly_message() {
 #[test]
 fn charter_status_requires_straymark_installed() {
     let dir = TempDir::new().unwrap();
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("status")
         .arg("--path")
@@ -508,8 +491,7 @@ fn charter_status_requires_straymark_installed() {
 fn charter_status_empty_when_no_charters() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_charter_template(dir.path());
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("status")
         .arg("--path")
@@ -525,8 +507,7 @@ fn charter_status_without_id_shows_recent() {
     setup_straymark_with_charter_template(dir.path());
     create_three_charters(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("status")
         .arg("--path")
@@ -545,8 +526,7 @@ fn charter_status_with_full_id_shows_detail() {
     setup_straymark_with_charter_template(dir.path());
     create_three_charters(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("status")
         .arg("CHARTER-02-second")
@@ -566,8 +546,7 @@ fn charter_status_with_charter_nn_prefix_shows_detail() {
     setup_straymark_with_charter_template(dir.path());
     create_three_charters(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("status")
         .arg("CHARTER-02")
@@ -584,8 +563,7 @@ fn charter_status_with_numeric_id_shows_detail() {
     setup_straymark_with_charter_template(dir.path());
     create_three_charters(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("status")
         .arg("2")
@@ -602,8 +580,7 @@ fn charter_status_with_unknown_id_fails() {
     setup_straymark_with_charter_template(dir.path());
     create_three_charters(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("status")
         .arg("CHARTER-99")
@@ -634,8 +611,7 @@ fn validate_without_flag_skips_charter_checks() {
     )
     .unwrap();
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -648,8 +624,7 @@ fn validate_with_flag_passes_for_valid_charter() {
     setup_straymark_full(dir.path());
     create_charter_via_cli(dir.path(), "valid charter", &[]);
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("validate")
         .arg("--include-charters")
         .arg(dir.path().to_str().unwrap())
@@ -671,8 +646,7 @@ fn validate_with_flag_fails_on_missing_required_field() {
     )
     .unwrap();
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("validate")
         .arg("--include-charters")
         .arg(dir.path().to_str().unwrap())
@@ -690,8 +664,7 @@ fn validate_with_flag_fails_on_invalid_status_enum() {
     let content = std::fs::read_to_string(&p).unwrap();
     std::fs::write(&p, content.replace("status: declared", "status: unknown-state")).unwrap();
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("validate")
         .arg("--include-charters")
         .arg(dir.path().to_str().unwrap())
@@ -710,8 +683,7 @@ fn validate_fails_when_originating_ailog_does_not_exist() {
         &["--from-ailog", "AILOG-2026-04-28-099"],
     );
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("validate")
         .arg("--include-charters")
         .arg(dir.path().to_str().unwrap())
@@ -750,8 +722,7 @@ fn validate_passes_when_originating_ailog_exists() {
         &["--from-ailog", "AILOG-2026-04-28-021"],
     );
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("validate")
         .arg("--include-charters")
         .arg(dir.path().to_str().unwrap())
@@ -775,8 +746,7 @@ fn validate_fails_when_originating_spec_path_missing() {
     );
     std::fs::remove_file(spec_dir.join("spec.md")).unwrap();
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("validate")
         .arg("--include-charters")
         .arg(dir.path().to_str().unwrap())
@@ -798,8 +768,7 @@ fn validate_warns_when_charter_schema_missing() {
     )
     .unwrap();
 
-    let out = Command::cargo_bin("straymark")
-        .unwrap()
+    let out = cargo_bin_cmd!("straymark")
         .arg("validate")
         .arg("--include-charters")
         .arg(dir.path().to_str().unwrap())
@@ -843,7 +812,7 @@ fn setup_straymark_full(dir: &std::path::Path) {
 /// Run `straymark charter new` with the given title and extra flags. Asserts
 /// success. Used by validate tests to produce real on-disk Charters.
 fn create_charter_via_cli(dir: &std::path::Path, title: &str, extra_args: &[&str]) {
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("charter").arg("new").arg("--title").arg(title);
     for arg in extra_args {
         cmd.arg(arg);
@@ -855,8 +824,7 @@ fn create_charter_via_cli(dir: &std::path::Path, title: &str, extra_args: &[&str
 /// list/status tests exercise real on-disk shapes (not synthetic stubs).
 fn create_three_charters(dir: &std::path::Path) {
     for title in ["first", "second", "third"] {
-        Command::cargo_bin("straymark")
-            .unwrap()
+        cargo_bin_cmd!("straymark")
             .arg("charter")
             .arg("new")
             .arg("--title")
@@ -890,8 +858,7 @@ fn charter_new_does_not_overwrite_existing_file() {
     // We can only force a clash with concurrent invocations, which we don't
     // simulate here. The overwrite guard is defensive — verify it compiles
     // and the happy path produces a distinct filename.
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("new")
         .arg("--title")
@@ -912,8 +879,7 @@ fn charter_new_truncates_long_title_at_word_boundary() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("new")
         .arg("--title")
@@ -948,8 +914,7 @@ fn charter_new_slug_flag_overrides_title_derivation() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("new")
         .arg("--title")
@@ -971,8 +936,7 @@ fn charter_new_slug_flag_normalizes_through_slugifier() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("new")
         .arg("--title")
@@ -1022,8 +986,7 @@ Original handler was synchronous and blocked on DB I/O.
     )
     .unwrap();
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("new")
         .arg("--title")
@@ -1056,8 +1019,7 @@ fn charter_new_from_ailog_falls_back_when_ailog_not_found() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("new")
         .arg("--title")
@@ -1084,8 +1046,7 @@ fn charter_new_empty_slug_flag_falls_back_to_title() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_charter_template(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("new")
         .arg("--title")

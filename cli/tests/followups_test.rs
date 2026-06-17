@@ -4,7 +4,7 @@
 //! in-place upgrade) and the anti-noise / counter-recompute behaviors that
 //! resolve issue #214 Signals 1-2.
 
-use assert_cmd::Command;
+use assert_cmd::{cargo_bin_cmd, Command};
 use predicates::prelude::*;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
@@ -126,7 +126,7 @@ promoted_from_followup: null    # FU-NNN if promoted from .straymark/follow-ups-
 "#;
 
 fn cmd() -> Command {
-    Command::cargo_bin("straymark").unwrap()
+    cargo_bin_cmd!("straymark")
 }
 
 fn write_registry(straymark: &Path, content: &str) {

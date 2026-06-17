@@ -7,7 +7,7 @@
 //! driven by the same `core` extractors, so the test asserts they agree on one
 //! fixture corpus.
 
-use assert_cmd::Command;
+use assert_cmd::cargo_bin_cmd;
 use predicates::prelude::*;
 use std::path::Path;
 use std::process::Command as StdCommand;
@@ -90,8 +90,7 @@ fn where_degrades_without_model() {
     let dir = TempDir::new().unwrap();
     std::fs::create_dir_all(dir.path().join(".straymark")).unwrap();
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["status", "--where"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -105,8 +104,7 @@ fn where_marks_active_in_progress_and_implemented() {
     let dir = TempDir::new().unwrap();
     setup_fixture(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["status", "--where"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -131,8 +129,7 @@ fn where_is_consistent_with_charter_list() {
     let path = dir.path().to_str().unwrap();
 
     // in-progress Charters → exactly the auth Charter.
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "list", "--status", "in-progress", path])
         .assert()
         .success()
@@ -140,8 +137,7 @@ fn where_is_consistent_with_charter_list() {
         .stdout(predicate::str::contains("billing-done").not());
 
     // closed Charters → exactly the billing Charter.
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "list", "--status", "closed", path])
         .assert()
         .success()
@@ -150,8 +146,7 @@ fn where_is_consistent_with_charter_list() {
 
     // The projection agrees: auth active (the in-progress Charter's component),
     // billing implemented (the closed Charter's component).
-    let out = Command::cargo_bin("straymark")
-        .unwrap()
+    let out = cargo_bin_cmd!("straymark")
         .args(["status", "--where"])
         .arg(path)
         .assert()

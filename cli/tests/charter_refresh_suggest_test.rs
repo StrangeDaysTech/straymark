@@ -3,7 +3,7 @@
 //! See `cli/src/commands/charter/refresh_suggest.rs` for unit coverage of the
 //! parsing helpers; this file exercises the assembled binary end-to-end.
 
-use assert_cmd::Command;
+use assert_cmd::cargo_bin_cmd;
 use predicates::prelude::*;
 use std::path::Path;
 use tempfile::TempDir;
@@ -48,8 +48,7 @@ fn refresh_suggest_recommends_when_rolling_mean_exceeds_threshold() {
     write_telemetry(dir.path(), "CHARTER-11-commshub-us2", "2026-04-15", 8);
     write_telemetry(dir.path(), "CHARTER-12-commshub-us3", "2026-05-01", 9);
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "refresh-suggest",
@@ -72,8 +71,7 @@ fn refresh_suggest_holds_when_rolling_mean_within_threshold() {
     write_telemetry(dir.path(), "CHARTER-21-commshub-us2", "2026-04-15", 1);
     write_telemetry(dir.path(), "CHARTER-22-commshub-us3", "2026-05-01", 3);
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "refresh-suggest",
@@ -92,8 +90,7 @@ fn refresh_suggest_reports_insufficient_when_chain_too_short() {
     write_charter(dir.path(), "CHARTER-30-commshub-us1");
     write_telemetry(dir.path(), "CHARTER-30-commshub-us1", "2026-05-01", 99);
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "refresh-suggest",
@@ -112,8 +109,7 @@ fn refresh_suggest_zero_matches_prints_nothing_to_suggest() {
     write_charter(dir.path(), "CHARTER-40-something-else");
     write_telemetry(dir.path(), "CHARTER-40-something-else", "2026-05-01", 99);
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "refresh-suggest",
@@ -137,8 +133,7 @@ fn refresh_suggest_threshold_flag_overrides_default() {
     write_telemetry(dir.path(), "CHARTER-51-commshub-us2", "2026-04-15", 5);
     write_telemetry(dir.path(), "CHARTER-52-commshub-us3", "2026-05-01", 5);
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "refresh-suggest",

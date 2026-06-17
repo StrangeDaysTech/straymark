@@ -1,4 +1,4 @@
-use assert_cmd::Command;
+use assert_cmd::cargo_bin_cmd;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
@@ -35,7 +35,7 @@ fn create_doc(dir: &std::path::Path, subpath: &str, filename: &str, frontmatter:
 fn test_validate_not_installed() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -48,7 +48,7 @@ fn test_validate_no_documents() {
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -68,7 +68,7 @@ fn test_validate_valid_document() {
         "id: AILOG-2025-01-27-001\ntitle: Implement auth\nstatus: draft\ncreated: 2025-01-27\nagent: claude-code-v1.0\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -88,7 +88,7 @@ fn test_validate_missing_frontmatter_fields() {
         "id: AILOG-2025-01-27-001\ntitle: Test",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -108,7 +108,7 @@ fn test_validate_invalid_status() {
         "id: AILOG-2025-01-27-001\ntitle: Test\nstatus: invalid_status\ncreated: 2025-01-27\nagent: test\nconfidence: high\nreview_required: false\nrisk_level: low",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -128,7 +128,7 @@ fn test_validate_cross_001_high_risk_no_review() {
         "id: AILOG-2025-01-27-001\ntitle: Test\nstatus: draft\ncreated: 2025-01-27\nagent: test\nconfidence: high\nreview_required: false\nrisk_level: high",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -149,7 +149,7 @@ fn test_validate_sensitive_info_detected() {
     )
     .unwrap();
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -169,7 +169,7 @@ fn test_validate_related_not_found() {
         "id: AILOG-2025-01-27-001\ntitle: Test\nstatus: draft\ncreated: 2025-01-27\nagent: test\nconfidence: high\nreview_required: false\nrisk_level: low\nrelated:\n  - AIDEC-2025-01-27-001",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -189,7 +189,7 @@ fn test_validate_sec_requires_review() {
         "id: SEC-2025-01-27-001\ntitle: API Review\nstatus: draft\ncreated: 2025-01-27\nagent: test\nconfidence: medium\nreview_required: false\nrisk_level: high",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -211,7 +211,7 @@ fn test_validate_fix_review_required() {
     )
     .unwrap();
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg("--fix")
         .arg(dir.path().to_str().unwrap())
@@ -235,7 +235,7 @@ fn test_validate_obs_001_tag_without_content() {
         "id: AILOG-2025-01-27-001\ntitle: Obs Test\nstatus: draft\ncreated: 2025-01-27\nagent: test\nconfidence: high\nreview_required: false\nrisk_level: low\ntags:\n  - observability",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -255,7 +255,7 @@ fn test_validate_inc_needs_severity() {
         "id: INC-2025-01-27-001\ntitle: Outage\nstatus: draft\ncreated: 2025-01-27\nagent: test\nconfidence: high\nreview_required: true\nrisk_level: high",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -281,7 +281,7 @@ fn test_validate_sec_document_valid() {
         "id: SEC-2026-03-24-001\ntitle: API Security Assessment\nstatus: draft\ncreated: 2026-03-24\nagent: claude-code-v1.0\nconfidence: medium\nreview_required: true\nrisk_level: high\nthreat_model_methodology: STRIDE\nowasp_asvs_level: 1\ntags:\n  - security\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -301,7 +301,7 @@ fn test_validate_mcard_document_valid() {
         "id: MCARD-2026-03-24-001\ntitle: GPT-4 Turbo Card\nstatus: draft\ncreated: 2026-03-24\nagent: claude-code-v1.0\nconfidence: medium\nreview_required: true\nrisk_level: medium\nmodel_name: gpt-4-turbo\nmodel_type: LLM\ntags:\n  - ai-model\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -321,7 +321,7 @@ fn test_validate_sbom_document_valid() {
         "id: SBOM-2026-03-24-001\ntitle: Platform AI SBOM\nstatus: accepted\ncreated: 2026-03-24\nagent: claude-code-v1.0\nconfidence: high\nreview_required: false\nrisk_level: low\ntags:\n  - sbom\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -341,7 +341,7 @@ fn test_validate_dpia_document_valid() {
         "id: DPIA-2026-03-24-001\ntitle: User Profiling DPIA\nstatus: draft\ncreated: 2026-03-24\nagent: claude-code-v1.0\nconfidence: low\nreview_required: true\nrisk_level: high\ntags:\n  - privacy\n  - gdpr\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -365,7 +365,7 @@ fn test_validate_tde_resolved_terminal_state() {
         "id: TDE-2026-05-11-001\ntitle: Architectural Refactor Debt\nstatus: resolved\ncreated: 2026-05-11\nagent: claude-code-v1.0\nconfidence: high\nreview_required: false\nrisk_level: medium\ntype: architecture\nimpact: high\neffort: medium\ntags:\n  - architecture\nrelated: []\npriority: null\nassigned_to: null",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -395,7 +395,7 @@ fn test_validate_rejects_non_canonical_ailog_terminals() {
             ),
         );
 
-        let mut cmd = Command::cargo_bin("straymark").unwrap();
+        let mut cmd = cargo_bin_cmd!("straymark");
         cmd.arg("validate")
             .arg(dir.path().to_str().unwrap())
             .assert()
@@ -419,7 +419,7 @@ fn test_validate_tde_document_valid() {
         "id: TDE-2026-05-11-001\ntitle: Architectural Refactor Debt\nstatus: identified\ncreated: 2026-05-11\nagent: claude-code-v1.0\nconfidence: high\nreview_required: false\nrisk_level: medium\ntype: architecture\nimpact: high\neffort: medium\ntags:\n  - architecture\nrelated: []\npriority: null\nassigned_to: null",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -440,7 +440,7 @@ fn test_validate_mcard_requires_review() {
         "id: MCARD-2026-03-24-001\ntitle: Test\nstatus: draft\ncreated: 2026-03-24\nagent: test\nconfidence: medium\nreview_required: false\nrisk_level: medium\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -460,7 +460,7 @@ fn test_validate_dpia_requires_review() {
         "id: DPIA-2026-03-24-001\ntitle: Test\nstatus: draft\ncreated: 2026-03-24\nagent: test\nconfidence: low\nreview_required: false\nrisk_level: high\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -521,7 +521,7 @@ fn test_validate_staged_no_git_repo() {
     std::fs::create_dir_all(&straymark).unwrap();
     std::fs::write(straymark.join("config.yml"), "language: en\n").unwrap();
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg("--staged")
         .arg(dir.path().to_str().unwrap())
@@ -563,8 +563,7 @@ risk_level: medium"#,
         ),
     );
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "validate",
             "--check-pending-reviews",
@@ -605,8 +604,7 @@ risk_level: medium"#,
         ),
     );
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "validate",
             "--check-pending-reviews",
@@ -643,8 +641,7 @@ risk_level: medium"#,
     );
 
     // Default max-pending-days = 14, doc is 5 days old → no warning.
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["validate", "--check-pending-reviews"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -676,8 +673,7 @@ risk_level: medium"#,
     );
 
     // Without --check-pending-reviews, the warning does not appear.
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -703,7 +699,7 @@ fn test_validate_staged_no_staged_docs() {
     std::fs::create_dir_all(&straymark).unwrap();
     std::fs::write(straymark.join("config.yml"), "language: en\n").unwrap();
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg("--staged")
         .arg(dir.path().to_str().unwrap())
@@ -732,7 +728,7 @@ fn test_charter_files_exist_flags_missing_path() {
     setup_straymark(dir.path());
     create_charter(dir.path(), "Files to modify", "| `src/does-not-exist.rs` | edit |\n");
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .arg("--include-charters")
@@ -752,7 +748,7 @@ fn test_charter_files_exist_skips_new_tagged_row() {
         "| `src/brand-new.rs` | New, `risk_level: low` |\n",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .arg("--include-charters")
@@ -769,7 +765,7 @@ fn test_charter_files_exist_passes_when_path_present() {
     std::fs::write(dir.path().join("src/real.rs"), "// real\n").unwrap();
     create_charter(dir.path(), "Files to modify", "| `src/real.rs` | edit |\n");
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .arg("--include-charters")
@@ -788,7 +784,7 @@ fn test_charter_files_exist_skips_wildcards() {
         "| `.straymark/07-ai-audit/agent-logs/AILOG-*.md` | logs |\n",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .arg("--include-charters")
@@ -803,7 +799,7 @@ fn test_charter_files_exist_detects_spanish_heading() {
     setup_straymark(dir.path());
     create_charter(dir.path(), "Archivos a modificar", "| `src/no-existe.rs` | editar |\n");
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .arg("--include-charters")

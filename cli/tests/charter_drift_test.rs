@@ -2,7 +2,7 @@
 //! Native Rust since cli-3.23.0 (#237) — no bash dependency; runs on every
 //! platform (these fixtures double as the script-equivalence guarantee).
 
-use assert_cmd::Command;
+use assert_cmd::cargo_bin_cmd;
 use predicates::prelude::*;
 use std::path::Path;
 use std::process::Command as StdCommand;
@@ -87,8 +87,7 @@ fn charter_drift_clean_when_declared_matches_modified() {
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-q", "-m", "edit foo"]);
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "drift", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -113,8 +112,7 @@ fn charter_drift_detects_declared_but_not_modified() {
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-q", "-m", "edit foo only"]);
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "drift", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -145,8 +143,7 @@ fn charter_drift_does_not_emit_charter_files_exist_rule() {
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-q", "-m", "edit"]);
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "drift", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -209,8 +206,7 @@ Done.
     git(dir.path(), &["commit", "-q", "-m", "edit foo only"]);
 
     // Default behavior: AILOG suppression kicks in, drift is cleared.
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "drift", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -262,8 +258,7 @@ review_required: false
     git(dir.path(), &["commit", "-q", "-m", "edit foo only"]);
 
     // With --no-ailog-suppress, drift is reported even though it's documented.
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "drift",
@@ -298,8 +293,7 @@ fn charter_drift_no_ailog_suppress_emits_info_line_when_n_zero() {
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-q", "-m", "edit foo"]);
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "drift",
@@ -360,8 +354,7 @@ review_required: false
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-q", "-m", "edit foo only"]);
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "drift",
@@ -400,8 +393,7 @@ fn charter_drift_default_stays_silent_when_n_zero() {
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-q", "-m", "edit foo"]);
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "drift", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -459,8 +451,7 @@ trigger: "bulk"
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-q", "-m", "edit all"]);
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "drift", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -522,8 +513,7 @@ trigger: "test"
     git(dir.path(), &["add", "."]);
     git(dir.path(), &["commit", "-q", "-m", "edit foo and bar"]);
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "drift", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
