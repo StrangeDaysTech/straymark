@@ -35,10 +35,10 @@ workspace** and extract the document/graph model into a new `straymark-core` cra
 Loom and the CLI share *exactly one* parser:
 
 ```
-/Cargo.toml          # [workspace] members = ["core", "cli", "experimento"]; [profile.release] opt-level=z, lto, strip
+/Cargo.toml          # [workspace] members = ["core", "cli", "experiment-loom"]; [profile.release] opt-level=z, lto, strip
 /core/               # straymark-core  (new)
 /cli/                # straymark-cli   (now depends on straymark-core)
-/experimento/        # straymark-loom  (new; depends on straymark-core)
+/experiment-loom/        # straymark-loom  (new; depends on straymark-core)
 ```
 
 `straymark-core` = a **pure move** (no behavior change) of, from `cli/src/`:
@@ -78,7 +78,7 @@ documented in the ADR if we prefer to keep core unpublished while Loom is experi
 - **Assets:** `rust-embed` embeds `web/dist/`; axum serves `/`. A `--assets-dir` flag
   overrides with a live dir for frontend dev (Vite dev server).
 
-## 4. Frontend (`experimento/web/`)
+## 4. Frontend (`experiment-loom/web/`)
 
 - **Stack:** TypeScript + Vite; **graphology** (graph data + analytics: degree, components,
   `graphology-communities-louvain`) + **Sigma.js** (WebGL render).
@@ -91,7 +91,7 @@ documented in the ADR if we prefer to keep core unpublished while Loom is experi
   `/api/stats`); filter controls drive `/api/graph` query params.
 - **i18n:** all UI strings behind a string table from day one (NFR5); translation in M3.
 
-All JS is confined to `experimento/web/` and built **only in CI** — mirrors how
+All JS is confined to `experiment-loom/web/` and built **only in CI** — mirrors how
 `website/`'s Docusaurus toolchain is isolated in a Rust-first repo. Adopters never run npm.
 
 ## 5. CLI integration
@@ -114,8 +114,8 @@ All JS is confined to `experimento/web/` and built **only in CI** — mirrors ho
 - **Tag prefix:** `loom-X.Y.Z` (independent history).
 - **`.github/workflows/release-loom.yml`** = clone of `release-cli.yml` with:
   - trigger `on: push: tags: ['loom-*']`; `VERSION=${TAG#loom-}` verified against
-    `experimento/Cargo.toml`.
-  - extra pre-build: `npm ci && npm run build` in `experimento/web/` so `rust-embed` picks
+    `experiment-loom/Cargo.toml`.
+  - extra pre-build: `npm ci && npm run build` in `experiment-loom/web/` so `rust-embed` picks
     up `web/dist/`.
   - same 4-target matrix; asset name `straymark-loom-v{ver}-{target}.{ext}`.
   - **no** `cargo publish` for `straymark-loom` while experimental (GitHub-release-only).
@@ -154,7 +154,7 @@ All JS is confined to `experimento/web/` and built **only in CI** — mirrors ho
   recursive CTE / sled, never Neo4j) only if** corpus > ~10k docs **or** incremental
   rebuild can't stay sub-second. Until then, in-memory adjacency is correct (spec NFR2).
 - **R3 — JS toolchain coherence in a Rust-first repo.** Mitigation: confine all JS to
-  `experimento/web/`, build only in CI, embed via rust-embed (mirror `website/`).
+  `experiment-loom/web/`, build only in CI, embed via rust-embed (mirror `website/`).
 - **R4 — Localhost exposure.** Mitigation: bind `127.0.0.1`, reject non-loopback `Host`,
   read-only server (FR7/NFR4).
 - **R5 — Model drift between Loom and the CLI.** Mitigation: the shared `straymark-core`

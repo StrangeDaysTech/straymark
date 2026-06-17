@@ -1,6 +1,6 @@
 //! The architecture model and its pure "you are here" status projection.
 //!
-//! Spec 002 (`experimento/specs/002-architecture-plan/`). Two halves:
+//! Spec 002 (`experiment-loom/specs/002-architecture-plan/`). Two halves:
 //! - [`model`] — typed `architecture/model.yml` (layers, components, globs).
 //! - [`projection`] — the pure `(model + governance state) -> Projection`
 //!   function (Spec 002 §4) plus the model↔layout integrity signals (§3.3).

@@ -23,7 +23,7 @@ use straymark_core::drift::glob_match;
 
 /// Default `architecture/` directory: the adopter `.straymark/architecture/`,
 /// else a top-level `architecture/`. The server's `--arch-dir` flag overrides
-/// this (e.g. the dogfood model under `experimento/architecture/` while
+/// this (e.g. the dogfood model under `experiment-loom/architecture/` while
 /// governance + globs resolve against the repo root).
 pub fn default_arch_dir(project_root: &Path) -> PathBuf {
     let installed = project_root.join(".straymark").join("architecture");

@@ -25,10 +25,10 @@ components:
     links: []
     docs: []
     external: false
-  - id: "experimento"
+  - id: "experiment-loom"
     label: "Loom (experimental dashboard)"
     layer: "visualization"
-    globs: ["experimento/**"]
+    globs: ["experiment-loom/**"]
     links: ["core"]
     docs: []
     external: false

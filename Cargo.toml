@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["core", "cli", "experimento"]
+members = ["core", "cli", "experiment-loom"]
 
 # Shared release profile (moved from cli/Cargo.toml when the workspace was
 # introduced in Loom M0 — profiles are only honored at the workspace root).

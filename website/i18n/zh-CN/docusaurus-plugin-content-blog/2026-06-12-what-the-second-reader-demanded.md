@@ -41,7 +41,7 @@ description: 在 Loom 能画出任何东西之前，StrayMark 的文档模型必
 
 克制小节，因为这个系列每篇都有一节。
 
-`straymark-core` 发布到了 crates.io —— 它现在是一个真正的共享库了。**Loom 没有。**它只走 GitHub-release，挂在 `loom-*` 标签下，标记为实验性（v0 / N=1），藏在 `straymark loom serve` 一个需要主动确认的下载闸门之后。CLI 没有从这一切里多出**任何** `axum` 或 `tokio` 依赖 —— 服务器整个住在 `experimento/` 里，CLI 对它的全部认知只是一个在首次使用时拉取二进制的 launcher。共享的*文法*在第二个读者需要它的那一刻晋升为一个发布的 crate；实验性的*组件*则保持隔离，直到它挣得出场资格。这两个决定中一个是永久的、另一个是可逆的，而它们被刻意保持在那条线的两侧。
+`straymark-core` 发布到了 crates.io —— 它现在是一个真正的共享库了。**Loom 没有。**它只走 GitHub-release，挂在 `loom-*` 标签下，标记为实验性（v0 / N=1），藏在 `straymark loom serve` 一个需要主动确认的下载闸门之后。CLI 没有从这一切里多出**任何** `axum` 或 `tokio` 依赖 —— 服务器整个住在 `experiment-loom/` 里，CLI 对它的全部认知只是一个在首次使用时拉取二进制的 launcher。共享的*文法*在第二个读者需要它的那一刻晋升为一个发布的 crate；实验性的*组件*则保持隔离，直到它挣得出场资格。这两个决定中一个是永久的、另一个是可逆的，而它们被刻意保持在那条线的两侧。
 
 ## 如果你读到了这里
 
@@ -49,6 +49,6 @@ description: 在 Loom 能画出任何东西之前，StrayMark 的文档模型必
 
 ---
 
-*StrayMark `fw-4.24.0` → `fw-4.26.0`，`cli-3.22.0` → `cli-3.23.1` — ADR [2026-06-02-001](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/ADR-2026-06-02-loom-stack.md) · Charter [`CHARTER-01-loom-server`](https://github.com/StrangeDaysTech/straymark/blob/main/experimento/CHARTER-01-loom-server.md) · Issues [#135](https://github.com/StrangeDaysTech/straymark/issues/135) · [#232](https://github.com/StrangeDaysTech/straymark/issues/232) · [#237](https://github.com/StrangeDaysTech/straymark/issues/237) · PRs [#238](https://github.com/StrangeDaysTech/straymark/pull/238) · [#239](https://github.com/StrangeDaysTech/straymark/pull/239)。前篇：[bash 脚本口中的"in sync"](what-the-bash-script-said-was-in-sync)。下一篇：[这张图还画不出来的东西](what-the-graph-couldnt-draw-yet)。*
+*StrayMark `fw-4.24.0` → `fw-4.26.0`，`cli-3.22.0` → `cli-3.23.1` — ADR [2026-06-02-001](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/ADR-2026-06-02-loom-stack.md) · Charter [`CHARTER-01-loom-server`](https://github.com/StrangeDaysTech/straymark/blob/main/experiment-loom/CHARTER-01-loom-server.md) · Issues [#135](https://github.com/StrangeDaysTech/straymark/issues/135) · [#232](https://github.com/StrangeDaysTech/straymark/issues/232) · [#237](https://github.com/StrangeDaysTech/straymark/issues/237) · PRs [#238](https://github.com/StrangeDaysTech/straymark/pull/238) · [#239](https://github.com/StrangeDaysTech/straymark/pull/239)。前篇：[bash 脚本口中的"in sync"](what-the-bash-script-said-was-in-sync)。下一篇：[这张图还画不出来的东西](what-the-graph-couldnt-draw-yet)。*
 
 *本文档在生成式 AI 工具（Claude Opus 4.8）的协助下完成；内容的全部责任由人类作者承担。*

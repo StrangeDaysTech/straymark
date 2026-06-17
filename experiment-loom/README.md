@@ -109,7 +109,7 @@ dependency tree) and lets Loom ship on its own cadence.
 ## Layout (planned)
 
 ```
-experimento/
+experiment-loom/
 ├── README.md                     # this file
 ├── CHANGELOG.md                  # independent release history (loom-X.Y.Z)
 ├── CHARTER-01-loom-server.md     # dogfood: the work-block Charter for building Loom

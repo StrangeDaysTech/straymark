@@ -51,7 +51,7 @@ One **model**, expressed as two linked artifacts (the BIM "model vs. drawing" sp
 
 Human-readable; the source of truth for *meaning*. (Adopter convention:
 `.straymark/architecture/model.yml`. This source repo, lacking a root `.straymark/`,
-dogfoods at `experimento/architecture/model.yml`.)
+dogfoods at `experiment-loom/architecture/model.yml`.)
 
 ```yaml
 version: 0
@@ -237,7 +237,7 @@ are linked:
 - ~~Home of the architecture artifacts for adopters: confirm `.straymark/architecture/`
   (`model.yml` + `plan.drawio`).~~ **RESOLVED (A1):** `.straymark/architecture/` is the
   default for all three `architecture` subcommands and `status --where`; `--out <dir>`
-  overrides it (the StrayMark repo itself dogfoods to `experimento/architecture/` since it has
+  overrides it (the StrayMark repo itself dogfoods to `experiment-loom/architecture/` since it has
   no root `.straymark/`).
 - ~~Initial auto-layout engine for `generate` (elk.js vs dagre).~~ **DEFERRED to A2:** A1's
   `generate` emits `plan.drawio` with a simple Rust-side grid (no JS layout engine); a real

@@ -4,7 +4,7 @@
 > for whom, and how we know it is correct. The HOW lives in `plan.md`; the ordered work
 > lives in `tasks.md`. Status: **draft / experimental (v0, N=1)**.
 > Originates the dogfood Charter: `../../CHARTER-01-loom-server.md`
-> (`originating_spec: experimento/specs/001-loom-server/spec.md`).
+> (`originating_spec: experiment-loom/specs/001-loom-server/spec.md`).
 
 ## 1. Problem & intent
 

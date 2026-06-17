@@ -73,7 +73,7 @@ yarn.lock
 
 # Website and Loom lockfiles must be committed — CI uses `npm ci` for reproducible builds.
 !website/package-lock.json
-!experimento/web/package-lock.json
+!experiment-loom/web/package-lock.json
 
 # =============================================================================
 # Temporary Files
@@ -125,8 +125,8 @@ api_keys.json
 nul
 
 # =============================================================================
-# Loom (experimento/) — JS confined to web/, built only in CI
+# Loom (experiment-loom/) — JS confined to web/, built only in CI
 # =============================================================================
 
-experimento/web/node_modules/
-experimento/web/dist/
+experiment-loom/web/node_modules/
+experiment-loom/web/dist/

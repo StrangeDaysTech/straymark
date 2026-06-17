@@ -4,7 +4,7 @@ This is the StrayMark project repository. It contains two main components, plus 
 
 - **Framework** (`dist/`): documentation templates, governance policies, and agent directives
 - **CLI** (`cli/`): the `straymark` Rust binary that manages the framework in user projects
-- **Loom** (`experimento/`, EXPERIMENTAL): knowledge-graph/architecture visualization server — see `experimento/README.md` and `experimento/CHARTER-01-loom-server.md`
+- **Loom** (`experiment-loom/`, EXPERIMENTAL): knowledge-graph/architecture visualization server — see `experiment-loom/README.md` and `experiment-loom/CHARTER-01-loom-server.md`
 
 The Rust code is a **Cargo workspace** (root `Cargo.toml`, members `core` + `cli`): `straymark-core` holds the shared document model and knowledge graph (one parser for the CLI and Loom); `Cargo.lock` and `[profile.release]` live at the workspace root; build artifacts land in the root `target/`.
 
@@ -33,7 +33,7 @@ straymark/
 │   │   └── utils.rs        # Output helpers, file hashing
 │   ├── tests/              # Integration tests
 │   └── Cargo.toml
-├── experimento/            # Loom (EXPERIMENTAL): straymark-loom server crate
+├── experiment-loom/            # Loom (EXPERIMENTAL): straymark-loom server crate
 │   ├── src/                # axum server + notify watcher
 │   ├── web/                # Sigma.js + graphology frontend (Vite/TS, built in CI only)
 │   ├── specs/              # SpecKit sets (001 knowledge graph, 002 architecture plan)
@@ -196,9 +196,9 @@ Users can now run `straymark update-framework` to get the new version.
 
 Loom releases are GitHub-release-only (no crates.io while experimental). Tag format: `loom-X.Y.Z`.
 
-1. Bump `version` in `experimento/Cargo.toml` and update `experimento/CHANGELOG.md`.
+1. Bump `version` in `experiment-loom/Cargo.toml` and update `experiment-loom/CHANGELOG.md`.
 2. Commit via PR (same rules as any change).
-3. `git tag loom-X.Y.Z && git push origin loom-X.Y.Z` — `release-loom.yml` verifies the version matches the tag, builds the frontend (`npm ci && npm run build` in `experimento/web/`, embedded via rust-embed), compiles the same 4-platform matrix as the CLI, and uploads `straymark-loom-vX.Y.Z-<target>.{tar.gz,zip}` assets. The release is marked `--latest=false` so CLI update flows are unaffected.
+3. `git tag loom-X.Y.Z && git push origin loom-X.Y.Z` — `release-loom.yml` verifies the version matches the tag, builds the frontend (`npm ci && npm run build` in `experiment-loom/web/`, embedded via rust-embed), compiles the same 4-platform matrix as the CLI, and uploads `straymark-loom-vX.Y.Z-<target>.{tar.gz,zip}` assets. The release is marked `--latest=false` so CLI update flows are unaffected.
 4. Verify: `gh release view loom-X.Y.Z --json assets --jq '.assets[].name'` (4 binaries). `straymark loom serve` picks the new version automatically (version marker in `~/.straymark/bin/`).
 
 ## Git Workflow

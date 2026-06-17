@@ -3,14 +3,14 @@ charter_id: CHARTER-01-loom-server
 status: in-progress
 effort_estimate: L
 trigger: "Three independent framework reviewers flagged a graphical knowledge-graph view as a cognitive aid and adoption attractor; the TUI is outpaced as corpora grow (Sentinel)."
-originating_spec: experimento/specs/001-loom-server/spec.md
+originating_spec: experiment-loom/specs/001-loom-server/spec.md
 ---
 
 # Charter: Build Loom — experimental knowledge-graph visualization server
 
 > **Status (mirrored from frontmatter — source of truth is above):** in-progress. Effort: L.
 >
-> **Origin:** SpecKit spec `experimento/specs/001-loom-server/spec.md`. Architecture
+> **Origin:** SpecKit spec `experiment-loom/specs/001-loom-server/spec.md`. Architecture
 > decision recorded in `docs/decisions/ADR-2026-06-02-loom-stack.md`
 > (`ADR-2026-06-02-001`).
 
@@ -79,7 +79,7 @@ MVP surfaces. It is **experimental (v0/N=1)** and ships behind an opt-in CLI dow
 
 | File | Change |
 |---|---|
-| `Cargo.toml` (repo root) | New — `[workspace] members = ["core","cli","experimento"]`; move `[profile.release]` here |
+| `Cargo.toml` (repo root) | New — `[workspace] members = ["core","cli","experiment-loom"]`; move `[profile.release]` here |
 | `core/Cargo.toml`, `core/src/document.rs` | New — `straymark-core`; moved from `cli/src/document.rs` |
 | `core/src/graph.rs` | New — generalized typed/bidirectional graph (from `audit_engine`) |
 | `cli/src/document.rs` | Removed — moved to `straymark-core` |
@@ -88,13 +88,13 @@ MVP surfaces. It is **experimental (v0/N=1)** and ships behind an opt-in CLI dow
 | `cli/Cargo.toml` | Modified — depend on `straymark-core`; patch version bump |
 | `cli/src/main.rs` | Modified — add `Loom { Serve { --port, --no-open } }` subcommand + dispatch |
 | `cli/src/commands/loom/serve.rs`, `cli/src/commands/loom/mod.rs` | New — download-on-demand launcher (reuses `download.rs`/`platform.rs`) |
-| `experimento/Cargo.toml`, `experimento/src/**` | New — `straymark-loom` (axum, notify, rust-embed) |
-| `experimento/web/**` | New — Sigma.js + graphology (graph) + maxGraph (plan) frontend (Vite/TS) |
+| `experiment-loom/Cargo.toml`, `experiment-loom/src/**` | New — `straymark-loom` (axum, notify, rust-embed) |
+| `experiment-loom/web/**` | New — Sigma.js + graphology (graph) + maxGraph (plan) frontend (Vite/TS) |
 | `core/src/architecture.rs` | New — architecture model + pure "you are here" status projection (A1) |
 | `cli/src/commands/architecture/*.rs` | New — `straymark architecture generate/sync/validate`; `status --where` (A1) |
-| `experimento/architecture/{model.yml,plan.drawio}` | New — dogfood architecture model + DrawIO layout |
+| `experiment-loom/architecture/{model.yml,plan.drawio}` | New — dogfood architecture model + DrawIO layout |
 | `.github/workflows/release-loom.yml` | New — clone of `release-cli.yml`, `loom-*` trigger, npm build step |
-| `experimento/CHANGELOG.md` | Modified — release entries per milestone |
+| `experiment-loom/CHANGELOG.md` | Modified — release entries per milestone |
 | `CHANGELOG.md` (root) | Modified — record the `cli-` patch (M0) and component introduction |
 
 ## Verification
@@ -112,7 +112,7 @@ curl -s http://127.0.0.1:7700/api/graph > /tmp/graph.json
 # (compare node/edge id sets — see tasks.md T1.11)
 
 # Frontend build (CI also runs this; embedded via rust-embed)
-cd experimento/web && npm ci && npm run build
+cd experiment-loom/web && npm ci && npm run build
 ```
 
 ### Production smoke (after deploy)
@@ -131,7 +131,7 @@ External auditors should skip this section.
   (SQLite recursive CTE / sled, never Neo4j): corpus > ~10k docs OR incremental rebuild
   can't stay sub-second. Until then in-memory adjacency is correct.
 - **R3 — JS toolchain coherence in a Rust-first repo.** low/low.
-  Mitigation: confine all JS to `experimento/web/`, build only in CI, embed via rust-embed
+  Mitigation: confine all JS to `experiment-loom/web/`, build only in CI, embed via rust-embed
   (mirror `website/`).
 - **R4 — Localhost network exposure.** low/med.
   Mitigation: bind `127.0.0.1` only; reject non-loopback `Host` (anti DNS-rebinding);
@@ -152,7 +152,7 @@ External auditors should skip this section.
 ## Tasks
 
 1. Sync main, branch `feat/loom-m0-core-extraction`.
-2. Execute M0 per `experimento/specs/001-loom-server/tasks.md` (T0.1–T0.8).
+2. Execute M0 per `experiment-loom/specs/001-loom-server/tasks.md` (T0.1–T0.8).
 3. AILOG for M0 (`risk_level: medium`, `review_required: true`).
 4. Local verification passes clean (workspace tests + audit diff).
 5. PR, merge, tag `cli-X.Y.Z`. Then repeat the branch→implement→AILOG→verify→PR→tag loop
@@ -178,5 +178,5 @@ When closing this Charter (after M3 ships and the graduation gate is evaluated):
 5. **Do not delete** this file — the planning history matters as much as the AILOGs.
 
 > Note: this repo (StrayMark source) does not currently install a root `.straymark/`; Loom's
-> Charter therefore lives self-contained under `experimento/`. If the repo later adopts a
+> Charter therefore lives self-contained under `experiment-loom/`. If the repo later adopts a
 > charters index, relocate accordingly.
