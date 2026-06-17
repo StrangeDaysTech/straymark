@@ -12,6 +12,14 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.2] — 2026-06-16 (scoped has-debt attribution)
+
+### Changed
+- Rebuilt against `straymark-core` 0.8.0 so the `has-debt` overlay honors the new TDE **`affects`**
+  field (#276): a TDE that scopes its debt to specific file globs is attributed to exactly those
+  components, not the broader footprint of its related AILOGs. No Loom code change — this keeps
+  the visual overlay consistent with the CLI's `status --where` (NFR3).
+
 ## [0.6.1] — 2026-06-16 (3D navigation + meaningful has-debt overlay)
 
 ### Added

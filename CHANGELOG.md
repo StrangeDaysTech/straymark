@@ -7,7 +7,12 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
-## [Unreleased]
+## Framework 4.28.0 / CLI 3.28.0 / Core 0.8.0 — 2026-06-16
+
+Scoped `has-debt` attribution via a TDE `affects` field (#276). The framework ships the field in
+`TEMPLATE-TDE.md` under `fw-4.28.0`; the CLI + `straymark-core` under `cli-3.28.0` (core 0.8.0 to
+crates.io). Loom's overlay picks up the same projection in `loom-0.6.2` (no Loom code change — it
+rebuilds against core 0.8.0 so the visual overlay and `status --where` stay consistent, NFR3).
 
 ### Added (architecture `has-debt` precision — #276, EXPERIMENTAL)
 
@@ -19,8 +24,8 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
   **exactly** those paths (expanded against the on-disk source files), ignoring the broader AILOG
   footprint. Absent `affects`, the AILOG-footprint attribution (#273) remains the fallback.
 - **Framework:** the `affects` field is documented in `TEMPLATE-TDE.md` (EN / es / zh-CN).
-- **Core:** `straymark-core::document::Frontmatter` gains `affects` (additive). Requires a
-  `straymark-core` **0.8.0** bump at release time; publishes with the next `cli-` release.
+- **Core:** `straymark-core::document::Frontmatter` gains `affects` (additive) — `straymark-core`
+  bumped to **0.8.0** and published with `cli-3.28.0`.
 
 ---
 

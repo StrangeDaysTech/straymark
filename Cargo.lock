@@ -2560,7 +2560,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "straymark-cli"
-version = "3.27.0"
+version = "3.28.0"
 dependencies = [
  "anyhow",
  "arborist-metrics",
@@ -2593,7 +2593,7 @@ dependencies = [
 
 [[package]]
 name = "straymark-core"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "serde",
@@ -2603,7 +2603,7 @@ dependencies = [
 
 [[package]]
 name = "straymark-loom"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "anyhow",
  "axum",
