@@ -210,6 +210,11 @@ pub struct Frontmatter {
     pub alternatives_documented: Option<Vec<String>>,
     /// AILOGs a document originates from (graph edge `ORIGINATES_FROM`).
     pub originating_ailogs: Option<Vec<String>>,
+    // TDE-specific: the code area the debt is about (file globs). Scopes the
+    // architecture `has-debt` overlay to exactly these paths instead of the
+    // broader footprint of the TDE's `related` AILOGs (#276). Optional — absent
+    // means fall back to the AILOG-footprint attribution.
+    pub affects: Option<Vec<String>>,
     // INC-specific
     pub severity: Option<String>,
     // ETH-specific

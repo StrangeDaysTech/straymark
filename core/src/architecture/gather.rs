@@ -21,7 +21,7 @@ use crate::charter::{self, Charter, CharterStatus};
 use crate::charter_files::parse_files_to_modify;
 use crate::architecture::scan::{resolve_scan_config, ScanConfig};
 use crate::document::{detect_doc_type, discover_documents, parse_document, DocType};
-use crate::drift::compute_drift;
+use crate::drift::{compute_drift, glob_match};
 
 /// Gather the governance-derived file sets (Spec 002 §4) the pure projection
 /// consumes. All impure work (git, fs walk, document parsing) lives here; the
@@ -63,11 +63,13 @@ pub fn build_governance_state(root: &Path) -> GovernanceState {
         .map(|p| p.to_string_lossy().replace('\\', "/"))
         .collect();
 
+    let tde_files = open_tde_files(root, &on_disk_files);
+
     GovernanceState {
         active_charter_files,
         in_progress_files,
         closed_charter_files,
-        tde_files: open_tde_files(root),
+        tde_files,
         wiring_gap_files: Vec::new(),
         on_disk_files,
     }
@@ -184,14 +186,18 @@ fn git_modified_files(root: &Path) -> Vec<String> {
 /// `has-debt` overlay input (§4). A TDE counts as open unless its status reads
 /// as resolved.
 ///
-/// A TDE's `related` frontmatter lists *governance docs* (AILOGs, audit reviews,
-/// Charters) far more often than source paths, so matching `related` directly
-/// against component globs almost never lights up a component (#273). We bridge
-/// the gap: for each `related` entry that names an **AILOG**, resolve it to its
-/// file and pull that AILOG's `## Modified Files` — the code the debt actually
-/// lives in — and feed those source paths to the projection. Raw `related`
-/// entries are kept too (a TDE may list a source path directly).
-fn open_tde_files(root: &Path) -> Vec<String> {
+/// Two attribution modes, per TDE:
+/// - **Scoped (`affects` declared, #276):** the TDE names the code area its debt
+///   is about, as file globs. We expand them against the on-disk source files
+///   and attribute the debt to exactly those paths — authoritative, ignoring the
+///   broader footprint of the related AILOGs (which is wider than the debt).
+/// - **Unscoped (no `affects`, the #273 fallback):** a TDE's `related` lists
+///   *governance docs* (AILOGs, reviews, Charters), so matching `related`
+///   directly against component globs almost never matches. We bridge the gap by
+///   resolving each `related` AILOG to the files it modified (frontmatter
+///   `files_modified` ∪ `## Modified Files`) and feeding those in; raw `related`
+///   entries are kept too (a TDE may list a source path directly).
+fn open_tde_files(root: &Path, on_disk: &[String]) -> Vec<String> {
     let straymark_dir = root.join(".straymark");
     if !straymark_dir.is_dir() {
         return Vec::new();
@@ -207,20 +213,29 @@ fn open_tde_files(root: &Path) -> Vec<String> {
         if !is_tde {
             continue;
         }
-        if let Ok(doc) = parse_document(&p) {
-            if !tde_is_open(doc.frontmatter.status.as_deref()) {
-                continue;
-            }
-            if let Some(related) = doc.frontmatter.related {
-                for r in related {
-                    // Transitively resolve an AILOG reference to the files it
-                    // modified, so the debt maps onto the components that own
-                    // those files.
-                    if let Some(files) = ailog_modified_files(&logs_dir, &r) {
-                        set.extend(files);
-                    }
-                    set.insert(r);
+        let Ok(doc) = parse_document(&p) else { continue };
+        if !tde_is_open(doc.frontmatter.status.as_deref()) {
+            continue;
+        }
+
+        // Scoped attribution wins when present and non-empty.
+        let affects: Vec<String> = doc.frontmatter.affects.unwrap_or_default();
+        if affects.iter().any(|g| !g.trim().is_empty()) {
+            for file in on_disk {
+                if affects.iter().any(|g| glob_match(g, file)) {
+                    set.insert(file.clone());
                 }
+            }
+            continue;
+        }
+
+        // Unscoped fallback: related-AILOG footprint.
+        if let Some(related) = doc.frontmatter.related {
+            for r in related {
+                if let Some(files) = ailog_modified_files(&logs_dir, &r) {
+                    set.extend(files);
+                }
+                set.insert(r);
             }
         }
     }
@@ -338,6 +353,54 @@ mod tests {
                 .any(|f| f == "internal/modules/commshub/http.go"),
             "expected the AILOG's modified file in tde_files, got: {:?}",
             state.tde_files
+        );
+    }
+
+    #[test]
+    fn scoped_tde_affects_attributes_only_to_declared_paths() {
+        // #276: a TDE that declares `affects` scopes the debt to exactly those
+        // globs, ignoring the broader footprint of its related AILOG. Here the
+        // AILOG touched audittrail + commshub + cmd, but `affects` names only
+        // audittrail — so only the audittrail file lands in tde_files.
+        let tmp = tempfile::TempDir::new().unwrap();
+        let root = tmp.path();
+        let logs = root.join(".straymark/07-ai-audit/agent-logs");
+        let tdes = root.join(".straymark/06-evolution/technical-debt");
+        std::fs::create_dir_all(&logs).unwrap();
+        std::fs::create_dir_all(&tdes).unwrap();
+        // Real on-disk source files (the affects globs expand against these).
+        for f in [
+            "internal/modules/audittrail/svc.go",
+            "internal/modules/commshub/http.go",
+            "cmd/main.go",
+        ] {
+            let p = root.join(f);
+            std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+            std::fs::write(p, "package x\n").unwrap();
+        }
+        std::fs::write(
+            logs.join("AILOG-2026-04-12-006-audittrail.md"),
+            "---\nid: AILOG-2026-04-12-006\nfiles_modified:\n  \
+             - internal/modules/audittrail/svc.go\n  - internal/modules/commshub/http.go\n  \
+             - cmd/main.go\n---\n\n# log\n",
+        )
+        .unwrap();
+        std::fs::write(
+            tdes.join("TDE-2026-05-11-003-audittrail-pii.md"),
+            "---\nid: TDE-2026-05-11-003\nstatus: identified\n\
+             affects:\n  - internal/modules/audittrail/**\nrelated:\n  \
+             - AILOG-2026-04-12-006-audittrail.md\n---\n\n# debt\n",
+        )
+        .unwrap();
+
+        let tde = build_governance_state(root).tde_files;
+        assert!(
+            tde.contains(&"internal/modules/audittrail/svc.go".to_string()),
+            "scoped path must be attributed, got: {tde:?}"
+        );
+        assert!(
+            !tde.iter().any(|f| f.contains("commshub") || f.starts_with("cmd/")),
+            "out-of-scope AILOG-footprint paths must NOT be attributed, got: {tde:?}"
         );
     }
 }

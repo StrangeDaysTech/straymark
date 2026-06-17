@@ -106,7 +106,7 @@ straymark status --where        # el "estás aquí" textual
 
 - La **semilla generada es un punto de partida.** No inferirá tus capas o fronteras de componentes intencionadas — esa es la fase de refinamiento, por diseño.
 - **La cobertura depende de tu stack.** El escaneo reconoce ~25 lenguajes por defecto y maneja layouts comunes (Go `internal/`, JS `src/`, Maven/Gradle multi-módulo). Un lenguaje no predeterminado o un layout inusual necesita una entrada de config `architecture:` y más refinamiento a mano — pero la semilla nunca *engaña*; solo da menos ventaja inicial.
-- El **overlay `has-debt` es tan preciso como tus registros de deuda.** La deuda se atribuye a los componentes que los AILOGs referenciados de un TDE abierto realmente modificaron; las listas `files_modified` gruesas la esparcen más ampliamente que la deuda misma.
+- El **overlay `has-debt` es tan preciso como tus registros de deuda.** Por defecto, la deuda se atribuye a los componentes que los AILOGs referenciados de un TDE abierto realmente modificaron; las listas `files_modified` gruesas la esparcen más ampliamente que la deuda misma. Para acotarla con exactitud, declara un campo **`affects`** en el TDE (globs de archivos, p. ej. `affects: [internal/modules/audittrail/**]`) — cuando está presente, atribuye la deuda solo a esos paths, ignorando el footprint del AILOG.
 - **Loom es N=1.** Ha sido validado por dogfooding en este proyecto y en la referencia Sentinel. Espera asperezas; repórtalas.
 
 ---

@@ -13,6 +13,7 @@ effort: low | medium | high
 iso_42001_clause: []            # 4 | 5 | 6 | 7 | 8 | 9 | 10
 tags: []
 related: []
+affects: []                     # globs de archivos a los que se refiere la deuda, p. ej. ["internal/modules/audittrail/**"]; acota el overlay `has-debt` de arquitectura de Loom a exactamente esos paths (EXPERIMENTAL). Déjalo vacío para usar el footprint de los AILOGs en `related`.
 priority: null
 assigned_to: null
 promoted_from_followup: null    # FU-NNN si fue promovido desde .straymark/follow-ups-backlog.md

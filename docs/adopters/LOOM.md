@@ -106,7 +106,7 @@ straymark status --where        # the textual "you are here"
 
 - The **generated seed is a starting point.** It will not infer your intended layers or component boundaries — that's the refinement phase, by design.
 - **Coverage depends on your stack.** The scan recognizes ~25 languages by default and handles common layouts (Go `internal/`, JS `src/`, multi-module Maven/Gradle). A non-default language or an unusual layout needs an `architecture:` config entry and more hand-refinement — but the seed never *misleads*; it just gives less of a head start.
-- The **`has-debt` overlay is as precise as your debt records.** Debt is attributed to the components an open TDE's referenced AILOGs actually modified; coarse `files_modified` lists spread it wider than the debt itself.
+- The **`has-debt` overlay is as precise as your debt records.** By default, debt is attributed to the components an open TDE's referenced AILOGs actually modified; coarse `files_modified` lists spread it wider than the debt itself. To scope it exactly, declare an **`affects`** field on the TDE (file globs, e.g. `affects: [internal/modules/audittrail/**]`) — when present it attributes the debt to those paths only, ignoring the AILOG footprint.
 - **Loom is N=1.** It has been validated by dogfooding on this project and the Sentinel reference. Expect rough edges; report them.
 
 ---
