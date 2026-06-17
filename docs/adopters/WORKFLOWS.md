@@ -101,6 +101,17 @@ The `/straymark-status` skill (available in Claude Code and Gemini CLI) analyzes
 - Document compliance against governance rules
 - Overall documentation health
 
+### Seeing the project (Loom, experimental)
+
+For a *visual* answer to "where are we?", the **EXPERIMENTAL** Loom dashboard renders your project as a live document graph plus a "you are here" architecture map:
+
+```bash
+straymark status --where     # textual "you are here" (no server)
+straymark loom serve         # the visual dashboard (downloads the loom-* binary on first use)
+```
+
+The architecture map is driven by a model you generate and then refine — see the **[Loom & the Architecture Map guide](./LOOM.md)** for the recommended `generate → refine → validate → sync → serve` workflow (the refinement step can be human or AI-assisted).
+
 ---
 
 ## Using Skills (Active Documentation)

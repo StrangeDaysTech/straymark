@@ -101,6 +101,17 @@ straymark status
 - 文档与治理规则的合规情况
 - 整体文档健康状态
 
+### 看见项目（Loom，实验性）
+
+要以*可视化*方式回答"我们在哪里？"，**EXPERIMENTAL** 的 Loom 仪表盘会把你的项目渲染为一张实时的文档图，外加一张"你在这里"的架构地图：
+
+```bash
+straymark status --where     # textual "you are here" (no server)
+straymark loom serve         # the visual dashboard (downloads the loom-* binary on first use)
+```
+
+架构地图由一个你先生成、再精修的模型驱动——推荐的 `generate → refine → validate → sync → serve` 工作流（精修步骤可以由人或 AI 辅助完成）参见 **[Loom 与架构地图指南](./LOOM.md)**。
+
 ---
 
 ## 使用 Skills（主动文档）
