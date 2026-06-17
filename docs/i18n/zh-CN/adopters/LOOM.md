@@ -106,7 +106,7 @@ straymark status --where        # the textual "you are here"
 
 - **生成的种子是一个起点。** 它不会推断出你意图中的层或组件边界——按设计，那是精修环节的事。
 - **覆盖度取决于你的技术栈。** 扫描默认识别约 25 种语言，并处理常见布局（Go 的 `internal/`、JS 的 `src/`、多模块 Maven/Gradle）。非默认语言或不寻常的布局需要一个 `architecture:` 配置项以及更多手工精修——但种子从不*误导*；它只是给的起步优势更少。
-- **`has-debt` 覆盖层的精度取决于你的债务记录。** 债务归属于一个未结 TDE 所引用的 AILOG 实际修改过的组件；粗粒度的 `files_modified` 列表会把它摊得比债务本身更宽。
+- **`has-debt` 覆盖层的精度取决于你的债务记录。** 默认情况下，债务归属于一个未结 TDE 所引用的 AILOG 实际修改过的组件；粗粒度的 `files_modified` 列表会把它摊得比债务本身更宽。若要精确限定，可在 TDE 上声明 **`affects`** 字段（文件 glob，例如 `affects: [internal/modules/audittrail/**]`）—— 存在时，债务只归属于这些路径，忽略 AILOG 足迹。
 - **Loom 是 N=1。** 它已通过在本项目和 Sentinel 参考上的自用（dogfooding）得到验证。请预期会有粗糙之处；发现了请反馈。
 
 ---

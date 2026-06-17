@@ -7,6 +7,23 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## [Unreleased]
+
+### Added (architecture `has-debt` precision — #276, EXPERIMENTAL)
+
+- **TDEs can scope their debt with an `affects` field.** Until now the `has-debt` overlay
+  attributed an open TDE's debt to every component its `related` AILOGs touched — wider than the
+  debt itself (a TDE about AuditTrail also lit `cmd`/`db`/`integration` because the same AILOG
+  wired them). A TDE may now declare `affects: [<file globs>]` (e.g.
+  `["internal/modules/audittrail/**"]`); when present, the projection attributes the debt to
+  **exactly** those paths (expanded against the on-disk source files), ignoring the broader AILOG
+  footprint. Absent `affects`, the AILOG-footprint attribution (#273) remains the fallback.
+- **Framework:** the `affects` field is documented in `TEMPLATE-TDE.md` (EN / es / zh-CN).
+- **Core:** `straymark-core::document::Frontmatter` gains `affects` (additive). Requires a
+  `straymark-core` **0.8.0** bump at release time; publishes with the next `cli-` release.
+
+---
+
 ## CLI 3.27.0 / Core 0.7.0 — 2026-06-16
 
 A language- and structure-agnostic, configurable seed for `architecture generate` (#279), plus a

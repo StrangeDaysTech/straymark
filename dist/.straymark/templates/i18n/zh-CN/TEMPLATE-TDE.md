@@ -13,6 +13,7 @@ effort: low | medium | high
 iso_42001_clause: []            # 4 | 5 | 6 | 7 | 8 | 9 | 10
 tags: []
 related: []
+affects: []                     # 该债务所涉及的文件 glob，例如 ["internal/modules/audittrail/**"]；将 Loom 的架构 `has-debt` 叠加精确限定到这些路径（实验性）。留空则回退到 `related` 中 AILOG 的足迹。
 priority: null
 assigned_to: null
 promoted_from_followup: null    # FU-NNN，如果从 .straymark/follow-ups-backlog.md 提升而来
