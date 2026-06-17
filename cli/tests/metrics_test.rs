@@ -1,4 +1,4 @@
-use assert_cmd::Command;
+use assert_cmd::cargo_bin_cmd;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
@@ -36,7 +36,7 @@ fn create_doc(dir: &std::path::Path, subpath: &str, filename: &str, frontmatter:
 fn test_metrics_not_installed() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("metrics")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -49,7 +49,7 @@ fn test_metrics_no_documents() {
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("metrics")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -89,7 +89,7 @@ fn test_metrics_with_documents() {
         ),
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("metrics")
         .arg("--period")
         .arg("last-30-days")
@@ -116,7 +116,7 @@ fn test_metrics_period_all() {
         "id: AILOG-2020-01-01-001\ntitle: Old\nstatus: accepted\ncreated: 2020-01-01\nagent: test-agent\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("metrics")
         .arg("--period")
         .arg("all")
@@ -134,7 +134,7 @@ fn test_metrics_output_json() {
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     let output = cmd
         .arg("metrics")
         .arg("--output")
@@ -154,7 +154,7 @@ fn test_metrics_output_markdown() {
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("metrics")
         .arg("--output")
         .arg("markdown")
@@ -191,7 +191,7 @@ fn test_metrics_agent_activity() {
         ),
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("metrics")
         .arg(dir.path().to_str().unwrap())
         .assert()

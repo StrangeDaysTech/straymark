@@ -3,7 +3,7 @@
 //! See `cli/src/commands/charter/amend.rs` for unit coverage; this exercises
 //! the end-to-end CLI surface.
 
-use assert_cmd::Command;
+use assert_cmd::cargo_bin_cmd;
 use predicates::prelude::*;
 use std::path::Path;
 use tempfile::TempDir;
@@ -59,8 +59,7 @@ fn amend_creates_new_ailog_and_appends_historical_correction() {
     write_closed_charter(dir.path());
     write_prior_ailog(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "amend",
@@ -121,8 +120,7 @@ fn amend_fails_when_charter_not_closed() {
     )
     .unwrap();
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "amend",
@@ -144,8 +142,7 @@ fn amend_rejects_invalid_trigger() {
     let dir = TempDir::new().unwrap();
     write_closed_charter(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "amend",
@@ -168,8 +165,7 @@ fn amend_merge_into_writes_post_close_amendment_to_telemetry() {
     write_prior_ailog(dir.path());
     let telemetry_path = write_minimal_telemetry(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "amend",

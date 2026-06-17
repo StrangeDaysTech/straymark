@@ -1,4 +1,4 @@
-use assert_cmd::Command;
+use assert_cmd::cargo_bin_cmd;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
@@ -47,7 +47,7 @@ fn create_governance_policy(dir: &std::path::Path) {
 fn test_compliance_not_installed() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("compliance")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -60,7 +60,7 @@ fn test_compliance_no_documents() {
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("compliance")
         .arg("--all")
         .arg(dir.path().to_str().unwrap())
@@ -78,7 +78,7 @@ fn test_compliance_eu_ai_act_only() {
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("compliance")
         .arg("--standard")
         .arg("eu-ai-act")
@@ -96,7 +96,7 @@ fn test_compliance_iso_42001_only() {
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("compliance")
         .arg("--standard")
         .arg("iso-42001")
@@ -114,7 +114,7 @@ fn test_compliance_nist_ai_rmf_only() {
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("compliance")
         .arg("--standard")
         .arg("nist-ai-rmf")
@@ -133,7 +133,7 @@ fn test_compliance_with_governance_policy() {
     setup_straymark(dir.path());
     create_governance_policy(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("compliance")
         .arg("--standard")
         .arg("iso-42001")
@@ -170,7 +170,7 @@ fn test_compliance_with_documents() {
         "id: AIDEC-2026-03-20-001\ntitle: Choice\nstatus: accepted\ncreated: 2026-03-20\nagent: claude-code\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("compliance")
         .arg("--all")
         .arg(dir.path().to_str().unwrap())
@@ -187,7 +187,7 @@ fn test_compliance_output_json() {
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     let output = cmd
         .arg("compliance")
         .arg("--all")
@@ -209,7 +209,7 @@ fn test_compliance_output_markdown() {
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("compliance")
         .arg("--all")
         .arg("--output")
@@ -243,7 +243,7 @@ fn test_compliance_china_tc260_only() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_china(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("compliance")
         .arg("--standard")
         .arg("china-tc260")
@@ -261,7 +261,7 @@ fn test_compliance_china_pipl_only() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_china(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("compliance")
         .arg("--standard")
         .arg("china-pipl")
@@ -279,7 +279,7 @@ fn test_compliance_china_gb45438_only() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_china(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("compliance")
         .arg("--standard")
         .arg("china-gb45438")
@@ -297,7 +297,7 @@ fn test_compliance_china_cac_only() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_china(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("compliance")
         .arg("--standard")
         .arg("china-cac")
@@ -315,7 +315,7 @@ fn test_compliance_china_gb45652_only() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_china(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("compliance")
         .arg("--standard")
         .arg("china-gb45652")
@@ -333,7 +333,7 @@ fn test_compliance_china_csl_only() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_china(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("compliance")
         .arg("--standard")
         .arg("china-csl")
@@ -351,7 +351,7 @@ fn test_compliance_region_china_runs_six_checkers() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_china(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     let output = cmd
         .arg("compliance")
         .arg("--region")
@@ -373,7 +373,7 @@ fn test_compliance_default_excludes_china_when_not_in_scope() {
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path()); // default scope = [global, eu]
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     let output = cmd
         .arg("compliance")
         .arg("--output")
@@ -395,7 +395,7 @@ fn test_compliance_all_flag_includes_china() {
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path()); // default scope (no china)
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     let output = cmd
         .arg("compliance")
         .arg("--all")
@@ -415,7 +415,7 @@ fn test_compliance_china_default_when_in_scope() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_china(dir.path()); // scope = [global, china]
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     let output = cmd
         .arg("compliance")
         .arg("--output")

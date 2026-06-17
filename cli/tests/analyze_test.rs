@@ -1,4 +1,4 @@
-use assert_cmd::Command;
+use assert_cmd::cargo_bin_cmd;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
@@ -22,7 +22,7 @@ fn setup_straymark_with_config(dir: &std::path::Path, threshold: u32) {
 fn test_analyze_empty_directory() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("analyze")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -46,7 +46,7 @@ fn hello(name: &str) -> String {
 "#,
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("analyze")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -81,7 +81,7 @@ fn nested(x: i32) -> i32 {
     );
 
     // With threshold 1, the function should exceed it
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("analyze")
         .arg("--threshold")
         .arg("1")
@@ -108,7 +108,7 @@ fn c() -> i32 { 42 }
 "#,
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("analyze")
         .arg("--top")
         .arg("1")
@@ -121,8 +121,7 @@ fn c() -> i32 { 42 }
         .success();
 
     // With --top 1 and json output, only 1 function in the array
-    let output = Command::cargo_bin("straymark")
-        .unwrap()
+    let output = cargo_bin_cmd!("straymark")
         .arg("analyze")
         .arg("--top")
         .arg("1")
@@ -143,8 +142,7 @@ fn test_analyze_output_json() {
     let dir = TempDir::new().unwrap();
     create_rust_file(dir.path(), "simple.rs", "fn add(a: i32, b: i32) -> i32 { a + b }\n");
 
-    let output = Command::cargo_bin("straymark")
-        .unwrap()
+    let output = cargo_bin_cmd!("straymark")
         .arg("analyze")
         .arg("--output")
         .arg("json")
@@ -164,7 +162,7 @@ fn test_analyze_output_markdown() {
     let dir = TempDir::new().unwrap();
     create_rust_file(dir.path(), "lib.rs", "fn foo() -> i32 { 1 }\n");
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("analyze")
         .arg("--output")
         .arg("markdown")
@@ -183,7 +181,7 @@ fn test_analyze_no_straymark_required() {
     let dir = TempDir::new().unwrap();
     create_rust_file(dir.path(), "main.rs", "fn main() {}\n");
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("analyze")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -214,7 +212,7 @@ fn branchy(x: i32) -> i32 {
     );
 
     // With config threshold=1, this function should exceed it
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("analyze")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -238,7 +236,7 @@ fn test_analyze_skips_excluded_dirs() {
     std::fs::create_dir_all(&target).unwrap();
     create_rust_file(&target, "build.rs", "fn build_fn() -> i32 { 3 }\n");
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("analyze")
         .arg("--output")
         .arg("json")
@@ -246,8 +244,7 @@ fn test_analyze_skips_excluded_dirs() {
         .assert()
         .success();
 
-    let output = Command::cargo_bin("straymark")
-        .unwrap()
+    let output = cargo_bin_cmd!("straymark")
         .arg("analyze")
         .arg("--output")
         .arg("json")
@@ -280,7 +277,7 @@ fn low_complexity(x: i32) -> &'static str {
     );
 
     // Default threshold is 8 — function should NOT exceed it
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("analyze")
         .arg(dir.path().to_str().unwrap())
         .assert()

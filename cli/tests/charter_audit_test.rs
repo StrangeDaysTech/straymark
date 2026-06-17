@@ -1,6 +1,6 @@
 //! Integration tests for `straymark charter audit` (v1 unified flow).
 
-use assert_cmd::Command;
+use assert_cmd::cargo_bin_cmd;
 use predicates::prelude::*;
 use std::path::Path;
 use std::process::Command as StdCommand;
@@ -99,8 +99,7 @@ fn init_repo_with_diff(dir: &Path) {
 #[test]
 fn audit_requires_straymark_installed() {
     let dir = TempDir::new().unwrap();
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "audit", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -112,8 +111,7 @@ fn audit_requires_straymark_installed() {
 fn audit_unknown_charter_fails() {
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "audit", "CHARTER-99", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -132,8 +130,7 @@ fn audit_prepare_writes_unified_prompt_to_canonical_location() {
     write_charter(dir.path());
     init_repo_with_diff(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "audit", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -218,8 +215,7 @@ fn audit_merge_reports_with_no_reports_fails_helpfully() {
     init_repo_with_diff(dir.path());
 
     // Skip prepare and any report files; jump straight to merge-reports.
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "audit", "CHARTER-01", "--merge-reports", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -257,8 +253,7 @@ prompt_used: audit-prompt.md
     )
     .unwrap();
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "audit", "CHARTER-01", "--merge-reports", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -277,8 +272,7 @@ fn audit_merge_reports_handles_n_reports_with_unified_role() {
     init_repo_with_diff(dir.path());
 
     // Prepare (writes the unified prompt).
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "audit", "CHARTER-01", "--prepare", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -317,8 +311,7 @@ evidence_citations: {findings}
         std::fs::write(canonical.join(format!("report-{slug}.md")), body).unwrap();
     }
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "audit", "CHARTER-01", "--merge-reports", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -365,8 +358,7 @@ findings_by_category:
     )
     .unwrap();
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "audit", "CHARTER-01", "--merge-reports", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -385,8 +377,7 @@ fn audit_deprecated_calibrate_emits_warning_and_exits() {
     write_charter(dir.path());
     init_repo_with_diff(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "audit", "CHARTER-01", "--calibrate", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -430,8 +421,7 @@ findings_by_category:
     .unwrap();
 
     // --finalize should warn but proceed via the merge-reports path.
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "audit", "CHARTER-01", "--finalize", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -447,8 +437,7 @@ fn audit_action_flags_are_mutually_exclusive() {
     setup_straymark(dir.path());
 
     // --prepare and --merge-reports must not co-occur (clap-enforced).
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "audit",
@@ -462,8 +451,7 @@ fn audit_action_flags_are_mutually_exclusive() {
         .failure();
 
     // Deprecated flags also conflict with each other and with the new ones.
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "audit",
@@ -487,8 +475,7 @@ fn setup_finalized_audit(dir: &Path) {
     init_repo_with_diff(dir);
 
     // PREPARE writes the unified audit-prompt.md to the canonical path.
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "audit", "CHARTER-01", "--prepare", "--path"])
         .arg(dir.to_str().unwrap())
         .assert()
@@ -572,8 +559,7 @@ fn audit_merge_into_appends_external_audit_to_telemetry() {
     setup_finalized_audit(dir.path());
     let telemetry_path = write_minimal_telemetry(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "audit",
@@ -619,8 +605,7 @@ fn audit_merge_into_missing_telemetry_fails_with_helpful_message() {
     setup_finalized_audit(dir.path());
     let missing = dir.path().join(".straymark/charters/CHARTER-01.telemetry.yaml");
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "audit",
@@ -651,8 +636,7 @@ fn audit_merge_into_rejects_existing_external_audit() {
     existing.push_str("\n  external_audit:\n    - auditor: \"old-auditor\"\n      findings_total: 0\n");
     std::fs::write(&telemetry_path, &existing).unwrap();
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "audit",
@@ -689,8 +673,7 @@ fn audit_merge_into_replaces_empty_external_audit_placeholder() {
     existing.push_str("\n  external_audit: []\n");
     std::fs::write(&telemetry_path, &existing).unwrap();
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "audit",
@@ -740,8 +723,7 @@ fn audit_merge_into_requires_merge_reports_or_finalize() {
 
     // Without --merge-reports (or deprecated --finalize), the CLI should
     // reject --merge-into with a clear error.
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "audit",
@@ -813,8 +795,7 @@ fn audit_default_range_uses_origin_main_when_available() {
     write_charter(dir.path());
     let _remote = init_repo_with_remote_main(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "audit", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -847,8 +828,7 @@ fn audit_default_range_falls_back_to_head_minus_one_without_remote() {
     write_charter(dir.path());
     init_repo_with_diff(dir.path()); // no remote configured
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "audit", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -884,8 +864,7 @@ fn audit_explicit_range_overrides_default_resolution() {
     write_charter(dir.path());
     init_repo_with_diff(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "audit",
@@ -953,8 +932,7 @@ fn audit_prepare_uses_es_overlay_when_language_es() {
     write_charter(dir.path());
     init_repo_with_diff(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "audit", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -988,8 +966,7 @@ fn audit_prepare_falls_back_to_en_when_locale_overlay_missing() {
     write_charter(dir.path());
     init_repo_with_diff(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "audit", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -1018,8 +995,7 @@ fn audit_prepare_uses_en_canonical_when_language_en() {
     write_charter(dir.path());
     init_repo_with_diff(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args(["charter", "audit", "CHARTER-01", "--path"])
         .arg(dir.path().to_str().unwrap())
         .assert()

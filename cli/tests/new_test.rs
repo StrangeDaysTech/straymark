@@ -1,4 +1,4 @@
-use assert_cmd::Command;
+use assert_cmd::cargo_bin_cmd;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
@@ -28,7 +28,7 @@ fn setup_straymark_with_template(dir: &std::path::Path, doc_type: &str) {
 fn test_new_requires_straymark_installed() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("new")
         .arg("--doc-type")
         .arg("ailog")
@@ -45,7 +45,7 @@ fn test_new_with_type_and_title_args() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_template(dir.path(), "AILOG");
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("new")
         .arg("--doc-type")
         .arg("ailog")
@@ -79,8 +79,7 @@ fn test_new_sequence_increments() {
     setup_straymark_with_template(dir.path(), "AILOG");
 
     // Create first document
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("new")
         .arg("--doc-type")
         .arg("ailog")
@@ -91,8 +90,7 @@ fn test_new_sequence_increments() {
         .success();
 
     // Create second document
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("new")
         .arg("--doc-type")
         .arg("ailog")
@@ -119,7 +117,7 @@ fn test_new_unknown_type() {
     let dir = TempDir::new().unwrap();
     setup_straymark_with_template(dir.path(), "AILOG");
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("new")
         .arg("--doc-type")
         .arg("invalid")

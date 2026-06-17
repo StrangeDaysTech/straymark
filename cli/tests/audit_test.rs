@@ -1,4 +1,4 @@
-use assert_cmd::Command;
+use assert_cmd::cargo_bin_cmd;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
@@ -36,7 +36,7 @@ fn create_doc(dir: &std::path::Path, subpath: &str, filename: &str, frontmatter:
 fn test_audit_not_installed() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("audit")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -49,7 +49,7 @@ fn test_audit_no_documents() {
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("audit")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -69,7 +69,7 @@ fn test_audit_with_documents() {
         "id: AILOG-2026-03-20-001\ntitle: Init project\nstatus: accepted\ncreated: 2026-03-20\nagent: claude-code\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("audit")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -107,7 +107,7 @@ fn test_audit_date_range_filter() {
         "id: AILOG-2026-06-01-001\ntitle: June entry\nstatus: accepted\ncreated: 2026-06-01\nagent: claude-code\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("audit")
         .arg("--from")
         .arg("2026-03-01")
@@ -143,7 +143,7 @@ fn test_audit_system_filter() {
         "id: AILOG-2026-03-21-001\ntitle: Payment update\nstatus: accepted\ncreated: 2026-03-21\nagent: claude-code\nconfidence: high\nreview_required: false\nrisk_level: low\ntags:\n  - payment\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("audit")
         .arg("--system")
         .arg("auth")
@@ -183,7 +183,7 @@ fn test_audit_traceability() {
         "id: AILOG-2026-03-03-001\ntitle: Implement JWT\nstatus: accepted\ncreated: 2026-03-03\nagent: claude-code\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("audit")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -208,7 +208,7 @@ fn test_audit_output_markdown() {
         "id: AILOG-2026-03-20-001\ntitle: Test\nstatus: accepted\ncreated: 2026-03-20\nagent: claude-code\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("audit")
         .arg("--output")
         .arg("markdown")
@@ -233,7 +233,7 @@ fn test_audit_output_html() {
         "id: AILOG-2026-03-20-001\ntitle: Test\nstatus: accepted\ncreated: 2026-03-20\nagent: claude-code\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("audit")
         .arg("--output")
         .arg("html")
@@ -258,7 +258,7 @@ fn test_audit_output_json() {
         "id: AILOG-2026-03-20-001\ntitle: Test\nstatus: accepted\ncreated: 2026-03-20\nagent: claude-code\nconfidence: high\nreview_required: false\nrisk_level: low\ntags: []\nrelated: []",
     );
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     let output = cmd
         .arg("audit")
         .arg("--output")

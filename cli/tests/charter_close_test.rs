@@ -3,7 +3,7 @@
 //! interactive flow is exercised manually and via the unit tests in
 //! `cli/src/commands/charter/close.rs`.
 
-use assert_cmd::Command;
+use assert_cmd::cargo_bin_cmd;
 use predicates::prelude::*;
 use std::path::Path;
 use tempfile::TempDir;
@@ -80,8 +80,7 @@ fn setup_straymark(dir: &Path) {
 }
 
 fn create_charter(dir: &Path, title: &str) {
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .arg("charter")
         .arg("new")
         .arg("--title")
@@ -95,8 +94,7 @@ fn create_charter(dir: &Path, title: &str) {
 fn charter_close_requires_straymark_installed() {
     let dir = TempDir::new().unwrap();
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "close",
@@ -116,8 +114,7 @@ fn charter_close_unknown_charter_fails_clearly() {
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "close",
@@ -138,8 +135,7 @@ fn charter_close_from_template_non_interactive_writes_telemetry_file() {
     setup_straymark(dir.path());
     create_charter(dir.path(), "Test Charter");
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "close",
@@ -189,8 +185,7 @@ fn charter_close_syncs_body_status_mirror_line() {
     let before = std::fs::read_to_string(&charter_path).unwrap();
     assert!(before.contains(":** declared. Effort:"), "{before}");
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "close",
@@ -232,8 +227,7 @@ fn charter_close_writes_closed_at_when_absent() {
     let before = std::fs::read_to_string(&charter_path).unwrap();
     assert!(!before.contains("closed_at:"), "scaffold should not pre-write closed_at");
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "close",
@@ -297,8 +291,7 @@ trigger: "test"
     std::fs::create_dir_all(dir.path().join(".straymark/charters")).unwrap();
     std::fs::write(&charter_path, stale).unwrap();
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "close",
@@ -327,8 +320,7 @@ fn charter_close_bumps_status_to_closed() {
     let before = std::fs::read_to_string(&charter_path).unwrap();
     assert!(before.contains("status: declared"));
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "close",
@@ -360,8 +352,7 @@ fn charter_close_idempotent_under_non_interactive() {
     setup_straymark(dir.path());
     create_charter(dir.path(), "Idempotent");
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "close",
@@ -384,8 +375,7 @@ fn charter_close_idempotent_under_non_interactive() {
     std::fs::write(&telemetry_path, &edited).unwrap();
 
     // Second run: should NOT overwrite the edit.
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "close",
@@ -416,8 +406,7 @@ fn charter_close_first_run_prints_template_created_message() {
     setup_straymark(dir.path());
     create_charter(dir.path(), "F7 First Run");
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "close",
@@ -444,8 +433,7 @@ fn charter_close_subsequent_run_prints_finalized_message() {
     create_charter(dir.path(), "F7 Subsequent Run");
 
     // First invocation: writes the template.
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "close",
@@ -479,8 +467,7 @@ fn charter_close_subsequent_run_prints_finalized_message() {
     std::fs::write(&telemetry_path, valid_yaml).unwrap();
 
     // Second invocation: schema validates, output says finalized.
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "close",
@@ -508,8 +495,7 @@ fn charter_close_subsequent_run_with_invalid_yaml_fails_clearly() {
     create_charter(dir.path(), "F7 Invalid Telemetry");
 
     // First invocation drops the template.
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "close",
@@ -542,8 +528,7 @@ fn charter_close_subsequent_run_with_invalid_yaml_fails_clearly() {
     )
     .unwrap();
 
-    Command::cargo_bin("straymark")
-        .unwrap()
+    cargo_bin_cmd!("straymark")
         .args([
             "charter",
             "close",

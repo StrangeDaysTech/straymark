@@ -1,4 +1,4 @@
-use assert_cmd::Command;
+use assert_cmd::cargo_bin_cmd;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
@@ -6,7 +6,7 @@ use tempfile::TempDir;
 fn test_status_not_installed() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("status")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -63,7 +63,7 @@ fn test_status_with_minimal_install() {
     std::fs::create_dir_all(&models_dir).unwrap();
     std::fs::write(models_dir.join(".gitkeep"), "").unwrap();
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("status")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -110,7 +110,7 @@ fn test_status_recognizes_new_doc_types() {
     )
     .unwrap();
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("status")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -131,7 +131,7 @@ fn test_status_incomplete_structure() {
     std::fs::create_dir_all(straymark.join("01-requirements")).unwrap();
     // Intentionally skip other directories
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("status")
         .arg(dir.path().to_str().unwrap())
         .assert()
@@ -143,7 +143,7 @@ fn test_status_incomplete_structure() {
 fn test_status_explicit_path_argument() {
     let dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("straymark").unwrap();
+    let mut cmd = cargo_bin_cmd!("straymark");
     cmd.arg("status")
         .arg(dir.path().to_str().unwrap())
         .assert()

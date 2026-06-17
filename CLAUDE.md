@@ -287,8 +287,10 @@ cargo build --no-default-features  # Without TUI
 ### Test
 
 ```bash
-cargo test    # All 121 tests
+cargo test    # Full workspace suite
 ```
+
+**CLI integration tests** (`cli/tests/`) spawn the binary via `assert_cmd`. Use the **macro** `cargo_bin_cmd!("straymark")` (import `use assert_cmd::cargo_bin_cmd;`), **not** the function `Command::cargo_bin("straymark").unwrap()`. The function is deprecated since `assert_cmd` 2.1 (incompatible with a custom cargo build-dir) and the macro returns a `Command` directly — no `.unwrap()`.
 
 ### Feature Flags
 
