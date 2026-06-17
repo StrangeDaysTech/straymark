@@ -314,4 +314,4 @@ Contribuido vía [issue #111](https://github.com/StrangeDaysTech/straymark/issue
 
 ---
 
-*StrayMark fw-4.27.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.28.0 | [Strange Days Tech](https://strangedays.tech)*
