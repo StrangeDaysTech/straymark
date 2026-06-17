@@ -1,8 +1,4 @@
 ---
-DRAFT — not yet published. Target: website/blog/. Series voice ("What the X…").
-Suggested date: pick the publish day. Translations (es/zh-CN) follow the usual
-pipeline once the EN draft is approved.
----
 slug: what-the-open-format-left-to-the-producer
 title: What the open format left to the producer
 authors:
@@ -14,6 +10,7 @@ tags:
   - governance
   - loom
   - interoperability
+date: 2026-06-17T00:00:00.000Z
 description: Google published the Open Knowledge Format — markdown, YAML frontmatter, a graph of links, an agent that maintains them. StrayMark reached the same primitives independently. The convergence is real; so is the divergence — OKF builds cognition for the AI, StrayMark builds it for the AI and the human engineer together.
 ---
 *On 2026-06-12 Google Cloud published the Open Knowledge Format: a directory of markdown files with YAML frontmatter, cross-linked into a graph, written and maintained by AI agents, with a static visualizer and a one-page spec. If that description gives you déjà vu reading this blog, it should — it's the shape StrayMark has shipped for months. We arrived there from our own ideas; OKF arrived crediting the Karpathy gist the whole "LLM-wiki pattern" traces back to. Two roads, same primitives. The honest reaction isn't defensiveness — someone with Google's reach just validated the bet. But validation of the shape is not agreement about its purpose, and that's where the only interesting question lives — the one their spec answers in a single sentence.*
