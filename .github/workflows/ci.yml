@@ -39,5 +39,5 @@ jobs:
         run: |
           # Fails if dist/.codex/skills/ drifted from what gen_codex_skills would
           # produce from dist/.claude/skills/. Fix locally with:
-          #   cd cli && cargo run --bin gen_codex_skills
-          cargo run --quiet --bin gen_codex_skills -- --check
+          #   cd cli && cargo run --bin gen_codex_skills --features dev-tools
+          cargo run --quiet --bin gen_codex_skills --features dev-tools -- --check

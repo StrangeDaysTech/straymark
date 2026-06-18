@@ -7,6 +7,21 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.28.1 — 2026-06-17
+
+### Fixed (CLI)
+
+- **`cargo install straymark-cli` no longer installs the internal `gen_codex_skills` build tool.**
+  That binary lives in `cli/src/bin/` and was auto-discovered by Cargo as a second target, so the
+  cargo-install path (used by `straymark update-cli`) leaked it into users' `~/.cargo/bin/`
+  alongside `straymark`. It is now gated behind a non-default `dev-tools` feature
+  (`required-features`), so `cargo install` ships only the `straymark` binary. CI and local
+  regeneration invoke it with `--features dev-tools`. The GitHub-release tarballs were never
+  affected (they only ever packaged `straymark`). Users who already have the leaked binary can
+  remove it with `rm ~/.cargo/bin/gen_codex_skills`.
+
+---
+
 ## Framework 4.28.0 / CLI 3.28.0 / Core 0.8.0 — 2026-06-16
 
 Scoped `has-debt` attribution via a TDE `affects` field (#276). The framework ships the field in
