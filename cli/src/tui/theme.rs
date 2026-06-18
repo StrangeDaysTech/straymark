@@ -1,30 +1,38 @@
 use ratatui::style::Color;
 use ratatui::widgets::BorderType;
 
-// Background: dark blue-gray (Catppuccin Mocha inspired)
-pub const BG: Color = Color::Rgb(30, 30, 46);
-// Surface: slightly lighter for panels
-pub const SURFACE: Color = Color::Rgb(36, 36, 54);
-// Text: primary readable text
-pub const TEXT: Color = Color::Rgb(164, 171, 199);
-// Dimmed text: secondary info (counts, dates, badges, hints)
-pub const TEXT_DIM: Color = Color::Rgb(148, 155, 180);
-// Subtle: borders, separators when inactive
-pub const SUBTLE: Color = Color::Rgb(88, 91, 112);
-// Subgroup labels (yellow family, accessible on dark bg)
-pub const SUBGROUP: Color = Color::Rgb(249, 226, 145);
-// User dir labels (magenta/lavender family)
-pub const USER_DIR: Color = Color::Rgb(203, 166, 247);
+// Terminal-adaptive palette. The TUI defers to the user's terminal theme:
+// it uses only `Color::Reset` (the terminal's default fg/bg) and the 16
+// standard ANSI colors, which the terminal remaps per its active theme.
+// We never hard-code RGB, so `explore` stays legible on BOTH light and dark
+// terminals — the same principle the rest of the CLI already follows.
+// Emphasis/selection that needs a "highlight box" uses reverse video
+// (Modifier::REVERSED) at the call site instead of a fixed background.
 
-// Accent: panel titles, expand/collapse icons, shortcut keys
-pub const ACCENT: Color = Color::Rgb(116, 199, 236);
-// Active panel border
-pub const BORDER_ACTIVE: Color = Color::Rgb(179, 190, 254);
+// Background: defer to the terminal's default background.
+pub const BG: Color = Color::Reset;
+// Surface (panels): also the terminal background — no forced fill.
+pub const SURFACE: Color = Color::Reset;
+// Text: the terminal's default foreground.
+pub const TEXT: Color = Color::Reset;
+// Dimmed text: secondary info (counts, dates, badges, hints).
+pub const TEXT_DIM: Color = Color::DarkGray;
+// Subtle: borders, separators when inactive.
+pub const SUBTLE: Color = Color::DarkGray;
+// Subgroup labels.
+pub const SUBGROUP: Color = Color::Yellow;
+// User dir labels.
+pub const USER_DIR: Color = Color::Magenta;
 
-// Semantic colors (muted variants)
-pub const GREEN: Color = Color::Rgb(166, 218, 149);
-pub const YELLOW: Color = Color::Rgb(229, 200, 144);
-pub const RED: Color = Color::Rgb(237, 135, 150);
+// Accent: panel titles, expand/collapse icons, shortcut keys, bullets.
+pub const ACCENT: Color = Color::Cyan;
+// Active panel border.
+pub const BORDER_ACTIVE: Color = Color::Cyan;
+
+// Semantic colors.
+pub const GREEN: Color = Color::Green;
+pub const YELLOW: Color = Color::Yellow;
+pub const RED: Color = Color::Red;
 
 // Border type: rounded corners
 pub const BORDER_TYPE: BorderType = BorderType::Rounded;

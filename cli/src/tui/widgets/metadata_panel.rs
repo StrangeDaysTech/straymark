@@ -213,13 +213,9 @@ fn doc_lines(
             Span::styled(format!(" {}", t("Tags:", lang)), l),
             Span::styled(tag_hint.to_string(), Style::default().fg(theme::TEXT_DIM)),
         ]));
-        let tag_style = Style::default()
-            .fg(theme::TEXT_DIM)
-            .bg(Color::Rgb(45, 45, 60));
-        let tag_selected_style = Style::default()
-            .fg(Color::Rgb(220, 224, 242))
-            .bg(Color::Rgb(45, 50, 80))
-            .add_modifier(Modifier::BOLD);
+        let tag_style = Style::default().fg(theme::ACCENT);
+        let tag_selected_style =
+            Style::default().add_modifier(Modifier::REVERSED | Modifier::BOLD);
         for (i, tag) in fm.tags.iter().enumerate() {
             let is_sel = app.meta_selection == Some(MetaSelection::Tag(i));
             let marker = if is_sel { " ▸ " } else { "   " };
@@ -357,9 +353,7 @@ fn push_related_block(
         let marker = if is_selected { " ▸ " } else { "   " };
         let style = if is_selected {
             Style::default()
-                .fg(Color::Rgb(220, 224, 242))
-                .bg(Color::Rgb(45, 50, 80))
-                .add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
+                .add_modifier(Modifier::REVERSED | Modifier::BOLD | Modifier::UNDERLINED)
         } else {
             Style::default()
                 .fg(theme::TEXT)

@@ -1,6 +1,6 @@
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
-use ratatui::style::{Color, Modifier, Style};
+use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph, Widget};
 
@@ -81,10 +81,7 @@ impl Widget for NavTree<'_> {
             };
 
             let style = if is_selected {
-                Style::default()
-                    .bg(theme::SUBTLE)
-                    .fg(theme::TEXT)
-                    .add_modifier(Modifier::BOLD)
+                Style::default().add_modifier(Modifier::REVERSED | Modifier::BOLD)
             } else {
                 Style::default().fg(theme::TEXT)
             };
@@ -122,10 +119,7 @@ impl Widget for NavTree<'_> {
                         + sg.user_dirs.iter().map(|ud| ud.files.len()).sum::<usize>();
                     let sg_arrow = if sg_expanded { "▾" } else { "▸" };
                     let sg_style = if is_sel {
-                        Style::default()
-                            .bg(theme::SUBTLE)
-                            .fg(theme::SUBGROUP)
-                            .add_modifier(Modifier::BOLD)
+                        Style::default().add_modifier(Modifier::REVERSED | Modifier::BOLD)
                     } else {
                         Style::default().fg(theme::SUBGROUP)
                     };
@@ -172,10 +166,7 @@ impl Widget for NavTree<'_> {
                             let ud_count = ud.files.len();
                             let ud_arrow = if ud_expanded { "▾" } else { "▸" };
                             let ud_style = if is_sel {
-                                Style::default()
-                                    .bg(theme::SUBTLE)
-                                    .fg(theme::USER_DIR)
-                                    .add_modifier(Modifier::BOLD)
+                                Style::default().add_modifier(Modifier::REVERSED | Modifier::BOLD)
                             } else {
                                 Style::default().fg(theme::USER_DIR)
                             };
@@ -236,9 +227,7 @@ impl Widget for NavTree<'_> {
 
 fn file_entry_line(entry: &DocEntry, indent: &str, max_width: usize, selected: bool) -> Line<'static> {
     let style = file_style(selected);
-    let badge_style = Style::default()
-        .fg(theme::TEXT_DIM)
-        .bg(Color::Rgb(45, 45, 60));
+    let badge_style = Style::default().fg(theme::ACCENT);
     let date_style = Style::default().fg(theme::TEXT_DIM);
 
     let has_badge = !entry.doc_type.is_empty();
@@ -275,10 +264,7 @@ fn file_entry_line(entry: &DocEntry, indent: &str, max_width: usize, selected: b
 
 fn file_style(selected: bool) -> Style {
     if selected {
-        Style::default()
-            .bg(Color::Rgb(45, 50, 80))
-            .fg(Color::Rgb(220, 224, 242))
-            .add_modifier(Modifier::BOLD)
+        Style::default().add_modifier(Modifier::REVERSED | Modifier::BOLD)
     } else {
         Style::default().fg(theme::TEXT)
     }
