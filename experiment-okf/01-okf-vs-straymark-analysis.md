@@ -7,9 +7,15 @@
 
 OKF and StrayMark share the **same mechanics** — the "LLM-wiki pattern":
 markdown + YAML frontmatter + a graph of links + an agent that maintains the
-corpus — but operate in **orthogonal domains**. OKF describes *the data and
-systems agents consume*; StrayMark records *the governance of what agents do*.
-Not a frontal competitor; a strong validation of the design bet and a real
+corpus — which StrayMark reached **independently** (OKF credits Karpathy; we
+didn't get here from him). But they obey **opposite paradigms of AI use**: OKF
+builds cognition *for the agent* — lifting the burden of knowing the system off
+people, in line with the dominant long-running-autonomous-agent trend — while
+StrayMark builds cognition *for the agent and the human engineer together*,
+keeping a person oriented and in command. The domains differ too (OKF describes
+*the data and systems agents consume*; StrayMark records *the governance of what
+agents do*), but that's downstream of the deeper split: **who the knowledge is
+for.** Not a frontal competitor; a strong validation of the design bet and a real
 interoperability opportunity. The risk is **mindshare capture**, not
 replacement.
 
@@ -46,12 +52,24 @@ Google arrived — independently — at almost every design decision StrayMark m
 | Tolerant consumption | broken links are "not-yet-written knowledge", unknown keys preserved | dangling refs kept as first-class `resolved:false` edges |
 
 That Google converged on markdown+frontmatter+graph+agent is the strongest
-possible evidence the bet was right. They even cite Karpathy and the "LLM-wiki
-pattern" as the genesis — the same intuition under StrayMark.
+possible evidence the bet was right — *because the two projects started from
+different places.* OKF cites Karpathy and the "LLM-wiki pattern" as its genesis;
+StrayMark reached the same intuition on its own, without that lineage. Independent
+arrival at the same primitives is what makes the convergence evidence rather than
+imitation.
 
-## 4. The decisive difference: domain and intent
+## 4. The decisive difference: who the knowledge is for
 
 This is where they stop touching.
+
+The split isn't only domain; it's **who each format's knowledge is ultimately
+for.** OKF encodes a system so an *agent* can understand and operate it with as
+little human involvement as possible — the autonomous-agent direction the industry
+is racing toward. StrayMark encodes how a system was built so a *human engineer*
+stays oriented and in command alongside the agent — the "AI-augmented engineering"
+position, where the human is repositioned into judgment and direction, not
+displaced. One faces the agent; the other faces the agent **and** the human at
+once. The domain difference below is a consequence of that, not the root of it:
 
 - **OKF = a semantic / context layer over data.** It encodes *what this table
   means, what this metric is, the join paths, the runbook* so an AI agent can

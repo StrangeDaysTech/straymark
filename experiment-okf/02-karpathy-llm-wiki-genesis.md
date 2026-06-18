@@ -1,12 +1,15 @@
-# The Karpathy gist — genesis of the LLM-wiki pattern, and what it means for StrayMark
+# The Karpathy gist — OKF's headwater, and an independent check on StrayMark's bets
 
 *Prepared 2026-06-17. Source: Andrej Karpathy, gist `442a6bf555914893e9891c11519de94f`
 (the pattern OKF's announcement explicitly credits as its origin), plus the
 community replies on that gist.*
 
 This is the "extra analysis step" requested: the gist is the intellectual
-headwater both OKF and StrayMark drink from, and its comment thread already
-mapped out the failure modes — several of which StrayMark answers by design.
+headwater **OKF's lineage** drinks from — StrayMark reached the same shape
+independently, without knowledge of it. What makes the gist worth reading anyway
+is its comment thread, which already mapped out the pattern's failure modes —
+several of which StrayMark answers by design. That's **corroboration, not
+inheritance.**
 
 ## 1. The proposal
 
@@ -32,10 +35,10 @@ rather than auto-resolving). The rationale: humans find wiki upkeep tedious;
 it in Vannevar Bush's 1945 Memex — associative trails that finally have a tireless
 maintainer.
 
-## 2. Why this is StrayMark's DNA too
+## 2. Where StrayMark lands on the same shape — independently
 
-StrayMark is, structurally, an instance of this pattern aimed at one domain —
-software governance:
+StrayMark independently lands on the same structural shape, aimed at one domain —
+software governance. It didn't derive from the pattern; it converges with it:
 
 | Karpathy's pattern | StrayMark |
 |---|---|
@@ -47,9 +50,12 @@ software governance:
 | Lint (contradictions/stale/orphans/gaps) | `validate`, `charter drift`, follow-ups drift, dangling-ref classification |
 | "LLMs don't forget cross-references" | typed frontmatter links resolved by `core::graph` |
 
-So OKF and StrayMark are **siblings, not rivals** — two specializations of the
-same parent idea. OKF specializes it for *data context*; StrayMark for
-*development governance*.
+So OKF and StrayMark are **convergent, not derivative** — two projects that
+arrived at the same shape from different starting points (OKF down Karpathy's
+lineage, StrayMark on its own) and specialized it differently. And not only for
+different domains — *data context* vs *development governance* — but for different
+**readers**: OKF builds cognition for the agent; StrayMark builds it for the agent
+and the human engineer together.
 
 ## 3. The community replies already mapped the failure modes — and StrayMark answers several
 
@@ -97,10 +103,11 @@ where StrayMark's opinionation earns its keep.
 
 ## 4. Takeaways
 
-1. **Convergence at three levels.** The same idea produced (a) Karpathy's
+1. **Convergence, not descent.** The same shape recurs across (a) Karpathy's
    pattern, (b) Google's OKF spec, (c) community implementations (memwiki), and
-   (d) StrayMark — independently. The pattern is no longer a differentiator; the
-   **domain and the opinionation** are.
+   (d) StrayMark — which reached it independently, with no knowledge of the gist.
+   The pattern is no longer a differentiator; the **reader it serves** (agent
+   alone vs agent + human) and the **opinionation** are.
 2. **StrayMark answers the gist's hardest critique.** Typed edges that preserve
    contradiction (pursultani) are designed-in via `supersedes`/`alternatives`/TDE
    — exactly where OKF chose untyped links. This is the sharpest line to draw.
