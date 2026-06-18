@@ -1,6 +1,6 @@
 [package]
 name = "straymark-cli"
-version = "3.28.0"
+version = "3.28.1"
 edition = "2021"
 description = "CLI for StrayMark — the cognitive discipline your AI-assisted projects need"
 license = "MIT"
@@ -15,6 +15,14 @@ include = ["src/**/*", "Cargo.toml", "README.md"]
 [[bin]]
 name = "straymark"
 path = "src/main.rs"
+
+# Internal build tool (regenerates dist/.codex/skills from dist/.claude/skills).
+# Gated behind the non-default `dev-tools` feature so `cargo install straymark-cli`
+# does NOT install it — only the `straymark` binary ships to users.
+[[bin]]
+name = "gen_codex_skills"
+path = "src/bin/gen_codex_skills.rs"
+required-features = ["dev-tools"]
 
 [dependencies]
 straymark-core = { version = "0.8.0", path = "../core" }
@@ -47,6 +55,8 @@ glob = { version = "0.3", optional = true }
 default = ["tui", "analyze"]
 tui = ["ratatui", "crossterm", "pulldown-cmark"]
 analyze = ["arborist-metrics", "regex", "glob"]
+# Enables the internal `gen_codex_skills` build tool (dev/CI only, not installed).
+dev-tools = []
 
 [dev-dependencies]
 assert_cmd = "2"
