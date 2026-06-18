@@ -7,6 +7,24 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.28.2 — 2026-06-18
+
+### Fixed (CLI)
+
+- **`straymark explore` TUI is now legible on light terminals.** The explore
+  TUI shipped a hard-coded dark (Catppuccin-inspired) palette built from fixed
+  `Color::Rgb(...)` values and painted its own dark background over the whole
+  screen, so it ignored the terminal's theme — on a light-background terminal
+  the body text rendered nearly invisible (dark-on-dark). The TUI now defers to
+  the terminal: backgrounds use `Color::Reset` (no forced fill), body text uses
+  the terminal's default foreground, accents use the 16 standard ANSI colors
+  (which the terminal remaps per its active theme), and code chips / selected
+  rows use reverse video instead of a fixed background. Result: `explore` is
+  readable on both light and dark terminals with zero configuration — the same
+  principle the rest of the CLI already follows.
+
+---
+
 ## CLI 3.28.1 — 2026-06-17
 
 ### Fixed (CLI)

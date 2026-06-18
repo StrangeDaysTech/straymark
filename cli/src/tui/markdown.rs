@@ -169,9 +169,11 @@ pub fn markdown_to_lines(markdown: &str, available_width: usize) -> Vec<Line<'st
                         .max()
                         .unwrap_or(0);
                     let target_width = max_natural.min(inner_width).max(1);
-                    let code_bg = Style::default()
-                        .fg(Color::Rgb(210, 215, 235))
-                        .bg(Color::Rgb(45, 45, 60));
+                    // Reverse video instead of a fixed bg: the "code card" then
+                    // contrasts against whatever background the terminal uses,
+                    // light or dark. The uniform-width padding keeps the
+                    // inverted block clean across wrapped lines.
+                    let code_style = Style::default().add_modifier(Modifier::REVERSED);
 
                     for code_line in &code_block_lines {
                         for chunk in wrap_visual_columns(code_line, inner_width) {
@@ -183,7 +185,7 @@ pub fn markdown_to_lines(markdown: &str, available_width: usize) -> Vec<Line<'st
                             if content_indent > 0 {
                                 spans.push(Span::raw(" ".repeat(content_indent)));
                             }
-                            spans.push(Span::styled(padded, code_bg));
+                            spans.push(Span::styled(padded, code_style));
                             lines.push(Line::from(spans));
                         }
                     }
@@ -266,9 +268,11 @@ pub fn markdown_to_lines(markdown: &str, available_width: usize) -> Vec<Line<'st
                 if in_table_cell {
                     cell_text.push_str(&format!("`{code}`"));
                 } else {
+                    // Inline code as a reverse-video chip — adapts to the
+                    // terminal's light/dark theme instead of a fixed gray box.
                     current_spans.push(Span::styled(
                         format!(" {code} "),
-                        Style::default().fg(theme::TEXT).bg(Color::Rgb(60, 60, 60)),
+                        Style::default().add_modifier(Modifier::REVERSED),
                     ));
                 }
             }
@@ -339,7 +343,7 @@ fn heading_indent_level(level: HeadingLevel) -> usize {
 
 fn heading_style(_level: HeadingLevel) -> Style {
     Style::default()
-        .fg(Color::Rgb(250, 179, 135))
+        .fg(Color::Yellow)
         .add_modifier(Modifier::BOLD)
 }
 
@@ -924,19 +928,19 @@ mod tests {
     }
 
     /// Blank lines inside a code block must still emit a styled Line so the
-    /// gutter background runs continuously. Without this, the screenshot
+    /// reverse-video "card" runs continuously. Without this, the screenshot
     /// the user reported showed truncated stripes between content rows.
     #[test]
     fn code_block_blank_lines_keep_background() {
         let md = "```\nfirst\n\nthird\n```\n";
         let lines = markdown_to_lines(md, 80);
-        // First, blank, third → 3 styled lines.
+        // First, blank, third → 3 styled lines (reverse-video code card).
         let styled: Vec<_> = lines
             .iter()
             .filter(|l| {
                 l.spans
                     .iter()
-                    .any(|s| s.style.bg == Some(Color::Rgb(45, 45, 60)))
+                    .any(|s| s.style.add_modifier.contains(Modifier::REVERSED))
             })
             .collect();
         assert_eq!(

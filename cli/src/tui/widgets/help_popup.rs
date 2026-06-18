@@ -42,7 +42,7 @@ impl Widget for HelpPopup<'_> {
             .add_modifier(Modifier::BOLD);
         let desc_style = Style::default().fg(theme::TEXT);
         let section_style = Style::default()
-            .fg(Color::Rgb(250, 179, 135))
+            .fg(Color::Yellow)
             .add_modifier(Modifier::BOLD);
         let dim = Style::default().fg(theme::TEXT_DIM);
 
