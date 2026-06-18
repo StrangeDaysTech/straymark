@@ -191,7 +191,10 @@ jobs:
           # straymark-cli depends on straymark-core by version; the core crate
           # must exist on crates.io before the CLI can be published.
           CORE_VERSION=$(grep '^version' core/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
-          if curl -fsSL "https://crates.io/api/v1/crates/straymark-core/$CORE_VERSION" | grep -q '"num"'; then
+          # crates.io rejects requests without a User-Agent with HTTP 403; without
+          # -A the guard always took the publish branch and re-published an existing
+          # version (broke the cli-3.28.1 release). Send a UA so the check works.
+          if curl -fsSL -A "straymark-release-ci (https://straymark.dev)" "https://crates.io/api/v1/crates/straymark-core/$CORE_VERSION" | grep -q '"num"'; then
             echo "straymark-core $CORE_VERSION already published — skipping"
           else
             cargo publish --manifest-path core/Cargo.toml --allow-dirty
