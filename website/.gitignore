@@ -11,6 +11,9 @@
 # Output of scripts/sync-docs-i18n.ts (regenerated at prestart/prebuild)
 /i18n/*/docusaurus-plugin-content-docs/
 
+# Output of scripts/gen-llms-full.ts (regenerated at prestart/prebuild)
+/static/llms-full.txt
+
 # Misc
 .DS_Store
 .env.local

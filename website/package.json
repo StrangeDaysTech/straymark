@@ -5,10 +5,11 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "sync:docs": "tsx scripts/sync-docs-i18n.ts",
+    "generate:llms": "tsx scripts/gen-llms-full.ts",
     "migrate:blog": "tsx scripts/migrate-blog.ts",
-    "prestart": "npm run sync:docs",
+    "prestart": "npm run sync:docs && npm run generate:llms",
     "start": "docusaurus start",
-    "prebuild": "npm run sync:docs",
+    "prebuild": "npm run sync:docs && npm run generate:llms",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",

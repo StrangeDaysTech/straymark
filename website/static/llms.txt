@@ -1,0 +1,31 @@
+# StrayMark
+
+> StrayMark is a governance framework for AI-assisted software development:
+> documentation templates, governance policies, and agent directives, managed by
+> the `straymark` Rust CLI that installs and maintains the framework in a project.
+> It keeps human- and agent-authored docs compliant, traceable, and current.
+
+The full text of the documentation is concatenated at /llms-full.txt. The site is
+also available in Spanish (/es/) and Simplified Chinese (/zh-CN/); the links below
+point at the canonical English pages.
+
+## Docs
+
+- [Introduction](https://straymark.dev/docs): what StrayMark is and how to get started.
+- [Adoption Guide](https://straymark.dev/docs/adopters/ADOPTION-GUIDE): install StrayMark and adopt it in a new or existing project.
+- [CLI Reference](https://straymark.dev/docs/adopters/CLI-REFERENCE): every command of the `straymark` binary.
+- [Workflows](https://straymark.dev/docs/adopters/WORKFLOWS): recommended day-to-day workflows.
+- [Loom](https://straymark.dev/docs/adopters/LOOM): the experimental knowledge-graph / architecture visualization component.
+- [Adopter Feedback](https://straymark.dev/docs/adopters/ADOPTER-FEEDBACK): how to send feedback as an adopter.
+
+## Contributors
+
+- [Contributors Overview](https://straymark.dev/docs/contributors): resources for people contributing to StrayMark.
+- [Design Principles](https://straymark.dev/docs/contributors/DESIGN-PRINCIPLES): the principles behind the framework's shape.
+- [What is a Charter](https://straymark.dev/docs/contributors/WHAT-IS-A-CHARTER): the charter concept and how charters work.
+- [Translation Guide](https://straymark.dev/docs/contributors/TRANSLATION-GUIDE): how to translate the docs.
+
+## Optional
+
+- [Full documentation](https://straymark.dev/llms-full.txt): every doc page concatenated into one file.
+- [Blog](https://straymark.dev/blog): the StrayMark chronicle — how the framework emerged, decision by decision.
