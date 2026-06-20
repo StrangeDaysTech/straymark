@@ -7,6 +7,59 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.30.0 / CLI 3.29.0 / Core 0.9.0 — 2026-06-20
+
+Adopter-feedback consolidation: four validator gaps from a 150-doc housekeeping
+pass (#215) plus two Charter-workflow friction fixes (#207, #208), reported by
+the Sentinel and lnxdrive adopters.
+
+### Added (CLI)
+
+- **META-003 now suggests the nearest canonical status** (#215 Gap 4). Invalid
+  `status:` values get a `Did you mean '<x>'?` hint via a semantic alias map
+  (`done`/`completed`/`closed` → `accepted`, …) with a Levenshtein fallback for
+  typos.
+- **`charter audit --prepare` warns on multi-batch under-coverage** (#208). When
+  the Charter (or its referenced AILOGs) has completed batches in the Batch
+  Ledger and no explicit `--range` was given, the CLI warns that the default
+  `origin/main..HEAD` excludes already-merged phases and recommends an explicit
+  range — turning a silent under-coverage into a visible one.
+
+### Changed (CLI)
+
+- **OBS-001 vocabulary widened** (#215 Gap 1). The observability content check is
+  now case-insensitive over a broad term set (`otel`, `metric`/`métrica`, `span`,
+  `trace`, `dashboard`, `collector`, `alert`, `slog`, `histogram`, `telemetr`, …),
+  eliminating the false positives the narrow literal set produced.
+- **`charter status` no longer advertises shipped commands as unavailable**
+  (#207). Removed the stale "Phase 2 features (not yet available)" block that
+  listed `charter drift` / `charter close` as `planned cli-3.7.0`.
+
+### Added (Core)
+
+- **Charter `execution_ailogs` + `context_spec` fields** (#215 Gap 2) — bless the
+  documented close-time AILOG aggregation and area-context spec for dual-origin
+  Charters, keeping `originating_ailogs`/`originating_spec` mutually exclusive.
+  Wired into the architecture `implemented` overlay and the knowledge-graph edges;
+  `CHARTER-AILOG-REF`/`CHARTER-SPEC-REF` cover the new fields.
+- **`CHARTER-FILES-EXIST` exemption markers** (#215 Gap 3) — `(external)`,
+  `(removed)`, `(relocated: <path>)` alongside `(new)`, so a closed Charter's
+  historical table can carry cross-repo / relocated / removed paths. Unmarked
+  missing paths (e.g. unsubstituted placeholders) are still flagged.
+
+### Changed (Framework)
+
+- **Charter schema** gains `execution_ailogs` + `context_spec` (mutual-exclusion
+  unchanged); **charter + AILOG templates** (EN/es/zh-CN) document the new fields,
+  the `status:` lifecycle vocabulary inline, and the `charter drift --range`
+  syntax (dropping stale "Phase 2" language).
+- **Skills**: `straymark-charter-new` documents the dual-origin fields;
+  `straymark-audit-prompt` documents the multi-batch `--range` pitfall.
+- **Docs**: CLI-REFERENCE (EN/es/zh-CN) documents the `charter audit --range`
+  multi-batch pitfall.
+
+---
+
 ## Framework 4.29.0 — 2026-06-20
 
 Agent-native skills for the architecture model and the Loom lifecycle (#281) —
