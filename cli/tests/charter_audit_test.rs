@@ -1010,3 +1010,69 @@ fn audit_prepare_uses_en_canonical_when_language_en() {
     assert!(!resolved.contains("## Tu rol"));
 }
 
+
+/// #208: a Charter whose AILOG batch ledger has a completed batch triggers a
+/// multi-batch under-coverage warning when prepared WITHOUT an explicit --range,
+/// and stays silent WITH an explicit range.
+#[test]
+fn audit_prepare_warns_on_multibatch_without_explicit_range() {
+    if !bash_available() {
+        eprintln!("skipping: git not available");
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+
+    // AILOG with a Batch Ledger: Batch 1 completed, Batch 2 still pending.
+    let ailog = "\
+---
+id: AILOG-2026-06-20-001-exec
+title: Execution log
+status: accepted
+---
+
+## Batch Ledger
+
+### Batch 1 — Phase one
+
+Done on 2026-06-19. Files: src/foo.rs.
+
+### Batch 2 — Phase two
+
+(pending)
+";
+    std::fs::write(
+        dir.path().join(".straymark/07-ai-audit/agent-logs/AILOG-2026-06-20-001-exec.md"),
+        ailog,
+    )
+    .unwrap();
+
+    // Charter referencing that AILOG.
+    let charters = dir.path().join(".straymark/charters");
+    std::fs::create_dir_all(&charters).unwrap();
+    std::fs::write(
+        charters.join("01-multibatch.md"),
+        "---\ncharter_id: CHARTER-01\nstatus: in-progress\neffort_estimate: M\ntrigger: \"t\"\noriginating_ailogs: [AILOG-2026-06-20-001-exec]\n---\n\n# Charter: Multibatch\n\n## Files to modify\n\n| File | Change |\n|---|---|\n| `src/foo.rs` | edit |\n",
+    )
+    .unwrap();
+    init_repo_with_diff(dir.path());
+
+    // Without --range: the warning fires.
+    cargo_bin_cmd!("straymark")
+        .args(["charter", "audit", "CHARTER-01", "--prepare", "--path"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("completed batches"))
+        .stderr(predicate::str::contains("under-cover"));
+
+    // With explicit --range: the warning is suppressed.
+    cargo_bin_cmd!("straymark")
+        .args([
+            "charter", "audit", "CHARTER-01", "--prepare", "--range", "HEAD~1..HEAD", "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("completed batches").not());
+}

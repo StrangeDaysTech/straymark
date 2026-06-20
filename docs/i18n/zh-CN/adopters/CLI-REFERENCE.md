@@ -686,7 +686,7 @@ OK `### Batch 5` written.
 | 参数/标志 | 默认值 | 描述 |
 |---|---|---|
 | `<CHARTER-ID>` | — | 与 `charter status` 相同的解析规则。 |
-| `--range` | `HEAD~1..HEAD` | 审计员将审查的 git 修订范围。 |
+| `--range` | `origin/main..HEAD`（回退到 `origin/master..HEAD`，再到 `HEAD~1..HEAD` 并告警） | 审计员将审查的 git 修订范围。**多批次陷阱：** 对于早期阶段已合并到基础分支的章程，做按阶段审计时，默认的 `origin/main..HEAD` 会*排除*已合并的提交，从而静默地覆盖不足——请传入显式的 `--range <章程首个提交>..HEAD` 以覆盖整个阶段。当 `--prepare` 检测到已完成批次且未指定显式范围时会打印告警。 |
 | `--calibrate` | off | 运行步骤 2。与 `--finalize` 互斥。 |
 | `--finalize` | off | 运行步骤 3。与 `--calibrate` 互斥。 |
 | `--path` | `.` | 项目目录。 |

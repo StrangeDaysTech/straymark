@@ -39,6 +39,8 @@ The CLI writes the resolved prompt to:
 
 The prompt is self-contained: it embeds the Charter content, the originating AILOGs, the git diff over the resolved range (default `origin/main..HEAD`, falls back to `HEAD~1..HEAD` if no upstream is reachable), and the discipline rules (REGLA ABSOLUTA — SOLO LECTURA, evidence-citation, severity calibration). The prompt template lifts the seven universal sections from Sentinel's pre-StrayMark audit skill and parameterizes the project-specific hardcodes.
 
+> **Multi-batch Charters — pass an explicit `--range`.** When auditing one phase of a Charter whose earlier phases already merged to the base branch, the default `origin/main..HEAD` *excludes* the already-merged commits and the prompt silently under-covers the phase. Pass `--range <charter-first-commit>..HEAD` so all of the phase's commits are in the diff. The CLI prints a warning when it detects completed batches in the Charter's Batch Ledger and no explicit range was given.
+
 The CLI does NOT invoke any LLM. It only resolves placeholders.
 
 ### 3. Notify the operator

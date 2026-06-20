@@ -85,10 +85,6 @@ fn print_detail(c: &Charter, project_root: &std::path::Path) {
     }
 
     println!();
-    println!("  {}", "Phase 2 features (not yet available):".dimmed());
-    println!("    {}", "telemetry — straymark charter close (planned cli-3.7.0)".dimmed());
-    println!("    {}", "drift-check — straymark charter drift (planned cli-3.7.0)".dimmed());
-    println!();
 }
 
 fn print_recent(charters: &[Charter]) {

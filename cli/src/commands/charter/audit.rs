@@ -114,6 +114,7 @@ pub fn run(
     let audit_dir = straymark_dir.join("audits").join(&canonical_id);
     utils::ensure_dir(&audit_dir)?;
 
+    let range_explicit = range.is_some();
     let range = match range {
         Some(r) => r.to_string(),
         None => resolve_default_range(project_root),
@@ -166,7 +167,7 @@ pub fn run(
     // Default action: prepare. The --prepare flag is accepted for
     // self-documenting invocations but is also the implicit default.
     let _ = prepare;
-    run_prepare(project_root, &straymark_dir, &audit_dir, &charter, &range)
+    run_prepare(project_root, &straymark_dir, &audit_dir, &charter, &range, range_explicit)
 }
 
 // ── Step 1: prepare ────────────────────────────────────────────────────────
@@ -177,6 +178,7 @@ fn run_prepare(
     audit_dir: &Path,
     charter: &Charter,
     range: &str,
+    range_explicit: bool,
 ) -> Result<()> {
     println!(
         "{} {} ({})",
@@ -184,6 +186,29 @@ fn run_prepare(
         "audit prompt".bold(),
         charter.frontmatter.charter_id.dimmed()
     );
+
+    // #208: a multi-batch Charter whose earlier phases already merged to the base
+    // branch will silently under-cover when audited with the default range
+    // (origin/main..HEAD excludes the merged commits). Warn when completed batches
+    // are detected and the operator did not pin an explicit --range.
+    if !range_explicit {
+        let completed = completed_batch_numbers(project_root, charter);
+        if !completed.is_empty() {
+            let list = completed
+                .iter()
+                .map(|n| format!("Batch {n}"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            eprintln!(
+                "{} this Charter has completed batches ({list}) — earlier phases may \
+                 already be merged to the base branch. The default audit range \
+                 (origin/main..HEAD) EXCLUDES already-merged commits, so a phase-scoped \
+                 audit can silently under-cover. Pass --range <charter-first-commit>..HEAD \
+                 explicitly to span the whole phase.",
+                "warn:".yellow().bold()
+            );
+        }
+    }
 
     let context = build_audit_context(project_root, charter, range)?;
 
@@ -576,6 +601,44 @@ fn build_audit_context(
         // derive it from CLAUDE.md / config.yml.
         project_context: String::new(),
     })
+}
+
+/// Batch numbers marked completed in the Charter body or its referenced AILOGs'
+/// Batch Ledgers (an entry is completed when its body is not `(pending)`). A
+/// non-empty result signals earlier phases likely landed on the base branch
+/// already — the condition that makes the default audit range under-cover (#208).
+fn completed_batch_numbers(project_root: &Path, charter: &Charter) -> Vec<u32> {
+    let agent_logs = project_root
+        .join(".straymark")
+        .join("07-ai-audit")
+        .join("agent-logs");
+    let mut sources: Vec<String> = vec![charter.body.clone()];
+    let ids = charter
+        .frontmatter
+        .originating_ailogs
+        .iter()
+        .flatten()
+        .chain(charter.frontmatter.execution_ailogs.iter().flatten());
+    for id in ids {
+        let prefix = id.split('-').take(5).collect::<Vec<_>>().join("-");
+        if let Some(found) = walk_for_prefix(&agent_logs, &prefix) {
+            if let Ok(body) = std::fs::read_to_string(&found) {
+                sources.push(body);
+            }
+        }
+    }
+    let mut completed: Vec<u32> = Vec::new();
+    for src in &sources {
+        if let Some(entries) = crate::ailog::parse_batch_ledger(src) {
+            for e in entries {
+                if !e.is_pending && !completed.contains(&e.n) {
+                    completed.push(e.n);
+                }
+            }
+        }
+    }
+    completed.sort_unstable();
+    completed
 }
 
 fn read_originating_ailogs(project_root: &Path, charter: &Charter) -> Result<(String, String)> {

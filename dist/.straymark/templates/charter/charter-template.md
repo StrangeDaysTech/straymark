@@ -150,13 +150,13 @@ follow-up insights are captured if the risk surfaces lessons for a later cycle.]
    a bounded code-level fix, see STRAYMARK.md §15.B (post-close Batch N.4
    amendment) and `straymark charter amend` instead of opening a new Charter.
 7. Local verification passes clean.
-8. **Auto-checklist drift** (when Phase 2 of the CLI roadmap ships):
-   `straymark charter drift CHARTER-NN <range>` to detect drifts between declared
-   and modified files **before** commit. If it reports omissions, complete the work
+8. **Auto-checklist drift**:
+   `straymark charter drift CHARTER-NN --range <range>` to detect drifts between
+   declared and modified files **before** commit (the range is optional; it defaults
+   to `HEAD~1..HEAD`). If it reports omissions, complete the work
    or document in the AILOG under `## Risk` as `R<N+1> (new, not in Charter)`. If it
    reports scope expansion, document in the AILOG the reason (mock updates, generated
-   files, drift fix pre-existing, etc.). Until Phase 2 ships, run Sentinel's
-   `check-plan-drift.sh` manually for the same effect.
+   files, drift fix pre-existing, etc.).
 9. Commit + push + open PR.
 
 ## Charter Closure
@@ -171,10 +171,9 @@ When closing this Charter:
    stale and confuses future readers (PLAN-07 of Sentinel demonstrated the failure
    mode that this step prevents).
 
-2. **Post-merge drift check** (automated when Phase 2 ships + manual review):
-   - Run `straymark charter drift CHARTER-NN origin/main..HEAD` (Phase 2) or the
-     equivalent Sentinel script, and validate the output is clean or that all
-     drifts are documented in the AILOG.
+2. **Post-merge drift check**:
+   - Run `straymark charter drift CHARTER-NN --range origin/main..HEAD`, and
+     validate the output is clean or that all drifts are documented in the AILOG.
    - This catches the rare case where drift is introduced post-merge (squash
      mangling, admin amendments, etc.) and the atomic step in #1 could not apply.
 
@@ -241,8 +240,8 @@ v3 addition" — the partition was Sentinel's iteration log, not structural).
    Sentinel 2026-05-02-001 formalized the gap and proposed format v4 (this template
    embodies it).
 
-6. Auto-checklist drift (`straymark charter drift`, Phase 2 of the CLI roadmap;
-   Sentinel had `scripts/check-plan-drift.sh`) runs in pre-commit (Tasks #7) and at
+6. Auto-checklist drift (`straymark charter drift`; Sentinel originally had
+   `scripts/check-plan-drift.sh`) runs in pre-commit (Tasks #7) and at
    Charter closure. Detects OMISSION drifts (file declared, not touched) and SCOPE
    EXPANSION drifts (file touched, not declared). Reason: external auditors caught
    implementation-gap and hallucination drifts that the implementer did not document
