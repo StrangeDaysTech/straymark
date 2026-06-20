@@ -142,10 +142,15 @@ fn closed_ailog_files(root: &Path, charters: &[Charter]) -> Vec<String> {
         if c.frontmatter.status != CharterStatus::Closed {
             continue;
         }
-        let ids = match &c.frontmatter.originating_ailogs {
-            Some(ids) => ids,
-            None => continue,
-        };
+        // Both the origin AILOGs and the close-time execution AILOGs (#215 Gap 2)
+        // are real implementation evidence; a spec-originated Charter only records
+        // the latter, so fold both into the `implemented` signal.
+        let ids = c
+            .frontmatter
+            .originating_ailogs
+            .iter()
+            .flatten()
+            .chain(c.frontmatter.execution_ailogs.iter().flatten());
         for id in ids {
             if let Some(path) = ailog::find_ailog_file(&agent_logs_dir, id) {
                 if let Ok(content) = std::fs::read_to_string(&path) {

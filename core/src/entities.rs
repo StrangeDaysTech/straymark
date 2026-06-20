@@ -58,6 +58,8 @@ struct CharterFm {
     charter_id: Option<String>,
     status: Option<String>,
     originating_ailogs: Option<Vec<String>>,
+    #[serde(default)]
+    execution_ailogs: Option<Vec<String>>,
 }
 
 fn discover_charters(straymark_dir: &Path, out: &mut Vec<Entity>) {
@@ -74,7 +76,14 @@ fn discover_charters(straymark_dir: &Path, out: &mut Vec<Entity>) {
             continue;
         };
         let mut links = Vec::new();
-        for ailog in fm.originating_ailogs.unwrap_or_default() {
+        // Origin AILOGs and close-time execution AILOGs (#215 Gap 2) both connect
+        // the Charter to its AILOGs in the knowledge graph.
+        for ailog in fm
+            .originating_ailogs
+            .into_iter()
+            .flatten()
+            .chain(fm.execution_ailogs.into_iter().flatten())
+        {
             links.push((EdgeType::OriginatesFrom, ailog));
         }
         out.push(Entity {

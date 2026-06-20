@@ -75,6 +75,16 @@ pub struct CharterFrontmatter {
     pub originating_ailogs: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub originating_spec: Option<String>,
+    /// AILOGs this Charter aggregated at close time, when its true origin is a
+    /// spec. Distinct from `originating_ailogs` (the *origin*) so a spec-born
+    /// Charter that accrues execution AILOGs stays single-origin instead of
+    /// tripping the schema's exactly-one rule (#215 Gap 2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub execution_ailogs: Option<Vec<String>>,
+    /// A spec that frames the area of an AILOG-originated Charter (context, not
+    /// origin). Counterpart of `execution_ailogs` for the spec direction (#215).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub context_spec: Option<String>,
 }
 
 /// A parsed Charter document from disk.
@@ -595,6 +605,8 @@ Body.
                 Origin::Spec(s) => Some(s.clone()),
                 _ => None,
             },
+            execution_ailogs: None,
+            context_spec: None,
         };
         // Build a realistic filename: NN-slug.md (mirrors what `charter new` produces).
         // Strip the CHARTER- prefix from the ID to derive the on-disk filename.

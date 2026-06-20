@@ -181,45 +181,51 @@ pub fn validate_charters(project_root: &Path, straymark_dir: &Path) -> (Validati
             None => continue,
         };
 
-        // CHARTER-AILOG-REF: every originating AILOG ID must resolve to a file.
-        if let Some(ailogs) = &typed.originating_ailogs {
-            for ailog_id in ailogs {
-                if !ailog_exists(straymark_dir, ailog_id) {
-                    result.errors.push(ValidationIssue {
-                        file: path.clone(),
-                        rule: "CHARTER-AILOG-REF".to_string(),
-                        message: format!(
-                            "originating_ailogs references missing AILOG: {}",
-                            ailog_id
-                        ),
-                        severity: Severity::Error,
-                        fix_hint: Some(format!(
-                            "Either create the AILOG (e.g., `straymark new --doc-type ailog`) or \
-                             remove '{}' from originating_ailogs if it was a typo.",
-                            ailog_id
-                        )),
-                    });
-                }
+        // CHARTER-AILOG-REF: every AILOG ID (origin and close-time execution,
+        // #215 Gap 2) must resolve to a file.
+        let ailog_refs = typed
+            .originating_ailogs
+            .iter()
+            .flatten()
+            .map(|id| ("originating_ailogs", id))
+            .chain(
+                typed
+                    .execution_ailogs
+                    .iter()
+                    .flatten()
+                    .map(|id| ("execution_ailogs", id)),
+            );
+        for (field, ailog_id) in ailog_refs {
+            if !ailog_exists(straymark_dir, ailog_id) {
+                result.errors.push(ValidationIssue {
+                    file: path.clone(),
+                    rule: "CHARTER-AILOG-REF".to_string(),
+                    message: format!("{field} references missing AILOG: {ailog_id}"),
+                    severity: Severity::Error,
+                    fix_hint: Some(format!(
+                        "Either create the AILOG (e.g., `straymark new --doc-type ailog`) or \
+                         remove '{ailog_id}' from {field} if it was a typo."
+                    )),
+                });
             }
         }
 
-        // CHARTER-SPEC-REF: the originating_spec path must exist.
-        if let Some(spec_path) = &typed.originating_spec {
-            let abs = project_root.join(spec_path);
-            if !abs.exists() {
+        // CHARTER-SPEC-REF: the originating_spec / context_spec path must exist.
+        for (field, spec_path) in [
+            ("originating_spec", typed.originating_spec.as_ref()),
+            ("context_spec", typed.context_spec.as_ref()),
+        ] {
+            let Some(spec_path) = spec_path else { continue };
+            if !project_root.join(spec_path).exists() {
                 result.errors.push(ValidationIssue {
                     file: path.clone(),
                     rule: "CHARTER-SPEC-REF".to_string(),
-                    message: format!(
-                        "originating_spec references missing file: {}",
-                        spec_path
-                    ),
+                    message: format!("{field} references missing file: {spec_path}"),
                     severity: Severity::Error,
-                    fix_hint: Some(
+                    fix_hint: Some(format!(
                         "Pass a path that exists under the project root (e.g., \
-                         specs/001-feature/spec.md), or remove originating_spec if it was a typo."
-                            .to_string(),
-                    ),
+                         specs/001-feature/spec.md), or remove {field} if it was a typo."
+                    )),
                 });
             }
         }
@@ -236,7 +242,11 @@ pub fn validate_charters(project_root: &Path, straymark_dir: &Path) -> (Validati
         // REF-001 / REVIEW-PENDING precedent.
         if let Ok(charter) = straymark_core::charter::parse_charter(path) {
             for declared in straymark_core::charter_files::parse_files_to_modify(&charter.body) {
-                if declared.is_new || straymark_core::charter_files::is_wildcard(&declared.path) {
+                // Skip files created here (`new`) and marked cross-repo / removed /
+                // relocated paths (#215 Gap 3), plus wildcard git-range patterns.
+                if declared.is_existence_exempt()
+                    || straymark_core::charter_files::is_wildcard(&declared.path)
+                {
                     continue;
                 }
                 if !project_root.join(&declared.path).exists() {
@@ -684,20 +694,87 @@ fn check_id_matches_filename(result: &mut ValidationResult, doc: &StrayMarkDocum
     }
 }
 
+/// Common non-canonical status values observed in the field, mapped to the
+/// canonical lifecycle value (#215 minor note). These are *semantic synonyms*
+/// (e.g. `done` → `accepted`), not typos — edit distance alone would mis-suggest
+/// them, so they get an explicit alias table. Keys are lowercased.
+const STATUS_ALIASES: &[(&str, &str)] = &[
+    ("complete", "accepted"),
+    ("completed", "accepted"),
+    ("done", "accepted"),
+    ("closed", "accepted"),
+    ("final", "accepted"),
+    ("finished", "accepted"),
+    ("merged", "accepted"),
+    ("in-progress", "accepted"),
+    ("in_progress", "accepted"),
+    ("wip", "accepted"),
+    ("ongoing", "accepted"),
+    ("todo", "draft"),
+    ("open", "draft"),
+    ("new", "draft"),
+    ("wontfix", "deprecated"),
+    ("rejected", "deprecated"),
+    ("abandoned", "deprecated"),
+    ("obsolete", "superseded"),
+    ("replaced", "superseded"),
+    ("fixed", "resolved"),
+    ("addressed", "resolved"),
+];
+
+/// Levenshtein edit distance (iterative, two-row). No dependency for this in the
+/// repo, and it's only used to suggest a near-miss canonical status.
+fn levenshtein(a: &str, b: &str) -> usize {
+    let b_chars: Vec<char> = b.chars().collect();
+    let mut prev: Vec<usize> = (0..=b_chars.len()).collect();
+    let mut curr = vec![0usize; b_chars.len() + 1];
+    for (i, ca) in a.chars().enumerate() {
+        curr[0] = i + 1;
+        for (j, &cb) in b_chars.iter().enumerate() {
+            let cost = if ca == cb { 0 } else { 1 };
+            curr[j + 1] = (prev[j + 1] + 1).min(curr[j] + 1).min(prev[j] + cost);
+        }
+        std::mem::swap(&mut prev, &mut curr);
+    }
+    prev[b_chars.len()]
+}
+
+/// Suggest the canonical status nearest to an invalid one: first a known semantic
+/// alias, then a typo within edit distance 2 of a canonical value.
+fn suggest_status(invalid: &str) -> Option<&'static str> {
+    let lc = invalid.trim().to_lowercase();
+    if let Some((_, canonical)) = STATUS_ALIASES.iter().find(|(alias, _)| *alias == lc) {
+        return Some(canonical);
+    }
+    VALID_STATUSES
+        .iter()
+        .map(|&v| (v, levenshtein(&lc, v)))
+        .filter(|&(_, d)| d <= 2)
+        .min_by_key(|&(_, d)| d)
+        .map(|(v, _)| v)
+}
+
 /// META-003: Check that status has a valid value
 fn check_valid_status(result: &mut ValidationResult, doc: &StrayMarkDocument) {
     if let Some(status) = &doc.frontmatter.status {
         if !VALID_STATUSES.contains(&status.as_str()) {
+            let valid = VALID_STATUSES.join(", ");
+            let (message, fix_hint) = match suggest_status(status) {
+                Some(suggestion) => (
+                    format!("Invalid status '{status}'. Did you mean '{suggestion}'? Valid values: {valid}"),
+                    Some(format!("Set status to '{suggestion}' (the canonical value for this lifecycle state).")),
+                ),
+                None => (
+                    format!("Invalid status '{status}'. Valid values: {valid}"),
+                    Some(format!("Use one of the canonical lifecycle values: {valid}.")),
+                ),
+            };
             result.add(ValidationIssue {
                 file: doc.path.clone(),
                 rule: "META-003".to_string(),
-                message: format!(
-                    "Invalid status '{}'. Valid values: {}",
-                    status,
-                    VALID_STATUSES.join(", ")
-                ),
+                message,
                 severity: Severity::Error,
-                fix_hint: None,
+                fix_hint,
             });
         }
     }
@@ -1202,6 +1279,30 @@ fn check_sensitive_info(result: &mut ValidationResult, doc: &StrayMarkDocument) 
     }
 }
 
+/// Lowercase substrings that count as observability-related content for OBS-001.
+/// Kept broad on purpose: the rule only fires on docs already tagged
+/// `observabilidad`/`observability`, so the goal is to avoid false positives on
+/// docs that genuinely discuss instrumentation in mixed ES/EN vocabulary (#215).
+const OBS_KEYWORDS: &[&str] = &[
+    "## observability",
+    "## observabilidad",
+    "instrumentation",
+    "instrumentación",
+    "opentelemetry",
+    "observability_scope",
+    "otel",
+    "telemetr", // telemetry / telemetría
+    "metric",
+    "métrica",
+    "span",
+    "trace",
+    "dashboard",
+    "collector",
+    "alert",
+    "slog",
+    "histogram",
+];
+
 /// OBS-001: If document has tag 'observabilidad' or 'observability', check for relevant sections
 fn check_observability(result: &mut ValidationResult, doc: &StrayMarkDocument) {
     let has_obs_tag = doc.frontmatter.tags.as_ref().is_some_and(|tags| {
@@ -1209,12 +1310,14 @@ fn check_observability(result: &mut ValidationResult, doc: &StrayMarkDocument) {
     });
 
     if has_obs_tag {
-        let has_obs_section = doc.body.contains("## Observability")
-            || doc.body.contains("## Observabilidad")
-            || doc.body.contains("instrumentation")
-            || doc.body.contains("instrumentación")
-            || doc.body.contains("OpenTelemetry")
-            || doc.body.contains("observability_scope");
+        // The tag itself is the signal (the adopter rule motivating it is "record
+        // instrumentation-pipeline changes in an AILOG tagged observabilidad"), so
+        // the content check exists only to catch a tag pasted onto an unrelated doc.
+        // Match case-insensitively against a broad vocabulary: a narrow, case-sensitive
+        // literal set produced 19/19 false positives in the field (#215, Gap 1) — docs
+        // that talked about OTel / metrics / spans / dashboards but not the exact words.
+        let body_lc = doc.body.to_lowercase();
+        let has_obs_section = OBS_KEYWORDS.iter().any(|kw| body_lc.contains(kw));
 
         if !has_obs_section {
             result.add(ValidationIssue {
@@ -1519,5 +1622,106 @@ mod tests {
         let mut result = ValidationResult::default();
         check_china_type_specific(&mut result, &doc);
         assert!(result.errors.iter().any(|e| e.rule == "TYPE-006"));
+    }
+
+    // ----- OBS-001: observability content (#215 Gap 1) -----
+
+    fn obs_doc(body: &str) -> StrayMarkDocument {
+        let fm = Frontmatter {
+            id: Some("AILOG-2026-04-25-001".into()),
+            tags: Some(vec!["observabilidad".into()]),
+            ..Default::default()
+        };
+        make_doc("AILOG-2026-04-25-001-test.md", DocType::Ailog, fm, body)
+    }
+
+    #[test]
+    fn test_obs_001_flags_tagged_doc_without_content() {
+        let doc = obs_doc("This change refactors the parser and adds a CLI flag.");
+        let mut result = ValidationResult::default();
+        check_observability(&mut result, &doc);
+        assert!(result.warnings.iter().any(|w| w.rule == "OBS-001"));
+    }
+
+    #[test]
+    fn test_obs_001_accepts_broadened_vocabulary() {
+        // Mixed ES/EN observability terms that the old literal set missed (#215).
+        for body in [
+            "Added OTel spans to the request path.",
+            "New Grafana dashboard for p99 latency.",
+            "Configuré el otel-collector y métricas de histograma.",
+            "Emits a histogram metric and a trace per job.",
+            "slog structured logging wired to Cloud Monitoring alert policies.",
+        ] {
+            let doc = obs_doc(body);
+            let mut result = ValidationResult::default();
+            check_observability(&mut result, &doc);
+            assert!(
+                !result.warnings.iter().any(|w| w.rule == "OBS-001"),
+                "OBS-001 should not fire for body: {body:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_obs_001_skips_untagged_doc() {
+        let fm = Frontmatter {
+            id: Some("AILOG-2026-04-25-002".into()),
+            ..Default::default()
+        };
+        let doc = make_doc("AILOG-2026-04-25-002-test.md", DocType::Ailog, fm, "no tag here");
+        let mut result = ValidationResult::default();
+        check_observability(&mut result, &doc);
+        assert!(!result.warnings.iter().any(|w| w.rule == "OBS-001"));
+    }
+
+    // ----- META-003: status vocabulary suggestions (#215 Gap 4) -----
+
+    #[test]
+    fn test_suggest_status_semantic_aliases() {
+        assert_eq!(suggest_status("done"), Some("accepted"));
+        assert_eq!(suggest_status("completed"), Some("accepted"));
+        assert_eq!(suggest_status("in-progress"), Some("accepted"));
+        assert_eq!(suggest_status("WIP"), Some("accepted")); // case-insensitive
+        assert_eq!(suggest_status("obsolete"), Some("superseded"));
+    }
+
+    #[test]
+    fn test_suggest_status_typo_fallback() {
+        assert_eq!(suggest_status("acepted"), Some("accepted")); // distance 1
+        assert_eq!(suggest_status("draftt"), Some("draft")); // distance 1
+        assert_eq!(suggest_status("zzzzzzzz"), None); // nothing close
+    }
+
+    #[test]
+    fn test_meta_003_invalid_status_carries_suggestion() {
+        let fm = Frontmatter {
+            id: Some("AILOG-2026-04-25-003".into()),
+            status: Some("done".into()),
+            ..Default::default()
+        };
+        let doc = make_doc("AILOG-2026-04-25-003-test.md", DocType::Ailog, fm, "");
+        let mut result = ValidationResult::default();
+        check_valid_status(&mut result, &doc);
+        let issue = result
+            .errors
+            .iter()
+            .find(|e| e.rule == "META-003")
+            .expect("META-003 expected");
+        assert!(issue.message.contains("Did you mean 'accepted'?"), "msg: {}", issue.message);
+        assert!(issue.fix_hint.as_deref().unwrap_or("").contains("accepted"));
+    }
+
+    #[test]
+    fn test_meta_003_accepts_canonical_status() {
+        let fm = Frontmatter {
+            id: Some("AILOG-2026-04-25-004".into()),
+            status: Some("accepted".into()),
+            ..Default::default()
+        };
+        let doc = make_doc("AILOG-2026-04-25-004-test.md", DocType::Ailog, fm, "");
+        let mut result = ValidationResult::default();
+        check_valid_status(&mut result, &doc);
+        assert!(!result.errors.iter().any(|e| e.rule == "META-003"));
     }
 }

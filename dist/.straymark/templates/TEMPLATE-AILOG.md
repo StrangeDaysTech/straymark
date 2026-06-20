@@ -1,7 +1,7 @@
 ---
 id: AILOG-YYYY-MM-DD-NNN
 title: [Descriptive title of the action]
-status: accepted
+status: accepted        # draft | review | accepted (lifecycle) — see DOCUMENTATION-POLICY §3
 created: YYYY-MM-DD
 agent: [agent-name-v1.0]
 confidence: high | medium | low

@@ -186,6 +186,8 @@ mod tests {
                 trigger: "x".to_string(),
                 originating_ailogs: None,
                 originating_spec: None,
+                execution_ailogs: None,
+                context_spec: None,
             },
             body: body.to_string(),
         }

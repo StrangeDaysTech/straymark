@@ -87,4 +87,4 @@ StrayMark: Created CHARTER-NN-slug at .straymark/charters/NN-slug.md
 
 - It does not flip status to `in-progress` or `closed`. Lifecycle transitions are operator decisions.
 - It does not run drift or audit. Use `straymark charter drift` and the audit-prompt / audit-execute / audit-review skills for those phases.
-- It does not replace AILOGs. Day-to-day work inside the Charter still produces AILOGs; the Charter aggregates them via `originating_ailogs:`.
+- It does not replace AILOGs. Day-to-day work inside the Charter still produces AILOGs. Record where they go by the Charter's origin: an AILOG-originated Charter lists them in `originating_ailogs:`; a spec-originated Charter (with `originating_spec:`) aggregates its execution AILOGs in `execution_ailogs:` at close — `originating_ailogs` and `originating_spec` stay mutually exclusive (exactly-one), and `execution_ailogs` / `context_spec` carry the other side without tripping it.

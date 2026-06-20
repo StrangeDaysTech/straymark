@@ -8,6 +8,11 @@ trigger: "[一行：哪个具体信号 — 可观察的事件、声明的决策�
 # 转为 in-progress 之前必须填写）。
 # originating_ailogs: [AILOG-YYYY-MM-DD-NNN]
 # originating_spec: specs/001-feature/spec.md
+# 由 spec 发起、在执行中累积 AILOG 的 Charter 在关闭时将它们记录在此处
+#（不要放进 originating_ailogs——它仍是唯一来源）。spec-作为-上下文的对应字段：
+# context_spec。两者都不受"恰好一个"规则约束。
+# execution_ailogs: [AILOG-YYYY-MM-DD-NNN]
+# context_spec: specs/001-feature/spec.md
 ---
 
 # Charter: [简短标题]
