@@ -234,4 +234,4 @@ Marcar `review_required: true` cuando:
 
 ---
 
-*StrayMark fw-4.28.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.29.0 | [Strange Days Tech](https://strangedays.tech)*

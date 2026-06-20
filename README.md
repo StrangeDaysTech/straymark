@@ -277,7 +277,7 @@ StrayMark uses independent version tags for each component:
 
 | Component | Tag prefix | Example | Includes |
 | --- | --- | --- | --- |
-| Framework | `fw-` | `fw-4.28.0` | Templates (12 types), governance, directives, Charter template + schema |
+| Framework | `fw-` | `fw-4.29.0` | Templates (12 types), governance, directives, Charter template + schema |
 | CLI | `cli-` | `cli-3.28.2` | The `straymark` binary |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | The `straymark-loom` visualization server, downloaded on demand by `straymark loom serve` |
 
@@ -498,6 +498,9 @@ StrayMark includes skills for AI agents that enable **active documentation creat
 | `/straymark-adr` | Quick ADR creation | ✅ | ✅ | ✅ |
 | `/straymark-sec` | Security Assessment creation | ✅ | ✅ | ✅ |
 | `/straymark-mcard` | Model/System Card creation | ✅ | ✅ | ✅ |
+| `/straymark-architecture` *(fw-4.29.0+, EXPERIMENTAL)* | Generate + agent-refine the architecture model (reassign layers, wire links, sync DrawIO, validate) | ✅ | ✅ | ✅ |
+| `/straymark-architecture-sync` *(fw-4.29.0+, EXPERIMENTAL)* | Keep the architecture model current as code grows (append-only) | ✅ | ✅ | ✅ |
+| `/straymark-loom` *(fw-4.29.0+, EXPERIMENTAL)* | Drive the Loom visualization server lifecycle (up / down / status), terminal-free | ✅ | ✅ | ✅ |
 
 > **Codex CLI users** *(fw-4.19.0+)*: Codex reads skills from `~/.codex/skills/` (user-level), not from the project tree. After `straymark init` (or any subsequent `straymark update`), run `straymark install-skills --agent codex` once to populate it from the project's `.codex/skills/`.
 

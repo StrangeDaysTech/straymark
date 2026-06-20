@@ -47,7 +47,7 @@ StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.28.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| Framework | `fw-` | `fw-4.29.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
 | CLI | `cli-` | `cli-3.28.2` | El binario `straymark` |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | El servidor de visualización `straymark-loom`, descargado bajo demanda por `straymark loom serve` |
 

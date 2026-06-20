@@ -258,7 +258,7 @@ StrayMark 为每个组件使用独立的版本标签：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.28.0` | 模板（12 种类型）、治理文档、指令、Charter 模板 + schema |
+| Framework | `fw-` | `fw-4.29.0` | 模板（12 种类型）、治理文档、指令、Charter 模板 + schema |
 | CLI | `cli-` | `cli-3.28.2` | `straymark` 二进制文件 |
 | Loom（实验性） | `loom-` | `loom-0.4.2` | `straymark-loom` 可视化服务器，由 `straymark loom serve` 按需下载 |
 
@@ -474,6 +474,9 @@ StrayMark 包含面向 AI Agent 的 Skills，支持**主动创建文档**。
 | `/straymark-adr` | 快速创建 ADR | ✅ | ✅ | ✅ |
 | `/straymark-sec` | 创建安全评估 | ✅ | ✅ | ✅ |
 | `/straymark-mcard` | 创建模型/系统卡片 | ✅ | ✅ | ✅ |
+| `/straymark-architecture` *(fw-4.29.0+，实验性)* | 生成 + 由 agent 精炼架构模型（重新分配层、连接 links、同步 DrawIO、validate） | ✅ | ✅ | ✅ |
+| `/straymark-architecture-sync` *(fw-4.29.0+，实验性)* | 随代码增长保持架构模型最新（仅追加） | ✅ | ✅ | ✅ |
+| `/straymark-loom` *(fw-4.29.0+，实验性)* | 驱动 Loom 服务器生命周期（up / down / status），无需终端 | ✅ | ✅ | ✅ |
 
 > **Codex CLI 用户** *(fw-4.19.0+)*：Codex 从 `~/.codex/skills/`（用户级）读取 skills，而不是从项目树读取。`straymark init` 之后（以及后续每次 `straymark update` 之后），运行一次 `straymark install-skills --agent codex` 从项目的 `.codex/skills/` 填充该目录。
 

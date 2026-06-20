@@ -7,6 +7,43 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.29.0 — 2026-06-20
+
+Agent-native skills for the architecture model and the Loom lifecycle (#281) —
+the terminal-free counterpart to the manual DrawIO refinement path. The
+`architecture generate|sync|validate` commands and `loom serve` already shipped;
+this release wraps them in skills so an adopter can drive the whole
+`generate → refine → loom up` arc from the agent window, never editing YAML/DrawIO
+or opening a shell.
+
+### Added (Framework)
+
+- **`/straymark-architecture` skill** *(EXPERIMENTAL, Loom A1.x)* — drives the
+  `generate → refine → validate` arc in one guided pass: seeds the model with
+  `straymark architecture generate`, then reassigns components out of the
+  placeholder `unassigned` layer into real layers, infers dependency `links` from
+  the import graph / directory structure / ADR "Affected Components" tables, syncs
+  the `plan.drawio` (vertices *and* edges) so the 2D view shows arrows, and
+  iterates `validate` to green. Pre-encodes the Sentinel refinement gotchas
+  (`component.id` must not equal a `layer.id`; `links` is a list of string ids,
+  not objects; 3D edges come from `model.yml` `links` while 2D edges come from
+  `plan.drawio`; never delete a layer a component still points at) so no future
+  agent re-hits them.
+- **`/straymark-architecture-sync` skill** *(EXPERIMENTAL, Loom A1.3)* — wraps
+  `straymark architecture sync` (append-only) to keep a curated model current as
+  code grows: dry-run, surface new dirs/components, confirm, `--apply`,
+  re-validate. Never re-refines from scratch.
+- **`/straymark-loom` skill** *(EXPERIMENTAL, Loom v0)* — owns the Loom server
+  lifecycle (up / down / status) from the agent window. Launches
+  `straymark loom serve --no-open` in the background and reports
+  `http://127.0.0.1:7700`, so the terminal-free operator just gets a link to
+  click. The agent owns the process; the user stays in the chat window.
+- All three skills ship across `.claude/`, `.gemini/`, `.codex/`, and
+  `.agent/workflows/` like the existing skills, and are documented in the README,
+  WORKFLOWS, QUICK-REFERENCE, and LOOM adopter guide (EN + es + zh-CN).
+
+---
+
 ## CLI 3.28.2 — 2026-06-18
 
 ### Fixed (CLI)

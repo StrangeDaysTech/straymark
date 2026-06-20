@@ -247,6 +247,9 @@ Mark `review_required: true` when:
 | `/straymark-audit-prompt CHARTER-XX` *(fw-4.9.0+, refactored in fw-4.9.0)* | External multi-model audit — write unified prompt at canonical path |
 | `/straymark-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | Run inside an auditor CLI — read prompt, audit with tool use, write report |
 | `/straymark-audit-review CHARTER-XX` *(fw-4.9.0+, expanded in fw-4.9.0)* | Consolidate N reports into review.md (6 sections) + merge YAML into telemetry |
+| `/straymark-architecture` *(fw-4.29.0+, EXPERIMENTAL)* | Generate + agent-refine the architecture model — reassign layers, wire links, sync DrawIO, validate to green |
+| `/straymark-architecture-sync` *(fw-4.29.0+, EXPERIMENTAL)* | Keep the architecture model current as code grows (append-only) |
+| `/straymark-loom` *(fw-4.29.0+, EXPERIMENTAL)* | Drive the Loom server lifecycle (up / down / status), terminal-free |
 
 ---
 
@@ -259,4 +262,4 @@ Mark `review_required: true` when:
 
 ---
 
-*StrayMark fw-4.28.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.29.0 | [Strange Days Tech](https://strangedays.tech)*
