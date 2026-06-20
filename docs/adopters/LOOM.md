@@ -69,6 +69,8 @@ This is where a generated map becomes a real one. `model.yml` is plain YAML and 
 - **Lay out the diagram** in DrawIO (open `plan.drawio`) so the 2D plan reads well.
 
 > **AI-assisted refinement.** Because the model is just YAML + DrawIO XML, an AI coding agent can do this directly: point it at `model.yml` and your codebase and ask it to assign layers, fix labels, and add dependency links. It operates the same CLI (`generate` / `validate` / `sync`) and edits the same files you would. The refinement is a normal review-and-edit loop — keep what's right, correct what's wrong.
+>
+> **Skill shortcut** *(fw-4.29.0+)*: the `/straymark-architecture` skill drives this whole `generate → refine → validate` pass in one guided step (with the model's gotchas pre-encoded), `/straymark-architecture-sync` keeps a curated model current append-only, and `/straymark-loom` runs the server lifecycle (up/down/status) — the terminal-free path through this entire workflow.
 
 ### 3. Validate — catch model↔plan drift
 

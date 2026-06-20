@@ -240,7 +240,7 @@ StrayMark usa tags de versión independientes para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Incluye |
 |------------|---------------|---------|---------|
-| Framework | `fw-` | `fw-4.28.0` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
+| Framework | `fw-` | `fw-4.29.0` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
 | CLI | `cli-` | `cli-3.28.2` | El binario `straymark` |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | El servidor de visualización `straymark-loom`, descargado bajo demanda por `straymark loom serve` |
 
@@ -455,6 +455,9 @@ StrayMark incluye skills para agentes IA que habilitan la **creación activa de 
 | `/straymark-ailog` | Creación rápida de AILOG | ✅ | ✅ | ✅ |
 | `/straymark-aidec` | Creación rápida de AIDEC | ✅ | ✅ | ✅ |
 | `/straymark-adr` | Creación rápida de ADR | ✅ | ✅ | ✅ |
+| `/straymark-architecture` *(fw-4.29.0+, EXPERIMENTAL)* | Generar + refinar con agente el modelo de arquitectura (reasignar capas, cablear links, sincronizar DrawIO, validar) | ✅ | ✅ | ✅ |
+| `/straymark-architecture-sync` *(fw-4.29.0+, EXPERIMENTAL)* | Mantener el modelo de arquitectura al día conforme crece el código (append-only) | ✅ | ✅ | ✅ |
+| `/straymark-loom` *(fw-4.29.0+, EXPERIMENTAL)* | Manejar el ciclo de vida del servidor Loom (up / down / status), sin terminal | ✅ | ✅ | ✅ |
 
 > **Usuarios de Codex CLI** *(fw-4.19.0+)*: Codex lee los skills desde `~/.codex/skills/` (a nivel de usuario), no desde el árbol del proyecto. Después de `straymark init` (o de cualquier `straymark update` posterior), ejecuta `straymark install-skills --agent codex` una vez para poblarlo desde `.codex/skills/` del proyecto.
 
