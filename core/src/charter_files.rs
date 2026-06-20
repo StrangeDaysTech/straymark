@@ -17,19 +17,53 @@
 //! grep; we mirror it in [`looks_like_path`] so a backtick token like
 //! `` `cargo build` `` is not mistaken for a declared file.
 
+/// A declared path's exemption from the on-disk existence check (#215 Gap 3).
+///
+/// `New` keeps the original `(new)` semantics. The others let a *closed*
+/// Charter's historical table legitimately carry paths that don't exist in the
+/// adopter repo — without the parser-shaped de-backticking workaround adopters
+/// reached for. A closed Charter's table is a historical record, not a forward
+/// declaration; an unmarked missing path is still flagged (so substituted-late
+/// `AILOG-YYYY-MM-NNN` placeholders keep being caught).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum FileExemption {
+    /// Created by this Charter — Change column "New"/"Nuevo"/"新建" or a `(new)` tag.
+    New,
+    /// Lives in another repository (cross-repo Charter). Tagged `(external)`.
+    External,
+    /// Existed once / planned but deleted or never materialized. Tagged `(removed)`.
+    Removed,
+    /// Shipped under a different path; carries the new location.
+    /// Tagged `(relocated: <path>)`.
+    Relocated(String),
+}
+
 /// A file declared in a Charter's `## Files to modify` section.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DeclaredFile {
-    /// The path as declared, with any trailing `(new)` tag stripped. May still
+    /// The path as declared, with any trailing exemption tag stripped. May still
     /// contain a wildcard (`...` or `*`); callers that check disk existence
     /// must skip those (see [`is_wildcard`]).
     pub path: String,
-    /// True when the row marks the file as created by this Charter — either the
-    /// Change column starts with "New"/"Nuevo"/"新建", or the path/cell carries
-    /// a `(new)` tag. Existence-checking consumers skip these.
-    pub is_new: bool,
+    /// The exemption disposition, if the row carries one. `None` is a normal
+    /// declared path subject to the existence check.
+    pub exemption: Option<FileExemption>,
     /// The trimmed Change-column text (empty for bullet/prose declarations).
     pub raw_change: String,
+}
+
+impl DeclaredFile {
+    /// True when the row marks the file as created by this Charter. Back-compat
+    /// accessor (was a public field before #215).
+    pub fn is_new(&self) -> bool {
+        matches!(self.exemption, Some(FileExemption::New))
+    }
+
+    /// True when the declared path is exempt from the on-disk existence check
+    /// (created here, or a marked cross-repo / removed / relocated path).
+    pub fn is_existence_exempt(&self) -> bool {
+        self.exemption.is_some()
+    }
 }
 
 /// Recognized source-file extensions, mirroring the grep filter in
@@ -74,25 +108,57 @@ pub(crate) fn first_backtick_token(s: &str) -> Option<&str> {
     Some(&rest[..end])
 }
 
-/// True when `cell`/`change` indicates the file is created by this Charter.
-fn detect_new(col1_cell: &str, change: &str) -> bool {
-    let change_lc = change.trim().to_lowercase();
-    if NEW_MARKERS.iter().any(|m| change_lc.starts_with(m)) {
-        return true;
-    }
-    // Fallback: a `(new)` tag anywhere in the path cell (table) or line (bullet).
-    col1_cell.to_lowercase().contains("(new)")
+/// Parse a `(relocated: <path>)` tag from a path cell, returning the target path.
+fn parse_relocated(cell: &str) -> Option<String> {
+    let lc = cell.to_lowercase();
+    let idx = lc.find("(relocated:")?;
+    let after = &cell[idx + "(relocated:".len()..];
+    let end = after.find(')')?;
+    Some(after[..end].trim().to_string())
 }
 
-/// Strip a trailing `(new)` tag (and surrounding whitespace) from a path.
-fn strip_new_tag(path: &str) -> String {
+/// Determine a declared path's exemption from `cell`/`change`. Explicit
+/// parenthetical tags on the path cell win; otherwise a Change column starting
+/// with a "new" locale variant marks the file as created here.
+fn detect_exemption(col1_cell: &str, change: &str) -> Option<FileExemption> {
+    if let Some(reloc) = parse_relocated(col1_cell) {
+        return Some(FileExemption::Relocated(reloc));
+    }
+    let cell_lc = col1_cell.to_lowercase();
+    if cell_lc.contains("(external)") {
+        return Some(FileExemption::External);
+    }
+    if cell_lc.contains("(removed)") {
+        return Some(FileExemption::Removed);
+    }
+    if cell_lc.contains("(new)") {
+        return Some(FileExemption::New);
+    }
+    let change_lc = change.trim().to_lowercase();
+    if NEW_MARKERS.iter().any(|m| change_lc.starts_with(m)) {
+        return Some(FileExemption::New);
+    }
+    None
+}
+
+/// Strip a trailing exemption tag — `(new)`, `(external)`, `(removed)`,
+/// `(relocated: …)` — and surrounding whitespace from a path.
+fn strip_exemption_tag(path: &str) -> String {
     let trimmed = path.trim();
-    // Tag may appear right after the token, e.g. `src/foo.rs (new)` once the
-    // backticks are removed. Drop any parenthetical "(new)" suffix.
-    let lower = trimmed.to_lowercase();
-    if let Some(idx) = lower.rfind("(new)") {
-        if trimmed[idx + 5..].trim().is_empty() {
-            return trimmed[..idx].trim().to_string();
+    if let Some(open) = trimmed.rfind('(') {
+        if let Some(close_rel) = trimmed[open..].find(')') {
+            let close = open + close_rel;
+            // Only treat it as a tag when nothing but whitespace follows the ')'.
+            if trimmed[close + 1..].trim().is_empty() {
+                let tag = trimmed[open + 1..close].trim().to_lowercase();
+                if tag == "new"
+                    || tag == "external"
+                    || tag == "removed"
+                    || tag.starts_with("relocated:")
+                {
+                    return trimmed[..open].trim().to_string();
+                }
+            }
         }
     }
     trimmed.to_string()
@@ -151,15 +217,16 @@ pub fn parse_files_to_modify(body: &str) -> Vec<DeclaredFile> {
             if !looks_like_path(token) {
                 continue;
             }
-            let is_new = detect_new(col1, col2);
+            let exemption = detect_exemption(col1, col2);
             out.push(DeclaredFile {
-                path: strip_new_tag(token),
-                is_new,
+                path: strip_exemption_tag(token),
+                exemption,
                 raw_change: col2.to_string(),
             });
         } else {
-            // Bullet / prose: extract every backtick token on the line.
-            let is_new_line = trimmed.to_lowercase().contains("(new)");
+            // Bullet / prose: extract every backtick token on the line. Any
+            // exemption tag on the line applies to the tokens on it.
+            let line_exemption = detect_exemption(line, "");
             let mut rest = line;
             while let Some(start) = rest.find('`') {
                 let after = &rest[start + 1..];
@@ -167,8 +234,8 @@ pub fn parse_files_to_modify(body: &str) -> Vec<DeclaredFile> {
                 let token = &after[..end];
                 if looks_like_path(token) {
                     out.push(DeclaredFile {
-                        path: strip_new_tag(token),
-                        is_new: is_new_line,
+                        path: strip_exemption_tag(token),
+                        exemption: line_exemption.clone(),
                         raw_change: String::new(),
                     });
                 }
@@ -217,9 +284,9 @@ mod tests {
 "#;
         let files = parse_files_to_modify(body);
         let by_path = |p: &str| files.iter().find(|f| f.path == p).unwrap();
-        assert!(!by_path("src/old.rs").is_new);
-        assert!(by_path(".straymark/07-ai-audit/agent-logs/AILOG-x.md").is_new);
-        assert!(by_path("src/created.rs").is_new); // "Nuevo" prefix
+        assert!(!by_path("src/old.rs").is_new());
+        assert!(by_path(".straymark/07-ai-audit/agent-logs/AILOG-x.md").is_new());
+        assert!(by_path("src/created.rs").is_new()); // "Nuevo" prefix
     }
 
     #[test]
@@ -231,10 +298,45 @@ mod tests {
 "#;
         let files = parse_files_to_modify(body);
         let by_path = |p: &str| files.iter().find(|f| f.path == p).unwrap();
-        assert!(by_path("src/foo.rs").is_new);
-        assert!(!by_path("src/bar.rs").is_new);
+        assert!(by_path("src/foo.rs").is_new());
+        assert!(!by_path("src/bar.rs").is_new());
         // The `(new)` tag is stripped from the stored path.
         assert!(by_path("src/foo.rs").path == "src/foo.rs");
+    }
+
+    #[test]
+    fn detects_exemption_markers() {
+        let body = r#"## Files to modify
+
+| File | Change |
+|---|---|
+| `dist/.straymark/templates/charter-template.md` (external) | cross-repo |
+| `interfaces/module.go` (removed) | never materialized |
+| `src/old-name.rs` (relocated: src/new-name.rs) | renamed at impl |
+| `src/normal.rs` | edit |
+"#;
+        let files = parse_files_to_modify(body);
+        let by_path = |p: &str| files.iter().find(|f| f.path == p).unwrap();
+        assert_eq!(
+            by_path("dist/.straymark/templates/charter-template.md").exemption,
+            Some(FileExemption::External)
+        );
+        assert_eq!(
+            by_path("interfaces/module.go").exemption,
+            Some(FileExemption::Removed)
+        );
+        assert_eq!(
+            by_path("src/old-name.rs").exemption,
+            Some(FileExemption::Relocated("src/new-name.rs".to_string()))
+        );
+        assert_eq!(by_path("src/normal.rs").exemption, None);
+        // All marked rows are existence-exempt; the plain one is not.
+        assert!(by_path("dist/.straymark/templates/charter-template.md").is_existence_exempt());
+        assert!(by_path("interfaces/module.go").is_existence_exempt());
+        assert!(by_path("src/old-name.rs").is_existence_exempt());
+        assert!(!by_path("src/normal.rs").is_existence_exempt());
+        // Tags are stripped from the stored path.
+        assert!(by_path("src/old-name.rs").path == "src/old-name.rs");
     }
 
     #[test]

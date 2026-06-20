@@ -8,6 +8,11 @@ trigger: "[1 línea: qué señal concreta — evento observable, decisión decla
 # de que el status pase a in-progress).
 # originating_ailogs: [AILOG-YYYY-MM-DD-NNN]
 # originating_spec: specs/001-feature/spec.md
+# Un Charter originado por spec que acumula AILOGs de ejecución los registra aquí al cerrar
+# (NO en originating_ailogs — ese sigue siendo el único origen). Contraparte para el caso
+# de spec-como-contexto: context_spec. Ninguno está sujeto a la regla de exactamente-uno.
+# execution_ailogs: [AILOG-YYYY-MM-DD-NNN]
+# context_spec: specs/001-feature/spec.md
 ---
 
 # Charter: [TÍTULO BREVE]

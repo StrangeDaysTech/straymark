@@ -794,6 +794,53 @@ fn test_charter_files_exist_skips_wildcards() {
 }
 
 #[test]
+fn test_charter_files_exist_skips_exemption_markers() {
+    // #215 Gap 3: cross-repo / removed / relocated paths in a (historical)
+    // Charter table must not be flagged when explicitly marked.
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    create_charter(
+        dir.path(),
+        "Files to modify",
+        "| `dist/.straymark/templates/charter-template.md` (external) | cross-repo |\n\
+         | `interfaces/module.go` (removed) | never materialized |\n\
+         | `src/old.rs` (relocated: src/new.rs) | renamed |\n",
+    );
+
+    let mut cmd = cargo_bin_cmd!("straymark");
+    cmd.arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .arg("--include-charters")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("CHARTER-FILES-EXIST").not());
+}
+
+#[test]
+fn test_charter_files_exist_still_flags_unmarked_missing_path() {
+    // A missing path WITHOUT an exemption marker (e.g. a never-substituted
+    // placeholder) must still be flagged — the markers don't blanket-silence.
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    create_charter(
+        dir.path(),
+        "Files to modify",
+        "| `src/does-not-exist.rs` | edit |\n\
+         | `src/external-ok.rs` (external) | cross-repo |\n",
+    );
+
+    let mut cmd = cargo_bin_cmd!("straymark");
+    cmd.arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .arg("--include-charters")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("CHARTER-FILES-EXIST"))
+        .stdout(predicate::str::contains("src/does-not-exist.rs"))
+        .stdout(predicate::str::contains("src/external-ok.rs").not());
+}
+
+#[test]
 fn test_charter_files_exist_detects_spanish_heading() {
     let dir = TempDir::new().unwrap();
     setup_straymark(dir.path());

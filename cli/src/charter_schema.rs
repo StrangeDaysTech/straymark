@@ -465,6 +465,42 @@ trigger: "x"
     }
 
     #[test]
+    fn accepts_spec_origin_with_execution_ailogs() {
+        // #215 Gap 2: a spec-originated Charter that aggregated execution AILOGs
+        // at close time stays single-origin and must validate.
+        let s = schema();
+        let fm = yaml(
+            r#"
+charter_id: CHARTER-10-spec-plus-exec
+status: closed
+effort_estimate: M
+trigger: "x"
+originating_spec: specs/001-feature/spec.md
+execution_ailogs: [AILOG-2026-04-28-021, AILOG-2026-04-29-002]
+"#,
+        );
+        let issues = s.validate(&fm, Path::new("test.md"));
+        assert!(issues.is_empty(), "unexpected issues: {:?}", issues);
+    }
+
+    #[test]
+    fn accepts_ailog_origin_with_context_spec() {
+        let s = schema();
+        let fm = yaml(
+            r#"
+charter_id: CHARTER-11-ailog-plus-ctx
+status: in-progress
+effort_estimate: S
+trigger: "x"
+originating_ailogs: [AILOG-2026-04-28-021]
+context_spec: specs/002-area/spec.md
+"#,
+        );
+        let issues = s.validate(&fm, Path::new("test.md"));
+        assert!(issues.is_empty(), "unexpected issues: {:?}", issues);
+    }
+
+    #[test]
     fn additional_properties_are_permitted() {
         // The schema has additionalProperties: true (default), so unknown
         // fields like `note` and `closed_at` must not trigger errors.

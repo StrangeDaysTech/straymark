@@ -41,6 +41,20 @@
       "type": "string",
       "minLength": 1,
       "description": "Path (relative to project root) to a SpecKit spec.md or equivalent (e.g., 'specs/001-feature/spec.md'). Used in greenfield mode where SpecKit drives planning. Free-form to avoid coupling the schema to a specific SpecKit version. Mutually exclusive with originating_ailogs."
+    },
+    "execution_ailogs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^AILOG-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3}[a-z]?(-[a-z0-9-]+)?$"
+      },
+      "minItems": 1,
+      "description": "AILOGs this Charter aggregated at close time when its true origin is a spec. Distinct from originating_ailogs (the origin) so a spec-originated Charter can record its execution log without tripping the originating_* exactly-one rule. NOT subject to mutual exclusion."
+    },
+    "context_spec": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path to a spec that frames the area of an AILOG-originated Charter (context, not origin). Counterpart of execution_ailogs for the spec direction. NOT subject to mutual exclusion."
     }
   },
   "not": {

@@ -1,7 +1,7 @@
 ---
 id: AILOG-YYYY-MM-DD-NNN
 title: [操作的描述性标题]
-status: accepted
+status: accepted        # draft | review | accepted（生命周期）— 见 DOCUMENTATION-POLICY §3
 created: YYYY-MM-DD
 agent: [agent-name-v1.0]
 confidence: high | medium | low

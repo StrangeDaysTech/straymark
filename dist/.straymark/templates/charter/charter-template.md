@@ -8,6 +8,11 @@ trigger: "[1-line: what concrete signal — observable event, declared decision,
 # filled before status moves to in-progress).
 # originating_ailogs: [AILOG-YYYY-MM-DD-NNN]
 # originating_spec: specs/001-feature/spec.md
+# A spec-originated Charter that accrues execution AILOGs records them here at close
+# (NOT in originating_ailogs — that stays the single origin). Counterpart for the
+# spec-as-context case: context_spec. Neither is subject to the exactly-one rule.
+# execution_ailogs: [AILOG-YYYY-MM-DD-NNN]
+# context_spec: specs/001-feature/spec.md
 ---
 
 # Charter: [BRIEF TITLE]
