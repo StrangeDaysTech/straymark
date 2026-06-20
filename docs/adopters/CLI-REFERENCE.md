@@ -754,7 +754,7 @@ Two steps, each invokable independently:
 | Argument/Flag | Default | Description |
 |---|---|---|
 | `<CHARTER-ID>` | — | Same resolution rules as `charter status` |
-| `--range` | `origin/main..HEAD` (with fallback to `origin/master..HEAD`, then `HEAD~1..HEAD` with warning) | Git revision range the auditors review. The default captures the full feature-branch implementation set; explicit `--range <REV..REV>` overrides without probing for upstream. |
+| `--range` | `origin/main..HEAD` (with fallback to `origin/master..HEAD`, then `HEAD~1..HEAD` with warning) | Git revision range the auditors review. The default captures the full feature-branch implementation set; explicit `--range <REV..REV>` overrides without probing for upstream. **Multi-batch pitfall:** for a phase-scoped audit of a Charter whose earlier phases already merged to the base branch, the default `origin/main..HEAD` *excludes* the merged commits and silently under-covers the phase — pass an explicit `--range <charter-first-commit>..HEAD` to span it. `--prepare` prints a warning when it detects completed batches and no explicit range. |
 | `--prepare` | off (default action when no other flag) | Run step 1. Mutually exclusive with `--merge-reports`. |
 | `--merge-reports` | off | Run step 2. Mutually exclusive with `--prepare`. |
 | `--merge-into <PATH>` | — | With `--merge-reports`: append the `external_audit:` array directly into the telemetry YAML at `<PATH>` instead of printing to stdout. The CLI rejects re-audit (telemetry already has the key) with a clear error. |

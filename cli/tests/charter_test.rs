@@ -1059,3 +1059,31 @@ fn charter_new_empty_slug_flag_falls_back_to_title() {
 
     assert!(dir.path().join(".straymark/charters/01-hello-world.md").exists());
 }
+
+#[test]
+fn charter_status_omits_stale_phase2_section() {
+    // #207 Part 2: drift-check and telemetry have shipped; `charter status`
+    // must no longer advertise them as "not yet available".
+    let dir = TempDir::new().unwrap();
+    setup_straymark_with_charter_template(dir.path());
+
+    cargo_bin_cmd!("straymark")
+        .arg("charter")
+        .arg("new")
+        .arg("--title")
+        .arg("Phase Two")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    cargo_bin_cmd!("straymark")
+        .arg("charter")
+        .arg("status")
+        .arg("CHARTER-01-phase-two")
+        .arg("--path")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("not yet available").not())
+        .stdout(predicate::str::contains("planned cli-3.7.0").not());
+}

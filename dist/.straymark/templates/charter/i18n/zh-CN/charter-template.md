@@ -142,12 +142,11 @@ curl -X PUT "https://${SERVICE_HOST}/api/v1/.../..." \
    `### Batch N`。对于单批次 Charter，请跳过此步骤——AILOG 中的
    `## 执行的操作` 已足够。
 7. 本地验证通过且干净.
-8. **自动检查清单漂移**（当 CLI 路线图的第 2 阶段发布时）：
-   `straymark charter drift CHARTER-NN <range>` 在提交**之前**检测声明的文件
-   与修改的文件之间的漂移。如果它报告遗漏，请完成工作或在 AILOG 的
-   `## Risk` 下记录为 `R<N+1> (new, not in Charter)`。如果它报告范围扩展，
-   请在 AILOG 中记录原因（mock 更新、生成的文件、漂移修复预先存在等）。
-   在第 2 阶段发布之前，手动运行 Sentinel 的 `check-plan-drift.sh` 以获得相同效果。
+8. **自动检查清单漂移**：
+   `straymark charter drift CHARTER-NN --range <range>` 在提交**之前**检测声明的文件
+   与修改的文件之间的漂移（范围可选；默认为 `HEAD~1..HEAD`）。如果它报告遗漏，
+   请完成工作或在 AILOG 的 `## Risk` 下记录为 `R<N+1> (new, not in Charter)`。
+   如果它报告范围扩展，请在 AILOG 中记录原因（mock 更新、生成的文件、漂移修复预先存在等）。
 9. 提交 + 推送 + 打开 PR.
 
 ## Charter 关闭
@@ -161,10 +160,9 @@ curl -X PUT "https://${SERVICE_HOST}/api/v1/.../..." \
    会使 Charter 变得陈旧，并使未来的读者感到困惑（Sentinel 的 PLAN-07
    演示了此步骤所防止的失败模式）。
 
-2. **合并后漂移检查**（第 2 阶段发布时自动化 + 手动审查）：
-   - 运行 `straymark charter drift CHARTER-NN origin/main..HEAD`（第 2 阶段）或
-     等效的 Sentinel 脚本，并验证输出是干净的，或所有
-     漂移都已在 AILOG 中记录。
+2. **合并后漂移检查**：
+   - 运行 `straymark charter drift CHARTER-NN --range origin/main..HEAD`，并验证
+     输出是干净的，或所有漂移都已在 AILOG 中记录。
    - 这捕获了在合并后引入漂移的罕见情况（squash 改写、管理员修订等），
      而 #1 中的原子步骤无法应用。
 
@@ -225,8 +223,8 @@ curl -X PUT "https://${SERVICE_HOST}/api/v1/.../..." \
    读者感到困惑 — Sentinel 2026-05-02-001 的 AIDEC 形式化了该差距
    并提出了格式 v4（此模板体现了它）。
 
-6. 自动检查清单漂移（`straymark charter drift`，CLI 路线图的第 2 阶段；
-   Sentinel 有 `scripts/check-plan-drift.sh`）在 pre-commit（任务 #7）和
+6. 自动检查清单漂移（`straymark charter drift`；Sentinel 最初有
+   `scripts/check-plan-drift.sh`）在 pre-commit（任务 #7）和
    Charter 关闭时运行。检测 OMISSION 漂移（声明的文件未触及）和 SCOPE
    EXPANSION 漂移（触及的文件未声明）。原因：外部审计员捕获了实现者
    未在其 AILOG 中记录的 implementation-gap 和 hallucination 漂移。

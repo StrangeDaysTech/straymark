@@ -579,7 +579,10 @@ enum CharterCommands {
         charter_id: String,
         /// Git revision range (default: origin/main..HEAD with fallback to
         /// origin/master..HEAD; falls back to HEAD~1..HEAD with warning when
-        /// no upstream is reachable). Override with explicit value as needed.
+        /// no upstream is reachable). For a phase-scoped audit of a multi-batch
+        /// Charter whose earlier phases already merged, pass an explicit range
+        /// from the Charter's first commit (e.g. <decl-commit>..HEAD) — the
+        /// default excludes already-merged commits and would under-cover.
         #[arg(long)]
         range: Option<String>,
         /// Generate the unified audit prompt and write it to

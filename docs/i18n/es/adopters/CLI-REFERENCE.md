@@ -668,7 +668,7 @@ Dos pasos, cada uno invocable independientemente:
 | Argumento/Flag | Default | Descripción |
 |---|---|---|
 | `<CHARTER-ID>` | — | Mismas reglas de resolución que `charter status`. |
-| `--range` | `origin/main..HEAD` (con fallback a `origin/master..HEAD`, luego `HEAD~1..HEAD` con warning) | Rango git que los auditores revisan. El default captura el set completo de commits de la feature branch; el override explícito vía `--range <REV..REV>` no prueba upstream. |
+| `--range` | `origin/main..HEAD` (con fallback a `origin/master..HEAD`, luego `HEAD~1..HEAD` con warning) | Rango git que los auditores revisan. El default captura el set completo de commits de la feature branch; el override explícito vía `--range <REV..REV>` no prueba upstream. **Pitfall multi-batch:** para una auditoría phase-scoped de un Charter cuyas fases anteriores ya se mergearon a la rama base, el default `origin/main..HEAD` *excluye* los commits mergeados y sub-cubre la fase silenciosamente — pasa un `--range <primer-commit-del-charter>..HEAD` explícito para abarcarla. `--prepare` imprime un aviso cuando detecta batches completados sin rango explícito. |
 | `--prepare` | off (acción default cuando ningún otro flag se pasa) | Corre el paso 1. Mutuamente excluyente con `--merge-reports`. |
 | `--merge-reports` | off | Corre el paso 2. Mutuamente excluyente con `--prepare`. |
 | `--merge-into <PATH>` | — | Con `--merge-reports`: anexa el array `external_audit:` directamente a la telemetría YAML en `<PATH>` en lugar de imprimir a stdout. El CLI rechaza re-audit (la telemetría ya tiene la clave) con error claro. |
