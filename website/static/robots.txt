@@ -2,6 +2,9 @@
 # Crawl policy: open. The site is public marketing + docs + blog.
 # Sitemap directive points crawlers at the locale-aware index, which
 # in turn references the three per-locale sitemaps (en, es, zh-CN).
+# LLM index: https://straymark.dev/llms.txt (full text at /llms-full.txt).
+# Non-directive discovery aid — the llms.txt convention is the well-known
+# /llms.txt path itself; this comment just points there.
 
 User-agent: *
 Allow: /
