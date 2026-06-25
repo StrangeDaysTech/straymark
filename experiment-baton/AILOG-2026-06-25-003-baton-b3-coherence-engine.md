@@ -81,7 +81,7 @@ Completed 2026-06-25 — AILOG-2026-06-25-002.
 Completed 2026-06-25 — this AILOG's PR. (T3.5 → B4, see scope note.)
 
 ### Batch 4 — B4: Loom intent overlay + NFR2 consistency (T4.1–T4.3, T3.5)
-(pending)
+Completed 2026-06-25 — see AILOG-2026-06-25-004.
 
 ### Batch 5 — B5: Sentinel dogfood + acceptance (T5.1–T5.5)
 (pending)

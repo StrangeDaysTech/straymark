@@ -15,6 +15,7 @@
 pub mod codescan;
 pub mod coherence;
 pub mod intent;
+pub mod overlay;
 pub mod provenance;
 mod scan;
 pub mod speckit;
