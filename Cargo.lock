@@ -2559,6 +2559,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
+name = "straymark-baton"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "colored",
+ "serde",
+ "serde_json",
+ "straymark-core",
+]
+
+[[package]]
 name = "straymark-cli"
 version = "3.29.0"
 dependencies = [
