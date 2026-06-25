@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 
-use super::scan_ids;
+use crate::scan::{scan_endpoints, scan_ids};
 
 /// A single SpecKit feature spec, as far as Phase 1 mines it.
 #[derive(Debug, Clone, Serialize, Default)]
@@ -203,31 +203,6 @@ fn first_heading(body: &str) -> Option<String> {
         .find_map(|l| l.strip_prefix("# ").map(clean_inline))
 }
 
-/// Scan `/api/...` endpoint references; trims trailing punctuation.
-fn scan_endpoints(text: &str) -> Vec<String> {
-    let mut out = Vec::new();
-    let mut seen = HashSet::new();
-    let mut idx = 0;
-    while let Some(rel) = text[idx..].find("/api/") {
-        let start = idx + rel;
-        let mut end = start;
-        for c in text[start..].chars() {
-            if c.is_whitespace() || matches!(c, '`' | '"' | '\'' | '(' | ')' | '<' | '>' | '|') {
-                break;
-            }
-            end += c.len_utf8();
-        }
-        let ep = text[start..end]
-            .trim_end_matches(['.', ',', ';', ':'])
-            .to_string();
-        if seen.insert(ep.clone()) {
-            out.push(ep);
-        }
-        idx = end.max(start + 1);
-    }
-    out
-}
-
 fn dedup_consumes(v: &mut Vec<ConsumesHint>) {
     let mut seen = HashSet::new();
     v.retain(|c| seen.insert((c.endpoint.clone(), c.location.clone())));
@@ -305,12 +280,5 @@ mod tests {
         assert_eq!(decisions[0].id, "PM-002");
         assert!(decisions[0].status.as_deref().unwrap().contains("CERRADO"));
         assert_eq!(decisions[0].references, vec!["AILOG-2026-04-24-006"]);
-    }
-
-    #[test]
-    fn endpoints_are_scanned_and_trimmed() {
-        let eps = scan_endpoints("call `GET /api/v1/services/{id}/health`. also /api/v1/services,");
-        assert!(eps.contains(&"/api/v1/services/{id}/health".to_string()));
-        assert!(eps.contains(&"/api/v1/services".to_string()));
     }
 }

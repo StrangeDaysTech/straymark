@@ -10,7 +10,6 @@
 pub mod memory;
 pub mod specs;
 
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
@@ -117,68 +116,9 @@ fn read_integration_version(specify_dir: &Path) -> Option<String> {
     serde_json::from_str::<Integration>(&raw).ok()?.version
 }
 
-/// Scan `text` for all identifiers shaped `<prefix><body>` where `body` is made
-/// of ASCII alphanumerics / hyphens and contains at least one digit. Returns
-/// them de-duplicated, in first-seen order. Char-boundary safe (the corpus
-/// includes accented Spanish prose).
-///
-/// Matches both `FR-010` (Sentinel) and `FR1` (Loom) shapes, plus
-/// `PM-002`, `AILOG-2026-04-24-006`, `ADR-…`, `AIDEC-…`.
-pub(crate) fn scan_ids(text: &str, prefix: &str) -> Vec<String> {
-    let mut out = Vec::new();
-    let mut seen = HashSet::new();
-    let mut idx = 0;
-    while let Some(rel) = text[idx..].find(prefix) {
-        let start = idx + rel;
-        let after = start + prefix.len();
-        let mut end = after;
-        for c in text[after..].chars() {
-            if c.is_ascii_alphanumeric() || c == '-' {
-                end += c.len_utf8();
-            } else {
-                break;
-            }
-        }
-        let id = &text[start..end];
-        let body = &text[after..end];
-        if !body.is_empty() && body.chars().any(|c| c.is_ascii_digit()) && seen.insert(id.to_string())
-        {
-            out.push(id.to_string());
-        }
-        idx = end.max(start + 1);
-    }
-    out
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn scan_ids_matches_both_fr_shapes() {
-        assert_eq!(scan_ids("- **FR-010** estado", "FR"), vec!["FR-010"]);
-        assert_eq!(scan_ids("- **FR1** — node", "FR"), vec!["FR1"]);
-    }
-
-    #[test]
-    fn scan_ids_dedups_in_order() {
-        let t = "FR-010 then FR-002 then FR-010 again";
-        assert_eq!(scan_ids(t, "FR"), vec!["FR-010", "FR-002"]);
-    }
-
-    #[test]
-    fn scan_ids_ignores_prefix_without_digits() {
-        // "Frontend"/"FRONT" must not be picked up as an FR id.
-        assert!(scan_ids("Frontend FRONT matters", "FR").is_empty());
-    }
-
-    #[test]
-    fn scan_ids_is_char_boundary_safe() {
-        // accented prose around an id must not panic or mis-slice.
-        assert_eq!(scan_ids("según AILOG-2026-04-24-006 está", "AILOG-"), vec![
-            "AILOG-2026-04-24-006"
-        ]);
-    }
 
     #[test]
     fn discover_reports_empty_for_non_speckit_dir() {
