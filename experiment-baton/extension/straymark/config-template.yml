@@ -1,0 +1,15 @@
+# StrayMark Coherence Bridge extension configuration.
+# Copied to .specify/extensions/straymark/straymark-config.yml on install.
+
+# Gate mode:
+#   advisory — always surface findings, never block the flow (default)
+#   block    — fail `before_implement` when blocking findings exist
+gate: advisory
+
+# Minimum confidence to report: low | medium | high
+min_confidence: medium
+
+# Path to the `straymark-baton` binary.
+#   empty  → search PATH, then `cargo run` in $BATON_REPO (development)
+#   /path  → use this binary
+binary: ""

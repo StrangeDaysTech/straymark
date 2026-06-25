@@ -22,6 +22,7 @@ use std::path::Path;
 use serde::Serialize;
 
 use crate::intent::{Confidence, IntentContract, IntentModel, SourceRef};
+use crate::scan::normalize_endpoint;
 use crate::speckit::IntendedComponent;
 
 /// A flat, lowercased listing of on-disk file paths (read-only) — used to tell
@@ -109,6 +110,9 @@ pub struct Finding {
     pub confidence: Confidence,
     pub message: String,
     pub locations: Vec<SourceRef>,
+    /// The contract this finding is about (`None` for repo-wide C1). Lets a
+    /// `--spec` run scope to the contracts a feature consumes.
+    pub contract: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Default)]
@@ -119,10 +123,44 @@ pub struct CoherenceReport {
 impl CoherenceReport {
     /// Build the report for the project at `root` (read-only).
     pub fn build(root: impl AsRef<Path>) -> Self {
+        Self::build_scoped(root, None)
+    }
+
+    /// Build the report, optionally scoped to a single feature/spec id — the
+    /// authoring-time view a `before_implement` hook wants (only the contracts
+    /// that feature consumes). Repo-wide C1 hints are dropped when scoped.
+    pub fn build_scoped(root: impl AsRef<Path>, spec: Option<&str>) -> Self {
         let root = root.as_ref();
         let model = IntentModel::build(root);
         let inventory = Inventory::scan(root);
-        analyze(&model, &inventory)
+        let report = analyze(&model, &inventory);
+        match spec {
+            Some(s) => report.for_spec(s, &model),
+            None => report,
+        }
+    }
+
+    /// Keep only findings about a contract the given spec consumes.
+    fn for_spec(self, spec_id: &str, model: &IntentModel) -> CoherenceReport {
+        let contracts: BTreeSet<String> = model
+            .specs
+            .iter()
+            .find(|s| s.id == spec_id)
+            .map(|s| {
+                s.consumes
+                    .iter()
+                    .map(|c| normalize_endpoint(&c.endpoint))
+                    .filter(|c| !c.is_empty())
+                    .collect()
+            })
+            .unwrap_or_default();
+        CoherenceReport {
+            findings: self
+                .findings
+                .into_iter()
+                .filter(|f| f.contract.as_ref().is_some_and(|c| contracts.contains(c)))
+                .collect(),
+        }
     }
 
     pub fn blocking_count(&self) -> usize {
@@ -182,6 +220,7 @@ pub fn analyze(model: &IntentModel, inv: &Inventory) -> CoherenceReport {
                         symbol: Some(comp.label.clone()),
                     })
                     .collect(),
+                contract: None,
             });
         }
     }
@@ -221,6 +260,7 @@ pub fn analyze(model: &IntentModel, inv: &Inventory) -> CoherenceReport {
                         orphans.join(", ")
                     ),
                     locations: vec![consumer.source.clone(), producer.source.clone()],
+                    contract: Some(c.id.clone()),
                 });
             }
 
@@ -246,6 +286,7 @@ pub fn analyze(model: &IntentModel, inv: &Inventory) -> CoherenceReport {
                         join(&consumer_variants)
                     ),
                     locations: vec![consumer.source.clone(), producer.source.clone()],
+                    contract: Some(c.id.clone()),
                 });
             }
         }
@@ -290,7 +331,10 @@ pub fn analyze(model: &IntentModel, inv: &Inventory) -> CoherenceReport {
                     id: next_id(FindingClass::ConsumerVsChangedDecision),
                     class: FindingClass::ConsumerVsChangedDecision,
                     severity: Severity::Warning,
-                    confidence: edge.confidence,
+                    // C4 is a decision-propagation finding: its strength comes from
+                    // the precise decision↔contract link (B5) and the consumption,
+                    // not from whether a code producer was keyed. Medium, grounded.
+                    confidence: Confidence::Medium,
                     message: format!(
                         "spec '{}' consumes contract '{}' but never references its defining decision(s): {}",
                         spec_id,
@@ -298,6 +342,7 @@ pub fn analyze(model: &IntentModel, inv: &Inventory) -> CoherenceReport {
                         unref.join(", ")
                     ),
                     locations: vec![edge.consumer.clone()],
+                    contract: Some(c.id.clone()),
                 });
             }
         }
