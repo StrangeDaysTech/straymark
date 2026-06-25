@@ -70,7 +70,7 @@ seams — *reading* the intended plane — without any reconciliation logic yet.
 Completed 2026-06-25 — this AILOG's PR.
 
 ### Batch 2 — B2: IntentModel + provenance inference (T2.1–T2.4)
-(pending)
+Completed 2026-06-25 — see AILOG-2026-06-25-002.
 
 ### Batch 3 — B3: coherence engine (C1–C4) + CLI (T3.1–T3.5)
 (pending)

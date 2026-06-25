@@ -9,6 +9,7 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use colored::Colorize;
 
+use straymark_baton::intent::{Confidence, IntentModel};
 use straymark_baton::speckit;
 
 #[derive(Parser)]
@@ -31,6 +32,13 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutFmt::Text)]
         out: OutFmt,
     },
+    /// Read-only intent model: contracts + provenance edges (B2).
+    Intent {
+        /// Project root (default: current directory).
+        path: Option<PathBuf>,
+        #[arg(long, value_enum, default_value_t = OutFmt::Text)]
+        out: OutFmt,
+    },
 }
 
 #[derive(Copy, Clone, ValueEnum)]
@@ -43,6 +51,7 @@ fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     match cli.command {
         Command::Inspect { path, out } => inspect(path.unwrap_or_else(|| PathBuf::from(".")), out),
+        Command::Intent { path, out } => intent(path.unwrap_or_else(|| PathBuf::from(".")), out),
     }
 }
 
@@ -104,5 +113,64 @@ fn render_text(a: &speckit::SpecKitArtifacts) {
     );
     for c in &a.intended_components {
         println!("    • {} ({:?})", c.label.green(), c.kind);
+    }
+}
+
+fn intent(root: PathBuf, out: OutFmt) -> anyhow::Result<()> {
+    let model = IntentModel::build(&root);
+    match out {
+        OutFmt::Json => println!("{}", serde_json::to_string_pretty(&model)?),
+        OutFmt::Text => render_intent(&model),
+    }
+    Ok(())
+}
+
+fn render_intent(m: &IntentModel) {
+    println!("{}", "Intent model (Baton B2, read-only)".bold());
+
+    println!("\n  {} ({})", "Contracts".bold(), m.contracts.len());
+    for c in &m.contracts {
+        let ep = c.endpoint.as_deref().unwrap_or("");
+        println!("    • {} {}", c.id.cyan(), ep.dimmed());
+        if let Some(p) = &c.producer {
+            println!(
+                "        producer: {} ({} fields, {} enum defs)",
+                p.source.file,
+                p.fields.len(),
+                p.enums.len()
+            );
+        }
+        for cons in &c.consumers {
+            println!(
+                "        consumer: {} ({} fields)",
+                cons.source.file,
+                cons.fields.len()
+            );
+        }
+        if !c.defined_by.is_empty() {
+            let ds: Vec<String> = c.defined_by.iter().map(|d| d.id.clone()).collect();
+            println!("        defined by: {}", ds.join(", "));
+        }
+    }
+
+    println!("\n  {} ({})", "Provenance edges".bold(), m.provenance.len());
+    for e in &m.provenance {
+        let conf = match e.confidence {
+            Confidence::High => "HIGH".green(),
+            Confidence::Medium => "MED".yellow(),
+            Confidence::Low => "LOW".dimmed(),
+        };
+        let producer = e
+            .producer
+            .as_ref()
+            .map(|p| p.file.as_str())
+            .unwrap_or("(none)");
+        println!(
+            "    [{}] {} --consumes--> {} <--defines-- {}",
+            conf,
+            e.consumer.file,
+            e.contract.magenta(),
+            producer
+        );
     }
 }
