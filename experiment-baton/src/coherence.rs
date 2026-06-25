@@ -22,6 +22,7 @@ use std::path::Path;
 use serde::Serialize;
 
 use crate::intent::{Confidence, IntentContract, IntentModel, SourceRef};
+use crate::speckit::IntendedComponent;
 
 /// A flat, lowercased listing of on-disk file paths (read-only) — used to tell
 /// whether an intended component has any implementing files (C1).
@@ -159,16 +160,18 @@ pub fn analyze(model: &IntentModel, inv: &Inventory) -> CoherenceReport {
     };
 
     // --- C1: intended component with no implementing files -----------------
+    // Memory naming is free-form, so C1 is a low-confidence INFO hint (R1): it
+    // catches real gaps (a designed module with no code) but also flags
+    // architectural concepts that were never meant to be a module.
     for comp in &model.intended_components {
-        let implemented = inv.files.iter().any(|f| f.contains(&comp.id));
-        if !implemented {
+        if !component_implemented(comp, inv) {
             findings.push(Finding {
                 id: next_id(FindingClass::IntendedNotImplemented),
                 class: FindingClass::IntendedNotImplemented,
-                severity: Severity::Warning,
-                confidence: Confidence::Medium,
+                severity: Severity::Info,
+                confidence: Confidence::Low,
                 message: format!(
-                    "component '{}' is designed in .specify/memory ({:?}) but no implementing files were found",
+                    "component '{}' is designed in .specify/memory ({:?}) but no implementing files were found (low-confidence hint)",
                     comp.label, comp.kind
                 ),
                 locations: comp
@@ -249,17 +252,22 @@ pub fn analyze(model: &IntentModel, inv: &Inventory) -> CoherenceReport {
     }
 
     // --- C4: consumer spec depends on a contract a decision defined, without
-    //         acknowledging that decision -----------------------------------
+    //         acknowledging that decision. One finding per (spec, contract),
+    //         listing every unreferenced defining decision. ------------------
     for c in &model.contracts {
         if c.defined_by.is_empty() {
             continue;
         }
-        // spec consumers come from provenance edges into spec.md files.
-        for edge in model.provenance.iter().filter(|e| e.contract == c.id) {
+        let mut seen_specs: BTreeSet<&str> = BTreeSet::new();
+        for edge in model
+            .provenance
+            .iter()
+            .filter(|e| e.contract == c.id && e.consumer.file.ends_with("spec.md"))
+        {
             let Some(spec_id) = edge.consumer.symbol.as_deref() else {
                 continue;
             };
-            if !edge.consumer.file.ends_with("spec.md") {
+            if !seen_specs.insert(spec_id) {
                 continue;
             }
             let referenced = model
@@ -268,24 +276,29 @@ pub fn analyze(model: &IntentModel, inv: &Inventory) -> CoherenceReport {
                 .find(|s| s.id == spec_id)
                 .map(|s| s.referenced_decisions.clone())
                 .unwrap_or_default();
+            let mut unref: Vec<String> = Vec::new();
             for d in &c.defined_by {
-                // the spec that *owns* the decision is exempt
-                if d.location == spec_id {
+                if d.location == spec_id || referenced.iter().any(|r| r == &d.id) {
                     continue;
                 }
-                if !referenced.iter().any(|r| r == &d.id) {
-                    findings.push(Finding {
-                        id: next_id(FindingClass::ConsumerVsChangedDecision),
-                        class: FindingClass::ConsumerVsChangedDecision,
-                        severity: Severity::Warning,
-                        confidence: edge.confidence,
-                        message: format!(
-                            "spec '{}' consumes contract '{}' but never references its defining decision {} ({})",
-                            spec_id, c.id, d.id, d.location
-                        ),
-                        locations: vec![edge.consumer.clone()],
-                    });
+                if !unref.contains(&d.id) {
+                    unref.push(d.id.clone());
                 }
+            }
+            if !unref.is_empty() {
+                findings.push(Finding {
+                    id: next_id(FindingClass::ConsumerVsChangedDecision),
+                    class: FindingClass::ConsumerVsChangedDecision,
+                    severity: Severity::Warning,
+                    confidence: edge.confidence,
+                    message: format!(
+                        "spec '{}' consumes contract '{}' but never references its defining decision(s): {}",
+                        spec_id,
+                        c.id,
+                        unref.join(", ")
+                    ),
+                    locations: vec![edge.consumer.clone()],
+                });
             }
         }
     }
@@ -312,4 +325,26 @@ fn contract_confidence(model: &IntentModel, c: &IntentContract) -> Confidence {
 
 fn join(set: &BTreeSet<String>) -> String {
     set.iter().cloned().collect::<Vec<_>>().join(", ")
+}
+
+/// Lowercase, ASCII-alphanumeric-only form (drops spaces/hyphens/accents).
+fn slugify(s: &str) -> String {
+    s.chars()
+        .filter(|c| c.is_ascii_alphanumeric())
+        .map(|c| c.to_ascii_lowercase())
+        .collect()
+}
+
+/// A component counts as implemented when a path segment equals its slug or its
+/// label's first word — so `Identity Module` matches `internal/modules/identity`
+/// without `identity-module` ever matching literally.
+fn component_implemented(comp: &IntendedComponent, inv: &Inventory) -> bool {
+    let slug = slugify(&comp.id);
+    let first = comp.label.split_whitespace().next().map(slugify).unwrap_or_default();
+    inv.files.iter().any(|f| {
+        f.split('/').any(|seg| {
+            let s = slugify(seg);
+            (!slug.is_empty() && s == slug) || (!first.is_empty() && s == first)
+        })
+    })
 }

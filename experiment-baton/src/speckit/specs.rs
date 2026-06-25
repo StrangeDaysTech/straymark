@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 
-use crate::scan::{scan_endpoints, scan_ids};
+use crate::scan::{normalize_endpoint, scan_endpoints, scan_ids};
 
 /// A single SpecKit feature spec, as far as Phase 1 mines it.
 #[derive(Debug, Clone, Serialize, Default)]
@@ -44,6 +44,10 @@ pub struct BacklogDecision {
     /// Governance documents the decision references (e.g. the AILOG that
     /// recorded it). Phase 2 turns these into provenance edges.
     pub references: Vec<String>,
+    /// Normalized contract ids (endpoints) named in the decision's own section —
+    /// the *precise* link from a decision to the contracts it actually defines
+    /// (avoids attaching every decision to every endpoint the spec mentions).
+    pub endpoints: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -153,11 +157,19 @@ fn parse_backlog_decisions(body: &str) -> Vec<BacklogDecision> {
             })
             .map(clean_line);
         let references = scan_ids(&section.body, "AILOG-");
+        let mut endpoints: Vec<String> = scan_endpoints(&section.body)
+            .iter()
+            .map(|e| normalize_endpoint(e))
+            .filter(|c| !c.is_empty())
+            .collect();
+        endpoints.sort();
+        endpoints.dedup();
         out.push(BacklogDecision {
             id,
             title: section.heading,
             status,
             references,
+            endpoints,
         });
     }
     out

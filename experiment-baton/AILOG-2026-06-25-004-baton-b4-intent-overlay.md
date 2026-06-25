@@ -81,7 +81,7 @@ Completed 2026-06-25 — AILOG-2026-06-25-003.
 Completed 2026-06-25 — this AILOG's PR. (Loom web rendering → follow-on.)
 
 ### Batch 5 — B5: Sentinel dogfood + acceptance (T5.1–T5.5)
-(pending)
+Completed 2026-06-25 — see AILOG-2026-06-25-005.
 
 ## Modified Files
 

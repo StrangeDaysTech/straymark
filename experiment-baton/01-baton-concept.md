@@ -188,8 +188,8 @@ Coherencia primero; clasificar-y-recomendar antes que ejecutar; plataforma como 
 
 | Fase | Alcance | Resultado | Toca modelos |
 |---|---|---|---|
-| **0 — Encuadre** | Este documento; Charter + specs de Baton; fronteras `core` para graduar | Contrato conceptual estable | No |
-| **1 — Coherence Bridge (read-only, en core)** | Investigar hooks de SpecKit; ingerir el plan global; reconciliar contra gobernanza; extender Loom con el overlay *intención vs. estado* | Caza la deriva (telemetría mockup, PolicyEngine) sin tocar modelos | No |
+| **0 — Encuadre** ✅ | Este documento; Charter + specs de Baton; fronteras `core` para graduar | Contrato conceptual estable | No |
+| **1 — Coherence Bridge (read-only)** ✅ **HECHA (2026-06-25)** | Adaptador SpecKit → IntentModel + procedencia → motor C1–C4 → overlay para Loom; dogfood en Sentinel | Caza la deriva #304-class read-only; gate cumplido. Ver `03-sentinel-dogfood-report.md` y `CHARTER-01` | No |
 | **2 — Clasificación + router en seco** | Esquema de clasificación barato; router que **recomienda** (no ejecuta); telemetría de "qué iría a qué tier"; experimentar granularidad de unidad enrutable en Sentinel | Visibilidad económica + validación del principio de §4.2, sin riesgo | Solo telemetría |
 | **3 — Ejecución bajo política** | Registro de modelos; archivos de config; ejecución aislada; tracking de costo real; (posible) interfaz web de config/vigilancia | Ahorro medible de costo por resultado aceptado | Sí |
 | **Track P — Plataforma** | Reingeniería del servidor interno hacia host de módulos (Loom + Baton) | Vehículo de graduación | — |

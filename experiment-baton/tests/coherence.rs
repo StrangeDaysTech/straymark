@@ -29,7 +29,7 @@ fn c1_flags_policyengine_as_intended_not_implemented() {
         .collect();
     assert_eq!(c1.len(), 1, "only PolicyEngine should be unimplemented");
     assert!(c1[0].message.contains("PolicyEngine"));
-    assert_eq!(c1[0].severity, Severity::Warning);
+    assert_eq!(c1[0].severity, Severity::Info, "C1 is a low-confidence hint");
 }
 
 #[test]
