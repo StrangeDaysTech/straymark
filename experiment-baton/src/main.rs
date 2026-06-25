@@ -9,6 +9,7 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use colored::Colorize;
 
+use straymark_baton::coherence::{CoherenceReport, Severity};
 use straymark_baton::intent::{Confidence, IntentModel};
 use straymark_baton::speckit;
 
@@ -39,12 +40,41 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutFmt::Text)]
         out: OutFmt,
     },
+    /// Read-only coherence report: findings C1–C4 (B3). Exit 1 if any blocking
+    /// finding is reported (CI-gateable).
+    Coherence {
+        /// Project root (default: current directory).
+        path: Option<PathBuf>,
+        #[arg(long, value_enum, default_value_t = OutFmt::Text)]
+        out: OutFmt,
+        /// Only report findings at or above this confidence.
+        #[arg(long, value_enum, default_value_t = MinConf::Low)]
+        min_confidence: MinConf,
+    },
 }
 
 #[derive(Copy, Clone, ValueEnum)]
 enum OutFmt {
     Text,
     Json,
+    Markdown,
+}
+
+#[derive(Copy, Clone, ValueEnum)]
+enum MinConf {
+    Low,
+    Medium,
+    High,
+}
+
+impl From<MinConf> for Confidence {
+    fn from(m: MinConf) -> Self {
+        match m {
+            MinConf::Low => Confidence::Low,
+            MinConf::Medium => Confidence::Medium,
+            MinConf::High => Confidence::High,
+        }
+    }
 }
 
 fn main() -> anyhow::Result<()> {
@@ -52,6 +82,15 @@ fn main() -> anyhow::Result<()> {
     match cli.command {
         Command::Inspect { path, out } => inspect(path.unwrap_or_else(|| PathBuf::from(".")), out),
         Command::Intent { path, out } => intent(path.unwrap_or_else(|| PathBuf::from(".")), out),
+        Command::Coherence {
+            path,
+            out,
+            min_confidence,
+        } => coherence(
+            path.unwrap_or_else(|| PathBuf::from(".")),
+            out,
+            min_confidence.into(),
+        ),
     }
 }
 
@@ -68,7 +107,7 @@ fn inspect(root: PathBuf, out: OutFmt) -> anyhow::Result<()> {
 
     match out {
         OutFmt::Json => println!("{}", serde_json::to_string_pretty(&artifacts)?),
-        OutFmt::Text => render_text(&artifacts),
+        _ => render_text(&artifacts),
     }
     Ok(())
 }
@@ -120,9 +159,95 @@ fn intent(root: PathBuf, out: OutFmt) -> anyhow::Result<()> {
     let model = IntentModel::build(&root);
     match out {
         OutFmt::Json => println!("{}", serde_json::to_string_pretty(&model)?),
-        OutFmt::Text => render_intent(&model),
+        _ => render_intent(&model),
     }
     Ok(())
+}
+
+fn coherence(root: PathBuf, out: OutFmt, min: Confidence) -> anyhow::Result<()> {
+    let report = CoherenceReport::build(&root).filtered(min);
+    match out {
+        OutFmt::Json => println!("{}", serde_json::to_string_pretty(&report)?),
+        OutFmt::Markdown => render_coherence_md(&report),
+        OutFmt::Text => render_coherence_text(&report),
+    }
+    // CI gate: any blocking finding fails the run.
+    if report.blocking_count() > 0 {
+        std::process::exit(1);
+    }
+    Ok(())
+}
+
+fn sev_label(s: Severity) -> colored::ColoredString {
+    match s {
+        Severity::Blocking => "BLOCKING".red().bold(),
+        Severity::Warning => "WARNING".yellow(),
+        Severity::Info => "INFO".dimmed(),
+    }
+}
+
+fn conf_label(c: Confidence) -> &'static str {
+    match c {
+        Confidence::High => "high",
+        Confidence::Medium => "medium",
+        Confidence::Low => "low",
+    }
+}
+
+fn render_coherence_text(r: &CoherenceReport) {
+    println!("{}", "Coherence report (Baton B3, read-only)".bold());
+    if r.findings.is_empty() {
+        println!("\n  {} no findings", "✓".green());
+        return;
+    }
+    println!(
+        "\n  {} finding(s) — {} blocking\n",
+        r.findings.len(),
+        r.blocking_count()
+    );
+    for f in &r.findings {
+        println!(
+            "  [{}] {} {} ({} confidence)",
+            f.class.code().cyan(),
+            sev_label(f.severity),
+            f.id.dimmed(),
+            conf_label(f.confidence)
+        );
+        println!("      {}", f.message);
+        for loc in &f.locations {
+            let sym = loc.symbol.as_deref().map(|s| format!(" [{s}]")).unwrap_or_default();
+            println!("        ↳ {}{}", loc.file.dimmed(), sym.dimmed());
+        }
+    }
+}
+
+fn render_coherence_md(r: &CoherenceReport) {
+    println!("# Coherence report (Baton)\n");
+    println!(
+        "{} finding(s), {} blocking.\n",
+        r.findings.len(),
+        r.blocking_count()
+    );
+    if r.findings.is_empty() {
+        println!("No findings.");
+        return;
+    }
+    println!("| Class | Severity | Confidence | Finding |");
+    println!("|---|---|---|---|");
+    for f in &r.findings {
+        let sev = match f.severity {
+            Severity::Blocking => "blocking",
+            Severity::Warning => "warning",
+            Severity::Info => "info",
+        };
+        println!(
+            "| {} | {} | {} | {} |",
+            f.class.code(),
+            sev,
+            conf_label(f.confidence),
+            f.message.replace('|', "\\|")
+        );
+    }
 }
 
 fn render_intent(m: &IntentModel) {

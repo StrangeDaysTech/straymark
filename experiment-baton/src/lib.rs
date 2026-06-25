@@ -13,6 +13,7 @@
 //! Scope rule: touches no models (no routing/tier/budget/token/cost).
 
 pub mod codescan;
+pub mod coherence;
 pub mod intent;
 pub mod provenance;
 mod scan;

@@ -22,6 +22,10 @@ pub struct ParsedSpec {
     pub decisions: Vec<BacklogDecision>,
     /// API endpoints this spec references (a conservative consume hint).
     pub consumes: Vec<ConsumesHint>,
+    /// Governance decision ids (`PM-`/`AILOG-`/`AIDEC-`/`ADR-`) cited anywhere in
+    /// the spec's own files — used to tell whether a consumer spec acknowledges
+    /// the decision that defined a contract it depends on (finding class C4).
+    pub referenced_decisions: Vec<String>,
     /// Files under `contracts/`.
     pub contract_files: Vec<PathBuf>,
 }
@@ -86,12 +90,31 @@ fn parse_spec_dir(dir: &Path) -> ParsedSpec {
     }
     dedup_consumes(&mut consumes);
 
+    // Decision ids cited anywhere in the spec's own authored files (spec.md +
+    // plan.md + tasks.md), so a consumer that acknowledges the defining decision
+    // is exempt from C4.
+    let mut referenced_decisions = Vec::new();
+    let mut seen_dec = HashSet::new();
+    for fname in ["spec.md", "plan.md", "tasks.md"] {
+        let Some(body) = read(dir.join(fname)) else {
+            continue;
+        };
+        for prefix in ["PM-", "AILOG-", "AIDEC-", "ADR-"] {
+            for id in scan_ids(&body, prefix) {
+                if seen_dec.insert(id.clone()) {
+                    referenced_decisions.push(id);
+                }
+            }
+        }
+    }
+
     ParsedSpec {
         id,
         title,
         requirements,
         decisions,
         consumes,
+        referenced_decisions,
         contract_files,
     }
 }
