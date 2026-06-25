@@ -73,7 +73,7 @@ Completed 2026-06-25 — AILOG-2026-06-25-001.
 Completed 2026-06-25 — this AILOG's PR.
 
 ### Batch 3 — B3: coherence engine (C1–C4) + CLI (T3.1–T3.5)
-(pending)
+Completed 2026-06-25 — see AILOG-2026-06-25-003.
 
 ### Batch 4 — B4: Loom intent overlay (T4.1–T4.3)
 (pending)
