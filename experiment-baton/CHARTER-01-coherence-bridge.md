@@ -3,6 +3,7 @@ charter_id: CHARTER-01-coherence-bridge
 status: declared
 effort_estimate: L
 trigger: "Issue #304 — deriva real de contrato cross-spec en Sentinel (adopter); más los casos telemetría-mockup y PolicyEngine. Ninguna herramienta compara la arquitectura intencionada (SpecKit) con la emergente (StrayMark/Loom)."
+originating_spec: experiment-baton/specs/001-coherence-bridge/spec.md
 originating_concept: experiment-baton/01-baton-concept.md
 originating_research: experiment-baton/02-speckit-integration-research.md
 related_issues: [304, 303]
