@@ -322,6 +322,15 @@ fn ext(path: &Path) -> Option<&str> {
     path.extension().and_then(|e| e.to_str())
 }
 
+/// Tests describe assumed contracts, not produced ones — never a contract source.
+fn is_test_file(path: &Path) -> bool {
+    let name = path.file_name().and_then(|n| n.to_str()).unwrap_or_default();
+    name.ends_with("_test.go")
+        || name.contains(".test.")
+        || name.contains(".spec.")
+        || name.ends_with(".d.ts")
+}
+
 fn walk_code(root: &Path) -> Vec<std::path::PathBuf> {
     let mut out = Vec::new();
     let mut stack = vec![root.to_path_buf()];
@@ -339,7 +348,9 @@ fn walk_code(root: &Path) -> Vec<std::path::PathBuf> {
                 if !SKIP_DIRS.contains(&name) {
                     stack.push(p);
                 }
-            } else if matches!(ext(&p), Some("go") | Some("ts") | Some("tsx")) {
+            } else if matches!(ext(&p), Some("go") | Some("ts") | Some("tsx"))
+                && !is_test_file(&p)
+            {
                 out.push(p);
             }
         }

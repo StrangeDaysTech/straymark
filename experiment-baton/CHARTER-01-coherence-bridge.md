@@ -1,6 +1,7 @@
 ---
 charter_id: CHARTER-01-coherence-bridge
-status: declared
+status: closed
+closed_at: "2026-06-25"
 effort_estimate: L
 trigger: "Issue #304 — deriva real de contrato cross-spec en Sentinel (adopter); más los casos telemetría-mockup y PolicyEngine. Ninguna herramienta compara la arquitectura intencionada (SpecKit) con la emergente (StrayMark/Loom)."
 originating_spec: experiment-baton/specs/001-coherence-bridge/spec.md
@@ -11,7 +12,7 @@ related_issues: [304, 303]
 
 # Charter: Baton Fase 1 — Coherence Bridge (intención SpecKit ↔ gobernanza ↔ arquitectura), read-only
 
-> **Status (espejo del frontmatter; la fuente de verdad es el frontmatter):** declared. Effort: L.
+> **Status (espejo del frontmatter; la fuente de verdad es el frontmatter):** closed (2026-06-25). Effort: L.
 > **Origen:** concepto [01-baton-concept.md](01-baton-concept.md) §4.1 + investigación [02-speckit-integration-research.md](02-speckit-integration-research.md). Caza el patrón del issue #304.
 > **Encuadre:** primera fase del experimento Baton. **No toca modelos.** Prototipa en `experiment-baton/`, con la intención explícita de graduar la lógica pura/typed a `straymark-core` una vez validada.
 
@@ -102,3 +103,34 @@ Esta fase construye la **costura de lectura** (de las tres del documento de inve
 - Frontmatter: `declared` → `in-progress` al arrancar; `in-progress` → `closed` al cerrar (+ `closed_at`).
 - No borrar el archivo — el historial de planeación importa.
 - **Graduation gate de Baton (parcial, ver concepto §7):** esta fase se considera exitosa si el diagnóstico, corrido read-only contra Sentinel, **caza al menos una deriva arquitectónica real (#304 y/o PolicyEngine) que la revisión humana había dejado pasar.**
+
+## Closing notes
+
+Cerrado 2026-06-25 tras B5 (AILOG-2026-06-25-005). Entregado en 5 batches/PRs:
+B1 adaptador SpecKit (#308), B2 IntentModel + procedencia (#309), B3 motor de
+coherencia C1–C4 (#310), B4 overlay de intención para Loom + NFR2 (#311), B5
+dogfood + calibración + cierre.
+
+**Graduation gate: MET.** Corrido read-only contra Sentinel (HEAD `24d5a66`, cero
+mutación verificada), el bridge caza una deriva real #304-class previamente no
+señalada — `005-frontend-dashboard` consume `services.public-visibility` sin
+referenciar su decisión definitoria PM-001 / `AILOG-2026-04-21-002` — además de
+gaps reales (DevPortal, UsageGuard) vía el overlay. Evidencia completa en
+[`03-sentinel-dogfood-report.md`](03-sentinel-dogfood-report.md).
+
+**Desviaciones vs. el plan declarado (reconciliadas en su PR):**
+- **T3.5** (consistencia NFR2 con `glob_match`) se movió de B3 a **B4**, donde el
+  overlay une con el `model.yml` que sí lleva globs (en B3 C1 usa substring, no
+  hay matcher de globs que comparar). Documentado en AILOG-003/004.
+- **Render web en Loom** (parte de T4.2): B4 entrega el overlay *consumible* por
+  Loom (tipado + JSON, FR6); el render en el frontend Vite/TS de experiment-loom
+  queda como follow-on para no acoplar un PR de Baton al build del frontend.
+- **Calibración en B5**: los datos reales de Sentinel obligaron a 4 fixes de
+  precisión (liga decisión→contrato por endpoint, excluir tests como productores,
+  C1→info, agregación C4) — 90→6 findings. Es el valor esperado de un dogfood.
+
+**Limitación conocida (top follow-up):** el keying de contrato sobre archivos de
+tipos generados (`types.gen.ts`) funde contratos, así que el mismatch de
+campos/enums de salud (C2/C3) no se aísla en Sentinel (0 blocking by design). El
+seguimiento y la *costura de activación* (hook `before_implement` de SpecKit) se
+documentan en `03-sentinel-dogfood-report.md` §6.

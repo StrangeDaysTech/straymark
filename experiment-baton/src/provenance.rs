@@ -52,11 +52,14 @@ pub fn infer(
                 .push(spec_src.clone());
         }
 
-        // A decision recorded in a spec defines every contract that spec
-        // references (co-location anchor — the spec that owns the endpoint and
-        // records a decision about it).
+        // A decision defines only the contracts its *own section* names (precise
+        // link). Falls back to nothing when the decision references no endpoint —
+        // we never claim a decision defines a contract it doesn't mention.
         for d in &spec.decisions {
-            for cid in &cids {
+            for cid in &d.endpoints {
+                if cid.is_empty() {
+                    continue;
+                }
                 let bucket = defined_by.entry(cid.clone()).or_default();
                 push_decision(bucket, DecisionKind::Pm, &d.id, &spec.id);
                 for r in &d.references {
