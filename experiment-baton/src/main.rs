@@ -11,6 +11,7 @@ use colored::Colorize;
 
 use straymark_baton::coherence::{CoherenceReport, Severity};
 use straymark_baton::intent::{Confidence, IntentModel};
+use straymark_baton::overlay::{IntentState, OverlayReport};
 use straymark_baton::speckit;
 
 #[derive(Parser)]
@@ -50,6 +51,13 @@ enum Command {
         /// Only report findings at or above this confidence.
         #[arg(long, value_enum, default_value_t = MinConf::Low)]
         min_confidence: MinConf,
+    },
+    /// Read-only intent overlay for Loom: per-component intended vs implemented (B4).
+    Overlay {
+        /// Project root (default: current directory).
+        path: Option<PathBuf>,
+        #[arg(long, value_enum, default_value_t = OutFmt::Text)]
+        out: OutFmt,
     },
 }
 
@@ -91,6 +99,7 @@ fn main() -> anyhow::Result<()> {
             out,
             min_confidence.into(),
         ),
+        Command::Overlay { path, out } => overlay(path.unwrap_or_else(|| PathBuf::from(".")), out),
     }
 }
 
@@ -176,6 +185,40 @@ fn coherence(root: PathBuf, out: OutFmt, min: Confidence) -> anyhow::Result<()> 
         std::process::exit(1);
     }
     Ok(())
+}
+
+fn overlay(root: PathBuf, out: OutFmt) -> anyhow::Result<()> {
+    let report = OverlayReport::build(&root);
+    match out {
+        OutFmt::Json => println!("{}", serde_json::to_string_pretty(&report)?),
+        _ => render_overlay(&report),
+    }
+    Ok(())
+}
+
+fn render_overlay(r: &OverlayReport) {
+    println!("{}", "Intent overlay (Baton B4, read-only)".bold());
+    if !r.model_found {
+        eprintln!(
+            "  {} no architecture model.yml found — overlay limited to intended components",
+            "note:".yellow()
+        );
+    }
+    if r.components.is_empty() {
+        println!("\n  (nothing to overlay)");
+        return;
+    }
+    for c in &r.components {
+        let (mark, label) = match c.state {
+            IntentState::IntendedAndImplemented => ("✓".green(), "intended & implemented".green()),
+            IntentState::IntendedNotImplemented => ("!".red(), "intended, NOT implemented".red()),
+            IntentState::ImplementedNotIntended => {
+                ("?".yellow(), "implemented, NOT intended".yellow())
+            }
+        };
+        let modeled = if c.modeled { "" } else { " (not modeled)" };
+        println!("  {} {} — {}{}", mark, c.label.bold(), label, modeled.dimmed());
+    }
 }
 
 fn sev_label(s: Severity) -> colored::ColoredString {

@@ -1,0 +1,13 @@
+version: 0
+layers:
+  - { id: backend, label: Backend, order: 0 }
+  - { id: frontend, label: Frontend, order: 1 }
+components:
+  - id: statuscenter
+    label: StatusCenter
+    layer: backend
+    globs: ["internal/statuscenter/**"]
+  - id: web-api
+    label: Web API client
+    layer: frontend
+    globs: ["web/**"]
