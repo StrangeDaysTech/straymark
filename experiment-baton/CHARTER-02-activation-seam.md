@@ -1,6 +1,7 @@
 ---
 charter_id: CHARTER-02-activation-seam
-status: declared
+status: closed
+closed_at: "2026-06-25"
 effort_estimate: M
 trigger: "Fase 1 entregó la detección read-only on-demand; el caso #304 (telemetría mockup, contrato de salud) se origina cuando un agente codifica ANTES de que nadie corra el diagnóstico. La señal debe llegar en tiempo de autoría."
 originating_concept: experiment-baton/01-baton-concept.md
@@ -10,7 +11,7 @@ related_issues: [316, 304, 303]
 
 # Charter: Baton — costura de activación (extensión SpecKit, hook `before_implement`)
 
-> **Status (espejo del frontmatter; la fuente de verdad es el frontmatter):** declared. Effort: M.
+> **Status (espejo del frontmatter; la fuente de verdad es el frontmatter):** closed (2026-06-25). Effort: M.
 > **Origen:** concepto [01-baton-concept.md](01-baton-concept.md) §4.1 (costura de *activación*) + investigación [02-speckit-integration-research.md](02-speckit-integration-research.md) §2 (extensiones/hooks de SpecKit v0.11). Cierra el issue #316.
 > **Encuadre:** continuación de la Fase 1 (Coherence Bridge). Reutiliza el motor read-only ya construido; **no toca modelos**. La Fase 2 (routing económico) sigue siendo posterior.
 
@@ -95,3 +96,25 @@ El precedente existe y está verificado en Sentinel (research §2.2): la extensi
 - Frontmatter: `declared` → `in-progress` al arrancar; `in-progress` → `closed` al cerrar (+ `closed_at`).
 - No borrar el archivo.
 - **Gate de éxito:** con la extensión instalada, un `before_implement` en Sentinel surface al menos un finding #304-class al agente **antes** de implementar, sin romper el flujo de SpecKit ni mutar el repo.
+
+## Closing notes
+
+Cerrado 2026-06-25 (AILOG-2026-06-25-006), en un solo incremento. **Gate de éxito
+CUMPLIDO:** el hook `before_implement`, corrido read-only desde Sentinel para el
+feature `005-frontend-dashboard`, surface el C4 real (`services.public-visibility`
+consumido sin referenciar PM-001 / `AILOG-2026-04-21-002`) en modo advisory, sin
+romper el flujo ni mutar el repo (`git status` intacto).
+
+Entregado: `--spec` para acotar al feature; el paquete de extensión `straymark`
+(`extension/straymark/`: manifiesto + comando + config + script `coherence-check.sh`
++ README); specs 002; 4 tests nuevos. Reusa el motor de Fase 1; **no toca modelos**.
+
+**Ajuste durante la ejecución (reconciliado en este PR):** C4 pasó de heredar la
+confianza del edge consumidor-spec (Low cuando no hay productor de código) a
+**Medium fija** — la fuerza de C4 viene del enlace preciso decisión↔contrato (B5),
+no del productor; si no, el default `medium` lo ocultaba (lo destapó el dogfood).
+
+**Diferido a graduación:** release formal de `straymark-baton` + empaquetar la
+extensión vía `dist/` (hoy install manual, ver README). El signal blocking C2/C3
+sigue gated por #313 (keying de tipos generados), así que el finding de autoría en
+Sentinel es el C4 de propagación de decisión.

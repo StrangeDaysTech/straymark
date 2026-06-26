@@ -2567,6 +2567,7 @@ dependencies = [
  "colored",
  "serde",
  "serde_json",
+ "serde_yaml",
  "straymark-core",
 ]
 

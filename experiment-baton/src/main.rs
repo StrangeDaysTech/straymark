@@ -51,6 +51,10 @@ enum Command {
         /// Only report findings at or above this confidence.
         #[arg(long, value_enum, default_value_t = MinConf::Low)]
         min_confidence: MinConf,
+        /// Scope to one feature/spec id (only contracts that feature consumes) —
+        /// the authoring-time view a SpecKit `before_implement` hook wants.
+        #[arg(long)]
+        spec: Option<String>,
     },
     /// Read-only intent overlay for Loom: per-component intended vs implemented (B4).
     Overlay {
@@ -94,10 +98,12 @@ fn main() -> anyhow::Result<()> {
             path,
             out,
             min_confidence,
+            spec,
         } => coherence(
             path.unwrap_or_else(|| PathBuf::from(".")),
             out,
             min_confidence.into(),
+            spec,
         ),
         Command::Overlay { path, out } => overlay(path.unwrap_or_else(|| PathBuf::from(".")), out),
     }
@@ -173,8 +179,8 @@ fn intent(root: PathBuf, out: OutFmt) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn coherence(root: PathBuf, out: OutFmt, min: Confidence) -> anyhow::Result<()> {
-    let report = CoherenceReport::build(&root).filtered(min);
+fn coherence(root: PathBuf, out: OutFmt, min: Confidence, spec: Option<String>) -> anyhow::Result<()> {
+    let report = CoherenceReport::build_scoped(&root, spec.as_deref()).filtered(min);
     match out {
         OutFmt::Json => println!("{}", serde_json::to_string_pretty(&report)?),
         OutFmt::Markdown => render_coherence_md(&report),

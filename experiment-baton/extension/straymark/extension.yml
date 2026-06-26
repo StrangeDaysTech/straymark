@@ -1,0 +1,39 @@
+schema_version: "1.0"
+
+extension:
+  id: straymark
+  name: "StrayMark Coherence Bridge"
+  version: "0.1.0"
+  description: "Runs the Baton coherence check at authoring time (before_implement) so a consumer is never implemented against a stale or assumed contract"
+  author: strange-days-tech
+  repository: https://github.com/StrangeDaysTech/straymark
+  license: MIT
+
+requires:
+  speckit_version: ">=0.11.0"
+  tools:
+    - name: straymark-baton
+      required: false
+
+provides:
+  commands:
+    - name: speckit.straymark.coherence-check
+      file: commands/speckit.straymark.coherence-check.md
+      description: "Read-only coherence check scoped to the active feature"
+  config:
+    - name: "straymark-config.yml"
+      template: "config-template.yml"
+      description: "Coherence-check gate mode + binary discovery"
+      required: false
+
+hooks:
+  before_implement:
+    command: speckit.straymark.coherence-check
+    optional: true
+    prompt: "Run the StrayMark coherence check before implementing?"
+    description: "Surface cross-spec contract drift before any code is written"
+
+tags:
+  - "straymark"
+  - "coherence"
+  - "governance"
