@@ -54,6 +54,9 @@ impl TaskClass {
 pub struct Classification {
     pub class: TaskClass,
     pub confidence: Confidence,
+    /// True when the unit's signals pointed at more than one class and we routed
+    /// up — a within-unit heterogeneity marker the telemetry aggregates (§10.4).
+    pub conflict: bool,
     pub rationale: String,
 }
 
@@ -87,6 +90,7 @@ pub fn classify(s: &UnitSignals) -> Classification {
         return Classification {
             class: TaskClass::Implementer,
             confidence: Confidence::Low,
+            conflict: false,
             rationale: "no cue or risk signal — default Implementer (route up from Operator)".into(),
         };
     }
@@ -124,6 +128,7 @@ pub fn classify(s: &UnitSignals) -> Classification {
     Classification {
         class,
         confidence,
+        conflict: conflicting,
         rationale: reasons.join("; "),
     }
 }

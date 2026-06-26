@@ -102,7 +102,17 @@ B5 must adjudicate under §4.2 — High needs `effort_estimate`, which only char
 carry, so most units classify on cue alone.
 
 ### Batch 4 — B4: tier policy + telemetry + CLI (T4.1–T4.5)
-Pending.
+Completed 2026-06-26. `src/tiers.rs` (config-driven `baton:` policy + illustrative
+defaults), `src/route.rs` (dry-run tier decision + high-risk escalation),
+`src/telemetry.rs` (per-granularity `EconomicTelemetry`), CLI `classify` +
+`route --dry-run` (`--dry-run` mandatory; no execution path). 17 new unit tests.
+Sentinel dogfood (read-only, `git status` clean): **ALL 762 units — all-frontier
+$1293.60 → routed $93.68, gross saving $1199.92 (93%), net $1184.68, routable.**
+But the honesty guards tell the real story: **57% low-confidence, 57% of the
+saving rests on low-confidence routing**, while `conflict_fraction` is only
+5–15%. Reading: the granularities are *not* very heterogeneous (low conflict) —
+the blocker is **signal coverage**, not mixing. That already tilts the §10.4
+answer and is exactly what B5 must adjudicate before claiming the saving is real.
 
 ### Batch 5 — B5: Sentinel dogfood + acceptance (T5.1–T5.6)
 Pending.

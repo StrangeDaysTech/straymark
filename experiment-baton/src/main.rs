@@ -9,10 +9,15 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use colored::Colorize;
 
+use straymark_baton::classify::classify;
 use straymark_baton::coherence::{CoherenceReport, Severity};
 use straymark_baton::intent::{Confidence, IntentModel};
 use straymark_baton::overlay::{IntentState, OverlayReport};
+use straymark_baton::signals::signals_for;
 use straymark_baton::speckit;
+use straymark_baton::telemetry::{build_report, EconomicTelemetry, UnitRouting};
+use straymark_baton::tiers::Policy;
+use straymark_baton::units::{inventory, Granularity};
 
 #[derive(Parser)]
 #[command(
@@ -63,6 +68,35 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutFmt::Text)]
         out: OutFmt,
     },
+    /// Read-only task classification of recorded work units (Phase 2, B3).
+    Classify {
+        /// Project root (default: current directory).
+        path: Option<PathBuf>,
+        #[arg(long, value_enum, default_value_t = OutFmt::Text)]
+        out: OutFmt,
+        /// Granularity: charter|batch|followup|task|all.
+        #[arg(long, default_value = "all")]
+        granularity: String,
+    },
+    /// Read-only DRY-RUN tier router + economic telemetry (Phase 2, B4).
+    /// Recommends a tier per unit and reports the §4.2 saving-vs-overhead verdict.
+    /// Never executes a model — `--dry-run` is mandatory in Phase 2.
+    Route {
+        /// Project root (default: current directory).
+        path: Option<PathBuf>,
+        /// Required: Phase 2 only recommends; there is no execution path.
+        #[arg(long)]
+        dry_run: bool,
+        #[arg(long, value_enum, default_value_t = OutFmt::Text)]
+        out: OutFmt,
+        /// Granularity: charter|batch|followup|task|all.
+        #[arg(long, default_value = "all")]
+        granularity: String,
+        /// Path to a config file with a `baton:` block (default:
+        /// `<root>/.straymark/config.yml`; falls back to illustrative defaults).
+        #[arg(long)]
+        config: Option<PathBuf>,
+    },
 }
 
 #[derive(Copy, Clone, ValueEnum)]
@@ -106,6 +140,170 @@ fn main() -> anyhow::Result<()> {
             spec,
         ),
         Command::Overlay { path, out } => overlay(path.unwrap_or_else(|| PathBuf::from(".")), out),
+        Command::Classify {
+            path,
+            out,
+            granularity,
+        } => classify_cmd(path.unwrap_or_else(|| PathBuf::from(".")), out, &granularity),
+        Command::Route {
+            path,
+            dry_run,
+            out,
+            granularity,
+            config,
+        } => route_cmd(
+            path.unwrap_or_else(|| PathBuf::from(".")),
+            dry_run,
+            out,
+            &granularity,
+            config,
+        ),
+    }
+}
+
+fn parse_granularity(s: &str) -> anyhow::Result<Option<Granularity>> {
+    Granularity::parse(s).ok_or_else(|| {
+        anyhow::anyhow!("unknown --granularity '{s}' (expected charter|batch|followup|task|all)")
+    })
+}
+
+fn classify_cmd(root: PathBuf, out: OutFmt, granularity: &str) -> anyhow::Result<()> {
+    let only = parse_granularity(granularity)?;
+    let units = inventory(&root, only);
+
+    #[derive(serde::Serialize)]
+    struct Row {
+        id: String,
+        granularity: Granularity,
+        class: &'static str,
+        confidence: Confidence,
+        rationale: String,
+        title: String,
+    }
+    let rows: Vec<Row> = units
+        .iter()
+        .map(|u| {
+            let c = classify(&signals_for(u));
+            Row {
+                id: u.id.clone(),
+                granularity: u.granularity,
+                class: c.class.as_str(),
+                confidence: c.confidence,
+                rationale: c.rationale,
+                title: u.title.clone(),
+            }
+        })
+        .collect();
+
+    match out {
+        OutFmt::Json => println!("{}", serde_json::to_string_pretty(&rows)?),
+        _ => {
+            println!(
+                "{} ({} units)",
+                "Task classification (Baton Phase 2, read-only)".bold(),
+                rows.len()
+            );
+            for r in &rows {
+                let title: String = r.title.chars().take(64).collect();
+                println!(
+                    "  [{}] {}  {} ({:?})  — {}",
+                    r.granularity.as_str().dimmed(),
+                    r.id.cyan(),
+                    r.class.green(),
+                    r.confidence,
+                    title
+                );
+            }
+        }
+    }
+    Ok(())
+}
+
+fn route_cmd(
+    root: PathBuf,
+    dry_run: bool,
+    out: OutFmt,
+    granularity: &str,
+    config: Option<PathBuf>,
+) -> anyhow::Result<()> {
+    if !dry_run {
+        eprintln!(
+            "{} Phase 2 only recommends — pass {} (there is no execution path).",
+            "error:".red(),
+            "--dry-run".bold()
+        );
+        std::process::exit(2);
+    }
+    let only = parse_granularity(granularity)?;
+    let units = inventory(&root, only);
+    let policy = Policy::load(&root, config.as_deref());
+    if policy.using_defaults {
+        eprintln!(
+            "{} no `baton:` config block found — using built-in illustrative tier costs.",
+            "note:".yellow()
+        );
+    }
+    let (routings, reports) = build_report(&units, &policy);
+
+    #[derive(serde::Serialize)]
+    struct RouteOut<'a> {
+        units: &'a [UnitRouting],
+        telemetry: &'a [EconomicTelemetry],
+    }
+    match out {
+        OutFmt::Json => println!(
+            "{}",
+            serde_json::to_string_pretty(&RouteOut {
+                units: &routings,
+                telemetry: &reports,
+            })?
+        ),
+        _ => render_route_text(&reports),
+    }
+    Ok(())
+}
+
+fn render_route_text(reports: &[EconomicTelemetry]) {
+    println!(
+        "{}",
+        "Dry-run router — economic telemetry (Baton Phase 2, illustrative costs)".bold()
+    );
+    for t in reports {
+        let label = match t.granularity {
+            Some(g) => g.as_str(),
+            None => "ALL",
+        };
+        let verdict = if t.routable {
+            "routable".green()
+        } else {
+            "not routable".red()
+        };
+        let pct = |f: f64| format!("{:.0}%", f * 100.0);
+        println!("\n  {} ({} units) — {}", label.bold(), t.units_total, verdict);
+        let tiers: Vec<String> = t
+            .tier_counts
+            .iter()
+            .map(|(k, v)| format!("{k} {v}"))
+            .collect();
+        println!("    tiers: {}", tiers.join(" · "));
+        println!(
+            "    cost: all-frontier {:.2} → routed {:.2}  (gross saving {:.2})",
+            t.cost_all_frontier, t.cost_routed, t.gross_savings
+        );
+        println!(
+            "    overhead {:.2} → net saving {:.2}",
+            t.classification_overhead, t.net_savings
+        );
+        println!(
+            "    caveats: {} low-confidence, {} of saving on low-confidence routing, {} conflicted",
+            pct(t.low_confidence_fraction),
+            pct(t.low_confidence_savings_fraction),
+            pct(t.conflict_fraction)
+        );
+        println!(
+            "    sensitivity: breakeven overhead/unit {:.3}, robust at 2× overhead: {}",
+            t.sensitivity.breakeven_overhead_per_unit, t.sensitivity.robust_at_2x_overhead
+        );
     }
 }
 
