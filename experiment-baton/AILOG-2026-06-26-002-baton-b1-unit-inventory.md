@@ -115,4 +115,14 @@ the blocker is **signal coverage**, not mixing. That already tilts the §10.4
 answer and is exactly what B5 must adjudicate before claiming the saving is real.
 
 ### Batch 5 — B5: Sentinel dogfood + acceptance (T5.1–T5.6)
-Pending.
+Completed 2026-06-26. `tests/dry_run_router.rs` (4 acceptance tests: coverage,
+telemetry consistency, overhead≥saving → not-routable, read-only). Full dogfood
+writeup in [`04-phase2-dry-run-dogfood.md`](04-phase2-dry-run-dogfood.md); concept
+§7 marked Phase 2 done; `CHARTER-03` closed with the graduation-gate verdict.
+**Gate MET — graduates knowledge:** routing's illustrative ceiling is ~93% and
+survives 2× overhead, but only ~43% of units route at high+medium confidence, so
+~57% of the saving is a guess. **§10.4 answer (vs the hypothesis): granularity is
+not the lever — signal coverage is** (conflict is confounded by title length; Task
+has the *highest* conflict, not Charter). Phase 3's data-justified next step: wire
+the deferred signals (complexity/arch_state/coherence) to lift confidence before
+executing.

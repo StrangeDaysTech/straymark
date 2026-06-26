@@ -1,6 +1,7 @@
 ---
 charter_id: CHARTER-03-dry-run-router
-status: in-progress
+status: closed
+closed_at: "2026-06-26"
 effort_estimate: L
 trigger: "Baton concepto §7 Fase 2 — no existe ninguna noción de modelo/tier/presupuesto/costo en StrayMark; todo el trabajo corre con el mismo modelo (commit trivial o rediseño). Presión económica §1.1 (fin de subsidios, pago por Mtoken). Tras la Fase 1 (Coherence Bridge), validar empíricamente el principio económico §4.2 sin tocar modelos."
 originating_concept: experiment-baton/01-baton-concept.md
@@ -11,7 +12,7 @@ related_issues: [304]
 
 # Charter: Baton Fase 2 — Clasificación + router en seco (dry-run, recomienda no ejecuta)
 
-> **Status (espejo del frontmatter; la fuente de verdad es el frontmatter):** in-progress. Effort: L.
+> **Status (espejo del frontmatter; la fuente de verdad es el frontmatter):** closed (2026-06-26). Effort: L.
 > **Origen:** concepto [01-baton-concept.md](01-baton-concept.md) §4.2 + §7 (Fase 2) + §10.4 (unidad enrutable).
 > **Encuadre:** segunda fase del experimento Baton. **Recomienda, no ejecuta. Toca modelos solo como telemetría — riesgo cero.** Prototipa en `experiment-baton/`, lógica pura/typed diseñada para graduar a `straymark-core`.
 
@@ -112,3 +113,42 @@ El objetivo no es ahorrar todavía — es **hacer visible el ahorro potencial y 
 - Frontmatter: `declared` → `in-progress` al arrancar; `in-progress` → `closed` al cerrar (+ `closed_at`).
 - No borrar el archivo — el historial de planeación importa.
 - **Graduation gate de Baton (Fase 2, concepto §7):** la telemetría, corrida read-only sobre Sentinel, demuestra **ahorro relativo neto positivo** (enrutado vs. todo-frontier) **después de restar el overhead de clasificación estimado** (§4.2), a alguna granularidad instrumentada — e **identifica qué granularidad paga**. Si ninguna granularidad paga, el resultado (con su evidencia) sigue siendo una graduación válida del *conocimiento*, no del ahorro: habríamos probado empíricamente que el routing-por-unidad no es rentable en este corpus, lo cual cambia el diseño de la Fase 3.
+
+## Closing notes
+
+Cerrado 2026-06-26 tras B5 (AILOG-2026-06-26-002). Entregado en 5 batches/PRs:
+B1 inventario de unidades (#323), B2 señales baratas (#324), B3 clasificador
+(#325), B4 tiers + router dry-run + telemetría + CLI (#326), B5 dogfood + cierre.
+Evidencia completa en [`04-phase2-dry-run-dogfood.md`](04-phase2-dry-run-dogfood.md).
+
+**Graduation gate: MET — y gradúa *conocimiento*, el resultado más valioso aquí.**
+Corrido read-only sobre Sentinel (762 unidades, `git status` intacto):
+
+- **Ahorro neto positivo en TODAS las granularidades** (ALL: bruto ~93% ilustrativo,
+  neto $1184.68, robusto a 2× overhead; overhead = 1.2% del ahorro bruto, así que el
+  principio §4.2 no se viola por el costo de clasificar).
+- **Pero el ahorro es frágil:** solo ~43% de las unidades enrutan con confianza
+  high+medium; **57% del ahorro descansa en routing de baja confianza** (dominado por
+  el default no-cue, no por conflictos, que son 5–15%).
+- **Respuesta empírica a §10.4 (contraria a la hipótesis):** la granularidad **no** es
+  la palanca. El conflicto (proxy de heterogeneidad) está confundido por la verbosidad
+  del título — Task tiene el conflicto *más alto* (15%), Charter el más bajo (6%) — y
+  la confianza es uniforme (37–46%) en todas. **La cobertura de señal, no la
+  granularidad, es la restricción.** La decisión "instrumentar lo existente" se mantiene;
+  una sub-unidad más fina (§4.3b) no ayudaría (Task ya es la más fina y no es más
+  confiable).
+
+**Reencuadre para la Fase 3 (data-justified, no especulativo):** el camino a un ahorro
+*confiable* no es otra unidad enrutable, es **cablear las señales diferidas** (complejidad
+— requiere graduar `analyze` de `cli` a `core`; arch_state de la proyección Loom;
+findings de coherencia de la Fase 1) para subir la confianza antes de ejecutar. Filable
+como el siguiente trabajo de Baton cuando se retome.
+
+**Desviaciones vs. el plan declarado (reconciliadas en su PR):**
+- **Señales pesadas diferidas en B2** (complejidad/arch_state/coherencia): el plan §4 las
+  listaba; se difirieron por el principio cheap-first y porque `analyze` vive en `cli`. El
+  dogfood de B5 las *justifica* retroactivamente como el siguiente paso — exactamente el
+  enfoque empírico del charter.
+- **`homogeneity` → `conflict_fraction`**: la métrica de heterogeneidad del spec §3.4 se
+  implementó como tasa de conflicto de cues; B5 documenta que es un proxy débil (confundido
+  por largo de título). Una mejor mediría el cuerpo/scope de la unidad, no solo el título.
