@@ -1,9 +1,20 @@
 //! Heuristic contract-shape extraction from code (Go producers, TS consumers).
 //!
 //! Not a real parser — a tolerant, line-oriented heuristic good enough to key a
-//! contract's *shape* (field names, enum variants) to a `ContractId` derived
-//! from the nearest `/api/...` endpoint anchor. Conservative by design (R3/R6):
-//! a file with no endpoint anchor yields nothing rather than a guess.
+//! contract's *shape* (field names, enum variants) to a `ContractId`. Two keying
+//! sources, in priority order:
+//!
+//! 1. **Call-site binding** (#313): a usage-grounded `api.get<HealthSnapshot>(
+//!    `/services/${id}/health`)` binds the *type* to the *route*. This is what
+//!    keys a generated types file (`types.gen.ts`) whose declarations carry no
+//!    endpoint anchor of their own — they'd otherwise all collapse onto one
+//!    coarse contract (or be dropped entirely).
+//! 2. **Nearest endpoint anchor**: the `/api/...` reference at or above a
+//!    declaration. Used when no call-site binds the type.
+//!
+//! Conservative by design (R3/R6): a declaration with neither a binding nor an
+//! anchor yields nothing rather than a guess; a type bound to two different
+//! routes is dropped as ambiguous.
 //!
 //! Cross-language keying (spec Q4): the join key is the **normalized endpoint**,
 //! the one anchor a Go handler and a TS type provably share.
@@ -27,7 +38,8 @@ const SKIP_DIRS: &[&str] = &[
 
 /// Scan all Go/TS source under `root` for contract shapes.
 pub fn scan(root: &Path) -> Vec<ContractShape> {
-    let mut out = Vec::new();
+    // Read every code file once; keep (rel, lang, content).
+    let mut files: Vec<(String, Lang, String)> = Vec::new();
     for path in walk_code(root) {
         let rel = path
             .strip_prefix(root)
@@ -42,17 +54,126 @@ pub fn scan(root: &Path) -> Vec<ContractShape> {
             Some("ts") | Some("tsx") => Lang::Ts,
             _ => continue,
         };
-        out.extend(extract_file(&rel, &content, lang));
+        files.push((rel, lang, content));
+    }
+
+    // Pass 1: repo-wide type→endpoint bindings mined from TS call sites — what
+    // keys an anchorless generated types file (#313).
+    let bindings = collect_bindings(&files);
+
+    // Pass 2: extract shapes, binding-first keying.
+    let mut out = Vec::new();
+    for (rel, lang, content) in &files {
+        out.extend(extract_file(rel, content, *lang, &bindings));
     }
     out.sort_by(|a, b| (&a.contract, &a.source.file).cmp(&(&b.contract, &b.source.file)));
     out
 }
 
-fn extract_file(rel: &str, content: &str, lang: Lang) -> Vec<ContractShape> {
-    let anchors = anchors(content);
-    if anchors.is_empty() {
-        return Vec::new();
+/// Mine `IDENT<Type>('/route')` call sites across TS files into a
+/// `Type → ContractId` map (the binding keying source for #313). Conservative
+/// (R6): a type bound to two *different* contracts is dropped as ambiguous.
+fn collect_bindings(files: &[(String, Lang, String)]) -> BTreeMap<String, String> {
+    let mut seen: BTreeMap<String, Option<String>> = BTreeMap::new();
+    for (_, lang, content) in files {
+        if *lang != Lang::Ts {
+            continue;
+        }
+        for line in content.lines() {
+            for (ty, cid) in scan_type_route_bindings(line) {
+                match seen.get(&ty) {
+                    None => {
+                        seen.insert(ty, Some(cid));
+                    }
+                    // already bound to a different route → ambiguous, drop it
+                    Some(Some(prev)) if *prev != cid => {
+                        seen.insert(ty, None);
+                    }
+                    _ => {}
+                }
+            }
+        }
     }
+    seen.into_iter().filter_map(|(k, v)| v.map(|c| (k, c))).collect()
+}
+
+/// Extract `(TypeName, ContractId)` from a single line's `…<Type>('/path')` call
+/// sites. Recognizes the typed-client shape generated API clients use; ignores
+/// JSX (`<Table<Row>`) and generics with no leading-`/` route literal argument.
+fn scan_type_route_bindings(line: &str) -> Vec<(String, String)> {
+    let mut out = Vec::new();
+    for (i, c) in line.char_indices() {
+        if c != '>' {
+            continue;
+        }
+        let Some(lt) = line[..i].rfind('<') else {
+            continue;
+        };
+        let Some(ty) = valid_type_name(&line[lt + 1..i]) else {
+            continue;
+        };
+        // require `(` after the closing `>` (optional whitespace)
+        let rest = line[i + 1..].trim_start();
+        let Some(after_paren) = rest.strip_prefix('(') else {
+            continue;
+        };
+        // the first argument must be a quoted `/`-path literal
+        let Some(path) = first_path_literal(after_paren) else {
+            continue;
+        };
+        let cid = normalize_endpoint(&path);
+        if !cid.is_empty() {
+            out.push((ty, cid));
+        }
+    }
+    out
+}
+
+/// A single PascalCase/`_`-leading type identifier (optionally `[]`-suffixed),
+/// else `None`. Rejects multi-token generics and comparison noise.
+fn valid_type_name(s: &str) -> Option<String> {
+    let s = s.trim().strip_suffix("[]").unwrap_or_else(|| s.trim()).trim();
+    let mut chars = s.chars();
+    let first = chars.next()?;
+    if !(first.is_ascii_uppercase() || first == '_') {
+        return None;
+    }
+    s.chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '_')
+        .then(|| s.to_string())
+}
+
+/// The first argument, if it is a quoted (or backtick) literal whose value
+/// starts with `/`. Returns the literal's content (interpolations intact).
+fn first_path_literal(arg: &str) -> Option<String> {
+    let s = arg.trim_start();
+    let q = s.chars().next()?;
+    if q != '\'' && q != '"' && q != '`' {
+        return None;
+    }
+    let from = q.len_utf8();
+    let rel = s[from..].find(q)?;
+    let lit = &s[from..from + rel];
+    lit.starts_with('/').then(|| lit.to_string())
+}
+
+/// The leading type identifier of a type hint: `HealthState[]` → `HealthState`,
+/// `Record<string, number>` → `Record`.
+fn base_type(hint: &str) -> &str {
+    let h = hint.trim();
+    let end = h
+        .find(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
+        .unwrap_or(h.len());
+    &h[..end]
+}
+
+fn extract_file(
+    rel: &str,
+    content: &str,
+    lang: Lang,
+    bindings: &BTreeMap<String, String>,
+) -> Vec<ContractShape> {
+    let anchors = anchors(content);
     let decls = match lang {
         Lang::Go => parse_go(content),
         Lang::Ts => parse_ts(content),
@@ -63,21 +184,50 @@ fn extract_file(rel: &str, content: &str, lang: Lang) -> Vec<ContractShape> {
         _ => ShapeRole::Consumer,
     };
 
+    // Index named enum decls so an interface bound to a route can pull in the
+    // `type X = 'A'|'B'` its fields reference — that union has no anchor/binding
+    // of its own in a generated types file (needed for C3 enum mismatches).
+    let union_by_name: BTreeMap<&str, &EnumDef> = decls
+        .iter()
+        .filter_map(|d| {
+            d.enums
+                .iter()
+                .find_map(|e| e.name.as_deref().map(|n| (n, e)))
+        })
+        .collect();
+
     let mut by_contract: BTreeMap<String, Agg> = BTreeMap::new();
-    for d in decls {
-        let Some(cid) = contract_for_line(&anchors, d.line) else {
+    for d in &decls {
+        // Binding-first (a usage-grounded type→route link), then nearest anchor.
+        let Some(cid) = bindings
+            .get(&d.name)
+            .cloned()
+            .or_else(|| contract_for_line(&anchors, d.line))
+        else {
             continue;
         };
         let agg = by_contract.entry(cid).or_default();
         if agg.symbol.is_none() {
             agg.symbol = Some(d.name.clone());
         }
-        for f in d.fields {
+        for f in &d.fields {
             if !agg.fields.iter().any(|x| x.name == f.name) {
-                agg.fields.push(f);
+                agg.fields.push(f.clone());
+            }
+            // Attribute a referenced union's variants to this contract.
+            if let Some(hint) = &f.type_hint {
+                if let Some(e) = union_by_name.get(base_type(hint)) {
+                    if !agg.enums.iter().any(|x| x.name == e.name) {
+                        agg.enums.push((*e).clone());
+                    }
+                }
             }
         }
-        agg.enums.extend(d.enums);
+        for e in &d.enums {
+            if !agg.enums.iter().any(|x| x.name == e.name) {
+                agg.enums.push(e.clone());
+            }
+        }
     }
 
     by_contract
@@ -363,6 +513,10 @@ fn walk_code(root: &Path) -> Vec<std::path::PathBuf> {
 mod tests {
     use super::*;
 
+    fn no_bindings() -> BTreeMap<String, String> {
+        BTreeMap::new()
+    }
+
     #[test]
     fn go_struct_and_enum_extracted() {
         let src = "// GET /api/v1/services/{id}/health\n\
@@ -376,7 +530,7 @@ mod tests {
                    \tA HealthState = \"OPERATIONAL\"\n\
                    \tB HealthState = \"IDLE\"\n\
                    )\n";
-        let shapes = extract_file("h.go", src, Lang::Go);
+        let shapes = extract_file("h.go", src, Lang::Go, &no_bindings());
         assert_eq!(shapes.len(), 1);
         let s = &shapes[0];
         assert_eq!(s.contract, "services.health");
@@ -397,7 +551,7 @@ mod tests {
                    \tstatus: HealthStatus;\n\
                    \tcpu?: number;\n\
                    }\n";
-        let shapes = extract_file("t.ts", src, Lang::Ts);
+        let shapes = extract_file("t.ts", src, Lang::Ts, &no_bindings());
         assert_eq!(shapes.len(), 1);
         let s = &shapes[0];
         assert_eq!(s.contract, "services.health");
@@ -411,6 +565,55 @@ mod tests {
     #[test]
     fn no_endpoint_anchor_yields_nothing() {
         let src = "type Foo struct {\n\tBar string `json:\"bar\"`\n}\n";
-        assert!(extract_file("x.go", src, Lang::Go).is_empty());
+        assert!(extract_file("x.go", src, Lang::Go, &no_bindings()).is_empty());
+    }
+
+    // ---- call-site binding (#313) ----------------------------------------
+
+    #[test]
+    fn scan_bindings_parses_typed_client_call_sites() {
+        let b = scan_type_route_bindings("  queryFn: () => api.get<HealthSnapshot>(`/services/${id}/health`),");
+        assert_eq!(b, vec![("HealthSnapshot".to_string(), "services.health".to_string())]);
+
+        let b = scan_type_route_bindings("api.post<Incident>('/incidents', input)");
+        assert_eq!(b, vec![("Incident".to_string(), "incidents".to_string())]);
+
+        // query string stripped
+        let b = scan_type_route_bindings("api.get<SearchRecordsResponse>('/audit/records?action_type=AI_AUTO')");
+        assert_eq!(b, vec![("SearchRecordsResponse".to_string(), "audit.records".to_string())]);
+    }
+
+    #[test]
+    fn scan_bindings_ignores_jsx_and_argless_generics() {
+        // JSX generic component, no route → not a binding.
+        assert!(scan_type_route_bindings("        <Table<ComponentHealth>").is_empty());
+        // generic call with a non-path first argument → not a binding.
+        assert!(scan_type_route_bindings("const [x] = useState<HealthSnapshot>(null);").is_empty());
+        assert!(scan_type_route_bindings("useQuery<HealthSnapshot>({ queryKey })").is_empty());
+    }
+
+    #[test]
+    fn binding_keys_anchorless_type_and_resolves_its_enum() {
+        // A generated types file: no endpoint anchor anywhere.
+        let src = "export type Semaphore = 'GREEN' | 'RED';\n\
+                   export interface DashboardComponent {\n\
+                   \tname: string;\n\
+                   \tstatus: Semaphore;\n\
+                   \tcpu?: number;\n\
+                   }\n";
+        // Without a binding the anchorless file yields nothing (conservative).
+        assert!(extract_file("types.gen.ts", src, Lang::Ts, &no_bindings()).is_empty());
+
+        // With a call-site binding the interface keys to its route, and the
+        // referenced union's variants ride along (for C3).
+        let bindings = BTreeMap::from([("DashboardComponent".to_string(), "services.health".to_string())]);
+        let shapes = extract_file("types.gen.ts", src, Lang::Ts, &bindings);
+        assert_eq!(shapes.len(), 1);
+        let s = &shapes[0];
+        assert_eq!(s.contract, "services.health");
+        let names: Vec<&str> = s.fields.iter().map(|f| f.name.as_str()).collect();
+        assert_eq!(names, vec!["name", "status", "cpu"]);
+        let variants: Vec<String> = s.enums.iter().flat_map(|e| e.variants.clone()).collect();
+        assert_eq!(variants, vec!["GREEN", "RED"]);
     }
 }
