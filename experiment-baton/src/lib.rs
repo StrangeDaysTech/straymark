@@ -18,5 +18,6 @@ pub mod intent;
 pub mod overlay;
 pub mod provenance;
 mod scan;
+pub mod signals;
 pub mod speckit;
 pub mod units;
