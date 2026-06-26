@@ -1,6 +1,6 @@
 ---
 charter_id: CHARTER-03-dry-run-router
-status: declared
+status: in-progress
 effort_estimate: L
 trigger: "Baton concepto §7 Fase 2 — no existe ninguna noción de modelo/tier/presupuesto/costo en StrayMark; todo el trabajo corre con el mismo modelo (commit trivial o rediseño). Presión económica §1.1 (fin de subsidios, pago por Mtoken). Tras la Fase 1 (Coherence Bridge), validar empíricamente el principio económico §4.2 sin tocar modelos."
 originating_concept: experiment-baton/01-baton-concept.md
@@ -11,7 +11,7 @@ related_issues: [304]
 
 # Charter: Baton Fase 2 — Clasificación + router en seco (dry-run, recomienda no ejecuta)
 
-> **Status (espejo del frontmatter; la fuente de verdad es el frontmatter):** declared. Effort: L.
+> **Status (espejo del frontmatter; la fuente de verdad es el frontmatter):** in-progress. Effort: L.
 > **Origen:** concepto [01-baton-concept.md](01-baton-concept.md) §4.2 + §7 (Fase 2) + §10.4 (unidad enrutable).
 > **Encuadre:** segunda fase del experimento Baton. **Recomienda, no ejecuta. Toca modelos solo como telemetría — riesgo cero.** Prototipa en `experiment-baton/`, lógica pura/typed diseñada para graduar a `straymark-core`.
 
