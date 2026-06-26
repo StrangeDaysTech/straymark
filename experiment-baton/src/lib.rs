@@ -12,6 +12,7 @@
 //! Spec: `experiment-baton/specs/001-coherence-bridge/spec.md`.
 //! Scope rule: touches no models (no routing/tier/budget/token/cost).
 
+pub mod classify;
 pub mod codescan;
 pub mod coherence;
 pub mod intent;
