@@ -89,7 +89,17 @@ Phase-1 coherence findings — wired only if B5 calibration shows the cheap sign
 misclassify.
 
 ### Batch 3 — B3: cheap classifier (T3.1–T3.4)
-Pending.
+Completed 2026-06-26. `src/classify.rs`: pure `classify(&UnitSignals) ->
+Classification { class, confidence, rationale }`. Deterministic cue→class map
+(Architecture→Planner, Audit→Auditor, Implement/Fix→Implementer,
+Operate/Test→Operator); conflict → route up to the highest-rank class; no signal →
+Implementer (the escalatable middle, not Operator — never claim cheap); high
+risk + unbounded surface → Planner. Reuses `intent::Confidence`. 5 unit tests.
+Sentinel dogfood (read-only, 762 units): implementer 491 (64%) / operator 131
+(17%) / auditor 126 (16%) / planner 14 (1%); confidence Low 57% / Medium 41% /
+High <1%. The **64%-economic vs 57%-low-confidence tension** is the honest crux
+B5 must adjudicate under §4.2 — High needs `effort_estimate`, which only charters
+carry, so most units classify on cue alone.
 
 ### Batch 4 — B4: tier policy + telemetry + CLI (T4.1–T4.5)
 Pending.
