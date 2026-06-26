@@ -88,14 +88,21 @@ intended-not-implemented gaps (DevPortal, UsageGuard) and a naming drift
 
 Phase 1 is a calibrated first cut, not a finished product. Known gaps:
 
-1. **Contract keying on generated type files.** Sentinel's `web/src/api/types.gen.ts`
-   holds *all* API types in one file with sparse endpoint anchors, so many
-   interfaces collapse onto a few `ContractId`s. The #304 *field/enum-level* health
-   mismatch (C2/C3) therefore isn't isolated on Sentinel the way it is on the
-   fixture — it merges into a coarse `services` contract and is currently dropped
-   (no non-test producer). **Follow-up:** map each generated type to its endpoint
-   (response-type ↔ route), e.g. via an OpenAPI/codegen manifest, so C2/C3 fire per
-   real contract. *This is why the Sentinel run has 0 blocking findings.*
+1. **Contract keying on generated type files.** ✅ *Addressed (#313,
+   `AILOG-2026-06-26-001`).* Sentinel's `web/src/api/types.gen.ts` held *all* API
+   types in one file with sparse endpoint anchors, so every interface collapsed
+   onto the coarse `services` contract. Keying now adds a **call-site binding**
+   source (`api.get<HealthSnapshot>(`/services/${id}/health`)` → `services.health`)
+   that beats nearest-anchor and works on anchorless generated files; the
+   consumers now spread across the correct contracts (`HealthSnapshot →
+   services.health`, `SearchRecordsResponse → audit.records`, …). The Sentinel run
+   stays **0 blocking** — but now *correctly*: its `types.gen.ts` was remediated to
+   match the Go backend, so there is no drift to flag (de-collapsing introduced no
+   false positives). **Remaining (sibling follow-up #319):** the *producer* side has the
+   symmetric gap — `huma` registers routes in one block while the response struct
+   sits far below, so the Go producer mis-keys away from `services.health`. The
+   same binding idea (route-registration → handler → output struct) is needed for
+   C2/C3 to fire end-to-end on an *un-remediated* `huma`-style repo.
 2. **C1 is inherently fuzzy.** Free-form `.specify/memory` naming conflates real
    gaps with architectural concepts; kept info-grade. **Follow-up:** optional
    explicit component→path mapping (in memory or `model.yml`) to promote C1 to a
