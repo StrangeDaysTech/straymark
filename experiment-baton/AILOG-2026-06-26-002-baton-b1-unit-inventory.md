@@ -75,7 +75,18 @@ Completed 2026-06-26 — this AILOG's PR. `src/units.rs` + fixture corpus + 5 te
 Sentinel dogfood read-only. Charter → `in-progress`.
 
 ### Batch 2 — B2: signal aggregation (T2.1–T2.4)
-Pending.
+Completed 2026-06-26. `src/signals.rs`: pure `signals_for(&RoutableUnit) ->
+UnitSignals` — cheap-first universal signals (textual `cues` via word-start-prefix
+matching, bilingual EN/ES; effort/follow-up carry-forward; `surface_size`; risk
+derived from severity). 6 unit tests. Sentinel dogfood (read-only): over 762 real
+units, cue spread Audit 155 / Test 175 / Implement 140 / Operate 38 / Fix 15 /
+Architecture 14, with **45% no-cue → route up** — an empirical signal that the
+cheap title scan alone is insufficient for ~half, i.e. where the heavier deferred
+signals (complexity, arch_state, coherence findings) would earn their cost.
+**Deferred (calibration-gated):** per-function complexity (`analyze` lives in
+`cli`, not reachable from `core`), architecture state (Loom projection), and
+Phase-1 coherence findings — wired only if B5 calibration shows the cheap signals
+misclassify.
 
 ### Batch 3 — B3: cheap classifier (T3.1–T3.4)
 Pending.
