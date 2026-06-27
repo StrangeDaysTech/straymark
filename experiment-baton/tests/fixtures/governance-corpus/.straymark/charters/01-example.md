@@ -3,6 +3,8 @@ charter_id: CHARTER-01-example
 status: closed
 closed_at: "2026-06-20"
 effort_estimate: L
+work_verb: implement
+design_provenance: new
 trigger: "Synthetic charter for the Baton Phase-2 routable-unit inventory fixture."
 originating_spec: specs/003-example/spec.md
 ---

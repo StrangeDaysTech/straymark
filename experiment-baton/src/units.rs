@@ -14,7 +14,7 @@
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
-use straymark_core::charter::{discover_and_parse, display_title};
+use straymark_core::charter::{discover_and_parse, display_title, read_frontmatter_yaml};
 use straymark_core::charter_files::parse_files_to_modify;
 
 use crate::intent::SourceRef;
@@ -87,6 +87,14 @@ pub struct RoutableUnit {
     /// Follow-up severity, when declared.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub followup_severity: Option<String>,
+    /// Authored work verb — the authoritative classification signal (#332):
+    /// `design` | `implement` | `audit` | `operate`. `None` = undeclared.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub work_verb: Option<String>,
+    /// The residual-cognitive-load dimension: `new` | `upstream`. An `implement`
+    /// unit that only instruments prior design (`upstream`) is mechanical.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub design_provenance: Option<String>,
     /// Declared file scope (charters: the `Files to modify` paths/globs).
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub scope_globs: Vec<String>,
@@ -126,6 +134,12 @@ fn read_charters(root: &Path) -> Vec<RoutableUnit> {
                 .into_iter()
                 .map(|d| d.path)
                 .collect();
+            // work_verb / design_provenance are not in the typed CharterFrontmatter;
+            // read them from the raw frontmatter (absent → None).
+            let (work_verb, design_provenance) = read_frontmatter_yaml(&c.path)
+                .ok()
+                .map(|y| (yaml_str(&y, "work_verb"), yaml_str(&y, "design_provenance")))
+                .unwrap_or((None, None));
             RoutableUnit {
                 id: c.frontmatter.charter_id.clone(),
                 granularity: Granularity::Charter,
@@ -137,6 +151,8 @@ fn read_charters(root: &Path) -> Vec<RoutableUnit> {
                 effort_estimate: Some(c.frontmatter.effort_estimate.as_str().to_string()),
                 followup_bucket: None,
                 followup_severity: None,
+                work_verb,
+                design_provenance,
                 scope_globs,
             }
         })
@@ -176,6 +192,8 @@ fn read_batches(root: &Path) -> Vec<RoutableUnit> {
                 effort_estimate: None,
                 followup_bucket: None,
                 followup_severity: None,
+                work_verb: None,
+                design_provenance: None,
                 scope_globs: Vec::new(),
             });
         }
@@ -226,25 +244,42 @@ fn read_followups(root: &Path) -> Vec<RoutableUnit> {
                 effort_estimate: None,
                 followup_bucket: bucket.clone(),
                 followup_severity: None,
+                work_verb: None,
+                design_provenance: None,
                 scope_globs: Vec::new(),
             });
             continue;
         }
-        // `- **Severity**: high` within the current entry.
-        if t.contains("**Severity**") {
-            if let Some(last) = out.last_mut() {
-                if last.granularity == Granularity::Followup && last.followup_severity.is_none() {
-                    if let Some((_, v)) = t.rsplit_once(':') {
-                        let v = v.trim().trim_matches('`').trim();
-                        if !v.is_empty() {
-                            last.followup_severity = Some(v.to_string());
-                        }
-                    }
+        // `- **Label**: value` metadata lines within the current entry.
+        if let Some(last) = out.last_mut() {
+            if last.granularity == Granularity::Followup {
+                if let Some(v) = field_value(t, "**Severity**") {
+                    last.followup_severity.get_or_insert(v);
+                } else if let Some(v) = field_value(t, "**Work verb**") {
+                    last.work_verb.get_or_insert(v);
+                } else if let Some(v) = field_value(t, "**Design provenance**") {
+                    last.design_provenance.get_or_insert(v);
                 }
             }
         }
     }
     out
+}
+
+/// Value of a `- **Label**: value` metadata line (trimmed, backtick-stripped),
+/// or `None` if the line doesn't carry that label.
+fn field_value(line: &str, label: &str) -> Option<String> {
+    if !line.contains(label) {
+        return None;
+    }
+    let (_, v) = line.rsplit_once(':')?;
+    let v = v.trim().trim_matches('`').trim();
+    (!v.is_empty()).then(|| v.to_string())
+}
+
+/// Extract a string field from parsed YAML frontmatter.
+fn yaml_str(y: &serde_yaml::Value, key: &str) -> Option<String> {
+    y.get(key).and_then(|v| v.as_str()).map(str::to_string)
 }
 
 // ---- Task (from `specs/**/tasks.md`) --------------------------------------
@@ -289,6 +324,8 @@ fn read_tasks(root: &Path) -> Vec<RoutableUnit> {
                 effort_estimate: None,
                 followup_bucket: None,
                 followup_severity: None,
+                work_verb: None,
+                design_provenance: None,
                 scope_globs: Vec::new(),
             });
         }
@@ -406,6 +443,21 @@ mod tests {
         let fu = u.iter().find(|u| u.id == "FU-201").expect("FU-201");
         assert_eq!(fu.followup_bucket.as_deref(), Some("ready"));
         assert_eq!(fu.followup_severity.as_deref(), Some("high"));
+    }
+
+    #[test]
+    fn declared_work_verb_is_harvested() {
+        let u = inventory(&corpus(), None);
+        let c = u.iter().find(|u| u.id == "CHARTER-01-example").expect("charter");
+        assert_eq!(c.work_verb.as_deref(), Some("implement"));
+        assert_eq!(c.design_provenance.as_deref(), Some("new"));
+
+        let fu = u.iter().find(|u| u.id == "FU-201").expect("FU-201");
+        assert_eq!(fu.work_verb.as_deref(), Some("implement"));
+        assert_eq!(fu.design_provenance.as_deref(), Some("upstream"));
+
+        // Batches/tasks have no declaration slot in the prototype → undeclared.
+        assert!(u.iter().filter(|u| u.granularity == Granularity::Task).all(|u| u.work_verb.is_none()));
     }
 
     #[test]
