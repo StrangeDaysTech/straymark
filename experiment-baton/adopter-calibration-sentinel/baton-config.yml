@@ -1,0 +1,19 @@
+# E3 — costos reales del stack de Sentinel (pásalo con `--config`).
+# cost_per_mtok es UN solo número por tier ⇒ blended. Supuesto declarado:
+#   80% input / 20% output (trabajo de gobernanza/código es input-pesado).
+#   Precios por Mtok (cacheados 2026-06-04, skill claude-api):
+#     Opus 4.6  $5 in / $25 out  → blended 0.8*5 + 0.2*25 = 9.0   (frontier)
+#     Haiku 4.5 $1 in / $5  out  → blended 0.8*1 + 0.2*5  = 1.8   (economic)
+#     Gemma 4 self-hosted        → ~0                              (local)
+# Routing = política declarada del operador: interesante→frontier, mecánico→compacto.
+baton:
+  cost_per_mtok:
+    frontier: 9.0    # Opus 4.6 blended
+    economic: 1.8    # Haiku 4.5 blended (revisión/auditoría)
+    local: 0.0       # Gemma 4 self-hosted
+  routing:
+    planner: frontier       # diseño/arquitectura
+    implementer: frontier   # trabajo interesante (decisión nueva)
+    auditor: economic       # revisión/verificación con modelo más barato
+    operator: local         # mecánico (tests/migraciones/scaffolding) → Gemma
+  escalate_high_risk: true

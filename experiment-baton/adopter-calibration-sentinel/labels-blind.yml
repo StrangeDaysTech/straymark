@@ -1,0 +1,174 @@
+# Baton — hoja de etiquetado CIEGA (experimento E1 / ground truth)
+#
+# Muestra estratificada de 32 unidades del corpus de gobernanza de Sentinel.
+# La clase/confianza que Baton predijo está OCULTA a propósito: etiqueta
+# `true_class` por tu propio juicio (tú hiciste el trabajo), sin anclarte a la
+# predicción. El scoring se hace después uniendo contra la clave oculta.
+#
+# true_class (escribe UNA):
+#   planner      = diseño/arquitectura, alcance abierto
+#   implementer  = implementación acotada (feature/fix con scope)
+#   auditor      = contraste/revisión/auditoría/verificación
+#   operator     = mecánico: commits, docs, limpieza, scaffolding, chore
+# Si dudas entre dos, pon la principal en true_class y la otra en notes.
+
+- id: 001-sentinel-mvp:T001
+  granularity: task
+  title: "archivos: `go.mod`, `go.sum`"
+  true_class: operator
+  notes: "go mod init + agregar deps; scaffolding mecánico del módulo (go.mod/go.sum). Sin lógica."
+- id: 001-sentinel-mvp:T008
+  granularity: task
+  title: "archivo: `internal/core/config_test.go`"
+  true_class: operator
+  notes: "[POLÍTICA OPERADOR 2026-06-26] Autorar unit tests de LoadConfig = trabajo mecánico de tests → tier compacto/operator (Gemma-4-class), no frontier. (Antes implementer; corregido a la intención de routing real del operador.)"
+- id: 001-sentinel-mvp:T014
+  granularity: task
+  title: "archivo: `internal/core/interfaces/audit.go`"
+  true_class: implementer
+  notes: "audit.go: declara tipos de dominio + 3 interfaces (AuditRecorder/Searcher/DataDiscoverer) según diseño ya decidido en spec. Escribir el contrato = implementer (la decisión fue upstream)."
+- id: 001-sentinel-mvp:T036
+  granularity: task
+  title: "archivo: `internal/core/wire.go`"
+  true_class: implementer
+  notes: "wire.go: CoreProviderSet + provider funcs con lógica (ConnectDB, GCS condicional, cleanups). Wiring DI con lógica real."
+- id: 002-commshub:T012
+  granularity: task
+  title: "T012 Create `internal/core/interfaces/comms.go` defining the four cross-module ports per `Arquitectura - CommsHub.md §4.1`: `MessageSender`, `RecipientQuerier`, `DataDiscoverer`, `StagingMailboxReader`. These belong in `core/interfaces/` so other modules can depend on them without importing `commshub` (Constitution I)."
+  true_class: implementer
+  notes: "comms.go: escribe 4 ports cross-módulo per 'Arquitectura - CommsHub §4.1' (diseño decidido upstream). Autoría del contrato a un diseño dado."
+- id: 002-commshub:T102
+  granularity: task
+  title: "T102 [P] Verify all four FR-039..042 metrics export correctly: bring up the local server, generate test traffic, scrape `/metrics` (or whatever OTel exporter the MVP uses), confirm `commshub.sends.total` / `commshub.send.*_latency_ms` / `commshub.provider.circuit_state` / `commshub.queue.depth` series are present with the expected labels. *CHARTER-19 Batch 3: added `scripts/otel-collector-local.yaml` recipe + boot smoke confirms FR-039 + 3 of 4 FR-040 instruments arrive at the OTel Collector (`sends_total`, `send_render_latency_ms`, `send_provider_latency_ms`, `send_end_to_end_latency_ms`). The 4 instruments were declared in `metrics/commshub.go` since CHARTER-18 but never invoked from production code (10th GAP-G surfaced by polish); CHARTER-24 (PR #91) wired them. Remaining 3 instruments deferred to dedicated follow-up Charters per their architectural-decision boundary: CHARTER-24 §R5 `SendEnqueueLatency` (handler-side anchor), §R6 `ProviderErrorRate` (rolling 5-min window vs downstream derived), §R7 `QueueDepth` (observable gauge w/ Cloud Tasks callback).*"
+  true_class: auditor
+  notes: "Verificar que las 4 métricas FR-039..042 exportan: levantar server, scrape /metrics, confirmar series. Contraste contra la realidad = auditoría/verificación."
+- id: 003-etapa3-agents-mcp:T069
+  granularity: task
+  title: "annotate that Etapa 3 ships **Streamable HTTP transport** (`POST /mcp`, JSON-RPC body, no SSE) per spec-003 §Clarifications Q2-AMENDED 2026-05-24; stdio bridge optional/deferred to CHARTER-33; SSE server-initiated notifications + OAuth 2.1 deferred to Etapa 4+. §7 — add the consumer contract for `policy.privacy_profile_changed` (link to `contracts/events/policy.privacy_profile_changed.v1.consumer.md`). Keep the SSE design intact in §2.2 but tag it as future state."
+  true_class: operator
+  notes: "Anotar 'Arquitectura - MCPServer.md' (transport HTTP, link a contrato consumer, tag SSE future). Edición de documentación; refleja clarificaciones ya decididas."
+- id: AILOG-2026-05-05-036-charter-08-commshub-us1-send#batch-1
+  granularity: batch
+  title: "Setup + provider abstraction (2026-05-05)"
+  true_class: implementer
+  notes: "Setup + provider abstraction (capa de proveedor de envío). Construcción de abstracción = implementación."
+- id: AILOG-2026-05-07-041-charter-13-commshub-us2-channels#batch-1
+  granularity: batch
+  title: "SQLC query extensions + repository skeleton (commit `ed76efd`)"
+  true_class: operator
+  notes: "[POLÍTICA OPERADOR — carga cognitiva residual] 4 queries SIMPLES (UpdateChannel, Batch(Un)Subscribe, CountActiveOptOuts) + 12 métodos repo CRUD vía withRLS (boilerplate) + helper de conversión. Diseño upstream ('CHARTER-07 ya generó 11/12 queries'). Instrumentación mecánica → operator. (Antes implementer.)"
+- id: AILOG-2026-05-07-041-charter-13-commshub-us2-channels#batch-2
+  granularity: batch
+  title: "service layer + T038 unit + migration 021 (commit `3cde89a`)"
+  true_class: implementer
+  notes: "service layer + unit T038 + migración 021. Implementación de servicio + migración."
+- id: AILOG-2026-05-07-041-charter-13-commshub-us2-channels#batch-4
+  granularity: batch
+  title: "T040 + T041 integration tests + FR-005 trigger empirical verification (commit `0899dca`)"
+  true_class: operator
+  notes: "[POLÍTICA OPERADOR] Dominante = autorar 2 integration tests (T040/T041) = trabajo mecánico de tests → operator. La verificación empírica FR-005 es menor. (Antes implementer.)"
+- id: AILOG-2026-05-11-042-charter-14-commshub-us2b-broadcast#batch-1
+  granularity: batch
+  title: "Pagination support + repository extensions (F3 + decommission queries)"
+  true_class: implementer
+  notes: "Pagination support + repository extensions. Implementación."
+- id: AILOG-2026-05-13-048-charter-17-commshub-us4-templates-branding#batch-7.4
+  granularity: batch
+  title: "Audit remediation (H1 + M1 + M2)"
+  true_class: implementer
+  notes: "'Audit remediation H1+M1+M2' pero el detalle es ESCRIBIR los fixes (query atómica ON CONFLICT, mapError branches, sentinel nuevo, MaxTemplateVersion). Remediar = implementar; la auditoría fue otro acto."
+- id: AILOG-2026-05-14-049-charter-18-commshub-us5-cloud-tasks-failover-tracking-anomaly#batch-10
+  granularity: batch
+  title: "Close ceremony (tasks.md updates + telemetry yaml + format-v4 atomic close + audit cycle 7 review)"
+  true_class: operator
+  notes: "Close ceremony: flips de checkbox en tasks.md, telemetry yaml, atomic close, anotaciones. Bookkeeping mecánico de cierre."
+- id: CHARTER-01-format-v4-atomic-charter-closure-pattern
+  granularity: charter
+  title: "format v4 atomic Charter closure pattern"
+  true_class: operator
+  notes: "Porta una decisión AIDEC al template de straymark; 'enteramente editorial sobre el template' + README. Sin código; bookkeeping de gobernanza/proceso."
+- id: CHARTER-03-wif-en-ci-para-make-test-live-plan-04-f2-follow-up
+  granularity: charter
+  title: "WIF en CI para `make test-live` (Plan 04 F2 follow-up)"
+  true_class: implementer
+  notes: "Configurar WIF en CI para make test-live: workflow nuevo + trust OIDC. AMBIGUO: defendible como operator (config CI/ops); lo marco implementer por la lógica de auth no trivial (effort M)."
+- id: CHARTER-04-approve-retroactivo-bulk
+  granularity: charter
+  title: "Approve retroactivo bulk de docs `review_required: true` pre-canon"
+  true_class: operator
+  notes: "Bulk-approve de docs review_required pre-canon + documentar out-of-scope. Operación masiva + documentación; mecánico."
+- id: CHARTER-07-commshub-foundation-setup-ports-migrations-wire
+  granularity: charter
+  title: "CommsHub foundation: setup + ports + migrations + Wire"
+  true_class: implementer
+  notes: "Charter más grande de Etapa 2 (~25 archivos, 20 tasks): setup+ports+migraciones+Wire+PII guard test. Implementación de fundación acotada al diseño existente."
+- id: CHARTER-10-partition-helper-past-coverage
+  granularity: charter
+  title: "EnsureMonthlyPartitions: extend coverage to past 2 months (close R5 flake + latent backfill trap)"
+  true_class: operator
+  notes: "[POLÍTICA OPERADOR] Extender cobertura de fechas de un helper de particiones + cerrar flake = test-infra/migración-infra mecánica → operator. Borderline (el 'backfill trap' tiene sutileza), pero cae en la categoría declarada. (Antes implementer.)"
+- id: CHARTER-11-testutil-partitions-uniformity
+  granularity: charter
+  title: "testutil.StartPostgresWithPartitions: uniform partition-ensured test setup across all per-module integration tests"
+  true_class: operator
+  notes: "[POLÍTICA OPERADOR] Refactor de testutil.StartPostgresWithPartitions = test-infra pura → operator (Gemma-4-class). (Antes implementer.)"
+- id: CHARTER-12-followups-backlog-infra
+  granularity: charter
+  title: "Follow-ups backlog: central registry + drift-detection script + upstream RFC"
+  true_class: implementer
+  notes: "Construir registro central + script de drift-detection (+ RFC upstream). Deliverable dominante = tooling/script; el RFC es secundario."
+- id: CHARTER-19
+  granularity: charter
+  title: "CommsHub Polish — Phase 8 smokes + OTel scrape + WCAG audit"
+  true_class: auditor
+  notes: "Polish Phase 8: manual smokes + OTel scrape verification + WCAG accessibility audit. Núcleo = verificación/auditoría (incluye un CLI pre-flight ya enviado, menor)."
+- id: CHARTER-20
+  granularity: charter
+  title: "Server-boot fix — huma v2.37 + Go 1.22 ServeMux"
+  true_class: implementer
+  notes: "'pure code fix that restores the binary's ability to boot' (huma v2.37 + ServeMux). Bugfix acotado."
+- id: CHARTER-22
+  granularity: charter
+  title: "Fake-provider fault injection (close the env-var contract CHARTER-18 documented but never implemented)"
+  true_class: implementer
+  notes: "Implementar el contrato env-var de fault-injection que CHARTER-18 documentó pero nunca implementó. Implementación acotada."
+- id: CHARTER-26
+  granularity: charter
+  title: "Guard B — declared-vs-wired analyzer (Etapa-3 preparation 2/3)"
+  true_class: implementer
+  notes: "Construir el analizador estático declared-vs-wired (Guard B). Construcción de herramienta = implementación."
+- id: CHARTER-28-commshub-baseline-metrics-wire
+  granularity: charter
+  title: "Wire 3 CommsHub baseline metric record sites — unblock spec-003 US1 preflight"
+  true_class: operator
+  notes: "[POLÍTICA OPERADOR — carga cognitiva residual] Cablear 3 .Record() de métricas cuyos instrumentos se DECLARARON upstream (CHARTER-18). Instrumentación de diseño ya hecho, sin decisión nueva → operator. (Antes implementer.)"
+- id: FU-008
+  granularity: followup
+  title: "Public shape audit Q1 first cycle (15-Apr/Jul/Oct/Jan)"
+  true_class: auditor
+  notes: "'Public shape audit Q1' — auditoría trimestral manual del surface público. Acto de revisión."
+- id: FU-011
+  granularity: followup
+  title: "`commshub_anomaly_pauses` composite index `(service_id, resumed_at, paused_at DESC)`"
+  true_class: operator
+  notes: "[POLÍTICA OPERADOR] Añadir índice compuesto = migración mecánica → operator. (Antes implementer.)"
+- id: FU-020
+  granularity: followup
+  title: "Schema bump anomaly source attribution event"
+  true_class: operator
+  notes: "[POLÍTICA OPERADOR] Schema bump de evento = migración mecánica → operator. (Antes implementer.)"
+- id: FU-121
+  granularity: followup
+  title: "Design + wire the US5 dev-acceleration env knob for the anomaly detector"
+  true_class: implementer
+  notes: "'Design + wire' env knob US5 (decidir WarmingDuration vs WindowMinutes, cablear a AnomalyDetectorConfig). Cost S ~1h. AMBIGUO: destination dice 'chore'; lo marco implementer por la micro-decisión + wiring que cambia comportamiento."
+- id: FU-136
+  granularity: followup
+  title: "**Cierra FU-129 (FU-039-003)** — human-escalation-on-DENIED + durable REQUIRES_APPROVAL persistence: el camino completo (work item durable + resume-on-approval + 2º intento + escalación durable en denied) está implementado (Batches 2/4/5/8)."
+  true_class: operator
+  notes: "NO es trabajo real: meta-statement de cierre de FU-129 (triage ya lo marcó 'RUIDO'). Bookkeeping de cierre. SEÑAL para Baton: no debería clasificarse como implementer."
+- id: FU-174
+  granularity: followup
+  title: "R5 (new, not in Charter) — scope expansion sobre `## Files to modify` declarado: se añadieron `ObservabilityLayout.tsx` (sub-navegación por tabs, necesaria para US2), `AIOperations.test.tsx` (test de componente) y cambios a `web/src/test/setup.ts` (mocks de `matchMedia`/`ResizeObserver` que Ant Design requiere en jsdom). Justificación: ninguno altera contrato externo; son andamiaje de UI/test. Detectado por `straymark charter drift`; documentado aquí."
+  true_class: operator
+  notes: "NO es trabajo accionable: documenta un scope-expansion (drift) ya registrado en el AILOG. Bookkeeping de gobernanza. SEÑAL para Baton: unidad-nota, no trabajo."
