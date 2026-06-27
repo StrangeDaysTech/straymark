@@ -1,0 +1,110 @@
+# Piloto work_verb — declaración del autor (E2 / propuesta tercera vía)
+#
+# Lo que el autor (humano+agente) declararía AL CREAR la unidad, sin inferir del título.
+#   work_verb: design | implement | audit | operate
+#   design_provenance: new | upstream   (¿la decisión difícil ya se gastó aguas arriba?)
+#
+# Mapa verb→tier (propuesta): design→planner · implement→implementer · audit→auditor
+#   · operate→operator.  Regla de carga residual: implement|design + provenance=upstream
+#   ⇒ se DEGRADA a operator (instrumenta diseño previo, trabajo mecánico).
+#
+# Nota de vocabulario (hallazgo del piloto): "definir contrato/interface fundacional"
+#   es implement (implementer), NO design (planner). 'design' se reserva a arquitectura
+#   abierta. En esta muestra hay 0 design → consistente con E1 (planner=0 real).
+
+- id: 001-sentinel-mvp:T001
+  work_verb: operate
+  design_provenance: new
+- id: 001-sentinel-mvp:T008
+  work_verb: operate          # autorar unit tests = mecánico
+  design_provenance: new
+- id: 001-sentinel-mvp:T014
+  work_verb: implement        # definir contratos fundacionales = implementer
+  design_provenance: new
+- id: 001-sentinel-mvp:T036
+  work_verb: implement
+  design_provenance: new
+- id: 002-commshub:T012
+  work_verb: implement        # escribir 4 ports (contrato) = implementer
+  design_provenance: new
+- id: 002-commshub:T102
+  work_verb: audit
+  design_provenance: new
+- id: 003-etapa3-agents-mcp:T069
+  work_verb: operate          # anotar doc de arquitectura
+  design_provenance: new
+- id: AILOG-2026-05-05-036-charter-08-commshub-us1-send#batch-1
+  work_verb: implement        # provider abstraction (diseño nuevo)
+  design_provenance: new
+- id: AILOG-2026-05-07-041-charter-13-commshub-us2-channels#batch-1
+  work_verb: implement        # queries SIMPLES + repo skeleton
+  design_provenance: upstream # CHARTER-07 ya generó 11/12 queries ⇒ DEGRADA a operator
+- id: AILOG-2026-05-07-041-charter-13-commshub-us2-channels#batch-2
+  work_verb: implement        # service layer = lógica nueva
+  design_provenance: new
+- id: AILOG-2026-05-07-041-charter-13-commshub-us2-channels#batch-4
+  work_verb: operate          # autorar integration tests = mecánico
+  design_provenance: new
+- id: AILOG-2026-05-11-042-charter-14-commshub-us2b-broadcast#batch-1
+  work_verb: implement
+  design_provenance: new
+- id: AILOG-2026-05-13-048-charter-17-commshub-us4-templates-branding#batch-7.4
+  work_verb: implement        # FIX de race READ COMMITTED (diagnóstico nuevo)
+  design_provenance: new
+- id: AILOG-2026-05-14-049-charter-18-commshub-us5-cloud-tasks-failover-tracking-anomaly#batch-10
+  work_verb: operate          # ceremonia de cierre
+  design_provenance: new
+- id: CHARTER-01-format-v4-atomic-charter-closure-pattern
+  work_verb: operate          # editorial sobre el template
+  design_provenance: new
+- id: CHARTER-03-wif-en-ci-para-make-test-live-plan-04-f2-follow-up
+  work_verb: implement        # auth/OIDC en CI (decisión nueva)
+  design_provenance: new
+- id: CHARTER-04-approve-retroactivo-bulk
+  work_verb: operate          # bulk-approve
+  design_provenance: new
+- id: CHARTER-07-commshub-foundation-setup-ports-migrations-wire
+  work_verb: implement        # fundación, fija patrones
+  design_provenance: new
+- id: CHARTER-10-partition-helper-past-coverage
+  work_verb: operate          # extender cobertura de fechas de particiones (infra mecánica)
+  design_provenance: upstream
+- id: CHARTER-11-testutil-partitions-uniformity
+  work_verb: operate          # refactor de test-infra
+  design_provenance: new
+- id: CHARTER-12-followups-backlog-infra
+  work_verb: implement        # construir script de drift-detection (tooling nuevo)
+  design_provenance: new
+- id: CHARTER-19
+  work_verb: audit            # smokes + scrape + WCAG audit
+  design_provenance: new
+- id: CHARTER-20
+  work_verb: implement        # boot fix (diagnóstico)
+  design_provenance: new
+- id: CHARTER-22
+  work_verb: implement        # fault injection (lógica nueva)
+  design_provenance: new
+- id: CHARTER-26
+  work_verb: implement        # construir analizador (tooling nuevo)
+  design_provenance: new
+- id: CHARTER-28-commshub-baseline-metrics-wire
+  work_verb: implement        # "wire" métricas
+  design_provenance: upstream # instrumentos declarados en CHARTER-18 ⇒ DEGRADA a operator
+- id: FU-008
+  work_verb: audit            # public shape audit
+  design_provenance: new
+- id: FU-011
+  work_verb: operate          # índice = migración mecánica
+  design_provenance: new
+- id: FU-020
+  work_verb: operate          # schema bump = migración mecánica
+  design_provenance: new
+- id: FU-121
+  work_verb: implement        # design+wire env knob (micro-decisión nueva)
+  design_provenance: new
+- id: FU-136
+  work_verb: operate          # meta-nota de cierre (en rigor: NO-trabajo, ver §5.5)
+  design_provenance: new
+- id: FU-174
+  work_verb: operate          # drift-doc (en rigor: NO-trabajo)
+  design_provenance: new
