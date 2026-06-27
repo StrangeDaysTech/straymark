@@ -4,7 +4,8 @@
 
 use std::path::{Path, PathBuf};
 
-use straymark_baton::tiers::Policy;
+use straymark_baton::classify::TaskClass;
+use straymark_baton::tiers::{Policy, Tier};
 use straymark_baton::units::{inventory, Granularity};
 use straymark_baton::telemetry::build_report;
 
@@ -25,10 +26,38 @@ fn report_covers_every_granularity_plus_a_combined_block() {
 
     // Every granularity present in the corpus has its own block.
     for g in Granularity::ALL {
-        let present = inventory(&corpus(), Some(g)).len() > 0;
+        let present = !inventory(&corpus(), Some(g)).is_empty();
         let reported = reports.iter().any(|t| t.granularity == Some(g));
         assert_eq!(present, reported, "granularity {} coverage mismatch", g.as_str());
     }
+}
+
+#[test]
+fn declared_verbs_route_by_class_and_undeclared_go_to_frontier() {
+    let units = inventory(&corpus(), None);
+    let (routings, reports) = build_report(&units, &Policy::default());
+    let by_id = |id: &str| routings.iter().find(|r| r.id == id).unwrap().clone();
+
+    // Declared charter (implement/new) → implementer → economic.
+    let charter = by_id("CHARTER-01-example");
+    assert_eq!(charter.class, Some(TaskClass::Implementer));
+    assert_eq!(charter.tier, Tier::Economic);
+
+    // implement + design_provenance=upstream → operator (mechanical) → local.
+    let fu = by_id("FU-201");
+    assert_eq!(fu.class, Some(TaskClass::Operator));
+    assert_eq!(fu.tier, Tier::Local);
+
+    // Undeclared task → unclassifiable → frontier (conservative), counted.
+    let task = routings
+        .iter()
+        .find(|r| r.granularity == Granularity::Task)
+        .unwrap();
+    assert_eq!(task.class, None);
+    assert_eq!(task.tier, Tier::Frontier);
+
+    let all = reports.iter().find(|t| t.granularity.is_none()).unwrap();
+    assert!(all.undeclared_fraction > 0.0 && all.undeclared_fraction < 1.0);
 }
 
 #[test]

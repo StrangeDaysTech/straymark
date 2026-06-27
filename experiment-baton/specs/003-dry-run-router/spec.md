@@ -109,6 +109,13 @@ straymark-baton route    [PATH] --dry-run [--out FMT] [--granularity G] [--confi
 
 ## 5. Classification rules (cheap-first, deterministic)
 
+> **Superseded by #332 (2026-06-27).** The title-scan cue mechanism below was
+> discontinued after the Sentinel calibration (#331) proved it unsafe
+> (object-vs-verb collisions, per-adopter keyword treadmill). The authoritative
+> signal is now the **declared `work_verb`** (+ `design_provenance`); an undeclared
+> unit is unclassifiable → routed up + nudge. See `AILOG-2026-06-27-001`. The text
+> below is retained as the historical Phase-2 design.
+
 Rules over precomputed signals; **no LLM** (NFR3). Calibrated on the adopter corpus (Sentinel now, N=2 later). Conservative: when signals are ambiguous or conflicting, **route up** (toward the more capable tier) — never down (NFR4 / R1).
 
 | Signal pattern | Class |

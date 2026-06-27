@@ -187,7 +187,7 @@ fn classify_cmd(root: PathBuf, out: OutFmt, granularity: &str) -> anyhow::Result
             Row {
                 id: u.id.clone(),
                 granularity: u.granularity,
-                class: c.class.as_str(),
+                class: c.class.map_or("undeclared", |c| c.as_str()),
                 confidence: c.confidence,
                 rationale: c.rationale,
                 title: u.title.clone(),
@@ -295,10 +295,9 @@ fn render_route_text(reports: &[EconomicTelemetry]) {
             t.classification_overhead, t.net_savings
         );
         println!(
-            "    caveats: {} low-confidence, {} of saving on low-confidence routing, {} conflicted",
-            pct(t.low_confidence_fraction),
-            pct(t.low_confidence_savings_fraction),
-            pct(t.conflict_fraction)
+            "    caveats: {} undeclared (→ frontier, declare a work_verb), {} of saving on low-confidence routing",
+            pct(t.undeclared_fraction),
+            pct(t.low_confidence_savings_fraction)
         );
         println!(
             "    sensitivity: breakeven overhead/unit {:.3}, robust at 2× overhead: {}",

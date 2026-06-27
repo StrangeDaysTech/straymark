@@ -1,15 +1,15 @@
-//! Economic telemetry (Baton Phase 2, B4).
+//! Economic telemetry (Baton Phase 2, B4 — revised for #332).
 //!
 //! Aggregates the per-unit dry-run routing into the §4.2 verdict: does routing
 //! save more than it costs to classify? Per granularity, so the §10.4 question —
 //! *which* granularity is routable — is answered with data. Costs are
 //! illustrative; the saving reported is **relative**.
 //!
-//! Two honesty guards beyond the headline `net_savings`:
-//! - `low_confidence_savings_fraction` — how much of the gross saving rests on
-//!   Low-confidence routing (a saving built on guesses is fragile).
-//! - `sensitivity` — the breakeven overhead and whether the saving survives 2×
-//!   the configured overhead (a knife-edge result is visible).
+//! With declared-verb classification (#332) the honest metric is
+//! `undeclared_fraction`: units with no `work_verb` are routed up to frontier
+//! (no saving) and need an authoring nudge, not a guess. The saving therefore
+//! comes entirely from declared (high-confidence) units — surfaced by
+//! `low_confidence_savings_fraction` collapsing toward zero.
 
 use std::collections::BTreeMap;
 
@@ -28,9 +28,9 @@ pub struct UnitRouting {
     pub id: String,
     pub granularity: Granularity,
     pub title: String,
-    pub class: TaskClass,
+    /// `None` = undeclared work_verb (unclassifiable → routed up).
+    pub class: Option<TaskClass>,
     pub confidence: Confidence,
-    pub conflict: bool,
     pub tier: Tier,
     pub escalated: bool,
     pub tokens: u64,
@@ -42,6 +42,9 @@ pub struct UnitRouting {
 impl UnitRouting {
     fn saving(&self) -> f64 {
         self.cost_frontier - self.cost_routed
+    }
+    fn declared(&self) -> bool {
+        self.class.is_some()
     }
 }
 
@@ -57,7 +60,6 @@ pub fn route_unit(unit: &RoutableUnit, policy: &Policy) -> UnitRouting {
         title: unit.title.clone(),
         class: c.class,
         confidence: c.confidence,
-        conflict: c.conflict,
         tier: d.tier,
         escalated: d.escalated,
         tokens,
@@ -70,9 +72,7 @@ pub fn route_unit(unit: &RoutableUnit, policy: &Policy) -> UnitRouting {
 /// Sensitivity of the routable verdict to the (illustrative) overhead term.
 #[derive(Debug, Clone, Serialize)]
 pub struct Sensitivity {
-    /// Overhead-per-unit at which net saving would reach zero (gross / units).
     pub breakeven_overhead_per_unit: f64,
-    /// Does the net saving stay positive at 2× the configured overhead?
     pub robust_at_2x_overhead: bool,
 }
 
@@ -88,13 +88,13 @@ pub struct EconomicTelemetry {
     pub gross_savings: f64,
     pub classification_overhead: f64,
     pub net_savings: f64,
-    /// The headline §4.2 verdict: routing saves more than it costs here.
     pub routable: bool,
+    /// Fraction of units with no declared `work_verb` (routed up; need a nudge).
+    pub undeclared_fraction: f64,
     pub low_confidence_fraction: f64,
-    /// Fraction of the gross saving that rests on Low-confidence routing.
+    /// Fraction of the gross saving that rests on Low-confidence routing
+    /// (collapses toward zero once classification is declared-verb).
     pub low_confidence_savings_fraction: f64,
-    /// Fraction of units whose signals conflicted (a heterogeneity proxy).
-    pub conflict_fraction: f64,
     pub sensitivity: Sensitivity,
 }
 
@@ -108,19 +108,19 @@ pub fn telemetry(
     let mut tier_counts: BTreeMap<String, usize> = BTreeMap::new();
     let mut cost_all_frontier = 0.0;
     let mut cost_routed = 0.0;
+    let mut undeclared = 0usize;
     let mut low_conf = 0usize;
     let mut low_conf_saving = 0.0;
-    let mut conflicts = 0usize;
     for r in routings {
         *tier_counts.entry(r.tier.as_str().into()).or_default() += 1;
         cost_all_frontier += r.cost_frontier;
         cost_routed += r.cost_routed;
+        if !r.declared() {
+            undeclared += 1;
+        }
         if r.confidence == Confidence::Low {
             low_conf += 1;
             low_conf_saving += r.saving();
-        }
-        if r.conflict {
-            conflicts += 1;
         }
     }
     let gross_savings = cost_all_frontier - cost_routed;
@@ -137,13 +137,13 @@ pub fn telemetry(
         classification_overhead,
         net_savings,
         routable: net_savings > 0.0,
+        undeclared_fraction: frac(undeclared),
         low_confidence_fraction: frac(low_conf),
         low_confidence_savings_fraction: if gross_savings > 0.0 {
             low_conf_saving / gross_savings
         } else {
             0.0
         },
-        conflict_fraction: frac(conflicts),
         sensitivity: Sensitivity {
             breakeven_overhead_per_unit: if n == 0 { 0.0 } else { gross_savings / n as f64 },
             robust_at_2x_overhead: gross_savings - 2.0 * classification_overhead > 0.0,
@@ -178,58 +178,62 @@ mod tests {
     use super::*;
     use crate::intent::SourceRef;
 
-    fn unit(id: &str, title: &str, effort: Option<&str>) -> RoutableUnit {
+    fn unit(id: &str, verb: Option<&str>, effort: Option<&str>) -> RoutableUnit {
         RoutableUnit {
             id: id.into(),
             granularity: Granularity::Task,
             source: SourceRef { file: "f".into(), symbol: None },
-            title: title.into(),
+            title: "t".into(),
             effort_estimate: effort.map(str::to_string),
             followup_bucket: None,
             followup_severity: None,
+            work_verb: verb.map(str::to_string),
+            design_provenance: None,
             scope_globs: Vec::new(),
         }
     }
 
     #[test]
-    fn routing_to_cheaper_tiers_yields_positive_net_savings() {
+    fn declared_cheap_verbs_yield_positive_net_savings() {
         let p = Policy::default();
-        // Operator (local, free) + Auditor (economic) vs all-frontier → big saving.
         let units = [
-            unit("a", "gofmt cleanup", Some("XS")),
-            unit("b", "Audit the boundary", Some("S")),
+            unit("a", Some("operate"), Some("XS")), // → local (free)
+            unit("b", Some("audit"), Some("S")),    // → economic
         ];
         let (_r, reports) = build_report(&units, &p);
         let all = reports.iter().find(|t| t.granularity.is_none()).unwrap();
-        assert_eq!(all.units_total, 2);
         assert!(all.gross_savings > 0.0);
-        assert!(all.routable, "cheap routing should beat the tiny overhead");
+        assert!(all.routable);
+        assert_eq!(all.undeclared_fraction, 0.0);
     }
 
     #[test]
-    fn overhead_above_saving_is_reported_not_routable() {
-        let mut p = Policy::default();
-        // A punishing illustrative overhead per unit dwarfs the saving.
-        p.overhead_per_unit = 1_000.0;
-        let units = [unit("a", "gofmt cleanup", Some("XS"))];
-        let (_r, reports) = build_report(&units, &p);
-        let all = reports.iter().find(|t| t.granularity.is_none()).unwrap();
-        assert!(all.gross_savings >= 0.0);
-        assert!(!all.routable, "overhead ≥ saving must report not-routable, not force it");
-        assert!(!all.sensitivity.robust_at_2x_overhead);
-    }
-
-    #[test]
-    fn low_confidence_savings_fraction_flags_fragile_savings() {
+    fn undeclared_units_route_to_frontier_and_are_counted() {
         let p = Policy::default();
-        // A no-cue unit → Implementer at Low confidence; its saving is "fragile".
-        let units = [unit("a", "Handle the thing", None)];
+        let units = [unit("a", None, Some("M"))]; // no verb → frontier, no saving
+        let (routings, reports) = build_report(&units, &p);
+        assert_eq!(routings[0].tier, Tier::Frontier);
+        assert_eq!(routings[0].class, None);
+        let all = reports.iter().find(|t| t.granularity.is_none()).unwrap();
+        assert_eq!(all.undeclared_fraction, 1.0);
+        assert_eq!(all.gross_savings, 0.0);
+        assert!(!all.routable, "no saving, positive overhead → not routable");
+    }
+
+    #[test]
+    fn savings_come_from_declared_units_not_low_confidence() {
+        let p = Policy::default();
+        let units = [
+            unit("a", Some("operate"), Some("XS")), // declared, saves
+            unit("b", None, Some("XS")),            // undeclared, frontier, no saving
+        ];
         let (_r, reports) = build_report(&units, &p);
         let all = reports.iter().find(|t| t.granularity.is_none()).unwrap();
-        assert!(all.low_confidence_fraction > 0.99);
-        assert!(
-            all.low_confidence_savings_fraction > 0.99,
-            "the whole saving rests on a Low-confidence guess"
+        // The undeclared unit is Low-confidence but contributes 0 saving.
+        assert!(all.low_confidence_fraction > 0.0);
+        assert_eq!(
+            all.low_confidence_savings_fraction, 0.0,
+            "saving rests on declared (high-confidence) routing, not guesses"
         );
     }
 }

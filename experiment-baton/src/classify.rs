@@ -1,21 +1,19 @@
-//! Cheap task classifier (Baton Phase 2, B3).
+//! Task classifier (Baton Phase 2, B3 — revised for #332).
 //!
-//! Pure `classify(&UnitSignals) -> Classification` — deterministic rules over the
-//! cheap signals from B2, no LLM, no I/O (concept §4.2 corollary; NFR2/NFR3). Maps
-//! a unit to a `TaskClass` (Planner / Implementer / Auditor / Operator — the
-//! routing targets of §4.2) that B4 turns into a tier recommendation.
+//! Pure `classify(&UnitSignals) -> Classification`. The class comes from the
+//! **declared `work_verb`** (controlled vocabulary), with one refinement: an
+//! `implement` unit whose `design_provenance` is `upstream` only instruments
+//! prior design → it is mechanical → `operator` (the residual-cognitive-load
+//! principle from the Sentinel calibration, #331/#332).
 //!
-//! Conservative bias (R1): when cues conflict, **route up** to the highest-tier
-//! class present; when nothing is known, default to the *escalatable middle*
-//! (Implementer) rather than claiming a unit is cheap (Operator). A false "this is
-//! mechanical" routes real work *down* and costs quality — the one error class we
-//! refuse. The `rationale` records the driving signals so a recommendation is
-//! auditable and calibration deltas are legible.
+//! A unit with **no declared verb is unclassifiable** (`class = None`): the
+//! router sends it up conservatively (frontier) and the telemetry nudges the
+//! author to declare the verb. We never guess a class from the title.
 
 use serde::Serialize;
 
 use crate::intent::Confidence;
-use crate::signals::{Cue, RiskLevel, UnitSignals};
+use crate::signals::{DesignProvenance, UnitSignals, WorkVerb};
 
 /// The routing target — what kind of model tier this work wants (§4.2).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -36,112 +34,56 @@ impl TaskClass {
             TaskClass::Operator => "operator",
         }
     }
-
-    /// Route-up rank: higher wins a conflict (Planner is the most capable tier;
-    /// Implementer outranks Auditor because it can escalate to frontier).
-    fn rank(self) -> u8 {
-        match self {
-            TaskClass::Planner => 4,
-            TaskClass::Implementer => 3,
-            TaskClass::Auditor => 2,
-            TaskClass::Operator => 1,
-        }
-    }
 }
 
-/// A classification with its confidence and the signals that drove it.
+/// A classification. `class = None` means the unit declared no work verb and is
+/// unclassifiable — route up + nudge, never guess.
 #[derive(Debug, Clone, Serialize)]
 pub struct Classification {
-    pub class: TaskClass,
+    pub class: Option<TaskClass>,
     pub confidence: Confidence,
-    /// True when the unit's signals pointed at more than one class and we routed
-    /// up — a within-unit heterogeneity marker the telemetry aggregates (§10.4).
-    pub conflict: bool,
     pub rationale: String,
 }
 
-/// The class a single cue points at.
-fn cue_class(cue: Cue) -> TaskClass {
-    match cue {
-        Cue::Architecture => TaskClass::Planner,
-        Cue::Audit => TaskClass::Auditor,
-        Cue::Implement | Cue::Fix => TaskClass::Implementer,
-        Cue::Operate | Cue::Test => TaskClass::Operator,
-    }
-}
-
-/// Classify a unit from its cheap signals.
+/// Classify a unit from its declared signals.
 pub fn classify(s: &UnitSignals) -> Classification {
-    let mut candidates: Vec<(TaskClass, String)> = s
-        .cues
-        .iter()
-        .map(|&c| (cue_class(c), format!("{:?} cue", c)))
-        .collect();
-
-    // High risk on an unbounded surface looks like open-ended design (§5).
-    if s.risk_level == Some(RiskLevel::High) && s.surface_size == 0 {
-        candidates.push((TaskClass::Planner, "high risk, unbounded surface".into()));
-    }
-
-    if candidates.is_empty() {
-        // No cue, no risk signal. Don't claim it's cheap — default to the
-        // escalatable middle (Implementer), which B4 still lifts to frontier on
-        // an escalation signal. Low confidence.
+    let Some(verb) = s.work_verb else {
         return Classification {
-            class: TaskClass::Implementer,
+            class: None,
             confidence: Confidence::Low,
-            conflict: false,
-            rationale: "no cue or risk signal — default Implementer (route up from Operator)".into(),
+            rationale: "no work_verb declared — unclassifiable; route up and declare the verb".into(),
+        };
+    };
+
+    // `implement` that only instruments upstream design is mechanical → operator.
+    if verb == WorkVerb::Implement && s.design_provenance == Some(DesignProvenance::Upstream) {
+        return Classification {
+            class: Some(TaskClass::Operator),
+            confidence: Confidence::High,
+            rationale: "work_verb=implement + design_provenance=upstream → operator (instruments prior design)".into(),
         };
     }
 
-    // Route up: the highest-rank class present wins any conflict.
-    let class = candidates
-        .iter()
-        .map(|(c, _)| *c)
-        .max_by_key(|c| c.rank())
-        .unwrap();
-    let conflicting = candidates.iter().any(|(c, _)| c.rank() != class.rank());
-
-    let confidence = if conflicting {
-        Confidence::Low
-    } else if corroborated(class, s) {
-        Confidence::High
-    } else {
-        Confidence::Medium
+    let class = match verb {
+        WorkVerb::Design => TaskClass::Planner,
+        WorkVerb::Implement => TaskClass::Implementer,
+        WorkVerb::Audit => TaskClass::Auditor,
+        WorkVerb::Operate => TaskClass::Operator,
     };
-
-    let mut reasons: Vec<String> = candidates
-        .iter()
-        .filter(|(c, _)| *c == class)
-        .map(|(_, r)| r.clone())
-        .collect();
-    if conflicting {
-        let dropped: Vec<&str> = candidates
-            .iter()
-            .filter(|(c, _)| *c != class)
-            .map(|(c, _)| c.as_str())
-            .collect();
-        reasons.push(format!("routed up over {}", dropped.join(", ")));
-    }
-
     Classification {
-        class,
-        confidence,
-        conflict: conflicting,
-        rationale: reasons.join("; "),
+        // A declared verb is authoritative — the author knew it for free.
+        class: Some(class),
+        confidence: Confidence::High,
+        rationale: format!("work_verb={}", verb_str(verb)),
     }
 }
 
-/// A non-cue signal that corroborates the class → High confidence.
-fn corroborated(class: TaskClass, s: &UnitSignals) -> bool {
-    let effort = s.effort_estimate.as_deref();
-    match class {
-        TaskClass::Operator => effort == Some("XS"),
-        TaskClass::Implementer => matches!(effort, Some("XS" | "S" | "M")),
-        TaskClass::Planner => effort == Some("L") || s.risk_level == Some(RiskLevel::High),
-        // An audit cue alone is enough to act on, but nothing else corroborates it.
-        TaskClass::Auditor => false,
+fn verb_str(v: WorkVerb) -> &'static str {
+    match v {
+        WorkVerb::Design => "design",
+        WorkVerb::Implement => "implement",
+        WorkVerb::Audit => "audit",
+        WorkVerb::Operate => "operate",
     }
 }
 
@@ -149,61 +91,45 @@ fn corroborated(class: TaskClass, s: &UnitSignals) -> bool {
 mod tests {
     use super::*;
 
-    fn sig(cues: &[Cue]) -> UnitSignals {
+    fn sig(verb: Option<WorkVerb>, prov: Option<DesignProvenance>) -> UnitSignals {
         UnitSignals {
-            cues: cues.to_vec(),
+            work_verb: verb,
+            design_provenance: prov,
             ..Default::default()
         }
     }
 
     #[test]
-    fn each_cue_maps_to_its_class() {
-        assert_eq!(classify(&sig(&[Cue::Architecture])).class, TaskClass::Planner);
-        assert_eq!(classify(&sig(&[Cue::Audit])).class, TaskClass::Auditor);
-        assert_eq!(classify(&sig(&[Cue::Implement])).class, TaskClass::Implementer);
-        assert_eq!(classify(&sig(&[Cue::Fix])).class, TaskClass::Implementer);
-        assert_eq!(classify(&sig(&[Cue::Operate])).class, TaskClass::Operator);
-        assert_eq!(classify(&sig(&[Cue::Test])).class, TaskClass::Operator);
+    fn declared_verb_maps_to_class_at_high_confidence() {
+        for (v, c) in [
+            (WorkVerb::Design, TaskClass::Planner),
+            (WorkVerb::Implement, TaskClass::Implementer),
+            (WorkVerb::Audit, TaskClass::Auditor),
+            (WorkVerb::Operate, TaskClass::Operator),
+        ] {
+            let r = classify(&sig(Some(v), None));
+            assert_eq!(r.class, Some(c));
+            assert_eq!(r.confidence, Confidence::High);
+        }
     }
 
     #[test]
-    fn conflict_routes_up_with_low_confidence() {
-        // A title that is both architecture and cleanup → Planner (route up).
-        let c = classify(&sig(&[Cue::Architecture, Cue::Operate]));
-        assert_eq!(c.class, TaskClass::Planner);
-        assert_eq!(c.confidence, Confidence::Low);
-        assert!(c.rationale.contains("routed up over"));
+    fn implement_upstream_degrades_to_operator() {
+        let r = classify(&sig(Some(WorkVerb::Implement), Some(DesignProvenance::Upstream)));
+        assert_eq!(r.class, Some(TaskClass::Operator));
+        assert!(r.rationale.contains("upstream"));
     }
 
     #[test]
-    fn no_signal_defaults_to_escalatable_middle() {
-        let c = classify(&UnitSignals::default());
-        assert_eq!(c.class, TaskClass::Implementer);
-        assert_eq!(c.confidence, Confidence::Low);
-        assert!(c.rationale.contains("no cue"));
+    fn implement_new_stays_implementer() {
+        let r = classify(&sig(Some(WorkVerb::Implement), Some(DesignProvenance::New)));
+        assert_eq!(r.class, Some(TaskClass::Implementer));
     }
 
     #[test]
-    fn high_risk_unbounded_surface_is_planner() {
-        let s = UnitSignals {
-            risk_level: Some(RiskLevel::High),
-            surface_size: 0,
-            ..Default::default()
-        };
-        assert_eq!(classify(&s).class, TaskClass::Planner);
-    }
-
-    #[test]
-    fn corroborating_effort_lifts_confidence_to_high() {
-        let mut s = sig(&[Cue::Operate]);
-        s.effort_estimate = Some("XS".into());
-        assert_eq!(classify(&s).confidence, Confidence::High);
-
-        let mut s = sig(&[Cue::Implement]);
-        s.effort_estimate = Some("S".into());
-        assert_eq!(classify(&s).confidence, Confidence::High);
-
-        // Cue alone, no corroboration → Medium.
-        assert_eq!(classify(&sig(&[Cue::Implement])).confidence, Confidence::Medium);
+    fn undeclared_is_unclassifiable() {
+        let r = classify(&sig(None, None));
+        assert_eq!(r.class, None);
+        assert!(r.rationale.contains("no work_verb"));
     }
 }
