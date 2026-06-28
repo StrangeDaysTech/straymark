@@ -28,6 +28,14 @@
       "minLength": 1,
       "description": "Free-text observable signal that justifies executing this Charter now (e.g., 'first false-positive ticket in svc_xxx', 'when admin UI lands'). Per Sentinel telemetry, declared triggers tend to be prescriptive, not predictive — track effective trigger separately at closure."
     },
+    "work_verb": {
+      "type": "string",
+      "description": "Declared work-classification verb (Baton #332). Controlled vocabulary: 'design' (open-ended architecture/pattern/scalability decisions, spec authoring), 'implement' (service logic, diagnosed fixes, complex queries, new tooling, defining a bounded foundational contract — NOT 'design'), 'audit' (independent review/verification against reality), 'operate' (mechanical tests/migrations, scaffolding, docs, closure, bulk). Maps to a model tier (design→planner, implement→implementer, audit→auditor, operate→operator). Optional and additive; declared at authoring (cost ≈ 0). NOTE: the vocabulary is intentionally NOT an enum here — an out-of-vocabulary value is surfaced by `straymark validate` as an advisory warning (rule CHARTER-WORK-VERB), never a blocking schema error. See dist/.straymark/00-governance and experiment-baton/06-work-verb-schema-ratification.md."
+    },
+    "design_provenance": {
+      "type": "string",
+      "description": "Residual-cognitive-load dimension for the declared work_verb (Baton #332). Controlled vocabulary: 'new' (the hard decision happens in this unit; default when omitted) or 'upstream' (the design already exists; this unit only instruments/wires it). Only significant for work_verb='implement': 'implement' + 'upstream' degrades the routing tier to operator (mechanical). Optional and additive. Like work_verb, NOT an enum here — an out-of-vocabulary value is an advisory warning (rule CHARTER-DESIGN-PROVENANCE), not a schema error."
+    },
     "originating_ailogs": {
       "type": "array",
       "items": {

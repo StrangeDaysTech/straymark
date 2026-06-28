@@ -13,6 +13,13 @@ trigger: "[1 línea: qué señal concreta — evento observable, decisión decla
 # de spec-como-contexto: context_spec. Ninguno está sujeto a la regla de exactamente-uno.
 # execution_ailogs: [AILOG-YYYY-MM-DD-NNN]
 # context_spec: specs/001-feature/spec.md
+# Clasificación de trabajo declarada (Baton #332, opcional, declarada en autoría — costo ≈ 0).
+# work_verb: design | implement | audit | operate. Mapea a un tier de routing. "Definir un
+# contrato fundacional acotado" es implement, NO design (design = arquitectura/spec abierta).
+# design_provenance: new | upstream — sólo significativo para implement (upstream degrada a operator).
+# Un valor fuera del vocabulario es un warning advisory de `straymark validate`, nunca bloqueante.
+# work_verb: implement
+# design_provenance: new
 ---
 
 # Charter: [TÍTULO BREVE]

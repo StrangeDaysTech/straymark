@@ -13,6 +13,13 @@ trigger: "[1-line: what concrete signal — observable event, declared decision,
 # spec-as-context case: context_spec. Neither is subject to the exactly-one rule.
 # execution_ailogs: [AILOG-YYYY-MM-DD-NNN]
 # context_spec: specs/001-feature/spec.md
+# Declared work-classification (Baton #332, optional, declared at authoring — cost ≈ 0).
+# work_verb: design | implement | audit | operate. Maps to a routing tier. "Defining a bounded
+# foundational contract" is implement, NOT design (design = open-ended architecture/spec).
+# design_provenance: new | upstream — only meaningful for implement (upstream degrades to operator).
+# An out-of-vocabulary value is an advisory `straymark validate` warning, never blocking.
+# work_verb: implement
+# design_provenance: new
 ---
 
 # Charter: [BRIEF TITLE]

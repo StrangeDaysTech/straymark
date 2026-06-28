@@ -107,6 +107,8 @@ Cada entrada dentro de un bucket sigue esta forma (campos v1 marcados; todos opc
 - **Origin-class**: ex-ante-planning | testing | telemetry | staging | real-env-bug   (v1, opcional)
 - **Status**: open | in-progress | suspected-closed | closed | superseded | promoted
 - **Severity**: normal | blocking                                                     (v1, opcional; default normal)
+- **Work verb**: design | implement | audit | operate                                 (opcional; clasificación de trabajo declarada, Baton #332)
+- **Design provenance**: new | upstream                                               (opcional; sólo para implement — upstream degrada a operator)
 - **Trigger**: ready | <fecha calendario> | when <X> | <otro>
 - **Destination**: chore | mini-charter | charter-replanning | operations | <charter-id> | <TDE id>
 - **Cost**: <estimación de esfuerzo>
@@ -314,4 +316,4 @@ Contribuido vía [issue #111](https://github.com/StrangeDaysTech/straymark/issue
 
 ---
 
-*StrayMark fw-4.30.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.31.0 | [Strange Days Tech](https://strangedays.tech)*

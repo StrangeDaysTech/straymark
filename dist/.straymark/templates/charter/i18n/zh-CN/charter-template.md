@@ -13,6 +13,13 @@ trigger: "[一行：哪个具体信号 — 可观察的事件、声明的决策�
 # context_spec。两者都不受"恰好一个"规则约束。
 # execution_ailogs: [AILOG-YYYY-MM-DD-NNN]
 # context_spec: specs/001-feature/spec.md
+# 声明的工作分类（Baton #332，可选，在编写时声明 —— 成本 ≈ 0）。
+# work_verb: design | implement | audit | operate。映射到路由层级。"定义一个有界的
+# 基础契约"属于 implement，而非 design（design = 开放式架构/spec 编写）。
+# design_provenance: new | upstream —— 仅对 implement 有意义（upstream 降级为 operator）。
+# 词汇表之外的值是 `straymark validate` 的咨询性警告，绝不阻断。
+# work_verb: implement
+# design_provenance: new
 ---
 
 # Charter: [简短标题]

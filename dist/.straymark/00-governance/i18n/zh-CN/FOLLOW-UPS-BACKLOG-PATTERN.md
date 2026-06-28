@@ -107,6 +107,8 @@ bucket 内的每个条目遵循以下形式（标注了 v1 字段;所有这些�
 - **Origin-class**: ex-ante-planning | testing | telemetry | staging | real-env-bug   (v1, 可选)
 - **Status**: open | in-progress | suspected-closed | closed | superseded | promoted
 - **Severity**: normal | blocking                                                     (v1, 可选;默认 normal)
+- **Work verb**: design | implement | audit | operate                                 (可选;声明的工作分类，Baton #332)
+- **Design provenance**: new | upstream                                               (可选;仅用于 implement —— upstream 降级为 operator)
 - **Trigger**: ready | <日历日期> | when <X> | <其他>
 - **Destination**: chore | mini-charter | charter-replanning | operations | <charter-id> | <TDE id>
 - **Cost**: <工作量估计>
@@ -314,4 +316,4 @@ straymark followups promote FU-NNN        # 自动化 FU → TDE 提升(见上�
 
 ---
 
-*StrayMark fw-4.30.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.31.0 | [Strange Days Tech](https://strangedays.tech)*
