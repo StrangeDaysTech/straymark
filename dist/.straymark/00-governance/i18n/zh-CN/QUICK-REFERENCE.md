@@ -234,4 +234,4 @@ risk_level: low | medium | high | critical
 
 ---
 
-*StrayMark fw-4.30.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.31.0 | [Strange Days Tech](https://strangedays.tech)*

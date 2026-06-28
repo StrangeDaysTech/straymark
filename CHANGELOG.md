@@ -7,6 +7,37 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.31.0 / CLI 3.30.0 — 2026-06-28
+
+Graduate the Baton experiment's declared work-classification fields to the
+framework (#332 step 2). After the schema was ratified
+(`experiment-baton/06-work-verb-schema-ratification.md`), `work_verb` and
+`design_provenance` become optional, additive, first-class Charter / follow-up
+fields — declarable at authoring (cost ≈ 0) and surfaced by the validator as an
+advisory nudge. No existing document changes shape; the 100%-undeclared legacy
+corpus stays quiet.
+
+### Added (Framework)
+
+- **`work_verb` and `design_provenance` Charter frontmatter fields** (#332).
+  Added to `charter.schema.v0.json` as optional `string` properties (documented
+  vocabulary, intentionally **not** an `enum` so an out-of-vocabulary value is an
+  advisory warning, never a blocking schema error) and to the Charter template
+  (EN/es/zh-CN) as commented guidance. `work_verb`: design | implement | audit |
+  operate. `design_provenance`: new | upstream (only meaningful for implement —
+  upstream degrades the routing tier to operator).
+- **Follow-up entry schema gains `Work verb` / `Design provenance` lines**
+  (`FOLLOW-UPS-BACKLOG-PATTERN.md`, EN/es/zh-CN). Optional; documents the same
+  controlled vocabulary at the follow-up grain.
+
+### Added (CLI)
+
+- **`straymark validate` advisory for declared classification** (#332). New
+  warning-only rules `CHARTER-WORK-VERB` and `CHARTER-DESIGN-PROVENANCE` fire
+  only when a Charter declares the field with a value outside the controlled
+  vocabulary. An absent field emits nothing (anti-noise for legacy corpora); the
+  check never affects the exit code.
+
 ## Framework 4.30.0 / CLI 3.29.0 / Core 0.9.0 — 2026-06-20
 
 Adopter-feedback consolidation: four validator gaps from a 150-doc housekeeping

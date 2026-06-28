@@ -855,3 +855,84 @@ fn test_charter_files_exist_detects_spanish_heading() {
         .stdout(predicate::str::contains("CHARTER-FILES-EXIST"))
         .stdout(predicate::str::contains("src/no-existe.rs"));
 }
+
+// --- CHARTER-WORK-VERB / CHARTER-DESIGN-PROVENANCE (Baton #332 graduation) ---
+
+/// Write a minimal Charter whose frontmatter carries the given extra YAML lines
+/// (e.g. `work_verb: implement`). Used to exercise the declared-classification
+/// advisory.
+fn create_charter_with_frontmatter(dir: &std::path::Path, extra_frontmatter: &str) {
+    let charters = dir.join(".straymark").join("charters");
+    std::fs::create_dir_all(&charters).unwrap();
+    let content = format!(
+        "---\ncharter_id: CHARTER-01\nstatus: declared\neffort_estimate: M\ntrigger: \"test trigger\"\n{}---\n\n# Charter: Work Verb Test\n\n## Tasks\n\n1. Run.\n",
+        extra_frontmatter
+    );
+    std::fs::write(charters.join("01-work-verb.md"), content).unwrap();
+}
+
+#[test]
+fn test_charter_work_verb_invalid_value_warns() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    create_charter_with_frontmatter(dir.path(), "work_verb: refactor\n");
+
+    let mut cmd = cargo_bin_cmd!("straymark");
+    cmd.arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .arg("--include-charters")
+        .assert()
+        .success() // advisory: must NOT fail the exit code
+        .stdout(predicate::str::contains("CHARTER-WORK-VERB"));
+}
+
+#[test]
+fn test_charter_work_verb_valid_value_is_quiet() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    create_charter_with_frontmatter(dir.path(), "work_verb: implement\ndesign_provenance: upstream\n");
+
+    let mut cmd = cargo_bin_cmd!("straymark");
+    cmd.arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .arg("--include-charters")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("CHARTER-WORK-VERB").not())
+        .stdout(predicate::str::contains("CHARTER-DESIGN-PROVENANCE").not());
+}
+
+#[test]
+fn test_charter_work_verb_absent_is_quiet() {
+    // Anti-noise: an undeclared field must emit nothing (the legacy corpus is
+    // 100% undeclared and must stay quiet).
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    create_charter_with_frontmatter(dir.path(), "");
+
+    let mut cmd = cargo_bin_cmd!("straymark");
+    cmd.arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .arg("--include-charters")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("CHARTER-WORK-VERB").not());
+}
+
+#[test]
+fn test_charter_design_provenance_invalid_value_warns() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    create_charter_with_frontmatter(
+        dir.path(),
+        "work_verb: implement\ndesign_provenance: inherited\n",
+    );
+
+    let mut cmd = cargo_bin_cmd!("straymark");
+    cmd.arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .arg("--include-charters")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("CHARTER-DESIGN-PROVENANCE"));
+}

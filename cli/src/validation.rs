@@ -170,6 +170,13 @@ pub fn validate_charters(project_root: &Path, straymark_dir: &Path) -> (Validati
             }
         }
 
+        // Step 2b: work_verb / design_provenance advisory (Baton #332 graduation).
+        // Declared classification fields. ADVISORY ONLY: a *present* value outside
+        // the controlled vocabulary is a warning (never an error / exit-1, per the
+        // schema-ratification posture §5); an *absent* field emits nothing — the
+        // 100%-undeclared legacy corpus must stay quiet.
+        check_charter_work_verb(&raw_yaml, path, &mut result);
+
         // Step 3: typed parse for referential-integrity checks. If schema
         // validation already caught problems, the typed parse may also fail —
         // in that case we skip ref checks (cannot trust the structure) but
@@ -272,6 +279,54 @@ pub fn validate_charters(project_root: &Path, straymark_dir: &Path) -> (Validati
     }
 
     (result, charter_count)
+}
+
+/// Advisory check for the declared classification fields `work_verb` /
+/// `design_provenance` (Baton #332, schema ratification `06-work-verb-schema-
+/// ratification.md`). Reads the raw frontmatter (the fields are intentionally
+/// absent from the typed `CharterFrontmatter` — they are optional and additive).
+///
+/// Anti-noise by design: a value *present but outside* the controlled vocabulary
+/// is a Warning; an *absent* field emits nothing. The vocabulary is enforced here
+/// (CLI semantics) rather than via a schema `enum` (which would make it a blocking
+/// Error), keeping the posture advisory per the ratification §5.
+fn check_charter_work_verb(raw_yaml: &serde_yaml::Value, path: &Path, result: &mut ValidationResult) {
+    const WORK_VERBS: &[&str] = &["design", "implement", "audit", "operate"];
+    const PROVENANCES: &[&str] = &["new", "upstream"];
+
+    let Some(map) = raw_yaml.as_mapping() else {
+        return;
+    };
+
+    for (key, valid, rule) in [
+        ("work_verb", WORK_VERBS, "CHARTER-WORK-VERB"),
+        ("design_provenance", PROVENANCES, "CHARTER-DESIGN-PROVENANCE"),
+    ] {
+        // Absent field → nothing (anti-noise). Only a *present* value is checked.
+        let Some(value) = map.get(serde_yaml::Value::String(key.to_string())) else {
+            continue;
+        };
+        let Some(declared) = value.as_str() else {
+            continue;
+        };
+        if valid.contains(&declared.trim()) {
+            continue;
+        }
+        result.add(ValidationIssue {
+            file: path.to_path_buf(),
+            rule: rule.to_string(),
+            message: format!(
+                "`{key}: {declared}` is outside the controlled vocabulary (expected one of: {}).",
+                valid.join(", ")
+            ),
+            severity: Severity::Warning,
+            fix_hint: Some(format!(
+                "Declare `{key}` as one of: {}. Leave it unset if undeclared — \
+                 the field is optional and only a wrong value is flagged.",
+                valid.join(", ")
+            )),
+        });
+    }
 }
 
 /// True if an AILOG file matching the given ID exists under
