@@ -1,0 +1,38 @@
+---
+title: 仓库原生，源于设计
+description: 为什么 StrayMark 的工件存放在你的 git 仓库内部，而不是某个外部 SaaS 平台。
+---
+# 仓库原生，源于设计
+
+StrayMark 没有 SaaS，没有 dashboard，没有第二份真相来源。每个工件 —— Charters、AILOGs、Agent 规则、合规证据 —— 都作为版本化文件存放在你的 git 仓库内，与它治理的代码并列。
+
+## 为什么这很重要
+
+- **推理跟随代码一同传递。** 对一行棘手代码执行 `git blame`，会引到 commit，引到 AILOG，引到 Charter，引到提前声明的风险。无需登录任何工具，没有被搬走的 Confluence 页面留下的死链。
+- **Diff = 治理。** 当 `STRAYMARK.md` 变更时，那是一个有评审人和讨论的 PR。当一个非平凡 commit 缺少 AILOG 时，CI 会捕获。你已经在用的同一套 git 工作流，就是唯一的工作流。
+- **没有 vendor lock-in。** 框架是纯 Markdown 加上一个 Rust CLI。两者都是 MIT 协议且自托管。离开 StrayMark 就是 `rm -rf .straymark/` —— 你的历史不会跟着走。
+- **Fork 是一等公民。** 组织可以 fork 框架、固定版本，并演化自己的规则。CLI 的 `update-framework` 命令尊重这种 pinning。
+
+## 它如何工作
+
+```
+your-repo/
+├── STRAYMARK.md                  # 统一规则 —— Agent 最先读取的东西
+├── .straymark/
+│   ├── 00-governance/            # AGENT-RULES、文档政策、quick reference
+│   ├── 01-charters/              # CHARTER-NN-slug.md
+│   ├── 02-ailogs/                # AILOG-YYYYMMDD-NN-slug.md
+│   ├── 03-decisions/             # AIDEC、ADR
+│   ├── 04-models/                # MCARD
+│   ├── 05-security/              # SEC、ETH、DPIA
+│   ├── 06-evolution/             # TDE、deprecations
+│   └── audits/CHARTER-NN/        # 外部审计报告
+└── src/...                       # 你真正的代码
+```
+
+CLI（`straymark validate`、`straymark audit`、`straymark compliance`）以确定性方式在文件系统上操作。没有 daemon，没有后台同步。
+
+## 了解更多
+
+- [采用指南](/docs/adopters/ADOPTION-GUIDE)
+- [STRAYMARK.md（规则的规范文件）](https://github.com/StrangeDaysTech/straymark/blob/main/dist/STRAYMARK.md)

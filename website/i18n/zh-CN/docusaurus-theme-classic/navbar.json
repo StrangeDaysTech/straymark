@@ -7,6 +7,10 @@
     "message": "StrayMark",
     "description": "The alt text of navbar logo"
   },
+  "item.label.Features": {
+    "message": "功能",
+    "description": "Navbar item with label Features"
+  },
   "item.label.Docs": {
     "message": "文档",
     "description": "Navbar item with label Docs"

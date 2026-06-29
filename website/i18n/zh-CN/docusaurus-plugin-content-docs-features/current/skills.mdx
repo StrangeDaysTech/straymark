@@ -1,0 +1,37 @@
+---
+title: 给 AI Agent 的 Skills
+description: 十一条 /straymark-* 斜杠命令，让 Agent 直接调用框架的仪式 —— 你不必再口述步骤。
+---
+# 给 AI Agent 的 Skills
+
+CLI 是给人和 CI 用的。Skills 是给 Agent 用的。十一条 `/straymark-*` 斜杠命令随框架一起发布，让 Claude Code、Gemini CLI、Copilot CLI 等可以直接调用 Charter 脚手架、AILOG 创建、审计周期、status 检查与安全评估，而你不必口述步骤。
+
+## 为什么这很重要
+
+- **必须靠口述的仪式就是没人会做的仪式。** 一个嘴上说"记得在 commit 前写 AILOG"的团队，到第二周就会产出零个 AILOG。Skills 让仪式可以从 Agent 内部被发现：`/straymark-status` 显示团队进展到哪里，`/straymark-charter-new` 用 prompts 引导出正确的文档类型与范围。
+- **手工流程和 Agent 流程共享一个真相来源。** CLI 的 `straymark new -t AILOG` 命令和 `/straymark-ailog` skill 产出同一份文档；仅入口不同。维护者无需让两套实现保持同步。
+- **新仪式以新 skill 的形式发布。** 当框架增加新仪式（比如三个 skill 的审计周期），它就作为新的斜杠命令出现，Agent 在 `straymark update-framework` 后就能发现。无需重新培训。
+
+## 十一条 skills
+
+| Skill | 用途 |
+|---|---|
+| `/straymark-status` | 文档状态与合规检查 |
+| `/straymark-new` | 创建任意 StrayMark 文档类型（交互式） |
+| `/straymark-charter-new` | Charter 脚手架 —— 有边界的工作单元 |
+| `/straymark-ailog` | 为当前 commit 快速创建 AILOG |
+| `/straymark-aidec` | 记录带备选与取舍的独立决策 |
+| `/straymark-adr` | 创建 Architecture Decision Record |
+| `/straymark-mcard` | Model Card（多步交互流） |
+| `/straymark-sec` | 安全评估（交互式，OWASP ASVS 感知） |
+| `/straymark-audit-prompt CHARTER-XX` | 生成多模型审计 prompt |
+| `/straymark-audit-execute [CHARTER-XX]` | 在审计方 CLI 中执行审计 |
+| `/straymark-audit-review CHARTER-XX` | 把审计报告整合为一份校准过的 review |
+
+## 它们如何协同
+
+Agent 调用 `/straymark-status` 看缺什么。用 `/straymark-charter-new` 搭起一个 Charter，声明范围与风险，交付工作，运行 `/straymark-ailog` 记录执行，然后 `/straymark-audit-prompt` 委托外部审计。每个 skill 都很小；纪律从它们的组合中浮现。
+
+## 了解更多
+
+- [Workflows](/docs/adopters/WORKFLOWS)

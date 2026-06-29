@@ -1,0 +1,38 @@
+---
+title: Repo-native by design
+description: Why StrayMark's artifacts live inside your git repo instead of an external SaaS platform.
+---
+# Repo-native by design
+
+StrayMark has no SaaS, no dashboard, no second source of truth. Every artifact — Charters, AILOGs, agent rules, compliance evidence — lives as a versioned file in your git repository, next to the code it governs.
+
+## Why this matters
+
+- **Reasoning travels with the code.** A `git blame` on a tricky line leads to the commit, which leads to the AILOG, which leads to the Charter, which leads to the risks declared up-front. No tool to log into, no broken link from a moved Confluence page.
+- **Diff = governance.** When `STRAYMARK.md` changes, it's a PR with reviewers and a discussion. When an AILOG is missing for a non-trivial commit, CI catches it. The same git workflow you already use is the only workflow.
+- **No vendor lock-in.** The framework is plain Markdown plus a Rust CLI. Both are MIT-licensed and self-hosted. Walking away from StrayMark is `rm -rf .straymark/` — and your history doesn't go with it.
+- **Forks are first-class.** Organizations can fork the framework, pin a version, and evolve their own rules. The CLI's `update-framework` command respects that pinning.
+
+## How it works
+
+```
+your-repo/
+├── STRAYMARK.md                  # Unified rules — first thing agents read
+├── .straymark/
+│   ├── 00-governance/            # AGENT-RULES, doc policies, quick reference
+│   ├── 01-charters/              # CHARTER-NN-slug.md
+│   ├── 02-ailogs/                # AILOG-YYYYMMDD-NN-slug.md
+│   ├── 03-decisions/             # AIDEC, ADR
+│   ├── 04-models/                # MCARD
+│   ├── 05-security/              # SEC, ETH, DPIA
+│   ├── 06-evolution/             # TDE, deprecations
+│   └── audits/CHARTER-NN/        # External audit reports
+└── src/...                       # Your actual code
+```
+
+The CLI (`straymark validate`, `straymark audit`, `straymark compliance`) operates on the filesystem, deterministically. No daemons, no background sync.
+
+## Learn more
+
+- [Adoption Guide](/docs/adopters/ADOPTION-GUIDE)
+- [STRAYMARK.md (canonical rules file)](https://github.com/StrangeDaysTech/straymark/blob/main/dist/STRAYMARK.md)

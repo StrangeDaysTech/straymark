@@ -1,0 +1,76 @@
+---
+title: 真正干活的 CLI
+description: 一个 Rust 二进制，十一条命令。确定性、可脚本化、无守护进程。
+image: https://straymark.dev/img/og/cli.png
+---
+import gallery from '@site/features/explore-gallery.module.css';
+
+# 真正干活的 CLI
+
+`straymark` 是单个 Rust 二进制，附带十一条子命令，在你的仓库上操作：脚手架、校验、审计、复杂度分析、合规报告生成。确定性输出，可以管道到 `grep`、`jq` 或 CI。
+
+## 为什么这很重要
+
+- **一条安装路径，一条升级路径。** 无需追逐语言运行时，无 Docker 层，无编排。`curl -fsSL .../install.sh | sh` 把它放到 `$PATH`。`straymark update-cli` 保持最新。
+- **没有隐藏的副作用。** `straymark validate` 读取文件；`straymark audit` 产出 markdown 报告。任何子命令都不会在你不要求的情况下调用 API 或修改 git 状态。可安全接入 pre-commit 和 CI。
+- **CLI 即契约。** 同一份 `straymark validate` 在本地、pre-commit 和流水线中运行。没有"CI 模式"另用一套规则。
+
+## 十一条命令
+
+| 命令 | 作用 |
+|---|---|
+| `straymark init [path]` | 在项目中初始化 StrayMark |
+| `straymark update` | 同时更新 framework 和 CLI |
+| `straymark status [path]` | 显示安装健康度与文档统计 |
+| `straymark repair [path]` | 恢复缺失的目录与 framework 文件 |
+| `straymark validate [path] [--staged]` | 校验文档的合规性与正确性 |
+| `straymark new [-t type] [--title]` | 基于模板创建新文档 |
+| `straymark compliance [path]` | 检查监管合规（EU AI Act、ISO 42001、NIST 等） |
+| `straymark metrics [path]` | 展示治理度量与文档统计 |
+| `straymark analyze [path]` | 分析代码复杂度（认知 + 圈复杂度） |
+| `straymark audit [path]` | 生成带时间线与可追溯性的审计报告 |
+| `straymark explore [path]` | 交互式 TUI 文档浏览器 |
+
+所有命令在合适处都支持 `--json`，输出可机读。
+
+> **由 arborist-metrics 驱动：** `straymark analyze` 通过 [`arborist-metrics`](https://github.com/StrangeDaysTech/arborist-metrics/) 计算认知复杂度与圈复杂度 —— 这是我们开源的 Rust 多语言代码度量库，同样由 StrangeDaysTech S.A.S. de C.V. 开发。
+
+## 用 `straymark explore` 浏览文档
+
+`straymark explore` 在 `.straymark/` 之上打开一个交互式终端 UI：三个面板的 TUI，包含文档树、单文档元数据和渲染好的 markdown —— 键盘驱动，无 daemon，无额外依赖。下面的截图来自 **Sentinel**——即在实证上验证框架的那个项目，索引了 131 份文档。
+
+<div className={`${gallery.gallery} zoomable`}>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/01-initial.png" alt="straymark explore —— Quick start 初始画面，左侧是按类别分组的文档树。" loading="lazy" />
+    <figcaption>文档树按类别把 131 份文档分组 —— Governance、Requirements、Charters、AILOGs、TDEs、Security……</figcaption>
+  </figure>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/02-ailog.png" alt="straymark explore 展示一个打开的 AILOG，侧边栏显示元数据，主面板渲染 markdown。" loading="lazy" />
+    <figcaption>一个 AILOG 打开：元数据侧边栏展示 Status、Confidence、Risk、标签与交叉引用；主面板渲染 markdown。</figcaption>
+  </figure>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/03-tde.png" alt="straymark explore 显示一份 TDE 文档，包含其分类与源 Charter。" loading="lazy" />
+    <figcaption>另一种文档类型 —— 一个 TDE，附带分类与源 Charter。<code>explore</code> 自动区分类型。</figcaption>
+  </figure>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/04-shortcuts.png" alt="straymark explore 展示按面板分组的键盘快捷键帮助覆盖层。" loading="lazy" />
+    <figcaption><code>?</code> 显示按面板分组的全部快捷键 —— navigation、metadata、document、general。</figcaption>
+  </figure>
+</div>
+
+## 为管道而生
+
+```bash
+# 找出所有打开的 TDE 按影响排序：
+straymark metrics --json | jq '.tde[] | select(.status=="identified") | .id'
+
+# 当任何高风险 Charter 缺少 AILOG 时让 CI 失败：
+straymark validate --staged || exit 1
+
+# 比较两个 commit 之间的复杂度差异：
+straymark analyze --since HEAD~10
+```
+
+## 了解更多
+
+- [CLI 参考](/docs/adopters/CLI-REFERENCE)

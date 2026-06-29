@@ -201,31 +201,7 @@ const config: Config = {
           // sitemap plugin can emit <lastmod> per doc URL.
           showLastUpdateTime: true,
         },
-        blog: {
-          path: 'blog',
-          routeBasePath: 'blog',
-          blogTitle: 'Blog',
-          blogDescription: 'The StrayMark chronicle — how the framework emerged, decision by decision.',
-          blogSidebarCount: 'ALL',
-          blogSidebarTitle: 'All posts',
-          showReadingTime: true,
-          // Populates metadata.lastUpdatedAt from git for every post so the
-          // sitemap plugin can emit <lastmod> per post URL. Same lever the
-          // docs plugin uses above.
-          showLastUpdateTime: true,
-          feedOptions: {
-            type: ['rss', 'atom'],
-            title: 'StrayMark Blog',
-            description: 'The StrayMark chronicle.',
-            copyright: `Copyright © ${new Date().getFullYear()} Strange Days Tech.`,
-          },
-          editUrl: ({locale, blogDirPath, blogPath}) => {
-            if (locale && locale !== 'en') {
-              return `${GITHUB_EDIT_BASE}/website/i18n/${locale}/docusaurus-plugin-content-blog/${blogPath}`;
-            }
-            return `${GITHUB_EDIT_BASE}/website/${blogDirPath}/${blogPath}`;
-          },
-        },
+        blog: false,
         theme: {
           customCss: './src/css/custom.css',
         },
@@ -313,7 +289,29 @@ const config: Config = {
     ],
   ],
 
-  plugins: ['plugin-image-zoom'],
+  plugins: [
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'features',
+        path: 'features',
+        routeBasePath: 'features',
+        sidebarPath: './featuresSidebars.ts',
+        showLastUpdateTime: true,
+      },
+    ],
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'blog',
+        path: 'blog',
+        routeBasePath: 'blog',
+        sidebarPath: './blogSidebars.ts',
+        showLastUpdateTime: true,
+      },
+    ],
+    'plugin-image-zoom',
+  ],
 
   themeConfig: {
     imageZoom: {
@@ -346,6 +344,7 @@ const config: Config = {
         height: 32,
       },
       items: [
+        {to: '/features', label: 'Features', position: 'left'},
         {
           type: 'docSidebar',
           sidebarId: 'docsSidebar',
