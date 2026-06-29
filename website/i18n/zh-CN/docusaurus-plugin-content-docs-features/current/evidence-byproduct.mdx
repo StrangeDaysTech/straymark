@@ -1,0 +1,38 @@
+---
+title: 证据作为副产品
+description: 监管合规证据来源于团队已经在产出的同一批工件，没有平行的纸面流程。
+---
+# 证据作为副产品
+
+合规不应该是你的团队事后维护的另一摞文档。StrayMark 把你已有的工件 —— Charters、AILOGs、AIDECs、ETH、DPIA、MCARDs —— 直接映射到 EU AI Act、ISO 42001、NIST AI RMF、GDPR 和中国区（TC260、PIPL、GB45438、CAC、CSL）的控制项。工件*就是*证据。
+
+## 为什么这很重要
+
+- **你已经在写那些输入了。** 审计员索取风险登记册、决策日志、model cards、事件响应计划。这些恰好映射到 Charter 的 `Risks` 部分、AILOGs、AIDECs、MCARDs、SEC 文档 —— 都是团队在常规工作中产出的工件，而不是在年底冲刺时凑出来的。
+- **Gap 报告以秒为单位生成。** `straymark compliance --standard EuAiAct` 遍历仓库、解析 frontmatter（tags、risk_level、regional_scope），并产出 gap 报告。无电子表格、无 Confluence 空间、无外部 GRC 工具。
+- **标准在演化；引擎随版本发布。** 监管者发布澄清时，映射引擎会在下一个框架版本中更新。你不必给团队重新培训 —— 你运行 `straymark update-framework`。
+
+## 它扫描什么
+
+```bash
+$ straymark compliance --standard EuAiAct
+[OK]   Risk management   8/8   covered by R1-R8 across 12 Charters
+[OK]   Data governance   4/4   covered by 3 DPIA documents
+[GAP]  Model cards       0/2   high-risk models in scope are missing MCARD
+[GAP]  Incident response 0/1   ETH-RESPONSE not declared
+```
+
+开箱即用支持的标准：
+
+| 区域 | 标准 |
+|---|---|
+| 欧盟 | EU AI Act、GDPR |
+| 国际 | ISO/IEC 42001、NIST AI RMF |
+| 中国 | TC260、PIPL、GB45438、CAC、CSL |
+
+`.straymark/config.yml` 中的 `regional_scope` 字段决定默认运行哪些扫描。
+
+## 了解更多
+
+- [CLI 参考：`compliance`](/docs/adopters/CLI-REFERENCE)
+- [采用指南](/docs/adopters/ADOPTION-GUIDE)

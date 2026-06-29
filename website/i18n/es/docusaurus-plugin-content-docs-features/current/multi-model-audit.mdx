@@ -1,0 +1,41 @@
+---
+title: Auditoría externa multi-modelo
+description: Tres CLIs auditoras independientes revisan el mismo Charter en la puerta de cierre — antes de invocar `charter close`; un calibrador consolida los hallazgos en evidencia firmada dentro de la telemetría del Charter.
+---
+# Auditoría externa multi-modelo
+
+Cuando la implementación de un Charter está lista y el drift check está limpio — pero **antes** de invocar `charter close` — StrayMark puede comisionar opcionalmente una auditoría externa. No de un agente, sino de varios, en paralelo. Tres CLIs auditoras independientes (por ejemplo: Claude, Copilot, Gemini) leen el mismo prompt y auditan el Charter de forma independiente. Un **calibrador** consolida después los hallazgos en un único bloque de evidencia firmada dentro de la telemetría del Charter, que viaja con él cuando se cierra. La auditoría **nunca es obligatoria** — declínala con libertad cuando el costo (2-3 auditores LLM) no se ajuste al valor de tu caso.
+
+## Por qué importa
+
+- **Las auditorías de un solo modelo heredan los sesgos de su modelo auditor.** Las auditorías paralelas multi-modelo surfacean hallazgos que cualquier modelo individual perdería, y permiten al equipo despriorizar hallazgos que solo señaló un modelo. Consenso y disenso, ambos se vuelven datos.
+- **El calibrador es la capa de disciplina.** Lee todos los reports, verifica cada hallazgo contra el código real, deduplica, reclasifica severidad (¿el auditor estaba inflando o desinflando?) y califica la calidad de señal de cada auditor. El resultado es una review calibrada, no una votación.
+- **Human-in-the-loop, no LLM gateway.** StrayMark mismo nunca llama a APIs de auditores. El CLI prepara un prompt; el operador corre la auditoría en su CLI auditora de elección; el CLI consolida los reports resultantes. Es una postura arquitectónica deliberada (Principio #10: "no LLM gateway").
+
+## El ciclo de tres fases
+
+### Fase 1 — Generar el prompt
+```bash
+/straymark-audit-prompt CHARTER-12
+```
+Escribe un prompt unificado en `.straymark/audits/CHARTER-12/audit-prompt.md` que embebe el alcance del Charter, los AILOGs, el git diff y las reglas de disciplina (citación de evidencia, calibración de severidad, scope gates).
+
+### Fase 2 — Correr N auditores en paralelo
+El operador abre CLIs auditoras (gemini-cli, claude-cli, copilot-cli, codex-cli) y corre `/straymark-audit-execute` en cada una. Cada auditor lee el mismo prompt, audita con tool use (citando `path:línea`) y escribe `report-<modelo>.md` junto al prompt.
+
+### Fase 3 — Calibrar y mergear
+```bash
+/straymark-audit-review CHARTER-12
+```
+Consolida todos los reports en un `review.md` crítico con:
+- **Veredicto por hallazgo** — VALID, PARTIALLY_VALID, MISATTRIBUTED, FALSE_POSITIVE, DUPLICATE.
+- **Reclasificación de severidad** — cuando los auditores inflaron/desinflaron frente a la configuración real.
+- **Scorecard de auditores** — precisión de alcance, profundidad, tasa de detección de bugs, tasa de falsos positivos.
+- **Plan de remediación** — P0 Seguridad → P4 Documentación.
+
+La evidencia revisada se mergea después en el bloque YAML `external_audit:` del Charter como telemetría.
+
+## Aprende más
+
+- [Workflows](/docs/adopters/WORKFLOWS)
+- [Blog: Los Charters y el ciclo de auditoría externa](/blog/charters-and-the-external-audit-cycle)

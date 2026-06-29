@@ -1,0 +1,41 @@
+---
+title: 多模型外部审计
+description: 三个独立的审计方 CLI 在关闭门处审同一个 Charter —— 在 `charter close` 调用之前；一个校准器把所有发现整合为 Charter 遥测中的签名证据。
+---
+# 多模型外部审计
+
+当一个 Charter 的实现完成、drift 检查干净时 —— 但**在** `charter close` 被调用**之前** —— StrayMark 可以可选地委托一次外部审计。不是由单个 Agent，而是由数个 Agent 并行进行。三个独立的审计方 CLI（例如：Claude、Copilot、Gemini）读取同一份 prompt，各自独立审计 Charter。一个**校准器**随后把所有发现整合为一个签名的证据块，写入 Charter 的遥测中，并在 Charter 关闭时一同流转。审计**永不强制** —— 当成本（2-3 个 LLM 审计员）与你的情形不匹配时，可自由拒绝。
+
+## 为什么这很重要
+
+- **单模型审计会继承其审计模型的偏差。** 多模型并行审计能浮现任一模型会漏掉的发现，并让团队对仅被一个模型标记的发现降级。共识与分歧都成为数据。
+- **校准器是纪律层。** 它读取所有报告，把每个发现对照真实代码做核验，去重，重新分类严重度（审计员是在抬高还是压低？），并对每个审计员的信号质量评分。结果是校准过的 review，不是投票。
+- **Human-in-the-loop，不是 LLM gateway。** StrayMark 自身从不调用审计方 API。CLI 准备 prompt；操作员在自选的审计方 CLI 中运行审计；CLI 整合最终报告。这是有意的架构立场（原则 #10："不是 LLM gateway"）。
+
+## 三阶段周期
+
+### 阶段 1 —— 生成 prompt
+```bash
+/straymark-audit-prompt CHARTER-12
+```
+在 `.straymark/audits/CHARTER-12/audit-prompt.md` 写一份统一 prompt，内嵌 Charter 范围、AILOGs、git diff，以及纪律规则（证据引用、严重度校准、scope gate）。
+
+### 阶段 2 —— 并行运行 N 个审计员
+操作员打开审计方 CLI（gemini-cli、claude-cli、copilot-cli、codex-cli），在每个里运行 `/straymark-audit-execute`。每个审计员读取同一份 prompt，用 tool use（引用 `path:行号`）审计，并在 prompt 旁边写 `report-<model>.md`。
+
+### 阶段 3 —— 校准并合并
+```bash
+/straymark-audit-review CHARTER-12
+```
+把所有报告整合为一份关键的 `review.md`：
+- **每个发现的裁决** —— VALID、PARTIALLY_VALID、MISATTRIBUTED、FALSE_POSITIVE、DUPLICATE。
+- **严重度重分类** —— 当审计员相对实际配置过度抬高/压低时。
+- **审计员打分** —— 范围精度、深度、bug 检出率、误报率。
+- **修复计划** —— P0 安全 → P4 文档。
+
+经过 review 的证据随后合并到 Charter 的 `external_audit:` YAML 块作为遥测。
+
+## 了解更多
+
+- [Workflows](/docs/adopters/WORKFLOWS)
+- [Blog：Charter 与外部审计周期](/blog/charters-and-the-external-audit-cycle)

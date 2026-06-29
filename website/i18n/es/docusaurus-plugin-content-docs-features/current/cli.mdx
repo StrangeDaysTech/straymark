@@ -1,0 +1,76 @@
+---
+title: Un CLI que hace el trabajo
+description: Un único binario de Rust, once comandos. Determinista, scriptable, sin daemons.
+image: https://straymark.dev/img/og/cli.png
+---
+import gallery from '@site/features/explore-gallery.module.css';
+
+# Un CLI que hace el trabajo
+
+`straymark` es un único binario de Rust con once subcomandos que operan sobre tu repo: scaffolding, validación, auditoría, análisis de complejidad, generación de reportes de compliance. Salidas deterministas que puedes pipear a `grep`, `jq` o CI.
+
+## Por qué importa
+
+- **Una ruta de instalación, una ruta de upgrade.** Sin cacería de runtimes de lenguaje, sin capa de Docker, sin orquestación. `curl -fsSL .../install.sh | sh` lo deja en tu `$PATH`. `straymark update-cli` lo mantiene al día.
+- **Sin efectos secundarios ocultos.** `straymark validate` lee archivos; `straymark audit` produce un reporte en markdown. Ninguno de los subcomandos llama a APIs externas ni modifica el estado de git sin que lo pidas. Seguro de cablear en pre-commit y CI.
+- **El CLI es el contrato.** El mismo `straymark validate` corre en local, en pre-commit y en pipelines. No hay un "modo CI" con reglas distintas.
+
+## Los once comandos
+
+| Comando | Qué hace |
+|---|---|
+| `straymark init [path]` | Inicializa StrayMark en un proyecto |
+| `straymark update` | Actualiza framework y CLI |
+| `straymark status [path]` | Muestra la salud de la instalación y stats de documentación |
+| `straymark repair [path]` | Restaura directorios y archivos faltantes del framework |
+| `straymark validate [path] [--staged]` | Valida documentos por compliance y corrección |
+| `straymark new [-t type] [--title]` | Crea un nuevo documento desde una plantilla |
+| `straymark compliance [path]` | Verifica compliance regulatorio (EU AI Act, ISO 42001, NIST, ...) |
+| `straymark metrics [path]` | Muestra métricas de gobernanza y estadísticas documentales |
+| `straymark analyze [path]` | Analiza la complejidad del código (cognitiva + ciclomática) |
+| `straymark audit [path]` | Genera reportes de auditoría con línea temporal y trazabilidad |
+| `straymark explore [path]` | Navegador interactivo TUI de la documentación |
+
+Todos los comandos respetan `--json` donde tiene sentido, así la salida es procesable por máquina.
+
+> **Impulsado por arborist-metrics:** `straymark analyze` calcula la complejidad cognitiva y ciclomática mediante [`arborist-metrics`](https://github.com/StrangeDaysTech/arborist-metrics/) — nuestra librería Rust open source para métricas de código multi-lenguaje, también desarrollada por StrangeDaysTech S.A.S. de C.V.
+
+## Navega por los docs con `straymark explore`
+
+`straymark explore` abre una interfaz de terminal interactiva sobre `.straymark/`: una TUI de tres paneles con el árbol de documentación, la metadata por documento y el markdown renderizado — controlada por teclado, sin daemon, sin dependencia extra. Las capturas debajo son de **Sentinel**, el proyecto que valida el framework empíricamente, con 131 documentos indexados.
+
+<div className={`${gallery.gallery} zoomable`}>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/01-initial.png" alt="straymark explore — pantalla inicial Quick start con el árbol de documentación a la izquierda agrupado por categoría." loading="lazy" />
+    <figcaption>El árbol agrupa los 131 documentos por categoría — Governance, Requirements, Charters, AILOGs, TDEs, Security…</figcaption>
+  </figure>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/02-ailog.png" alt="straymark explore mostrando un AILOG abierto con el panel de metadata poblado y markdown renderizado en el panel principal." loading="lazy" />
+    <figcaption>Un AILOG abierto: el panel de metadata muestra Status, Confidence, Risk, tags y referencias cruzadas; el markdown se renderiza en el panel principal.</figcaption>
+  </figure>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/03-tde.png" alt="straymark explore mostrando un documento TDE con su clasificación y Charter de origen." loading="lazy" />
+    <figcaption>Otro tipo de documento — un TDE con su clasificación y el Charter de origen. <code>explore</code> distingue los tipos automáticamente.</figcaption>
+  </figure>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/04-shortcuts.png" alt="straymark explore mostrando el overlay de ayuda con los atajos de teclado agrupados por panel." loading="lazy" />
+    <figcaption><code>?</code> muestra todos los atajos agrupados por panel — navigation, metadata, document, general.</figcaption>
+  </figure>
+</div>
+
+## Hecho para pipear
+
+```bash
+# Encontrar cada TDE abierto ordenado por impacto:
+straymark metrics --json | jq '.tde[] | select(.status=="identified") | .id'
+
+# Fallar CI si algún Charter de alto riesgo no tiene AILOG:
+straymark validate --staged || exit 1
+
+# Diferencia de complejidad entre dos commits:
+straymark analyze --since HEAD~10
+```
+
+## Aprende más
+
+- [Referencia del CLI](/docs/adopters/CLI-REFERENCE)

@@ -1,0 +1,26 @@
+---
+title: Structured cognitive discipline
+description: Three small artifact types that turn vague "AI-assisted work" into traceable units of thought — Charters, AILOGs, AIDECs.
+---
+# Structured cognitive discipline
+
+Most AI-assisted work loses its reasoning the moment the diff lands. StrayMark fixes that with three small artifact types — **Charters**, **AILOGs**, **AIDECs** — that sit next to your code and document the intent, the action, and the trade-off behind each change.
+
+## Why this matters
+
+When an agent ships a feature, you usually get the result and lose everything that led there: the alternatives considered, the scope explicitly excluded, the risks discovered mid-flight. Six months later, the code is unrecoverable archaeology. Cognitive discipline is cheap when you have a template; it's everything when you don't.
+
+The cost of *not* having it shows up later as: undocumented decisions that nobody can defend in a review, agents drifting silently from the spec, and compliance auditors asking for evidence that doesn't exist.
+
+## What you get
+
+- **Charters** declare a bounded unit of work *before* you start: scope (in / out), files declared up-front, risks (`R1...Rn`), verification commands. The Charter cannot close if reality drifted from the declaration and the drift wasn't reconciled in the same PR.
+- **AILOGs** log the actual execution: what got done, why, what was discovered in flight, what was punted. One per commit, sequence-numbered per day, with a `risk_level` and a `confidence` field.
+- **AIDECs** capture standalone decisions: alternatives considered, trade-offs, the option chosen and the reason. The decision survives even if the original Charter is closed.
+
+All three are plain Markdown with YAML frontmatter. They live in `.straymark/` and ship with templates. The CLI scaffolds them; agents invoke them via skills.
+
+## Learn more
+
+- [What is a Charter](/docs/contributors/WHAT-IS-A-CHARTER)
+- [Adoption Guide](/docs/adopters/ADOPTION-GUIDE)

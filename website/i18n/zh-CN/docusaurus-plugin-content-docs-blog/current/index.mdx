@@ -1,0 +1,139 @@
+---
+id: index
+slug: /
+title: "所有文章"
+description: "StrayMark 编年史：这个框架如何随着一次次决策逐步成形。"
+hide_table_of_contents: true
+---
+
+# 所有文章
+
+StrayMark 编年史：这个框架如何随着一次次决策逐步成形。
+
+## 2026
+
+### [开放格式留给生产者的那部分](./2026-06-17-what-the-open-format-left-to-the-producer.md)
+
+2026-06-17
+
+Google 发布了 Open Knowledge Format —— markdown、YAML frontmatter、一张由链接构成的图、一个维护它们的智能体。StrayMark 独立地抵达了同样的基本构件。趋同是真实的;分歧同样真实 —— OKF 为 AI 构建认知,StrayMark 为 AI 与人类工程师一起构建认知。
+
+### [债务究竟在哪里](./2026-06-16-where-the-debt-actually-was.md)
+
+2026-06-16
+
+操作员每天真正的问题不是"把文档给我看",而是"我们现在在哪里?"。Loom 长出了第二个表面 —— 把架构当作一栋可以走进去的建筑,既有 2D 也有 3D —— 而它的技术债 overlay 却是空的。不是因为没有债务。是因为它不知道该把债务画在哪里。
+
+### [这张图还画不出来的东西](./2026-06-14-what-the-graph-couldnt-draw-yet.md)
+
+2026-06-14
+
+Loom 的首个 release 在不到一秒内就把文档图谱实时渲染进了浏览器。它同时也画出了 330 条通向虚空的 edge。看得见的那个 feature 是简单的部分 —— 让引用真正解析到位才是真正的工作，而它教会了我们：dangling edge 何时是 bug，何时是信号。
+
+### [第二个读者提出的要求](./2026-06-12-what-the-second-reader-demanded.md)
+
+2026-06-12
+
+在 Loom 能画出任何东西之前，StrayMark 的文档模型必须先停止做 CLI 的私产。那次零用户可见变更的重构，是之后一切可视化工作的前提 —— 也是框架一直以来向 adopter 反复宣讲的一个小教训。
+
+### [bash 脚本口中的"in sync"](./2026-06-04-what-the-bash-script-said-was-in-sync.md)
+
+2026-06-04
+
+Follow-ups 成为 StrayMark 的第二个一等公民实体 —— 一天之内，两次外部迁移对这个设计做了压力测试。参考 adopter 已弃用的 bash 脚本一直在报告"in sync"，而 29 个条目对它完全不可见。
+
+### [feature flag 编译掉的东西](./2026-05-31-what-the-feature-flag-compiled-away.md)
+
+2026-05-31
+
+第二个 adopter，在另一种语言和另一套 stack 上，验证了「声明了表层但未连线」这个反模式 —— 而我们有意推迟的 CLI helper 终于发布了。
+
+### [二进制藏不住的东西](./2026-05-23-what-the-binary-couldnt-hide.md)
+
+2026-05-23
+
+一次 polish Charter 浮现了十个潜伏 gap，以及一个终于得到命名的反模式
+
+### [Pattern 1 与 Pattern 2 —— 链演化](./2026-05-16-pattern-1-and-pattern-2-chain-evolution.md)
+
+2026-05-16
+
+二十七小时后，手工纪律被命名为两个模式：Pattern 1 —— pre-declare SpecKit refresh；Pattern 2 —— post-close audit-driven Batch N.4。正典文档、遥测 schema、CLI helper 随之落地，再过一小时，一个把两者向上重新吸收的元模式出现了。
+
+### [智能体发现了一件没人要求它发现的事](./2026-05-16-emergent-observation-design.md)
+
+2026-05-16
+
+为一个已在悄然运转的设计属性命名
+
+### [打开这个框架](./2026-05-15-opening-the-framework.md)
+
+2026-05-15
+
+七十二小时内的两个动作：补上 i18n 覆盖度最后的 5%（治理文档在 EN + ES + zh-CN 上达到 20/20/20）以及在 README 中加入 CLA 徽章。分开看都很小；放在一起，正是框架不再只对自己讲话、开始向任何想读的人讲话的那一刻。
+
+### [AGENTS.md 作为通用标准](./2026-05-15-agents-md-as-a-universal-standard.md)
+
+2026-05-15
+
+项目的第一份 AIDEC 与把它落地的开放标准之间相隔四个月。`AGENTS.md` 放在仓库根目录，被十五个不同厂商的 CLI 读取，替代了 CLAUDE.md / GEMINI.md / .cursorrules 以及十几个其他文件的扩散。
+
+### [模式之前的手工纪律](./2026-05-14-manual-discipline-before-the-pattern.md)
+
+2026-05-14
+
+Sentinel 在一个已经一个月没有刷新的 plan 上连续跑了七个 Charter，靠手工执行 CHARTER-18，心里清楚任何一步走错都会埋掉前六个 Charter 的工作。五个小时之内，把这套手工纪律写进了上游治理 —— 当时还没给这个模式起名字。
+
+### [audit-prompt 是异常值](./2026-05-13-the-audit-prompt-was-the-outlier.md)
+
+2026-05-13
+
+几十个文件里有一个反着活 —— 一个以英语为正典的框架里，唯一以西班牙语为正典的文件，存在了六个星期，没人发现。一次维护性修复，记录下博客一再遇到的一件事：异常值反过来教你什么是规范。
+
+### [TDE 与横向债务](./2026-05-12-tde-and-transversal-debt.md)
+
+2026-05-12
+
+Sentinel 关闭了十三个 Charter，里面至少有七处可辨认的横向债务，TDE 却一个都没有创建。文档类型存在，但触发它的操作准则不存在。fw-4.13.0 如何补上这个缺口——以及那一串 PR 怎样顺带把关于 stacked PR 的一课写进了项目规范。
+
+### [validate 与作为形式层的 schema](./2026-05-11-validate-and-schemas-as-a-formal-layer.md)
+
+2026-05-11
+
+464 行 bash 被一个 flag 替换。从"我检查这看起来像一份文档"变成"我检查这是否满足正典 schema，在你要求的模式下，附带具体的运行结果"。这就是 CLI 路线图 Phase 2 与 validate 的形式化。
+
+### [更名为 StrayMark](./2026-05-09-the-rebrand-to-straymark.md)
+
+2026-05-09
+
+第四次改名与前三次不同——它不是在寻找概念，而是源于一次商标冲突调查。八天、一份 ADR、四十三分钟内的五个 PR。这是项目第一次有纪律的品牌迁移，也展示了把 "in scope / out of scope" 应用到自己的过去意味着什么。
+
+### [对智能体不可见的 Charter](./2026-05-09-charters-invisible-to-agents.md)
+
+2026-05-09
+
+Issue #113 —— 拥有一个制品与智能体能够看见它之间的差距
+
+### [Charter 作为一等实体与外部审计周期](./2026-05-06-charters-and-the-external-audit-cycle.md)
+
+2026-05-06
+
+从 Sentinel 中的手工仪式到正式 CLI 命令
+
+### [为一个论题设计的六个 Plan（以及更名为 Charter 的那天）](./2026-04-30-six-plans-and-the-rename-to-charter.md)
+
+2026-04-30
+
+首次系统性实验，以及 Plan 变为 Charter 的那一天
+
+### [探索框架](./2026-04-27-exploring-the-framework.md)
+
+2026-04-27
+
+到 2026 年 4 月，框架已经有了约 50 个治理之下的 Markdown 文件，它们已经变得不透明。`straymark explore` —— 一个把整个仓库渲染成可导航界面的终端 UI（TUI）—— 在它意外暴露 Post 8 异常值的三周前诞生。新工具会在无意之间制造出可见性。
+
+### [四个月里的四个名字](./2026-04-05-four-names-in-four-months.md)
+
+2026-04-05
+
+寻找概念，而非寻找名字

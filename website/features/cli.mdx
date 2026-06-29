@@ -1,0 +1,76 @@
+---
+title: A CLI that does the work
+description: One Rust binary, eleven commands. Deterministic, scriptable, no daemons.
+image: https://straymark.dev/img/og/cli.png
+---
+import gallery from '@site/features/explore-gallery.module.css';
+
+# A CLI that does the work
+
+`straymark` is a single Rust binary with eleven subcommands that operate on your repo: scaffolding, validating, auditing, analyzing complexity, generating compliance reports. Deterministic outputs you can pipe to `grep`, `jq`, or CI.
+
+## Why this matters
+
+- **One install path, one upgrade path.** No language-runtime hunt, no Docker layer, no orchestration. `curl -fsSL .../install.sh | sh` puts it on `$PATH`. `straymark update-cli` keeps it current.
+- **No hidden side effects.** `straymark validate` reads files; `straymark audit` produces a markdown report. None of the subcommands call out to APIs or modify your git state without you asking. Safe to wire into pre-commit and CI.
+- **The CLI is the contract.** The same `straymark validate` runs locally, in pre-commit, and in pipelines. There isn't a "CI mode" with different rules.
+
+## The eleven commands
+
+| Command | What it does |
+|---|---|
+| `straymark init [path]` | Initialize StrayMark in a project |
+| `straymark update` | Update both framework and CLI |
+| `straymark status [path]` | Show installation health and doc stats |
+| `straymark repair [path]` | Restore missing directories and framework files |
+| `straymark validate [path] [--staged]` | Validate documents for compliance and correctness |
+| `straymark new [-t type] [--title]` | Create a new document from a template |
+| `straymark compliance [path]` | Check regulatory compliance (EU AI Act, ISO 42001, NIST, ...) |
+| `straymark metrics [path]` | Show governance metrics and documentation statistics |
+| `straymark analyze [path]` | Analyze code complexity (cognitive + cyclomatic) |
+| `straymark audit [path]` | Generate audit trail reports with timeline and traceability |
+| `straymark explore [path]` | Interactive TUI documentation browser |
+
+All commands respect `--json` where it makes sense, so output is machine-readable.
+
+> **Powered by arborist-metrics:** `straymark analyze` computes cognitive and cyclomatic complexity via [`arborist-metrics`](https://github.com/StrangeDaysTech/arborist-metrics/) — our open-source Rust library for multi-language code metrics, also developed by StrangeDaysTech S.A.S. de C.V.
+
+## Browse the docs with `straymark explore`
+
+`straymark explore` opens an interactive terminal UI over `.straymark/`: a three-pane TUI with the documentation tree, per-document metadata, and the rendered markdown — keyboard-driven, no daemon, no extra dependency. Screenshots below are from **Sentinel**, the project that empirically validates the framework, with 131 indexed documents.
+
+<div className={`${gallery.gallery} zoomable`}>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/01-initial.png" alt="straymark explore — initial Quick start screen with the documentation tree on the left grouped by category." loading="lazy" />
+    <figcaption>The tree groups the 131 documents by category — Governance, Requirements, Charters, AILOGs, TDEs, Security…</figcaption>
+  </figure>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/02-ailog.png" alt="straymark explore showing an open AILOG with the metadata sidebar populated and rendered markdown in the main pane." loading="lazy" />
+    <figcaption>An AILOG open: the metadata sidebar shows Status, Confidence, Risk, tags and cross-references; markdown is rendered in the main pane.</figcaption>
+  </figure>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/03-tde.png" alt="straymark explore displaying a TDE document with its classification and origin Charter." loading="lazy" />
+    <figcaption>A different document type — a TDE with its classification and origin Charter. <code>explore</code> distinguishes types automatically.</figcaption>
+  </figure>
+  <figure className={gallery.figure}>
+    <img src="/img/features/explore/04-shortcuts.png" alt="straymark explore showing the keyboard shortcuts help overlay grouped by panel." loading="lazy" />
+    <figcaption><code>?</code> shows every shortcut grouped by panel — navigation, metadata, document, general.</figcaption>
+  </figure>
+</div>
+
+## Built for piping
+
+```bash
+# Find every open TDE sorted by impact:
+straymark metrics --json | jq '.tde[] | select(.status=="identified") | .id'
+
+# Fail CI when any high-risk Charter lacks an AILOG:
+straymark validate --staged || exit 1
+
+# Diff complexity between two commits:
+straymark analyze --since HEAD~10
+```
+
+## Learn more
+
+- [CLI Reference](/docs/adopters/CLI-REFERENCE)

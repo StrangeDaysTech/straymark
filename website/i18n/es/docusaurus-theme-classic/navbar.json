@@ -7,6 +7,10 @@
     "message": "StrayMark",
     "description": "The alt text of navbar logo"
   },
+  "item.label.Features": {
+    "message": "Características",
+    "description": "Navbar item with label Features"
+  },
   "item.label.Docs": {
     "message": "Documentación",
     "description": "Navbar item with label Docs"

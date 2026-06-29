@@ -30,6 +30,7 @@
   --inline-border: #e2d2bd;
   --nav-active-bg: #efe2d0;
   --nav-active-fg: #0e423c;
+  --nav-section-bg: rgba(227, 94, 70, 0.08);
   --quote-bg: #f0e3d3;
 
   --ifm-background-color: var(--shell);
@@ -88,6 +89,7 @@
   --inline-border: #31403b;
   --nav-active-bg: #1d3a34;
   --nav-active-fg: #86d7c5;
+  --nav-section-bg: rgba(240, 119, 95, 0.12);
   --quote-bg: #172724;
 
   --ifm-background-color: var(--shell);
@@ -294,6 +296,18 @@ h2 {
   border-left-color: var(--coral);
   color: var(--nav-active-fg);
   font-weight: 600;
+}
+
+.menu__list-item-collapsible:has(> .menu__link--active) {
+  background: var(--nav-section-bg);
+}
+
+.menu__list-item-collapsible:has(> .menu__link--active[aria-current='page']) {
+  background: var(--nav-active-bg);
+}
+
+.menu__list-item-collapsible > .menu__link--active {
+  background: transparent;
 }
 
 .menu__list-item:not(:first-child) {
