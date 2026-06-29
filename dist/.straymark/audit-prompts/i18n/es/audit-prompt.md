@@ -1,5 +1,5 @@
 <!--
-Plantilla unificada de auditoría StrayMark v1 — traducción ES.
+Plantilla unificada de auditoría StrayMark v1.1 — traducción ES.
 
 La versión canónica está en EN en `dist/.straymark/audit-prompts/audit-prompt.md`.
 `straymark charter audit <CHARTER-ID>` resuelve los placeholders contra el
@@ -112,6 +112,15 @@ La fuente autoritativa de alcance es el archivo del Charter en `{{charter_path}}
   - Integration tests faltantes si la tarea de tests es de otro Charter.
   - Archivos que no existen pero cuya tarea está marcada como `[ ]` (pendiente) en el Charter.
 
+### Objeto de auditoría vs. oráculo de verdad
+
+Las reglas de alcance anteriores acotan **dónde reportas defectos** (el *objeto de auditoría* — los archivos del Charter / el `git_range`). **No** acotan **qué puedes leer para validar ese objeto**. Son dos roles distintos:
+
+- **Objeto de auditoría** — código en alcance, donde se reportan los hallazgos.
+- **Oráculo de verdad** — cualquier código que leas para *verificar* el objeto en alcance, aunque esté fuera del diff y no declarado. Leer un oráculo nunca está fuera de alcance.
+
+**Contratos cross-boundary.** Cuando el código auditado es un *cliente* que consume una API / IPC / RPC / contrato **servido por un componente en otra parte de este repo**, DEBES cruzar cada llamada — ruta, cuerpo de la petición, forma de la respuesta, valores de enum, nombres de campo — contra la **definición real del lado servidor** (structs del handler, proto, schema, migración). Lee el servidor como *oráculo de verdad* para validar el cliente, aunque no esté en el `git_range` ni declarado en el Charter. Un mismatch de contrato cliente↔servidor es un **defecto auditable del cliente** (`implementation_gap` o `real_debt`), **no** una nota fuera de alcance. Los tests verdes del lado cliente **NO** lo absuelven: los mocks y stubs rutinariamente codifican la *suposición* del cliente sobre el contrato, no el contrato real — así que pasan contra la misma forma equivocada. Si una nota del operador marca tipos generados o un contrato como "stub diferido", escrutínalos *más*, no menos.
+
 ### Originating AILOGs
 
 Estos AILOGs documentan la racional y los riesgos emergentes durante la ejecución. **Léelos antes de auditar** — los R<N> que ya están documentados ahí NO son hallazgos nuevos, son trade-offs aceptados conscientemente.
@@ -164,6 +173,7 @@ Para CADA tarea en el Charter, realiza estos pasos en orden:
 3. **Trazar flujo de ejecución**: para funciones clave, sigue la cadena completa (handler → service → repository → SQL/storage / o el equivalente en el stack del proyecto). Verifica que los parámetros se propaguen correctamente en cada capa.
 4. **Verificar tests**: localiza los tests correspondientes. Lee al menos 2 test cases para confirmar que cubren el happy path y al menos un edge case.
 5. **Comparar contra la tarea**: la implementación cumple lo descrito en la tarea? Si hay discrepancias, reporta con evidencia (`archivo:línea`).
+6. **Verificar la fidelidad de la verificación**: para cada afirmación de "verificado / resuelto / hecho" que encuentres (en el Charter o en los originating AILOGs), pregúntate *contra qué realidad* se comprobó — la **condición que realmente importa** (CI real, datos con forma de producción, el código o contrato vivo) o un **proxy conveniente** (un test local, un mock, la propia aseveración del doc). Una afirmación verificada solo contra un proxy aún no es confiable: márcala, y re-verifícala contra la condición real donde tus herramientas lo permitan. **No** confíes en un resumen downstream de un artefacto — si una afirmación se apoya en "el AILOG dice que se hizo", abre el artefacto (archivo / función / migración) y confírmalo tú mismo. Y cuando el código en alcance consume un contrato definido por una decisión en otra parte (un AILOG / AIDEC / PM-backlog / spec), verifica que lo referencie explícitamente; un consumidor sin un puntero a la decisión que define su contrato es un smell de deriva que amerita un finding.
 
 > **Disciplina de evidencia.** Solo puedes opinar sobre archivos que has abierto vía tool call (Read, Grep, etc.). Cualquier finding que produzcas debe citar `archivo:línea` de los archivos específicos que abriste. Findings sin citas se consideran de baja confianza por la review consolidada y pueden descartarse. Si no abriste un archivo, no puedes inferir comportamiento, estructura, ni corrección sobre él.
 
@@ -217,7 +227,7 @@ Cada finding cae en una de estas cuatro categorías. La review consolidada usa l
 
 - **`hallucination`** — el Charter o la implementación referencia algo que no existe (una API, una función, un campo, un comportamiento). El agente lo inventó. Verifica abriendo el archivo o la API real.
 - **`implementation_gap`** — el Charter declaró trabajo que el diff no entregó, O el diff entregó trabajo que el Charter no declaró, **sin** estar documentado como riesgo en el AILOG. (Si está documentado en `## Risk` como `R<N+1>` en algún AILOG, eso NO es gap — es trade-off aceptado.)
-- **`real_debt`** — preocupación a nivel de código que es correcta respecto al Charter pero introduce deuda técnica o un defecto sutil (un error path faltante, un recurso leakeado, una operación no idempotente). El adoptante debería capturarlo como TDE doc post-audit.
+- **`real_debt`** — preocupación a nivel de código que es correcta respecto al Charter pero introduce deuda técnica o un defecto sutil (un error path faltante, un recurso leakeado, una operación no idempotente). El adoptante debería capturarlo en el **registry de follow-ups** (`.straymark/follow-ups-backlog.md` — el ledger canónico de "qué está pendiente" desde fw-4.21.0), y promoverlo a TDE doc si califica como deuda transversal (`straymark followups promote FU-NNN`). Registrarlo solo dentro de la review consolidada lo deja invisible para el registry.
 - **`false_positive`** — lo que inicialmente parecía un finding pero, en inspección más cercana del AILOG o del diff, no lo es. Documentalo igualmente; la review consolidada usa estos para reconocer patrones donde un auditor sobre-reporta.
 
 ---
@@ -331,4 +341,4 @@ Observaciones sobre código que NO es parte del alcance de este Charter pero que
 
 ---
 
-*Plantilla unificada StrayMark v1 — traducción ES. Las siete secciones universales (REGLA ABSOLUTA, Tu rol, Reglas de alcance, Paso 2 verificación obligatoria, Paso 5 calibración de severidad, Lo que NO debes hacer, Formato de salida) provienen del skill `audit/SKILL.md` maduro pre-StrayMark de Sentinel, contribuido vía issue #102 por José Villaseñor Montfort (StrangeDaysTech). Hardcodes específicos a Sentinel (paths de specs, headings de Etapa, módulos internos) parametrizados contra el Charter doc, originating AILOGs, git range y project context.*
+*Plantilla unificada StrayMark v1.1 — traducción ES (añade: objeto-de-auditoría-vs-oráculo-de-verdad + contratos cross-boundary #303, fidelidad de verificación #306, registry de follow-ups como destino canónico de real_debt). Las siete secciones universales (REGLA ABSOLUTA, Tu rol, Reglas de alcance, Paso 2 verificación obligatoria, Paso 5 calibración de severidad, Lo que NO debes hacer, Formato de salida) provienen del skill `audit/SKILL.md` maduro pre-StrayMark de Sentinel, contribuido vía issue #102 por José Villaseñor Montfort (StrangeDaysTech). Hardcodes específicos a Sentinel (paths de specs, headings de Etapa, módulos internos) parametrizados contra el Charter doc, originating AILOGs, git range y project context.*

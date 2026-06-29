@@ -1,5 +1,5 @@
 <!--
-StrayMark unified audit prompt — v1 (EN canonical).
+StrayMark unified audit prompt — v1.1 (EN canonical).
 
 This file is a TEMPLATE. `straymark charter audit <CHARTER-ID>` resolves the
 placeholders below against the Charter's content + git range + originating
@@ -115,6 +115,15 @@ The authoritative source of scope is the Charter file at `{{charter_path}}`. Rea
   - Missing integration tests when the test task belongs to another Charter.
   - Files that do not exist but whose task is marked as `[ ]` (pending) in the Charter.
 
+### Audit object vs. truth oracle
+
+The scope rules above bound **where you report defects** (the *audit object* — the Charter's files / the `git_range`). They do **not** bound **what you may read to validate that object**. These are two different roles:
+
+- **Audit object** — code in scope, where findings are reported.
+- **Truth oracle** — any code you read to *verify* the in-scope object, even if it is outside the diff and undeclared. Reading an oracle is never out of scope.
+
+**Cross-boundary contracts.** When the audited code is a *client* that consumes an API / IPC / RPC / contract **served by a component elsewhere in this repo**, you MUST cross-check each call — route, request body, response shape, enum values, field names — against the **real server-side definition** (handler structs, proto, schema, migration). Read the server as a *truth oracle* to validate the client, even though it is not in the `git_range` and not declared in the Charter. A client↔server contract mismatch is an **auditable defect of the client** (`implementation_gap` or `real_debt`), **not** an out-of-scope note. Green client-side tests do **NOT** absolve this: mocks and stubs routinely encode the client's *assumption* about the contract, not the real contract — so they pass against the same wrong shape. If an operator note marks generated types or a contract as a "deferred stub", scrutinize them *more*, not less.
+
 ### Originating AILOGs
 
 These AILOGs document the rationale and the emergent risks during execution. **Read them before auditing** — the `R<N>` risks already documented there are NOT new findings, they are consciously accepted trade-offs.
@@ -167,6 +176,7 @@ For EACH task in the Charter, perform these steps in order:
 3. **Trace execution flow**: for key functions, follow the full chain (handler → service → repository → SQL/storage, or the equivalent in the project's stack). Verify that parameters propagate correctly through each layer.
 4. **Verify tests**: locate the corresponding tests. Read at least 2 test cases to confirm they cover the happy path and at least one edge case.
 5. **Compare against the task**: does the implementation match what the task describes? If there are discrepancies, report with evidence (`file:line`).
+6. **Check verification fidelity**: for each "verified / resolved / done" claim you meet (in the Charter or the originating AILOGs), ask *against which reality* it was checked — the **condition that actually matters** (real CI, production-shaped data, the live source or contract) or a **convenient proxy** (a local test, a mock, the doc's own assertion). A claim verified only against a proxy is not yet trustworthy: flag it, and re-verify against the real condition where your tools allow. Do **not** trust a downstream summary of an artifact — if a claim rests on "the AILOG says it was done", open the artifact (file / function / migration) and confirm it yourself. And when the in-scope code consumes a contract defined by a decision elsewhere (an AILOG / AIDEC / PM-backlog / spec), check that it explicitly references that defining decision; a consumer with no pointer to the decision that defines its contract is a drift smell worth a finding.
 
 > **Evidence discipline.** You may only opine on files you have opened via a tool call (Read, Grep, etc.). Any finding you produce must cite `file:line` of the specific files you opened. Findings without citations are treated as low confidence by the consolidated review and may be dropped. If you did not open a file, you cannot infer behavior, structure, or correctness about it.
 
@@ -220,7 +230,7 @@ Each finding falls into one of these four categories. The consolidated review us
 
 - **`hallucination`** — the Charter or the implementation references something that does not exist (an API, a function, a field, a behavior). The agent invented it. Verify by opening the actual file or API.
 - **`implementation_gap`** — the Charter declared work the diff did not deliver, OR the diff delivered work the Charter did not declare, **without** being documented as a risk in the AILOG. (If it is documented in `## Risk` as `R<N+1>` in some AILOG, that is NOT a gap — it is an accepted trade-off.)
-- **`real_debt`** — a code-level concern that is correct with respect to the Charter but introduces technical debt or a subtle defect (a missing error path, a leaked resource, a non-idempotent operation). The adopter should capture this as a post-audit TDE doc.
+- **`real_debt`** — a code-level concern that is correct with respect to the Charter but introduces technical debt or a subtle defect (a missing error path, a leaked resource, a non-idempotent operation). The adopter should capture this in the **follow-ups backlog registry** (`.straymark/follow-ups-backlog.md` — the canonical "what's pending" ledger since fw-4.21.0), and promote it to a TDE doc if it qualifies as cross-cutting debt (`straymark followups promote FU-NNN`). Recording it only inside the consolidated review leaves it invisible to the registry.
 - **`false_positive`** — what initially looked like a finding but, on closer inspection of the AILOG or the diff, is not. Document it anyway; the consolidated review uses these to recognize patterns where one auditor over-reports.
 
 ---
@@ -334,4 +344,4 @@ Does the implementation meet the closure criterion declared by `{{charter_id}}`?
 
 ---
 
-*StrayMark unified audit template v1. The seven universal sections (ABSOLUTE RULE, Your role, Scope rules, Step 2 mandatory verification, Step 5 severity calibration, What you must NOT do, Output format) come from the `audit/SKILL.md` skill mature pre-StrayMark in Sentinel, contributed via issue #102 by José Villaseñor Montfort (StrangeDaysTech). Sentinel-specific hardcodes (spec paths, Etapa headings, internal modules) were parameterized against the Charter doc, originating AILOGs, git range, and project context.*
+*StrayMark unified audit template v1.1 (adds: audit-object-vs-truth-oracle + cross-boundary contract checks #303, verification-fidelity #306, follow-ups registry as the canonical real_debt destination). The seven universal sections (ABSOLUTE RULE, Your role, Scope rules, Step 2 mandatory verification, Step 5 severity calibration, What you must NOT do, Output format) come from the `audit/SKILL.md` skill mature pre-StrayMark in Sentinel, contributed via issue #102 by José Villaseñor Montfort (StrangeDaysTech). Sentinel-specific hardcodes (spec paths, Etapa headings, internal modules) were parameterized against the Charter doc, originating AILOGs, git range, and project context.*
