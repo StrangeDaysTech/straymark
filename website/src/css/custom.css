@@ -557,6 +557,10 @@ div[class*='codeBlockContainer'] .token.punctuation {
 }
 
 @media (max-width: 996px) {
+  .navbar {
+    backdrop-filter: none;
+  }
+
   .navbar-sidebar {
     background: var(--paper);
   }
