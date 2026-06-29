@@ -2,8 +2,6 @@
 
 **看见你的项目：文档之网，以及标示工作正在何处发生的"你在这里"地图。**
 
-[![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
-
 > ⚠️ **EXPERIMENTAL — Loom v0 (N=1)。** Loom 是一项可选启用、不稳定的实验。在它毕业之前，它的 API、CLI 表面、磁盘上的模型格式乃至其本身都可能在没有弃用周期的情况下变更或被移除。它**不**属于受支持的 Framework 或 CLI 契约——暂时不要基于它构建自动化。`architecture` 模型与 `status --where` 随 CLI 发布，但带有同样的实验性注意事项。
 
 ---

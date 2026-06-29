@@ -1,38 +1,39 @@
 /* Blueprint theme tokens — light (drafting paper) by default, overridden in dark. */
 .section {
-  /* Light: drafting paper */
-  --bp-bg: #eef3fb;
-  --bp-bg-deep: #e3eaf6;
-  --bp-grid: #c6d4e6;
-  --bp-grid-major: #98aecd;
-  --bp-stroke: #1a3a6b;
-  --bp-stroke-dim: #6b87b0;
-  --bp-stroke-faint: rgba(26, 58, 107, 0.4);
-  --bp-accent: #0b66c2;
-  --bp-text: #0b1f3a;
-  --bp-text-dim: #4a6285;
-  --bp-fill-soft: rgba(11, 102, 194, 0.06);
-  --bp-fill-decision: rgba(11, 102, 194, 0.08);
-  --bp-fill-output: rgba(11, 102, 194, 0.14);
+  --bp-bg: #fff7ec;
+  --bp-bg-deep: #f1e5d4;
+  --bp-grid: #eadcc8;
+  --bp-grid-major: #d8c7ae;
+  --bp-stroke: #145f58;
+  --bp-stroke-dim: #6d827c;
+  --bp-stroke-faint: rgba(20, 95, 88, 0.28);
+  --bp-accent: #e35e46;
+  --bp-accent-2: #c89231;
+  --bp-text: #12211f;
+  --bp-text-dim: #5d6e69;
+  --bp-fill-soft: rgba(20, 95, 88, 0.055);
+  --bp-fill-decision: rgba(227, 94, 70, 0.08);
+  --bp-fill-output: rgba(31, 123, 147, 0.13);
 
-  padding: 5rem 1rem 4.5rem;
-  background: var(--ifm-background-color);
+  padding: 4.8rem 1.25rem 4.3rem;
+  background: transparent;
 }
 
 :global([data-theme='dark']) .section {
-  --bp-bg: #0b1f3a;
-  --bp-bg-deep: #081730;
-  --bp-grid: #1c3963;
-  --bp-grid-major: #2b507f;
-  --bp-stroke: #cfe2ff;
-  --bp-stroke-dim: #6f8db3;
-  --bp-stroke-faint: rgba(207, 226, 255, 0.35);
-  --bp-accent: #4fc3ff;
-  --bp-text: #e8f0ff;
-  --bp-text-dim: #97b1d4;
-  --bp-fill-soft: rgba(79, 195, 255, 0.08);
-  --bp-fill-decision: rgba(79, 195, 255, 0.1);
-  --bp-fill-output: rgba(79, 195, 255, 0.18);
+  --bp-bg: #0d1a18;
+  --bp-bg-deep: #0a1513;
+  --bp-grid: rgba(255, 255, 255, 0.035);
+  --bp-grid-major: rgba(134, 215, 197, 0.12);
+  --bp-stroke: #86d7c5;
+  --bp-stroke-dim: #6f857f;
+  --bp-stroke-faint: rgba(134, 215, 197, 0.28);
+  --bp-accent: #f0775f;
+  --bp-accent-2: #d8a847;
+  --bp-text: #e9e3d6;
+  --bp-text-dim: #9aa8a2;
+  --bp-fill-soft: rgba(134, 215, 197, 0.06);
+  --bp-fill-decision: rgba(240, 119, 95, 0.11);
+  --bp-fill-output: rgba(95, 180, 203, 0.16);
 }
 
 .inner {
@@ -41,15 +42,17 @@
 }
 
 .title {
+  color: var(--ink);
+  font-family: var(--ifm-heading-font-family);
   font-size: 2rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   margin: 0 0 0.75rem;
   text-align: center;
 }
 
 .caption {
-  color: var(--ifm-color-emphasis-700);
+  color: var(--body-soft);
   max-width: 640px;
   margin: 0 auto 2.5rem;
   font-size: 1.05rem;
@@ -74,17 +77,17 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   padding: 0.55rem 0.95rem;
-  border: 1px solid var(--ifm-color-emphasis-300);
-  background: transparent;
-  color: var(--ifm-color-emphasis-700);
-  border-radius: 2px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--muted);
+  border-radius: 8px;
   cursor: pointer;
   transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
 }
 
 .tabButton:hover {
-  color: var(--ifm-color-emphasis-900);
-  border-color: var(--ifm-color-emphasis-500);
+  color: var(--coral);
+  border-color: var(--coral);
 }
 
 .tabButton[aria-selected='true'] {
@@ -125,11 +128,11 @@
   position: relative;
   background: var(--bp-bg);
   border: 1px solid var(--bp-stroke-faint);
-  border-radius: 4px;
+  border-radius: 10px;
   overflow: hidden;
   font-family: var(--ifm-font-family-monospace, ui-monospace, SFMono-Regular, Menlo, monospace);
   color: var(--bp-text);
-  box-shadow: 0 1px 0 var(--bp-stroke-faint), 0 10px 32px -20px rgba(11, 31, 58, 0.4);
+  box-shadow: var(--shadow);
 }
 
 .frameHeader {
@@ -283,7 +286,7 @@
 }
 
 .arrowHead {
-  fill: var(--bp-stroke-dim);
+  fill: var(--bp-accent-2);
 }
 
 .axisLabel {

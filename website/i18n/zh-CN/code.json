@@ -3,6 +3,22 @@
     "message": "AI 协同工程的认知纪律",
     "description": "Hero tagline (H1 on the landing)"
   },
+  "cognitivePairing.eyebrow": {
+    "message": "认知配对",
+    "description": "Eyebrow for the cognitive pairing section"
+  },
+  "cognitivePairing.title": {
+    "message": "人可以置身其中的知识",
+    "description": "Title for the cognitive pairing section"
+  },
+  "cognitivePairing.body1": {
+    "message": "StrayMark 是一种认知配对工具：它把项目信息转化为有位置感的知识。它不是把数据倾倒出来供机器查询，而是构建一张人可以站进去的地图：看清正在做什么决定、为什么这样决定、哪些工作正在推进，以及项目将走向哪里。",
+    "description": "First paragraph explaining cognitive pairing"
+  },
+  "cognitivePairing.body2": {
+    "message": "它也避免人类团队被智能体编码和决策的速度甩在后面。在 AI 增强工程中，StrayMark 让你带着可验证的上下文掌控设计与实现决策，同时给予 AI 智能体在中大型项目中保持连贯所需的认知纪律。",
+    "description": "Second paragraph explaining human control and agent discipline"
+  },
   "features.title": {
     "message": "StrayMark 提供什么",
     "description": "Feature grid title"

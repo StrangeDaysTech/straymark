@@ -2,8 +2,6 @@
 
 **See your project: the document web, and the "you are here" map of where the work is happening.**
 
-[![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
-
 > ⚠️ **EXPERIMENTAL — Loom v0 (N=1).** Loom is an opt-in, unstable experiment. Its API, CLI surface, on-disk model format, and very existence may change or be removed without a deprecation cycle until it graduates. It is **not** part of the supported Framework or CLI contract — don't build automation against it yet. The `architecture` model and `status --where` ship in the CLI but carry the same experimental caveat.
 
 ---

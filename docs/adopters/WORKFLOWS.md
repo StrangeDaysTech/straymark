@@ -2,8 +2,6 @@
 
 **Patterns and cadences for using StrayMark day to day.**
 
-[![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
-
 
 ---
 

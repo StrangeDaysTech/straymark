@@ -2,8 +2,6 @@
 
 **Referencia completa de la herramienta de línea de comandos `straymark`.**
 
-[![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
-
 
 ---
 

@@ -2,8 +2,6 @@
 
 **如何宣告你的采用，并向上游发送遥测数据与发现。**
 
-[![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
-
 
 ---
 
