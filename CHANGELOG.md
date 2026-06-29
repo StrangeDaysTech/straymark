@@ -7,6 +7,33 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.32.0 — 2026-06-28
+
+Audit-prompt **v1.1**: a verification-fidelity pass on the unified audit prompt
+(`.straymark/audit-prompts/audit-prompt.md`, EN + es), resynced with what the
+framework learned since the v1 hardening (#261). The schema and the four finding
+categories are unchanged; the changes are additive guidance.
+
+### Changed (Framework)
+
+- **Audit object vs. truth oracle + cross-boundary contracts** (closes #303). The
+  `## STRICT scope` section now distinguishes *where you report defects* (the
+  audit object) from *what you may read to validate them* (a truth oracle), and
+  requires a client-auditing run to cross-check API/IPC/contract calls against
+  the **real server-side definition** even when it is outside the `git_range`. A
+  client↔server contract mismatch is an auditable defect of the client; green
+  client-side tests do not absolve it (mocks encode the client's assumption).
+- **Verification fidelity in Step 2** (addresses #306). For each
+  "verified/resolved/done" claim, the auditor now asks *against which reality* it
+  was checked — the condition that matters vs. a convenient proxy (local test,
+  mock, the doc's own assertion) — opens the artifact rather than trusting a
+  downstream summary, and flags a contract consumer that does not reference the
+  decision defining its contract.
+- **Follow-ups registry as the canonical `real_debt` destination**. The
+  `real_debt` finding category now points to the follow-ups backlog registry
+  (first-class since fw-4.21.0) with TDE promotion (`straymark followups
+  promote`), instead of a loose "post-audit TDE doc".
+
 ## Framework 4.31.0 / CLI 3.30.0 — 2026-06-28
 
 Graduate the Baton experiment's declared work-classification fields to the
