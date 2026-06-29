@@ -2,6 +2,7 @@ import type {ReactNode} from 'react';
 import Layout from '@theme/Layout';
 import {translate} from '@docusaurus/Translate';
 import Hero from '@site/src/components/Hero';
+import CognitivePairing from '@site/src/components/CognitivePairing';
 import WorkflowDiagram from '@site/src/components/WorkflowDiagram';
 import AsciinemaDemo from '@site/src/components/AsciinemaDemo';
 import WhyExists from '@site/src/components/WhyExists';
@@ -36,6 +37,7 @@ export default function Home(): ReactNode {
           primary content. */}
       <main>
         <Hero />
+        <CognitivePairing />
         <WorkflowDiagram />
         <AsciinemaDemo />
         <WhyExists />

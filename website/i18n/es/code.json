@@ -35,6 +35,22 @@
     "message": "guía de primeros pasos",
     "description": "Link text in the quickstart hint"
   },
+  "cognitivePairing.eyebrow": {
+    "message": "Emparejamiento cognitivo",
+    "description": "Eyebrow for the cognitive pairing section"
+  },
+  "cognitivePairing.title": {
+    "message": "Conocimiento donde el humano puede situarse",
+    "description": "Title for the cognitive pairing section"
+  },
+  "cognitivePairing.body1": {
+    "message": "StrayMark es una herramienta de emparejamiento cognitivo: convierte la información del proyecto en conocimiento situado. No entrega un volcado de datos para que una máquina lo consulte; construye un mapa donde una persona puede ubicarse, entender qué se está decidiendo y por qué, qué está en marcha y hacia dónde se dirige el trabajo.",
+    "description": "First paragraph explaining cognitive pairing"
+  },
+  "cognitivePairing.body2": {
+    "message": "También evita que la velocidad de codificación y decisión de los agentes rebase al equipo humano. En ingeniería aumentada por IA, StrayMark te mantiene al mando de las decisiones de diseño e implementación, con contexto verificable, y da a los agentes la disciplina cognitiva que necesitan para conservar coherencia en proyectos medianos y grandes.",
+    "description": "Second paragraph explaining human control and agent discipline"
+  },
   "gettingStarted.title": {
     "message": "¿Listo para probarla?",
     "description": "Bottom getting-started section title"

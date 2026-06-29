@@ -1,6 +1,6 @@
 .header {
-  padding: 4rem 0 2rem;
-  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  padding: 3.5rem 0 1.2rem;
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .headerInner {
@@ -11,23 +11,26 @@
 
 .eyebrow {
   margin: 0 0 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ifm-color-primary);
+  color: var(--coral);
 }
 
 .title {
+  color: var(--ink);
+  font-family: var(--ifm-heading-font-family);
   margin: 0 0 1rem;
   font-size: clamp(2rem, 4vw + 1rem, 3rem);
   font-weight: 700;
   line-height: 1.15;
+  letter-spacing: 0;
 }
 
 .intro {
   margin: 0;
   font-size: 1.125rem;
   line-height: 1.6;
-  color: var(--ifm-color-emphasis-700);
+  color: var(--body-soft);
 }

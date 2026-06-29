@@ -1,26 +1,33 @@
 .section {
-  padding: 5rem 1rem;
-  background: var(--ifm-background-surface-color);
-  border-top: 1px solid var(--ifm-color-emphasis-200);
+  padding: 4.5rem 1.25rem 5.5rem;
+  background: transparent;
+  border-top: 1px solid var(--line-soft);
 }
 
 .inner {
   max-width: 720px;
   margin: 0 auto;
   text-align: center;
+  background: var(--panel);
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  padding: clamp(2rem, 4vw, 3rem);
 }
 
 .title {
+  color: var(--ink);
+  font-family: var(--ifm-heading-font-family);
   font-size: 2rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   margin: 0 0 1rem;
 }
 
 .body {
   font-size: 1.05rem;
   line-height: 1.65;
-  color: var(--ifm-color-emphasis-700);
+  color: var(--body-soft);
   margin: 0 0 2rem;
 }
 
@@ -32,9 +39,7 @@
 .meta {
   margin: 1.5rem 0 0;
   font-size: 0.9rem;
-  /* emphasis-600 (#8d949e on white) is 3.06:1 — below WCAG AA. emphasis-700
-     (~#606770) clears 4.5:1 for normal text. */
-  color: var(--ifm-color-emphasis-700);
+  color: var(--muted);
 }
 
 .meta a {

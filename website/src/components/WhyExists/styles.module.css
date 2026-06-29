@@ -1,8 +1,8 @@
 .section {
-  padding: 4rem 1rem;
-  background: var(--ifm-background-surface-color);
-  border-top: 1px solid var(--ifm-color-emphasis-200);
-  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  padding: 4rem 1.25rem;
+  background: var(--panel);
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .inner {
@@ -12,17 +12,17 @@
 }
 
 .eyebrow {
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ifm-color-primary);
+  color: var(--coral);
   margin: 0 0 1rem;
 }
 
 .lead {
   font-size: 1.15rem;
   line-height: 1.65;
-  color: var(--ifm-color-content);
+  color: var(--body-soft);
   margin: 0;
 }

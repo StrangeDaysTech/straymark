@@ -1,48 +1,66 @@
 import type {ReactNode} from 'react';
 import Link from '@docusaurus/Link';
-import Translate from '@docusaurus/Translate';
-import CodeBlock from '@theme/CodeBlock';
-import ThemedImage from '@theme/ThemedImage';
+import Translate, {translate} from '@docusaurus/Translate';
 import styles from './styles.module.css';
 
 const INSTALL = 'curl -fsSL https://raw.githubusercontent.com/StrangeDaysTech/straymark/main/install.sh | sh';
+const HIGHLIGHT_TERMS = ['Cognitive', 'cognitiva', '认知'];
+
+function renderHighlightedTagline(): ReactNode {
+  const tagline = translate({
+    id: 'hero.tagline',
+    message: 'Cognitive discipline for AI-assisted engineering',
+    description: 'Hero tagline (H1 on the landing)',
+  });
+  const lowerTagline = tagline.toLocaleLowerCase();
+  const term = HIGHLIGHT_TERMS.find((candidate) =>
+    lowerTagline.includes(candidate.toLocaleLowerCase()),
+  );
+
+  if (!term) return tagline;
+
+  const start = lowerTagline.indexOf(term.toLocaleLowerCase());
+  const end = start + term.length;
+  return (
+    <>
+      {tagline.slice(0, start)}
+      <span className={styles.highlight}>{tagline.slice(start, end)}</span>
+      {tagline.slice(end)}
+    </>
+  );
+}
 
 export default function Hero(): ReactNode {
   return (
     <header className={styles.hero}>
       <div className={styles.inner}>
-        <ThemedImage
-          className={styles.banner}
-          alt="StrayMark — by Strange Days Tech"
-          width={600}
-          height={140}
-          sources={{
-            light: '/img/straymark-banner-light.svg',
-            dark: '/img/straymark-banner-dark.svg',
-          }}
-        />
-        <h1 className={styles.tagline}>
-          <Translate id="hero.tagline" description="Hero tagline (H1 on the landing)">
-            Cognitive discipline for AI-assisted engineering
-          </Translate>
-        </h1>
-        <ul className={styles.pillars}>
-          <li>
-            <Translate id="hero.pillar1" description="First hero pillar">
-              Track every decision
+        <div className={styles.copy}>
+          <p className={styles.eyebrow}>
+            <Translate id="hero.eyebrow" description="Small hero eyebrow">
+              StrayMark · documentation
             </Translate>
-          </li>
-          <li>
-            <Translate id="hero.pillar2" description="Second hero pillar">
-              Detect drift empirically
-            </Translate>
-          </li>
-          <li>
-            <Translate id="hero.pillar3" description="Third hero pillar">
-              Audit-ready by default
-            </Translate>
-          </li>
-        </ul>
+          </p>
+          <h1 className={styles.tagline}>
+            {renderHighlightedTagline()}
+          </h1>
+          <ul className={styles.pillars}>
+            <li>
+              <Translate id="hero.pillar1" description="First hero pillar">
+                Track every decision
+              </Translate>
+            </li>
+            <li>
+              <Translate id="hero.pillar2" description="Second hero pillar">
+                Detect drift empirically
+              </Translate>
+            </li>
+            <li>
+              <Translate id="hero.pillar3" description="Third hero pillar">
+                Audit-ready by default
+              </Translate>
+            </li>
+          </ul>
+        </div>
         <div className={styles.cta}>
           <p className={styles.installLabel}>
             <Translate
@@ -52,9 +70,15 @@ export default function Hero(): ReactNode {
               Install the CLI in one line
             </Translate>
           </p>
-          <CodeBlock language="bash" className={styles.install}>
-            {INSTALL}
-          </CodeBlock>
+          <pre className={styles.install} aria-label="Install command">
+            <code>
+              <span className={styles.prompt}>$</span> {INSTALL}
+              {'\n'}
+              <span className={styles.comment}># creates repo-native governance artifacts</span>
+              {'\n'}
+              <span className={styles.comment}># ready for your first Charter</span>
+            </code>
+          </pre>
           <p className={styles.quickstartHint}>
             <Translate
               id="hero.quickstartHint"

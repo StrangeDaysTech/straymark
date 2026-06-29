@@ -2,8 +2,6 @@
 
 **Una guía completa para adoptar StrayMark en proyectos nuevos o existentes.**
 
-[![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
-
 
 ---
 

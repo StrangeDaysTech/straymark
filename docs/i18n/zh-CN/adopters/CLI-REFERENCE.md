@@ -2,8 +2,6 @@
 
 **`straymark` 命令行工具的完整参考。**
 
-[![Strange Days Tech](https://img.shields.io/badge/by-Strange_Days_Tech-purple.svg)](https://strangedays.tech)
-
 
 ---
 
@@ -1247,7 +1245,7 @@ StrayMark CLI
 
 ---
 
-### `straymark architecture <generate|sync|validate>` *(cli-3.25.0+，实验性)*
+### `straymark architecture <generate|sync|validate>` *(cli-3.25.0+，实验性)* {#straymark-architecture-generatesyncvalidate-cli-3250-experimental}
 
 编写并维护驱动 Loom 架构计划视图（Spec 002）的**架构模型**：一个语义化的 `model.yml`（组件 → 文件 glob + 层级 + 链接），搭配一份 `plan.drawio` 蓝图，二者由一个稳定的 `component_id` 关联（即 BIM 中"模型与图纸"的拆分）。该模型之上的文本投影是 `straymark status --where`；其可视化叠加层是 Loom（A2）。
 
