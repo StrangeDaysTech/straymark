@@ -397,8 +397,7 @@ fn straymark_audit_execute_three_platforms_share_core_guidance() {
             "skill must read the unified audit prompt"
         );
         assert!(
-            body.contains("report-<self-model-slug>.md")
-                || body.contains("report-<slug>.md"),
+            body.contains("report-<slug>.md"),
             "skill must write the report at the keyed path"
         );
 
@@ -411,10 +410,16 @@ fn straymark_audit_execute_three_platforms_share_core_guidance() {
             "skill must handle the optional-argument auto-discovery case"
         );
 
-        // D14: model-slug detection.
+        // D14: auditor identity is operator-provided (never self-detected) and slugified.
         assert!(
-            body.contains("model identifier") && body.contains("slug"),
-            "skill must explain how to detect and slugify the model identifier"
+            body.contains("operator") && body.contains("slug"),
+            "skill must explain the operator-provided auditor identity and how to slugify it"
+        );
+        // The identity fix: the CLI is a router, not the model — never substitute the
+        // CLI product name for the operator-provided auditor id.
+        assert!(
+            body.contains("router, not the model"),
+            "skill must forbid substituting the CLI product name for the auditor identity"
         );
 
         // The wait warning — load-bearing for parallel-CLI workflows.

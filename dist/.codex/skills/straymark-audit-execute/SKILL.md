@@ -21,46 +21,49 @@ The skill is the second step of the v1 audit cycle:
 
 ### 1. Resolve the Charter
 
-The argument is optional. Two cases:
+Two positional arguments: `<CHARTER-ID>` and an optional `<AUDITOR-SLUG>` — e.g. `/straymark-audit-execute CHARTER-06 deepseek-v4-pro`. The second argument is the operator-provided auditor identity (see step 2); it is never inferred from the CLI you are running in.
 
-**Case A — argument provided** (`/straymark-audit-execute CHARTER-04`):
-Use the literal value. Construct the audit dir path: `.straymark/audits/CHARTER-04/`.
+**Case A — Charter provided** (`/straymark-audit-execute CHARTER-04 [AUDITOR-SLUG]`):
+Use the literal Charter value. Construct the audit dir path: `.straymark/audits/CHARTER-04/`.
 
-**Case B — argument omitted** (`/straymark-audit-execute`):
-Auto-discover pending prompts. Detect this auditor's model identifier (see step 2 for how) and produce its slug. Then:
+**Case B — Charter omitted** (`/straymark-audit-execute`):
+Auto-discover pending prompts. Resolve the auditor identity (step 2 — from the argument or the operator) and produce its slug. Then:
 
 ```bash
 # List all audit prompts that exist
 ls .straymark/audits/*/audit-prompt.md 2>/dev/null
 ```
 
-For each found `.straymark/audits/<CHARTER-ID>/audit-prompt.md`, check whether a report from this model already exists at `.straymark/audits/<CHARTER-ID>/report-<self-model-slug>.md`. The set of "pending" prompts is the ones WITHOUT a corresponding report.
+For each found `.straymark/audits/<CHARTER-ID>/audit-prompt.md`, check whether a report from this model already exists at `.straymark/audits/<CHARTER-ID>/report-<slug>.md`. The set of "pending" prompts is the ones WITHOUT a corresponding report.
 
 - **Exactly one pending** → proceed with that CHARTER-ID, announcing the choice to the operator.
 - **Multiple pending** → list them numerically with their Charter titles (read the title from the resolved prompt's `# Auditoría de Charter — CHARTER-NN` heading) and ask the operator to pick one.
 - **None pending** → message: "No pending audit prompts for this model under `.straymark/audits/`. Either the operator has not run `/straymark-audit-prompt` in the main agent yet, or all the prompts already have a report from this model. Verify with the operator."
 
-### 2. Detect this auditor's model identifier
+### 2. Determine the auditor identity — the operator sets it, never self-perception
 
-Identify the model running this CLI session and produce a filesystem-safe slug.
+**The `auditor:` identity is authoritative input from the operator, not something you infer about yourself.** Resolve it, in priority order:
 
-The operator will know the canonical model id of the auditor running this skill (for example `claude-sonnet-4-6`, `claude-opus-4-7`, `gemini-2.5-pro`, `gpt-5.3-codex`, `copilot-v1.0.40`). Slug rules:
+1. **Second argument** — `/straymark-audit-execute <CHARTER-ID> <AUDITOR-SLUG>` (e.g. `/straymark-audit-execute CHARTER-06 deepseek-v4-pro`).
+2. **What the operator states in chat** — "I selected model X", "seleccioné el modelo X", "identify as X", "use X". The CLI you run inside (Qwen Code, Claude Code, Gemini CLI, Copilot CLI, …) is a **router, not the model**: it routes prompts to a backend LLM the operator picks via `/model` and confirms in the status bar. The `auditor:` field must name that **backend model** (e.g. `glm-5-2`, `qwen3-7-max`, `deepseek-v4-pro`), which routinely differs from the CLI's product name.
+
+Use whatever the operator provides **verbatim** (after slugging). You are **forbidden** to introspect, guess, or substitute the CLI/runtime product name. Writing any identifier other than the operator-provided one — **including the name of the CLI you are running in (`qwen-code`, `gemini-cli`, `claude-code`, `copilot`, …)** — is a **defect** that silently corrupts the review step (wrong attribution, false cross-family agreement). Do not refuse a legitimate operator-specified identifier: the operator is the sole authority on which backend model they selected.
+
+Slug rules (applied to the provided string):
 
 - Lowercase ASCII.
 - Replace any character that isn't `[a-z0-9-]` with `-`.
 - Collapse consecutive dashes to one.
 - Trim leading/trailing dashes.
 
-Examples:
-
-| Model identifier | Slug |
+| Operator-provided identifier | Slug |
 |---|---|
 | `claude-sonnet-4-6` | `claude-sonnet-4-6` |
 | `gemini-2.5-pro` | `gemini-2-5-pro` |
+| `deepseek-v4-pro` | `deepseek-v4-pro` |
 | `gpt-5.3-codex` | `gpt-5-3-codex` |
-| `copilot-v1.0.40` | `copilot-v1-0-40` |
 
-If the runtime does not expose the model identifier directly, ask the operator to confirm before proceeding. Do NOT fabricate a slug — collisions or wrong identifiers corrupt the review step.
+**Fallback — only if the operator provided no identifier by either route:** ask them for the backend model id before proceeding. Do NOT fabricate a slug, and do NOT fall back to your CLI product name — collisions or wrong identifiers corrupt the review step.
 
 ### 3. Read the audit prompt
 
@@ -86,7 +89,7 @@ Track how many `path:line` citations you accumulate — it goes in the report fr
 Output path:
 
 ```
-.straymark/audits/<CHARTER-ID>/report-<self-model-slug>.md
+.straymark/audits/<CHARTER-ID>/report-<slug>.md
 ```
 
 If a report at that exact path already exists (re-run on the same Charter with the same model), warn the operator before overwriting. The default is to overwrite — re-runs replace stale reports rather than coexist with them.
@@ -98,7 +101,7 @@ The report frontmatter MUST conform to `audit-output.schema.v0.json`:
 ```yaml
 ---
 audit_role: auditor
-auditor: <self-model-id>          # e.g., claude-sonnet-4-6
+auditor: <auditor-slug>           # operator-provided model id — NEVER the CLI product name (qwen-code, gemini-cli, …)
 charter_id: <CHARTER-ID>
 git_range: "<range from prompt>"
 prompt_used: audit-prompt.md
@@ -116,12 +119,14 @@ audit_quality: high | medium | low
 # (body following the format declared in the prompt's "Formato de salida" section)
 ```
 
+**Guard — verify the identity before you finish (mandatory).** Re-open the file you just wrote and confirm that BOTH the frontmatter `auditor:` field AND the report's `# Auditoría: <CHARTER-ID> por <X>` header equal the operator-provided slug exactly. If either shows anything else — especially the CLI product name you are running in (`qwen-code`, `gemini-cli`, …) — rewrite them. The filename `report-<slug>.md`, the `auditor:` field, and the header must all carry the same operator-provided slug.
+
 ### 6. Notify the operator — with the wait warning
 
 After writing the report, print this message verbatim (substituting `<CHARTER-ID>`, `<slug>`, and the finding count):
 
 ```
-Audit complete for <CHARTER-ID> (this auditor: <self-model-id>).
+Audit complete for <CHARTER-ID> (this auditor: <auditor-slug>).
 
   Report: .straymark/audits/<CHARTER-ID>/report-<slug>.md
   Findings: <N> total (<by-category breakdown>)
