@@ -7,7 +7,7 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
-## Unreleased
+## Framework 4.33.0 — 2026-07-08
 
 ### Fixed (Framework)
 
