@@ -2,6 +2,7 @@
 name: straymark-audit-review
 description: Consolidate N external auditor reports into a critical review document with verdicts, remediation plan, and auditor ratings. Then merge the external_audit YAML block into the Charter telemetry. Counterpart of /straymark-audit-prompt and /straymark-audit-execute.
 allowed-tools: Read, Write, Glob, Grep, Bash(straymark charter audit *, straymark charter status *, ls *, git diff *, git log *)
+argument-hint: "CHARTER-NN [CALIBRATOR-SLUG] (calibrator id is operator-provided, never self-detected)"
 ---
 
 # StrayMark Audit Review Skill
@@ -24,7 +25,7 @@ If only some audits have completed, **do not proceed** — invoking the skill wi
 
 ### 1. Resolve the Charter and verify report set
 
-Argument: a Charter identifier.
+Arguments: a Charter identifier, and an optional `<CALIBRATOR-SLUG>` — `/straymark-audit-review <CHARTER-ID> <CALIBRATOR-SLUG>`. The second argument is the operator-provided identity of the model performing this consolidation (see the calibrator-identity note before the frontmatter block below); it is never inferred from the CLI you are running in.
 
 ```bash
 ls -la .straymark/audits/<CHARTER-ID>/
@@ -95,12 +96,14 @@ Mark these as "Missed by all auditors" in the remediation plan.
 
 ### 5. Build the consolidated review.md
 
+**Calibrator identity — the operator sets it, never self-perception.** The `calibrator:` and `**Reviewer:**` fields name the **backend model** performing this consolidation. Take it from the optional 2nd argument `<CALIBRATOR-SLUG>` or from what the operator states in chat. The CLI you run inside (Qwen Code, Claude Code, Gemini CLI, …) is a **router, not the model**: writing its product name (`qwen-code`, `gemini-cli`, …) instead of the operator-selected backend model is a defect. Fallback only if the operator provided nothing: ask before writing. **Guard:** before finishing, re-read the written `review.md` and confirm `calibrator:` and `**Reviewer:**` both equal the operator-provided slug — not the CLI product name — and fix them if not.
+
 Write the consolidated analysis to `.straymark/audits/<CHARTER-ID>/review.md` with this structure (six sections, lifted from Sentinel's pre-StrayMark audit-review skill):
 
 ```markdown
 ---
 audit_role: calibrator-reconciler
-calibrator: <self-model-id>
+calibrator: <calibrator-slug>
 charter_id: <CHARTER-ID>
 git_range: "<range from prompt>"
 prompt_used: ../audit-prompt.md
@@ -120,7 +123,7 @@ findings_by_status:
 
 # Consolidated audit review — <CHARTER-ID>
 
-**Reviewer:** <self-model-id>
+**Reviewer:** <calibrator-slug>
 **Date:** <YYYY-MM-DD>
 **Confidence:** [High | Medium]
 

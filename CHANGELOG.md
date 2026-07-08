@@ -7,6 +7,22 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Unreleased
+
+### Fixed (Framework)
+
+- **`straymark-audit-review`: the calibrator identity is now operator-provided, never
+  self-detected.** Same class of bug fixed for `straymark-audit-execute` in 4.33.0, but for
+  the consolidation step: when the review runs inside a router CLI (Qwen Code, Gemini CLI,
+  …), the `calibrator:` / `**Reviewer:**` fields would carry the CLI product name instead of
+  the operator-selected backend model. Step 1 now accepts an optional second argument
+  `/straymark-audit-review <CHARTER-ID> <CALIBRATOR-SLUG>`, a calibrator-identity note makes
+  the operator-provided identity authoritative and forbids the CLI product name, and a guard
+  verifies the written `calibrator:` and `**Reviewer:**` fields match the slug. Applied to
+  all four shipped copies (`.agent` workflow + `.claude`/`.gemini`/`.codex` skills).
+
+---
+
 ## Framework 4.33.0 — 2026-07-08
 
 ### Fixed (Framework)

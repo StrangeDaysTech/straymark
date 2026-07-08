@@ -247,6 +247,11 @@ fn straymark_audit_review_three_platforms_share_core_guidance() {
             body.contains("review.md"),
             "skill must produce the consolidated review.md document"
         );
+        // Calibrator identity is operator-provided (never the CLI product name).
+        assert!(
+            body.contains("router, not the model"),
+            "review skill must forbid substituting the CLI product name for the calibrator identity"
+        );
         // Six-section structure lifted from Sentinel skill.
         assert!(
             body.contains("Executive summary") || body.contains("executive summary"),
