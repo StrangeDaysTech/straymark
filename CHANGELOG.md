@@ -7,6 +7,24 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.33.0 — 2026-07-08
+
+### Fixed (Framework)
+
+- **`straymark-audit-execute`: the auditor identity is now operator-provided, never
+  self-detected.** Router CLIs (Qwen Code, Gemini CLI, …) inject a product identity by
+  system prompt, so auditors would write `auditor: qwen-code` even after the operator
+  confirmed a different backend model was selected via `/model` — corrupting attribution
+  and faking cross-family agreement in the review step. Step 2 was rewritten to make the
+  operator-provided identity authoritative (via an optional second argument
+  `/straymark-audit-execute <CHARTER-ID> <AUDITOR-SLUG>` or an in-chat statement), to
+  forbid substituting the CLI product name, and to add a mandatory post-write guard that
+  verifies the `auditor:` frontmatter and the report header match the provided slug.
+  Applied across all four shipped copies (`.agent` workflow + `.claude`/`.gemini`/`.codex`
+  skills). Self-detection remains only as a fallback when the operator provides nothing.
+
+---
+
 ## Framework 4.32.0 — 2026-06-28
 
 Audit-prompt **v1.1**: a verification-fidelity pass on the unified audit prompt
