@@ -13,6 +13,11 @@ const sidebars: SidebarsConfig = {
           collapsible: false,
           collapsed: false,
           items: [
+            '2026-07-10-what-a-million-assertions-cant-settle',
+            '2026-07-08-who-the-audit-thought-it-was',
+            '2026-06-28-what-the-author-already-knew',
+            '2026-06-26-what-the-dry-run-would-have-spent',
+            '2026-06-25-what-the-spec-path-only-proved-existed',
             '2026-06-17-what-the-open-format-left-to-the-producer',
             '2026-06-16-where-the-debt-actually-was',
             '2026-06-14-what-the-graph-couldnt-draw-yet',
