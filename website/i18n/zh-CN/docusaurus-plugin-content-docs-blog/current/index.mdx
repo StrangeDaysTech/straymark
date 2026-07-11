@@ -12,6 +12,30 @@ StrayMark 编年史：这个框架如何随着一次次决策逐步成形。
 
 ## 2026
 
+### [审计以为自己是谁](./2026-07-08-who-the-audit-thought-it-was.md)
+
+2026-07-08
+
+StrayMark 的审计只有在独立的模型家族各自趋同到一个 finding 时才值钱 —— 一致就是那个信号。一连串 release 把这条保证加固,以对抗三种伪造它的方式。最新的一种最锋利:一个 router CLI 注入了它自己的产品名,于是一个审计器在报告上署名 "qwen-code",哪怕 operator 早已切换了后端模型。
+
+### [作者本就知道的事](./2026-06-28-what-the-author-already-knew.md)
+
+2026-06-28
+
+dry run 证明了:是信号覆盖率 —— 而非 granularity —— 让 57% 的路由停留在低置信的猜测上。修复几乎免费:创建一个工作单元的人本就知道它是设计、实现、审计还是机械劳动。于是 Baton 彻底停用了标题扫描,把一个声明的动词变成唯一权威信号,并把它毕业到框架。
+
+### [这次 dry run 本会花掉多少](./2026-06-26-what-the-dry-run-would-have-spent.md)
+
+2026-06-26
+
+Baton 的第二阶段终于看了钱 —— 但它什么都没路由。它对 StrayMark 已经在 Sentinel 里记录的 762 个工作单元做了分类,并打印出一套 routing 策略相对全 frontier 本会花掉多少。头条是一个 ~93% 的上限。而诚实的读法推翻了这个实验自己的假设:granularity 从来不是那根杠杆。信号覆盖率才是。
+
+### [spec path 只证明了它存在](./2026-06-25-what-the-spec-path-only-proved-existed.md)
+
+2026-06-25
+
+第四个实验从一个经济问题开始 —— 当订阅补贴结束时,全程全 frontier 就不再负担得起 —— 而它立刻撞上了一个结构性问题。一个跑在被遗忘的 intent 之上的更便宜的 router,只会更快地把 drift 自动化。所以 Baton 的第一步完全不碰模型。它去读那份 StrayMark 一直以来只证明了存在的 plan。
+
 ### [开放格式留给生产者的那部分](./2026-06-17-what-the-open-format-left-to-the-producer.md)
 
 2026-06-17
