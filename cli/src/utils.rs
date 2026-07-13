@@ -68,12 +68,21 @@ pub fn resolve_project_root(path: &str) -> Option<ResolvedPath> {
         .canonicalize()
         .unwrap_or_else(|_| std::path::PathBuf::from(path));
 
-    // Check the given path first
+    // Check the given path first. Never treat the framework DISTRIBUTION SOURCE
+    // (`dist/.straymark`, identified by a sibling `dist-manifest.yml`) as an
+    // installed project — operating on it would mutate the shipped template
+    // (write AILOGs/AIDECs into `dist/`, validate the source as if it were a
+    // project, …). Skip it so resolution falls through to the real install
+    // (git root) or reports not-installed. (Auto-adoption safeguard S1.)
     if target.join(".straymark").exists() {
-        return Some(ResolvedPath {
-            path: target,
-            is_fallback: false,
-        });
+        if is_distribution_source(&target) {
+            warn_distribution_source_skipped(&target);
+        } else {
+            return Some(ResolvedPath {
+                path: target,
+                is_fallback: false,
+            });
+        }
     }
 
     // Try git repo root
@@ -94,14 +103,38 @@ pub fn resolve_project_root(path: &str) -> Option<ResolvedPath> {
     if let Some(root) = git_root {
         // Don't fallback to the same path we already checked
         if root != target && root.join(".straymark").exists() {
-            return Some(ResolvedPath {
-                path: root,
-                is_fallback: true,
-            });
+            if is_distribution_source(&root) {
+                warn_distribution_source_skipped(&root);
+            } else {
+                return Some(ResolvedPath {
+                    path: root,
+                    is_fallback: true,
+                });
+            }
         }
     }
 
     None
+}
+
+/// True when `dir` holds the framework **distribution source** rather than an
+/// installed project: its `.straymark/` sits next to a `dist-manifest.yml`. That
+/// manifest is unique to StrayMark's own `dist/` — no adopter project ships one
+/// — so it is a precise, cheap signal. Used to refuse operating on the shipped
+/// template (auto-adoption safeguard S1; the catastrophic path is running a
+/// mutating command with cwd/`--path` inside `dist/`).
+pub fn is_distribution_source(dir: &Path) -> bool {
+    dir.join("dist-manifest.yml").exists()
+}
+
+fn warn_distribution_source_skipped(dir: &Path) {
+    eprintln!(
+        "{} skipping {} — this is the framework distribution source (a sibling \
+         `dist-manifest.yml` marks it), not an installed StrayMark project. Run from \
+         the project root, or `straymark init` to install.",
+        "note:".yellow().bold(),
+        dir.join(".straymark").display()
+    );
 }
 
 /// Resolve `<dir>/<filename>` honoring an optional translation under
@@ -181,6 +214,42 @@ pub fn pad_right_visual(s: &str, cols: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // ── Auto-adoption safeguard S1: distribution-source guard ─────────────
+
+    #[test]
+    fn is_distribution_source_detects_dist_manifest_sibling() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let dir = tmp.path();
+        assert!(!is_distribution_source(dir));
+        std::fs::write(dir.join("dist-manifest.yml"), "version: \"1.0.0\"\n").unwrap();
+        assert!(is_distribution_source(dir));
+    }
+
+    #[test]
+    fn resolve_project_root_refuses_distribution_source() {
+        // A `dist/.straymark` with a sibling `dist-manifest.yml` must NEVER
+        // resolve as a project (it is the shipped template). With no real
+        // install to fall back to, resolution is None — not `dist/`.
+        let tmp = tempfile::TempDir::new().unwrap();
+        let dist = tmp.path().join("dist");
+        std::fs::create_dir_all(dist.join(".straymark")).unwrap();
+        std::fs::write(dist.join("dist-manifest.yml"), "version: \"1.0.0\"\n").unwrap();
+        assert!(
+            resolve_project_root(dist.to_str().unwrap()).is_none(),
+            "distribution source must never resolve as an installed project"
+        );
+    }
+
+    #[test]
+    fn resolve_project_root_accepts_normal_install() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        std::fs::create_dir_all(tmp.path().join(".straymark")).unwrap();
+        let resolved = resolve_project_root(tmp.path().to_str().unwrap())
+            .expect("a plain .straymark/ (no dist-manifest) must resolve");
+        assert!(!resolved.is_fallback);
+        assert!(resolved.path.join(".straymark").exists());
+    }
 
     #[test]
     fn visual_width_ascii() {

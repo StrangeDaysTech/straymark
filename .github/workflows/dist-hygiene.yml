@@ -1,0 +1,43 @@
+name: dist hygiene
+
+# Auto-adoption safeguard S6: the framework distribution source (dist/.straymark)
+# ships templates only. A dated governance artifact appearing here means a
+# `straymark` command (or an agent) wrote into dist/ instead of an installed
+# project — the exact pollution that safeguard S1 (the distribution-source
+# guard in resolve_project_root) exists to prevent. This is the CI backstop.
+
+on:
+  pull_request:
+    paths:
+      - 'dist/**'
+      - '.github/workflows/dist-hygiene.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'dist/**'
+      - '.github/workflows/dist-hygiene.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  no-artifacts-in-distribution:
+    name: No generated artifacts in dist/.straymark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Fail if dated governance artifacts polluted the distribution source
+        run: |
+          hits=$(find dist/.straymark \
+            \( -name 'AILOG-2*.md' -o -name 'AIDEC-2*.md' -o -name 'ADR-2*.md' \
+               -o -name '*.telemetry.yaml' -o -name 'CHARTER-[0-9]*.md' \) \
+            2>/dev/null || true)
+          if [ -n "$hits" ]; then
+            echo "::error::Generated governance artifacts found inside the framework distribution source (dist/.straymark/):"
+            echo "$hits"
+            echo ""
+            echo "These belong in an INSTALLED project's .straymark/, never in the shipped template."
+            echo "A command likely resolved dist/ as a project. See auto-adoption safeguards S1 (source guard) / S6 (this check)."
+            exit 1
+          fi
+          echo "OK — no generated artifacts in dist/.straymark/ (templates only)."

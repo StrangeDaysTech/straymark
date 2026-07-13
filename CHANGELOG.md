@@ -7,6 +7,25 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.34.0 — 2026-07-13
+
+### Added (CLI)
+
+- **Auto-adoption safeguard: refuse to operate on the framework distribution source.**
+  `resolve_project_root` now skips a `.straymark/` that sits next to a `dist-manifest.yml`
+  (i.e. StrayMark's own `dist/`), so a command run with cwd or `--path` inside `dist/` can no
+  longer resolve the shipped template as an installed project — it falls through to the real
+  git-root install or reports "not installed", printing a `note:` explaining the skip. This
+  is the mechanical guard (safeguard **S1**) that must exist before StrayMark self-adopts:
+  without it, `straymark new`/`ailog`/`validate` pointed at `dist/` would read and write into
+  the distribution. Pure detection helper `utils::is_distribution_source`.
+- **CI hygiene backstop (safeguard S6):** a `dist-hygiene` workflow fails a PR/push if any
+  dated governance artifact (`AILOG-2*`, `AIDEC-2*`, `ADR-2*`, `*.telemetry.yaml`,
+  `CHARTER-<n>*`) appears under `dist/.straymark/` — the pollution S1 prevents, caught in CI
+  if it ever slips through.
+
+---
+
 ## Framework 4.35.0 / CLI 3.33.0 — 2026-07-13
 
 ### Added (Framework)
