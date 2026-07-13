@@ -231,7 +231,8 @@ risk_level: low | medium | high | critical
 |------|------|
 | Follow-ups backlog（一等公民注册表 + 原生 `followups` CLI） *(fw-4.10.0+,自 fw-4.21.0+ 起为一等公民)* | [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) |
 | Polish Charter 作为债务检测("声明了表层但未接线"反模式) *(fw-4.18.0+)* | [POLISH-CHARTER-PATTERN.md](POLISH-CHARTER-PATTERN.md) |
+| 外部审计轮次(多阶段 Charter 的按轮命名) *(fw-4.35.0+)* | [AUDIT-ROUNDS-PATTERN.md](AUDIT-ROUNDS-PATTERN.md) |
 
 ---
 
-*StrayMark fw-4.34.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.35.0 | [Strange Days Tech](https://strangedays.tech)*

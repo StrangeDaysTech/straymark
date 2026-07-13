@@ -611,6 +611,14 @@ enum CharterCommands {
         /// (file already has external_audit) is rejected with a clear error.
         #[arg(long)]
         merge_into: Option<String>,
+        /// Optional round label for multi-phase audits (#341). Namespaces the
+        /// whole triad under .straymark/audits/CHARTER-NN/<label>/ so a Charter
+        /// audited across more than one round (e.g. one per code-heavy phase)
+        /// does not collide on flat paths, and the report-*.md glob scopes to
+        /// this round only. Omit for single-round Charters (flat, unchanged).
+        /// The label must be a simple slug ([A-Za-z0-9._-], no path separators).
+        #[arg(long)]
+        round: Option<String>,
         /// Project directory (default: current directory)
         #[arg(long = "path", default_value = ".")]
         path: String,
@@ -877,6 +885,7 @@ fn main() {
                 calibrate,
                 finalize,
                 merge_into,
+                round,
                 path,
             } => commands::charter::audit::run(
                 &path,
@@ -887,6 +896,7 @@ fn main() {
                 calibrate,
                 finalize,
                 merge_into.as_deref(),
+                round.as_deref(),
             ),
             CharterCommands::RefreshSuggest {
                 module,

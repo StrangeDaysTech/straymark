@@ -7,6 +7,41 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.35.0 / CLI 3.33.0 — 2026-07-13
+
+### Added (Framework)
+
+- **`AUDIT-ROUNDS-PATTERN.md` governance doc (EN/es/zh-CN) ([#341]).** Documents the per-round
+  audit layout (sibling of `FOLLOW-UPS-BACKLOG-PATTERN.md`): the `--round <label>` namespacing, the
+  resulting subfolder layout, telemetry `round:` tagging, and back-compat. Listed in
+  `QUICK-REFERENCE.md`.
+- **`AGENT-RULES.md` §12 (Audit Checkpoint) — two new bullets (EN/es/zh-CN).** "Audit a stable
+  state" (#345 — PR → CI green → `--prepare` → launch auditors) and "Multi-round audits" (#341).
+
+### Changed (Framework)
+
+- **Audit skills thread `--round <label>` ([#341]).** `straymark-audit-prompt`,
+  `straymark-audit-execute`, and `straymark-audit-review` (all four shipped copies each —
+  `.agent`/`.claude`/`.gemini`/`.codex`) now document the per-round subfolder paths and pass the
+  round label through the triad. `straymark-audit-review` also corrects the stale "CLI rejects
+  re-audit" note to describe the new append-a-new-round behavior. `straymark-audit-prompt` gained
+  the #345 "audit a stable state" note.
+
+### Added (CLI)
+
+- **`straymark charter audit --round <label>` ([#341]).** Optional per-round namespacing for
+  multi-phase Charters that need more than one external-audit round. The whole triad (prompt,
+  `report-*.md`, `review.md`) is written under `.straymark/audits/<CHARTER-ID>/<label>/`, so rounds
+  never overwrite each other and the non-recursive `report-*.md` glob scopes to exactly the current
+  round — fixing the cross-round report pollution into `review.md`/telemetry. The label is validated
+  as a filesystem-safe slug. Each merged `external_audit` entry carries a `round:` field, and
+  `--merge-into` **appends** a new round to an already-populated telemetry block (instead of bailing)
+  as long as the round label is new; re-merging the same round, or merging into a populated block
+  without a round label, is still rejected. Omit `--round` for single-round Charters (flat layout,
+  fully back-compatible).
+
+---
+
 ## CLI 3.32.0 — 2026-07-12
 
 ### Added (CLI)

@@ -14,6 +14,8 @@ Use this skill when the developer agreed to run an external audit at the Charter
 
 The Charter should be in `in-progress` or `declared` status — auditing closed Charters is allowed but atypical (warn the operator and proceed only on confirmation).
 
+> **Audit a stable state.** Generate the prompt only when the state under audit is stable: the PR's CI is green, the working tree is clean, and commits are pushed. `--prepare` embeds the git diff at generation time, so if in-flight CI later forces a fix (or uncommitted work changes the tree), the prompt goes stale and the auditors review a revision that no longer exists. Sequence: **PR → CI green → `--prepare` → launch auditors.** The CLI warns (does not block) when the tree is dirty or has unpushed commits.
+
 ## Instructions
 
 ### 1. Resolve the Charter
@@ -37,6 +39,8 @@ The CLI writes the resolved prompt to:
 ```
 .straymark/audits/<CHARTER-ID>/audit-prompt.md
 ```
+
+> **Multi-round audits (`--round`).** For a multi-phase Charter audited in more than one round (e.g. one external-audit round per code-heavy phase), pass `--round <label>` so the whole triad (prompt, reports, review) is namespaced under `.straymark/audits/<CHARTER-ID>/<label>/` instead of the flat charter root. This keeps rounds from overwriting each other and scopes the `report-*.md` glob to just this round. Omit `--round` for single-round Charters. Thread the same `--round <label>` through `/straymark-audit-execute` and `/straymark-audit-review`. See `.straymark/00-governance/AUDIT-ROUNDS-PATTERN.md`.
 
 The prompt is self-contained: it embeds the Charter content, the originating AILOGs, the git diff over the resolved range (default `origin/main..HEAD`, falls back to `HEAD~1..HEAD` if no upstream is reachable), and the discipline rules (REGLA ABSOLUTA — SOLO LECTURA, evidence-citation, severity calibration). The prompt template lifts the seven universal sections from Sentinel's pre-StrayMark audit skill and parameterizes the project-specific hardcodes.
 

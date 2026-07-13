@@ -378,6 +378,8 @@ Son heurísticas, no reglas rígidas — estás cerca del contexto, afínalas co
 - El checkpoint **no** bloquea ninguna acción posterior. Si el developer lo ignora y corre `charter close`, close procede normalmente — no hay enforcement y no lo habrá (decisión de diseño v0+v1 permanente; ver `Propuesta/straymark-audit-skills.md` §2.2).
 - El checkpoint **no** se cuenta en ninguna métrica de calidad. No hay KPI "% Charters auditados" en `straymark metrics` — por diseño, para evitar incentivos a inflar el conteo.
 - Si el developer acepta la auditoría, el workflow procede vía tres skills en secuencia: `/straymark-audit-prompt` (escribe el prompt unificado en el path canónico) → `/straymark-audit-execute` × N (una por CLI auditora que abra el operador — estas corren en esas CLIs, no en el agente principal) → `/straymark-audit-review` (consolida N reports inline en `.straymark/audits/<id>/review.md` y mergea el YAML en la telemetría). Los operadores nunca copian/pegan prompts ni reports — el intercambio de archivos sucede vía paths canónicos bajo `.straymark/audits/`.
+- **Audita un estado estable (#345).** Genera el prompt solo cuando el estado auditado es estable — la CI del PR en verde, el árbol de trabajo limpio y los commits pusheados. `charter audit --prepare` embebe el git diff al momento de generarlo, así que si la CI en vuelo luego fuerza un fix, el prompt queda obsoleto y los auditores revisan una revisión que ya no existe. Secuencia: **PR → CI verde → `--prepare` → lanzar auditores.** El CLI avisa (no bloquea) si el árbol está sucio o hay commits sin pushear.
+- **Auditorías multi-ronda (#341).** Un Charter auditado en más de una ronda (p. ej. una ronda por fase con mucho código) namespacea cada ronda con `--prepare --round <label>`, escribiendo la tríada bajo `.straymark/audits/<id>/<label>/` para que las rondas no colisionen y el glob `report-*.md` se acote por ronda. Ver [`AUDIT-ROUNDS-PATTERN.md`](AUDIT-ROUNDS-PATTERN.md).
 
 ---
 
@@ -412,4 +414,4 @@ Cuando un proyecto acumula un volumen alto de AILOGs a lo largo de múltiples Ch
 
 ---
 
-*StrayMark fw-4.34.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.35.0 | [Strange Days Tech](https://strangedays.tech)*

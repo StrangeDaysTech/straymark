@@ -120,6 +120,54 @@ fn audit_unknown_charter_fails() {
 }
 
 #[test]
+fn audit_prepare_round_namespaces_prompt_under_subfolder() {
+    // #341: --round <label> namespaces the whole triad under
+    // .straymark/audits/CHARTER-NN/<label>/ so multi-phase rounds don't collide.
+    if !bash_available() {
+        eprintln!("skipping: git not available");
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    write_charter(dir.path());
+    init_repo_with_diff(dir.path());
+
+    cargo_bin_cmd!("straymark")
+        .args(["charter", "audit", "CHARTER-01", "--prepare", "--round", "fase-1", "--path"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("round fase-1"))
+        // The next-step guidance threads the round through.
+        .stdout(predicate::str::contains("--round fase-1"));
+
+    // Prompt lands in the round subfolder, NOT at the flat charter root.
+    let round_path = audit_dir(dir.path(), "CHARTER-01")
+        .join("fase-1")
+        .join("audit-prompt.md");
+    assert!(round_path.exists(), "expected prompt at {}", round_path.display());
+    let flat_path = audit_dir(dir.path(), "CHARTER-01").join("audit-prompt.md");
+    assert!(
+        !flat_path.exists(),
+        "round-scoped prepare must not write the flat prompt"
+    );
+}
+
+#[test]
+fn audit_prepare_rejects_unsafe_round_label() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    write_charter(dir.path());
+
+    cargo_bin_cmd!("straymark")
+        .args(["charter", "audit", "CHARTER-01", "--prepare", "--round", "../escape", "--path"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("simple slug"));
+}
+
+#[test]
 fn audit_prepare_writes_unified_prompt_to_canonical_location() {
     if !bash_available() {
         eprintln!("skipping: git not available");
