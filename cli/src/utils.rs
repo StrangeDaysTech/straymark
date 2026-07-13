@@ -68,20 +68,22 @@ pub fn resolve_project_root(path: &str) -> Option<ResolvedPath> {
         .canonicalize()
         .unwrap_or_else(|_| std::path::PathBuf::from(path));
 
-    // Check the given path first. Never treat the framework DISTRIBUTION SOURCE
-    // (`dist/.straymark`, identified by a sibling `dist-manifest.yml`) as an
-    // installed project — operating on it would mutate the shipped template
-    // (write AILOGs/AIDECs into `dist/`, validate the source as if it were a
-    // project, …). Skip it so resolution falls through to the real install
-    // (git root) or reports not-installed. (Auto-adoption safeguard S1.)
+    // Check the given path first. Never treat a `.straymark/` that is NOT an
+    // installed project as one — the framework distribution source (`dist/`,
+    // safeguard S1) or a directory whose provenance marks a non-install role
+    // (safeguard S2). Operating on the distribution would mutate the shipped
+    // template (write AILOGs/AIDECs into `dist/`, validate the source, …). Skip
+    // it so resolution falls through to the real install (git root) or reports
+    // not-installed.
     if target.join(".straymark").exists() {
-        if is_distribution_source(&target) {
-            warn_distribution_source_skipped(&target);
-        } else {
-            return Some(ResolvedPath {
-                path: target,
-                is_fallback: false,
-            });
+        match non_project_reason(&target) {
+            Some(reason) => warn_non_project_skipped(&reason),
+            None => {
+                return Some(ResolvedPath {
+                    path: target,
+                    is_fallback: false,
+                })
+            }
         }
     }
 
@@ -103,13 +105,14 @@ pub fn resolve_project_root(path: &str) -> Option<ResolvedPath> {
     if let Some(root) = git_root {
         // Don't fallback to the same path we already checked
         if root != target && root.join(".straymark").exists() {
-            if is_distribution_source(&root) {
-                warn_distribution_source_skipped(&root);
-            } else {
-                return Some(ResolvedPath {
-                    path: root,
-                    is_fallback: true,
-                });
+            match non_project_reason(&root) {
+                Some(reason) => warn_non_project_skipped(&reason),
+                None => {
+                    return Some(ResolvedPath {
+                        path: root,
+                        is_fallback: true,
+                    })
+                }
             }
         }
     }
@@ -117,23 +120,66 @@ pub fn resolve_project_root(path: &str) -> Option<ResolvedPath> {
     None
 }
 
+/// Reason a `.straymark/` at `dir` must NOT be treated as an installed project,
+/// or `None` if it is operable. Refuses the framework distribution source (S1)
+/// and any directory whose provenance records an explicit non-install role (S2).
+/// An **absent** provenance file is operable — legacy installs (existing
+/// adopters) carry none and must keep working.
+fn non_project_reason(dir: &Path) -> Option<String> {
+    if is_distribution_source(dir) {
+        return Some(format!(
+            "{} is the framework distribution source (a sibling `dist-manifest.yml` marks it)",
+            dir.join(".straymark").display()
+        ));
+    }
+    if let Some(role) = provenance_role(dir) {
+        if role != "installed-project" {
+            return Some(format!(
+                "{} has provenance `role: {}` (not an installed project)",
+                dir.join(".straymark").display(),
+                role
+            ));
+        }
+    }
+    None
+}
+
 /// True when `dir` holds the framework **distribution source** rather than an
 /// installed project: its `.straymark/` sits next to a `dist-manifest.yml`. That
 /// manifest is unique to StrayMark's own `dist/` — no adopter project ships one
-/// — so it is a precise, cheap signal. Used to refuse operating on the shipped
-/// template (auto-adoption safeguard S1; the catastrophic path is running a
-/// mutating command with cwd/`--path` inside `dist/`).
+/// — so it is a precise, cheap signal. (Auto-adoption safeguard S1.)
 pub fn is_distribution_source(dir: &Path) -> bool {
     dir.join("dist-manifest.yml").exists()
 }
 
-fn warn_distribution_source_skipped(dir: &Path) {
+/// The `role:` recorded in `<dir>/.straymark/.provenance.yml` (auto-adoption
+/// safeguard S2, written by `straymark init`), or `None` if the file is absent
+/// (a legacy install) or has no `role:` line. Line-scanned rather than
+/// YAML-parsed to keep the hot resolution path dependency-light.
+pub fn provenance_role(dir: &Path) -> Option<String> {
+    let content =
+        std::fs::read_to_string(dir.join(".straymark").join(".provenance.yml")).ok()?;
+    for line in content.lines() {
+        let line = line.trim();
+        if line.starts_with('#') {
+            continue;
+        }
+        if let Some(rest) = line.strip_prefix("role:") {
+            let val = rest.trim().trim_matches(['"', '\'']).to_string();
+            if !val.is_empty() {
+                return Some(val);
+            }
+        }
+    }
+    None
+}
+
+fn warn_non_project_skipped(reason: &str) {
     eprintln!(
-        "{} skipping {} — this is the framework distribution source (a sibling \
-         `dist-manifest.yml` marks it), not an installed StrayMark project. Run from \
-         the project root, or `straymark init` to install.",
+        "{} skipping {} — not an installed StrayMark project. Run from the project \
+         root, or `straymark init` to install.",
         "note:".yellow().bold(),
-        dir.join(".straymark").display()
+        reason
     );
 }
 
@@ -246,9 +292,57 @@ mod tests {
         let tmp = tempfile::TempDir::new().unwrap();
         std::fs::create_dir_all(tmp.path().join(".straymark")).unwrap();
         let resolved = resolve_project_root(tmp.path().to_str().unwrap())
-            .expect("a plain .straymark/ (no dist-manifest) must resolve");
+            .expect("a plain .straymark/ (no dist-manifest, no provenance) must resolve");
         assert!(!resolved.is_fallback);
         assert!(resolved.path.join(".straymark").exists());
+    }
+
+    // ── Auto-adoption safeguard S2: provenance sentinel ───────────────────
+
+    fn seed_straymark(dir: &Path, provenance: Option<&str>) {
+        std::fs::create_dir_all(dir.join(".straymark")).unwrap();
+        if let Some(p) = provenance {
+            std::fs::write(dir.join(".straymark").join(".provenance.yml"), p).unwrap();
+        }
+    }
+
+    #[test]
+    fn provenance_role_reads_role_line_ignoring_comments() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        assert_eq!(provenance_role(tmp.path()), None, "absent file → None");
+        seed_straymark(
+            tmp.path(),
+            Some("# comment\nrole: installed-project\nframework_version: \"4.35.0\"\n"),
+        );
+        assert_eq!(provenance_role(tmp.path()).as_deref(), Some("installed-project"));
+    }
+
+    #[test]
+    fn resolve_project_root_tolerates_absent_provenance_legacy() {
+        // Existing adopters (Sentinel, lnxdrive) have a `.straymark/` with no
+        // provenance file — they MUST keep resolving.
+        let tmp = tempfile::TempDir::new().unwrap();
+        seed_straymark(tmp.path(), None);
+        assert!(resolve_project_root(tmp.path().to_str().unwrap()).is_some());
+    }
+
+    #[test]
+    fn resolve_project_root_accepts_installed_project_role() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        seed_straymark(tmp.path(), Some("role: installed-project\n"));
+        assert!(resolve_project_root(tmp.path().to_str().unwrap()).is_some());
+    }
+
+    #[test]
+    fn resolve_project_root_refuses_non_install_role() {
+        // A `.straymark/` explicitly stamped as a non-install role (e.g. a test
+        // fixture or a hand-marked distribution copy) must not resolve.
+        let tmp = tempfile::TempDir::new().unwrap();
+        seed_straymark(tmp.path(), Some("role: test-fixture\n"));
+        assert!(
+            resolve_project_root(tmp.path().to_str().unwrap()).is_none(),
+            "a non-install provenance role must be refused"
+        );
     }
 
     #[test]

@@ -3,6 +3,8 @@ use colored::Colorize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+use chrono::Local;
+
 use crate::config::Checksums;
 use crate::download;
 use crate::inject;
@@ -60,6 +62,13 @@ pub fn run(path: &str, install_hooks: bool) -> Result<()> {
 
     // Save checksums
     save_initial_checksums(&target, &release.tag_name)?;
+
+    // Auto-adoption safeguard S2: stamp the install with a provenance marker so
+    // every command can tell an installed project apart from the framework
+    // distribution source (dist/, caught by S1) or a test fixture. The
+    // `framework_version` records the pinned release the project governs itself
+    // with. Absent provenance is tolerated elsewhere (legacy installs).
+    write_provenance(&target, &manifest.version, &release.tag_name)?;
 
     // Install pre-PR hook (opt-in via --hooks).
     if install_hooks {
@@ -364,6 +373,54 @@ fn install_pre_pr_hook(target: &Path) -> Result<bool> {
         std::fs::set_permissions(&dest, perms)?;
     }
     Ok(true)
+}
+
+/// Render the `.provenance.yml` body (auto-adoption safeguard S2). Pure so it
+/// can be unit-tested without touching the filesystem or the clock.
+fn render_provenance(framework_version: &str, installed_at: &str, source_release: &str) -> String {
+    format!(
+        "# StrayMark install provenance (auto-adoption safeguard S2). Written by\n\
+         # `straymark init`. Marks this .straymark/ as an installed project — as\n\
+         # opposed to the framework distribution source (dist/) or a test fixture —\n\
+         # and records the pinned framework release the project governs itself with.\n\
+         # Do not edit by hand.\n\
+         role: installed-project\n\
+         framework_version: \"{framework_version}\"\n\
+         installed_at: \"{installed_at}\"\n\
+         source_release: \"{source_release}\"\n",
+    )
+}
+
+/// Write `.straymark/.provenance.yml` for a freshly-installed project (S2).
+fn write_provenance(target: &Path, framework_version: &str, source_release: &str) -> Result<()> {
+    let today = Local::now().format("%Y-%m-%d").to_string();
+    let body = render_provenance(framework_version, &today, source_release);
+    let dest = target.join(".straymark").join(".provenance.yml");
+    std::fs::write(&dest, body)
+        .with_context(|| format!("Failed to write {}", dest.display()))?;
+    Ok(())
+}
+
+#[cfg(test)]
+mod provenance_tests {
+    use super::*;
+
+    #[test]
+    fn render_provenance_is_installed_project_and_parses() {
+        let body = render_provenance("4.35.0", "2026-07-13", "fw-4.35.0");
+        // The provenance role reader (utils) must see installed-project.
+        assert!(body.contains("role: installed-project"));
+        assert!(body.contains("framework_version: \"4.35.0\""));
+        assert!(body.contains("source_release: \"fw-4.35.0\""));
+        // Round-trips through the utils line-scanner used at resolution time.
+        let tmp = tempfile::TempDir::new().unwrap();
+        std::fs::create_dir_all(tmp.path().join(".straymark")).unwrap();
+        std::fs::write(tmp.path().join(".straymark/.provenance.yml"), &body).unwrap();
+        assert_eq!(
+            crate::utils::provenance_role(tmp.path()).as_deref(),
+            Some("installed-project")
+        );
+    }
 }
 
 #[cfg(test)]
