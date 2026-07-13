@@ -692,19 +692,38 @@ pub struct ExtractedFu {
 /// case-insensitively; the es/zh forms have no case folding.
 const FOLLOWUP_HEADINGS: &[&str] = &["Follow-ups", "Follow-Ups", "Seguimientos", "后续工作", "后续"];
 
-/// Extract follow-up content from an AILOG body: top-level bullets of the
-/// `## Follow-ups` section plus any `R<N> (new, not in Charter)` risk lines.
+/// Extract follow-up content from an AILOG body: top-level bullets of every
+/// `## Follow-ups*` section plus any *structural* `R<N> (new, not in Charter)`
+/// risk declaration.
+///
+/// #346 (adopter field report) hardened three heuristic failures:
+/// - **Under-capture**: an explicit `## Follow-ups (auditoría externa)` heading
+///   was skipped because the old matcher required an exact heading equality. We
+///   now match any heading that *starts with* a follow-ups token, and collect
+///   **all** such sections (a plain `## Follow-ups` and an audit-scoped one can
+///   coexist).
+/// - **Over-capture**: a prose summary line that merely *mentioned* the phrase
+///   ("Riesgos R1–R5 mitigados… Emergió R6 (new, not in Charter)…") was
+///   extracted as a follow-up. We now require the line to be a *structural*
+///   risk declaration (heading or list item that begins with the `R<N>` token).
+/// - **Resolved-as-open**: a `## Risk: R<N>` heading whose remediation is
+///   documented in the section body ("Corregido a…", a `Mitigaciones aplicadas`
+///   sub-block, an AIDEC reference) was extracted as `open`. Closure is now
+///   judged over the whole risk section, so it lands as `suspected-closed`.
 pub fn extract_followups_from_ailog(content: &str) -> Vec<ExtractedFu> {
     let mut out = Vec::new();
+    let sections = split_hash_sections(content);
 
-    // ── `## Follow-ups` section bullets (locale-aware heading) ──
-    if let Some(section) =
-        extract_section(content, |h| FOLLOWUP_HEADINGS.iter().any(|x| h.eq_ignore_ascii_case(x)))
-    {
+    // ── `## Follow-ups*` sections (locale-aware, prefix-tolerant #346) ──
+    for (heading, body) in &sections {
+        let Some(h) = heading else { continue };
+        if !is_followup_heading(h) {
+            continue;
+        }
         // Group top-level bullets with their continuation lines so closure
         // markers on continuation lines are seen.
         let mut current: Option<String> = None;
-        for line in section.lines() {
+        for line in body.lines() {
             if let Some(rest) = line.strip_prefix("- ") {
                 if let Some(buf) = current.take() {
                     push_extracted(&mut out, &buf, "§Follow-ups");
@@ -725,33 +744,59 @@ pub fn extract_followups_from_ailog(content: &str) -> Vec<ExtractedFu> {
         }
     }
 
-    // ── `R<N> (new, not in Charter)` risk lines (anywhere in the file) ──
-    for line in content.lines() {
-        if line.contains("(new, not in Charter)") {
-            let cleaned = line
-                .trim_start()
-                .trim_start_matches("- ")
-                .replace("**", "")
-                .trim()
-                .to_string();
-            if cleaned.is_empty() {
-                continue;
-            }
-            let rn = extract_rn_token(&cleaned);
-            let origin = match rn {
-                Some(t) => format!("§{} (new, not in Charter)", t),
-                None => "§Risk (new, not in Charter)".to_string(),
-            };
-            let suspected = has_closure_marker(line);
+    // ── `R<N> (new, not in Charter)` structural risk declarations (#346) ──
+    for (heading, body) in &sections {
+        if let Some(rn) = heading.as_deref().and_then(risk_declaration_token) {
+            // Heading-style risk: the whole section is one risk, and its
+            // remediation (if any) lives in the body — judge closure over both.
+            let heading_text = heading.as_deref().unwrap_or_default();
+            let combined = format!("{heading_text}\n{body}");
             out.push(ExtractedFu {
-                description: first_line(&cleaned),
-                origin_section: origin,
-                suspected_closed: suspected,
+                description: clean_risk_desc(heading_text),
+                origin_section: format!("§{} (new, not in Charter)", rn),
+                suspected_closed: risk_section_resolved(&combined),
             });
+        } else {
+            // Scan the section body for inline (bullet-style) risk declarations.
+            extract_inline_risks(body, &mut out);
         }
     }
 
     out
+}
+
+/// Scan a section body for inline, *structural* `R<N> (new, not in Charter)`
+/// risk declarations (list items). Prose lines that merely mention the phrase
+/// are skipped by [`risk_declaration_token`]. Each declaration is grouped with
+/// its indented continuation lines so a closure marker documented on a
+/// continuation is seen.
+fn extract_inline_risks(body: &str, out: &mut Vec<ExtractedFu>) {
+    let lines: Vec<&str> = body.lines().collect();
+    let mut i = 0;
+    while i < lines.len() {
+        let Some(rn) = risk_declaration_token(lines[i]) else {
+            i += 1;
+            continue;
+        };
+        let mut group = lines[i].to_string();
+        let mut j = i + 1;
+        while j < lines.len() {
+            let l = lines[j];
+            if l.starts_with("  ") || l.trim().is_empty() {
+                group.push('\n');
+                group.push_str(l);
+                j += 1;
+            } else {
+                break;
+            }
+        }
+        out.push(ExtractedFu {
+            description: clean_risk_desc(lines[i]),
+            origin_section: format!("§{} (new, not in Charter)", rn),
+            suspected_closed: risk_section_resolved(&group),
+        });
+        i = j;
+    }
 }
 
 fn push_extracted(out: &mut Vec<ExtractedFu>, bullet: &str, origin: &str) {
@@ -770,42 +815,82 @@ fn first_line(s: &str) -> String {
     s.lines().next().unwrap_or("").trim().to_string()
 }
 
-/// Find a `R<digits>` token in a risk line (e.g. "R3 (new, not in Charter)").
-fn extract_rn_token(line: &str) -> Option<String> {
-    for word in line.split(|c: char| !c.is_ascii_alphanumeric()) {
-        if let Some(rest) = word.strip_prefix('R') {
-            if !rest.is_empty() && rest.chars().all(|c| c.is_ascii_digit()) {
-                return Some(word.to_string());
-            }
-        }
-    }
-    None
-}
-
-/// Extract the body of the first `## <heading>` section matching `pred`.
-fn extract_section(content: &str, pred: impl Fn(&str) -> bool) -> Option<String> {
-    let mut buf = String::new();
-    let mut in_section = false;
+/// Split an AILOG body into `## ` sections. Returns `(heading, body)` pairs
+/// where `heading` is the text after `## ` (`None` for the preamble before the
+/// first `## `) and `body` is every line up to the next `## ` heading. `###`+
+/// sub-headings stay inside the body (only `## ` starts a new section).
+fn split_hash_sections(content: &str) -> Vec<(Option<String>, String)> {
+    let mut sections: Vec<(Option<String>, String)> = Vec::new();
+    let mut heading: Option<String> = None;
+    let mut body = String::new();
     for line in content.lines() {
         if let Some(h) = line.strip_prefix("## ") {
-            if in_section {
-                break;
-            }
-            if pred(h.trim()) {
-                in_section = true;
-                continue;
-            }
+            sections.push((heading.take(), std::mem::take(&mut body)));
+            heading = Some(h.trim().to_string());
+            continue;
         }
-        if in_section {
-            buf.push_str(line);
-            buf.push('\n');
+        body.push_str(line);
+        body.push('\n');
+    }
+    sections.push((heading, body));
+    sections
+}
+
+/// True when a `## ` heading is a follow-ups section in any shipped locale.
+/// Matches an exact heading (case-insensitive for the ASCII forms) **or** a
+/// heading that starts with a follow-ups token followed by a non-alphanumeric
+/// boundary — so `## Follow-ups (auditoría externa)` and `## Seguimientos:
+/// deuda` are recognized, not just the bare heading (#346 under-capture).
+fn is_followup_heading(heading: &str) -> bool {
+    let h = heading.trim();
+    let hl = h.to_lowercase();
+    FOLLOWUP_HEADINGS.iter().any(|x| {
+        let xl = x.to_lowercase();
+        match hl.strip_prefix(&xl) {
+            Some("") => true,
+            Some(rest) => rest.chars().next().is_some_and(|c| !c.is_alphanumeric()),
+            None => false,
+        }
+    })
+}
+
+/// If `line` is a *structural* risk declaration (heading or list item) for an
+/// emergent `R<N> (new, not in Charter)` risk, return the `R<N>` token. Prose
+/// lines that merely mention the phrase (a summary paragraph) return `None` —
+/// they begin with narrative text, not the `R<N>` token (#346 over-capture).
+fn risk_declaration_token(line: &str) -> Option<String> {
+    if !line.contains("(new, not in Charter)") {
+        return None;
+    }
+    // Strip leading structural markers: heading hashes, list bullets, blockquote.
+    let mut s = line
+        .trim()
+        .trim_start_matches(['#', '>', '-', '*', ' '])
+        .trim_start_matches("**")
+        .trim_start();
+    // Optional "Risk:" / "Riesgo:" label before the token.
+    for label in ["Risk:", "Riesgo:", "risk:", "riesgo:"] {
+        if let Some(rest) = s.strip_prefix(label) {
+            s = rest.trim_start();
+            break;
         }
     }
-    if buf.trim().is_empty() {
-        None
-    } else {
-        Some(buf)
+    s = s.trim_start_matches("**").trim_start();
+    let token: String = s.chars().take_while(|c| c.is_ascii_alphanumeric()).collect();
+    match token.strip_prefix('R') {
+        Some(rest) if !rest.is_empty() && rest.chars().all(|c| c.is_ascii_digit()) => Some(token),
+        _ => None,
     }
+}
+
+/// Clean a risk declaration line into a description: strip leading heading
+/// hashes / list markers and bold, keep the first line. Bullet-style lines
+/// clean identically to the pre-#346 behavior (hash-stable dedup key); only
+/// heading-style declarations gain the leading `## ` strip.
+fn clean_risk_desc(line: &str) -> String {
+    let s = line.trim_start().trim_start_matches('#').trim_start();
+    let cleaned = s.trim_start_matches("- ").replace("**", "");
+    first_line(cleaned.trim())
 }
 
 /// Closure verbs recognized by the born-resolved idiom family
@@ -871,6 +956,61 @@ pub fn has_closure_marker(text: &str) -> bool {
                 }
             }
         }
+    }
+    false
+}
+
+/// Extra closure signals for an emergent-risk *section* — a heading-style
+/// `## Risk: R<N>` whose remediation is documented inline in the section body
+/// rather than on the heading line (#346). Broader than [`has_closure_marker`]:
+/// Spanish/English remediation participles, a `Mitigaciones aplicadas` /
+/// `Mitigations applied` sub-block, and an AIDEC cross-reference all mark the
+/// risk as resolved-in-Charter, so it lands as `suspected-closed` instead of
+/// polluting the open count.
+fn risk_section_resolved(text: &str) -> bool {
+    if has_closure_marker(text) {
+        return true;
+    }
+    let lower = text.to_lowercase();
+    // Remediation participles (ES + EN) as standalone words.
+    const RESOLUTION_WORDS: &[&str] = &[
+        "corregido",
+        "corregida",
+        "mitigado",
+        "mitigada",
+        "resuelto",
+        "resuelta",
+        "solucionado",
+        "solucionada",
+        "remediado",
+        "remediada",
+    ];
+    if RESOLUTION_WORDS.iter().any(|w| contains_word(&lower, w)) {
+        return true;
+    }
+    // A dedicated remediation sub-block, or a decided-remediation AIDEC ref.
+    lower.contains("mitigaciones aplicadas")
+        || lower.contains("mitigations applied")
+        || lower.contains("aidec-")
+}
+
+/// True when `word` appears in `haystack` bounded by non-alphanumeric edges —
+/// so "resuelto" does not fire inside "irresuelto". `haystack` is assumed
+/// already lowercased.
+fn contains_word(haystack: &str, word: &str) -> bool {
+    let bytes = haystack.as_bytes();
+    let wlen = word.len();
+    let mut start = 0;
+    while let Some(pos) = haystack[start..].find(word) {
+        let i = start + pos;
+        let before_ok = i == 0
+            || !bytes[i - 1].is_ascii_alphanumeric();
+        let after = i + wlen;
+        let after_ok = after >= bytes.len() || !bytes[after].is_ascii_alphanumeric();
+        if before_ok && after_ok {
+            return true;
+        }
+        start = i + wlen;
     }
     false
 }
@@ -1343,6 +1483,108 @@ Done.
         let zh = "# AILOG\n\n## 后续工作\n\n- 扩展端到端测试覆盖\n- 编写部署手册\n";
         assert_eq!(extract_followups_from_ailog(es).len(), 2);
         assert_eq!(extract_followups_from_ailog(zh).len(), 2);
+    }
+
+    // ── #346: extraction-fidelity field report ────────────────────────────
+
+    #[test]
+    fn extract_captures_suffixed_followups_heading() {
+        // Under-capture: an explicit `## Follow-ups (auditoría externa)` was
+        // skipped by the old exact-equality matcher.
+        let ailog = "# AILOG\n\n## Follow-ups (auditoría externa)\n\n- Deferral: optional capability X\n- real_debt: wire the retry path\n";
+        let found = extract_followups_from_ailog(ailog);
+        assert_eq!(found.len(), 2, "suffixed heading must still be captured");
+        assert!(found.iter().all(|f| f.origin_section == "§Follow-ups"));
+    }
+
+    #[test]
+    fn extract_collects_multiple_followups_sections() {
+        // A plain section and an audit-scoped one coexist — both extracted.
+        let ailog = "# AILOG\n\n## Follow-ups\n\n- item A\n\n## Follow-ups (external audit)\n\n- item B\n- item C\n";
+        let found = extract_followups_from_ailog(ailog);
+        let descs: Vec<&str> = found.iter().map(|f| f.description.as_str()).collect();
+        assert!(descs.contains(&"item A"));
+        assert!(descs.contains(&"item B"));
+        assert!(descs.contains(&"item C"));
+        assert_eq!(found.len(), 3);
+    }
+
+    #[test]
+    fn extract_skips_prose_mentioning_risk_phrase() {
+        // Over-capture: a prose summary line that merely mentions the phrase is
+        // NOT a follow-up (FU-001 in the report).
+        let ailog = "# AILOG\n\n## Summary\n\nRiesgos R1–R5 mitigados en el Charter. Emergió R6 (new, not in Charter) durante la ejecución.\n";
+        let found = extract_followups_from_ailog(ailog);
+        assert!(
+            found.is_empty(),
+            "prose line must not be extracted, got: {found:?}"
+        );
+    }
+
+    #[test]
+    fn extract_heading_risk_with_inline_remediation_is_suspected_closed() {
+        // Resolved-as-open: a `## Risk: R6` heading fixed in the same charter,
+        // with remediation documented in the body, must land suspected-closed.
+        let ailog = "# AILOG\n\n## Risk: R6 (new, not in Charter): UTF-16 offset\n\nEl offset se calculaba en UTF-16. Corregido a code points en este batch.\n\n### Mitigaciones aplicadas\n\n- test de regresión añadido\n";
+        let found = extract_followups_from_ailog(ailog);
+        let r6 = found
+            .iter()
+            .find(|f| f.origin_section.contains("R6"))
+            .expect("R6 risk extracted");
+        assert!(
+            r6.suspected_closed,
+            "in-charter remediation must mark the risk suspected-closed"
+        );
+    }
+
+    #[test]
+    fn extract_bullet_risk_still_extracted_open_when_unresolved() {
+        // Parity: an unresolved bullet-style risk stays open, hash-stable desc.
+        let ailog = "# AILOG\n\n## Risk\n\n- **R7 (new, not in Charter)**: Loro export mode needs review.\n";
+        let found = extract_followups_from_ailog(ailog);
+        assert_eq!(found.len(), 1);
+        assert!(found[0].origin_section.contains("R7"));
+        assert!(!found[0].suspected_closed);
+        assert_eq!(
+            found[0].description,
+            "R7 (new, not in Charter): Loro export mode needs review."
+        );
+    }
+
+    #[test]
+    fn is_followup_heading_matches_prefix_not_substring() {
+        assert!(is_followup_heading("Follow-ups"));
+        assert!(is_followup_heading("Follow-ups (auditoría externa)"));
+        assert!(is_followup_heading("Seguimientos: deuda"));
+        assert!(is_followup_heading("后续工作"));
+        // Not a follow-ups heading — token is a proper substring, not a prefix.
+        assert!(!is_followup_heading("Pending Follow-ups"));
+        assert!(!is_followup_heading("Outcome"));
+    }
+
+    #[test]
+    fn risk_declaration_token_distinguishes_structure_from_prose() {
+        assert_eq!(
+            risk_declaration_token("## Risk: R6 (new, not in Charter): x"),
+            Some("R6".to_string())
+        );
+        assert_eq!(
+            risk_declaration_token("- **R3 (new, not in Charter)**: y"),
+            Some("R3".to_string())
+        );
+        // Prose that mentions the phrase but does not begin with the token.
+        assert_eq!(
+            risk_declaration_token("Emergió R6 (new, not in Charter) al final."),
+            None
+        );
+        // No phrase at all.
+        assert_eq!(risk_declaration_token("- **R3**: no phrase here"), None);
+    }
+
+    #[test]
+    fn contains_word_respects_boundaries() {
+        assert!(contains_word("riesgo corregido a code points", "corregido"));
+        assert!(!contains_word("el punto no fue irresuelto aun", "resuelto"));
     }
 
     #[test]

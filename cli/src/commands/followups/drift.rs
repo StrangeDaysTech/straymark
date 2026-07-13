@@ -166,6 +166,28 @@ pub fn run(path: &str, apply: bool, scan_all: bool, range: Option<&str>) -> Resu
     Ok(())
 }
 
+/// Resolve the candidate AILOG files for a scan: `--scan-all` sweeps the whole
+/// agent-logs tree, otherwise the committed git range unioned with the working
+/// tree (#229) — at pre-commit time the just-written AILOG is usually untracked,
+/// so a range-only scan is blind to exactly the file the documented flow
+/// targets. Shared by [`detect_drift_candidates`] and the `charter close`
+/// review checkpoint (#350): at close time the default scope is exactly the
+/// Charter's just-written AILOGs.
+pub fn candidate_ailogs(project_root: &Path, scan_all: bool, range: Option<&str>) -> Vec<PathBuf> {
+    let agent_logs = ailog::agent_logs_dir(project_root);
+    if scan_all {
+        walk_ailogs(&agent_logs)
+    } else {
+        let mut set = ailogs_in_git_range(project_root, &agent_logs, range);
+        for p in ailogs_in_working_tree(project_root, &agent_logs) {
+            if !set.contains(&p) {
+                set.push(p);
+            }
+        }
+        set
+    }
+}
+
 /// Scan candidate AILOGs and return those carrying follow-up content not yet in
 /// the registry, deduped per follow-up by content hash (#231). Pure — no
 /// stdout, no `exit`. The reusable detection core shared by `run` and the
@@ -176,22 +198,7 @@ pub fn detect_drift_candidates(
     scan_all: bool,
     range: Option<&str>,
 ) -> Vec<(String, PathBuf, Vec<ExtractedFu>)> {
-    // Candidate AILOG files. Default mode unions the committed git range with
-    // the working tree (#229): at pre-commit time the just-written AILOG is
-    // usually untracked, so a range-only scan is blind to exactly the file the
-    // documented `drift --apply` flow targets.
-    let agent_logs = ailog::agent_logs_dir(project_root);
-    let candidates: Vec<PathBuf> = if scan_all {
-        walk_ailogs(&agent_logs)
-    } else {
-        let mut set = ailogs_in_git_range(project_root, &agent_logs, range);
-        for p in ailogs_in_working_tree(project_root, &agent_logs) {
-            if !set.contains(&p) {
-                set.push(p);
-            }
-        }
-        set
-    };
+    let candidates = candidate_ailogs(project_root, scan_all, range);
 
     let seen_hashes = followups::registry_extracted_hashes(registry);
 
