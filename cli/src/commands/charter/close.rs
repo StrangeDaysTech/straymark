@@ -21,6 +21,7 @@ use colored::Colorize;
 use std::path::{Path, PathBuf};
 
 use straymark_core::charter::{self, charters_dir, Charter, CharterStatus};
+use straymark_core::document;
 use crate::followups;
 use crate::prompts;
 use crate::telemetry_schema::TelemetrySchema;
@@ -136,6 +137,14 @@ pub fn run(
         }
     }
 
+    // #350 (adopter field report): the close flow and the AILOG review/sign
+    // flow are otherwise disconnected — a `review_required: true` AILOG only
+    // gets signed if the operator happens to remember to run `straymark
+    // approve`. Remind them, at close time, of any unsigned ones. Non-blocking
+    // (honest gaps > forced signatures) and read-only, so it runs in every
+    // mode — it is *more* valuable in the scripted `--from-template` path.
+    warn_unsigned_review_required_ailogs(project_root);
+
     // Tier 3 (RFC #135): in the interactive close, scan recent AILOGs for
     // unextracted follow-ups, extract them into the registry, and offer to
     // promote each to a TDE. Only the interactive flow has a confirmed TTY
@@ -146,6 +155,78 @@ pub fn run(
     }
 
     Ok(())
+}
+
+/// #350: At close time, surface any of the Charter's execution AILOGs that
+/// carry `review_required: true` but have no `review_outcome` yet (unsigned).
+/// Scoped to the same candidate AILOGs the follow-ups reconciliation uses
+/// (git range ∪ working tree = the Charter's just-written AILOGs). Non-blocking
+/// and best-effort: a scan failure must never derail a finalized close, so this
+/// returns `()` and swallows per-file parse errors.
+fn warn_unsigned_review_required_ailogs(project_root: &Path) {
+    use crate::commands::followups::drift;
+
+    let candidates = drift::candidate_ailogs(project_root, false, None);
+    let pending = unsigned_review_required(&candidates);
+    if pending.is_empty() {
+        return;
+    }
+
+    println!();
+    println!("{}", "── Review checkpoint ──".bold());
+    println!(
+        "{} {} AILOG{} of this Charter await{} human review/sign:",
+        "⚠".yellow().bold(),
+        pending.len(),
+        if pending.len() == 1 { "" } else { "s" },
+        if pending.len() == 1 { "s" } else { "" },
+    );
+    for (id, risk) in &pending {
+        match risk {
+            Some(r) => println!("    {} (risk_level: {})", id.bold(), r),
+            None => println!("    {}", id.bold()),
+        }
+    }
+    // Point at the concrete fix using the first pending AILOG as the example.
+    let example = &pending[0].0;
+    println!(
+        "  Run: {} {} --outcome approved --reviewer <you>",
+        "straymark approve".cyan(),
+        example
+    );
+    println!(
+        "  {} `review_required: true` is a governance promise (AGENT-RULES.md §4) — sign or record the outcome before merging.",
+        "→".blue().bold()
+    );
+}
+
+/// Pure core of the #350 review checkpoint: from a set of candidate AILOG paths,
+/// return `(id, risk_level)` for each that is `review_required: true` with no
+/// `review_outcome` (unsigned). Per-file parse errors are skipped. Split out for
+/// unit-testing without a git range or a TTY.
+fn unsigned_review_required(candidates: &[PathBuf]) -> Vec<(String, Option<String>)> {
+    let mut pending = Vec::new();
+    for path in candidates {
+        let Ok(doc) = document::parse_document(path) else {
+            continue;
+        };
+        if doc.frontmatter.review_required.unwrap_or(false)
+            && doc.frontmatter.review_outcome.is_none()
+        {
+            let id = doc
+                .frontmatter
+                .id
+                .clone()
+                .or_else(|| {
+                    path.file_stem()
+                        .and_then(|s| s.to_str())
+                        .map(|s| s.to_string())
+                })
+                .unwrap_or_else(|| path.display().to_string());
+            pending.push((id, doc.frontmatter.risk_level.clone()));
+        }
+    }
+    pending
 }
 
 /// Reconcile the follow-ups registry against the work just closed, then offer
@@ -884,6 +965,53 @@ mod tests {
         let body = "# Charter\n\n> **Origin:** stuff.\n";
         let out = sync_body_status_mirror(body, "closed");
         assert_eq!(out, body);
+    }
+
+    // ── #350: unsigned review_required AILOG checkpoint ───────────────────
+
+    fn write_ailog(dir: &Path, name: &str, frontmatter: &str) -> PathBuf {
+        let p = dir.join(name);
+        std::fs::write(&p, format!("---\n{frontmatter}---\n\n# AILOG\n\nBody.\n")).unwrap();
+        p
+    }
+
+    #[test]
+    fn unsigned_review_required_flags_only_unsigned() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let dir = tmp.path();
+        let unsigned = write_ailog(
+            dir,
+            "AILOG-2026-07-11-001-x.md",
+            "id: AILOG-2026-07-11-001\nreview_required: true\nrisk_level: high\n",
+        );
+        let signed = write_ailog(
+            dir,
+            "AILOG-2026-07-11-002-y.md",
+            "id: AILOG-2026-07-11-002\nreview_required: true\nrisk_level: high\nreview_outcome: approved\n",
+        );
+        let not_required = write_ailog(
+            dir,
+            "AILOG-2026-07-11-003-z.md",
+            "id: AILOG-2026-07-11-003\nreview_required: false\n",
+        );
+
+        let pending = unsigned_review_required(&[unsigned, signed, not_required]);
+        assert_eq!(pending.len(), 1, "only the unsigned review_required AILOG");
+        assert_eq!(pending[0].0, "AILOG-2026-07-11-001");
+        assert_eq!(pending[0].1.as_deref(), Some("high"));
+    }
+
+    #[test]
+    fn unsigned_review_required_empty_when_all_signed_or_none_required() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let dir = tmp.path();
+        let signed = write_ailog(
+            dir,
+            "AILOG-2026-07-11-001-x.md",
+            "id: AILOG-2026-07-11-001\nreview_required: true\nreview_outcome: revisions_requested\n",
+        );
+        let plain = write_ailog(dir, "AILOG-2026-07-11-002-y.md", "id: AILOG-2026-07-11-002\n");
+        assert!(unsigned_review_required(&[signed, plain]).is_empty());
     }
 
     #[test]

@@ -7,6 +7,47 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.31.0 — 2026-07-12
+
+### Added (CLI)
+
+- **`straymark charter close`: review checkpoint for unsigned `review_required` AILOGs
+  ([#350]).** Adopter field report (weft): the close flow and the AILOG review/sign flow
+  (`straymark approve`) were disconnected — a `review_required: true` AILOG only got signed
+  if the operator happened to remember. Close now resolves the Charter's just-written AILOGs
+  (the same git-range ∪ working-tree scope the follow-ups reconciliation uses) and prints a
+  non-blocking `── Review checkpoint ──` block listing any that are `review_required: true`
+  with no `review_outcome`, with the exact `straymark approve … --outcome approved` command
+  to run. Warning, not a gate (honest gaps > forced signatures); runs in every close mode.
+
+### Fixed (CLI)
+
+- **`straymark followups drift`: extraction fidelity for `## Follow-ups` sections and
+  emergent-risk blocks ([#346]).** Adopter field report (greenfield .NET 10 / Rust CRDT):
+  `drift --apply` populated the backlog with noise and missed the real items. Three heuristic
+  failures fixed:
+  - **Under-capture** — an explicit `## Follow-ups (auditoría externa)` heading was skipped
+    because heading matching required exact equality. Matching is now prefix-tolerant and
+    collects **all** follow-ups sections, so suffixed/localized headings are extracted.
+  - **Over-capture** — a prose summary line that merely mentioned `R<N> (new, not in Charter)`
+    was extracted as a follow-up. Extraction now requires a *structural* risk declaration
+    (a heading or list item that begins with the `R<N>` token); narrative paragraphs are
+    skipped.
+  - **Resolved-as-open** — a `## Risk: R<N>` heading whose remediation is documented inline
+    in the section body (`Corregido a…`, a `Mitigaciones aplicadas` sub-block, an AIDEC
+    reference) was extracted as `open`. Closure is now judged over the whole risk section
+    (with ES/EN remediation participles), so resolved risks land as `suspected-closed`
+    instead of polluting the open count.
+
+  Not changed: dedup is still by content hash, so two rewordings of the same risk across an
+  AILOG edit can still produce two entries (substance-level dedup deferred — changing the
+  hash would re-drift already-extracted entries in existing registries).
+
+[#346]: https://github.com/StrangeDaysTech/straymark/issues/346
+[#350]: https://github.com/StrangeDaysTech/straymark/issues/350
+
+---
+
 ## Framework 4.34.0 — 2026-07-08
 
 ### Fixed (Framework)
