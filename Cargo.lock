@@ -2573,7 +2573,7 @@ dependencies = [
 
 [[package]]
 name = "straymark-cli"
-version = "3.31.0"
+version = "3.32.0"
 dependencies = [
  "anyhow",
  "arborist-metrics",

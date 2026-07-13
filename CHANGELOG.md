@@ -7,6 +7,27 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.32.0 — 2026-07-12
+
+### Added (CLI)
+
+- **`straymark charter audit --prepare`: stable-state guard ([#345]).** Adopter field report
+  (greenfield .NET 10 / Rust CRDT): the audit prompt embeds the git diff at `--prepare` time,
+  so generating it while the PR's CI was still in flight produced a stale prompt when CI forced
+  a fix — the running auditors reviewed dead code. `--prepare` now emits a non-blocking warning
+  when the working tree is dirty (`git status --porcelain`) or has unpushed commits
+  (`git rev-list --count @{u}..HEAD`), reminding the operator of the stable-state sequence:
+  PR → CI green → `--prepare` → launch auditors. Best-effort (git errors are silent); never
+  blocks a prepare.
+
+  Note: the `--round <label>` per-round namespacing for multi-phase audits ([#341]) is scoped
+  to a dedicated follow-up round.
+
+[#345]: https://github.com/StrangeDaysTech/straymark/issues/345
+[#341]: https://github.com/StrangeDaysTech/straymark/issues/341
+
+---
+
 ## CLI 3.31.0 — 2026-07-12
 
 ### Added (CLI)

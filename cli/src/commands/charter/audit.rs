@@ -74,6 +74,65 @@ fn resolve_default_range(project_root: &Path) -> String {
     FALLBACK_RANGE.to_string()
 }
 
+/// #345 (adopter field report): `--prepare` embeds the git diff at generation
+/// time, so if the tree can still change — uncommitted work, or unpushed commits
+/// that a red CI on the pushed PR might force a fix on — the prompt is a snapshot
+/// of a revision that may not survive, and the auditors review dead code. Emit
+/// non-blocking warnings so the operator audits a stable state (PR CI green,
+/// tree clean and pushed). Best-effort: git failures (no repo, no upstream) are
+/// silent — this must never block a prepare.
+fn warn_unstable_state(project_root: &Path) {
+    if let Ok(out) = std::process::Command::new("git")
+        .args(["status", "--porcelain"])
+        .current_dir(project_root)
+        .output()
+    {
+        if out.status.success() && tree_is_dirty(&String::from_utf8_lossy(&out.stdout)) {
+            eprintln!(
+                "{} working tree is dirty — the audit prompt embeds the diff at \
+                 --prepare time, so uncommitted changes are NOT seen by the auditors. \
+                 Commit and push before preparing, or the auditors may review a \
+                 revision that no longer exists.",
+                "warn:".yellow().bold()
+            );
+        }
+    }
+    // Unpushed commits — only meaningful when an upstream is configured; if none,
+    // `@{u}` makes rev-list fail and the check is skipped.
+    if let Ok(out) = std::process::Command::new("git")
+        .args(["rev-list", "--count", "@{u}..HEAD"])
+        .current_dir(project_root)
+        .output()
+    {
+        if out.status.success() {
+            let count = parse_unpushed_count(&String::from_utf8_lossy(&out.stdout));
+            if count > 0 {
+                eprintln!(
+                    "{} {} local commit{} not pushed to the upstream branch — if CI on \
+                     the pushed PR later forces a fix, this prompt goes stale. Recommended \
+                     sequence: PR → CI green → --prepare → launch auditors.",
+                    "warn:".yellow().bold(),
+                    count,
+                    if count == 1 { " is" } else { "s are" },
+                );
+            }
+        }
+    }
+}
+
+/// True when `git status --porcelain` reports any change (staged, unstaged, or
+/// untracked). Pure core of the dirty-tree check for unit-testing.
+fn tree_is_dirty(porcelain: &str) -> bool {
+    porcelain.lines().any(|l| !l.trim().is_empty())
+}
+
+/// Parse the `git rev-list --count @{u}..HEAD` output into a commit count.
+/// Non-numeric / empty output (e.g. a git error slipped through) is treated as
+/// zero — the check is advisory, never a false alarm on garbage.
+fn parse_unpushed_count(rev_list: &str) -> u64 {
+    rev_list.trim().parse().unwrap_or(0)
+}
+
 pub fn run(
     path: &str,
     charter_id: &str,
@@ -209,6 +268,11 @@ fn run_prepare(
             );
         }
     }
+
+    // #345: warn (never block) when the tree is dirty or has unpushed commits —
+    // the prompt is a snapshot, so an unstable state means the auditors may
+    // review a revision that a later fix invalidates.
+    warn_unstable_state(project_root);
 
     let context = build_audit_context(project_root, charter, range)?;
 
@@ -895,6 +959,26 @@ fn relative_path(project_root: &Path, path: &Path) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // ── #345: stable-state guard predicates ──────────────────────────────
+
+    #[test]
+    fn tree_is_dirty_detects_any_change() {
+        assert!(!tree_is_dirty(""));
+        assert!(!tree_is_dirty("\n  \n"));
+        assert!(tree_is_dirty(" M cli/src/main.rs\n"));
+        assert!(tree_is_dirty("?? new-file.txt"));
+        assert!(tree_is_dirty("A  staged.rs\n M unstaged.rs\n"));
+    }
+
+    #[test]
+    fn parse_unpushed_count_is_lenient() {
+        assert_eq!(parse_unpushed_count("3\n"), 3);
+        assert_eq!(parse_unpushed_count("0"), 0);
+        assert_eq!(parse_unpushed_count(""), 0);
+        // git error text on stdout must not become a false alarm.
+        assert_eq!(parse_unpushed_count("fatal: no upstream\n"), 0);
+    }
 
     #[test]
     fn canonical_id_strips_slug() {
