@@ -198,6 +198,7 @@ fn remove_framework_files(target: &Path) -> Result<()> {
     remove_file_if_exists(&straymark.join("config.yml"))?;
     remove_file_if_exists(&straymark.join("QUICK-REFERENCE.md"))?;
     remove_file_if_exists(&straymark.join(".checksums.json"))?;
+    remove_file_if_exists(&straymark.join(".provenance.yml"))?;
     remove_file_if_exists(&straymark.join("dist-manifest.yml"))?;
 
     Ok(())

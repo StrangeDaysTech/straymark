@@ -7,6 +7,25 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.35.0 — 2026-07-13
+
+### Added (CLI)
+
+- **Auto-adoption safeguard S2 — provenance sentinel.** `straymark init` now writes
+  `.straymark/.provenance.yml` recording `role: installed-project`, the pinned `framework_version`,
+  `installed_at`, and `source_release`. `resolve_project_root` refuses to resolve a `.straymark/`
+  whose provenance records a non-install role (e.g. a test fixture or a hand-marked distribution
+  copy) — while **tolerating an absent sentinel** so existing adopters (with no provenance file)
+  keep working. Complements the S1 distribution-source guard (they now share one
+  `non_project_reason` check); the `framework_version` field is the pinned-release record the
+  lagged self-adoption is built on. `straymark remove` cleans the file. Decision + plan:
+  `docs/decisions/AIDEC-2026-07-13-001-*`.
+
+  Deferred (tracked in the implementation plan): `straymark update-framework` refreshing the
+  provenance version fields — harmless until safeguard S3 reads them.
+
+---
+
 ## CLI 3.34.0 — 2026-07-13
 
 ### Added (CLI)
