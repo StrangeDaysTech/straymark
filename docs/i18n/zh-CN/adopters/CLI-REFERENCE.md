@@ -45,8 +45,8 @@ StrayMark 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.34.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.32.0` | `straymark` 二进制文件 |
+| Framework | `fw-` | `fw-4.35.0` | 模板（12 种类型）、治理文档、指令 |
+| CLI | `cli-` | `cli-3.33.0` | `straymark` 二进制文件 |
 | Loom（实验性） | `loom-` | `loom-0.4.2` | `straymark-loom` 可视化服务器，由 `straymark loom serve` 按需下载 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。

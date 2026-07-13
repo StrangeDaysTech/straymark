@@ -259,7 +259,8 @@ Mark `review_required: true` when:
 |---------|----------|
 | Follow-ups backlog (first-class registry + native `followups` CLI) *(fw-4.10.0+, first-class fw-4.21.0+)* | [FOLLOW-UPS-BACKLOG-PATTERN.md](FOLLOW-UPS-BACKLOG-PATTERN.md) |
 | Polish Charter as debt-detection ("surface declaration without wiring" anti-pattern) *(fw-4.18.0+)* | [POLISH-CHARTER-PATTERN.md](POLISH-CHARTER-PATTERN.md) |
+| External audit rounds (per-round namespacing for multi-phase Charters) *(fw-4.35.0+)* | [AUDIT-ROUNDS-PATTERN.md](AUDIT-ROUNDS-PATTERN.md) |
 
 ---
 
-*StrayMark fw-4.34.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.35.0 | [Strange Days Tech](https://strangedays.tech)*

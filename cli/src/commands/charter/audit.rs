@@ -142,12 +142,17 @@ pub fn run(
     calibrate: bool,
     finalize: bool,
     merge_into: Option<&str>,
+    round: Option<&str>,
 ) -> Result<()> {
     // --merge-into only makes sense with --merge-reports (or the deprecated
     // --finalize that aliases to it).
     if merge_into.is_some() && !merge_reports && !finalize {
         bail!("--merge-into is only valid with --merge-reports (or the deprecated --finalize)");
     }
+
+    // #341: an optional round label namespaces the audit triad. Validate it as a
+    // filesystem-safe slug before it becomes a path component.
+    let round = round.map(sanitize_round_label).transpose()?;
 
     let resolved = utils::resolve_project_root(path)
         .ok_or_else(|| anyhow!("StrayMark not installed. Run 'straymark init' first."))?;
@@ -170,7 +175,13 @@ pub fn run(
     // v1 canonical path: .straymark/audits/<CHARTER-ID>/. The audit-prompt is
     // written directly to this dir; reports land here as report-*.md; the
     // future review.md consolidated by the audit-review skill lands here too.
-    let audit_dir = straymark_dir.join("audits").join(&canonical_id);
+    // #341: with --round <label>, the whole triad is namespaced under a
+    // per-round subfolder so multi-phase audit rounds don't collide, and the
+    // non-recursive report-*.md glob scopes to exactly this round.
+    let audit_dir = match &round {
+        Some(label) => straymark_dir.join("audits").join(&canonical_id).join(label),
+        None => straymark_dir.join("audits").join(&canonical_id),
+    };
     utils::ensure_dir(&audit_dir)?;
 
     let range_explicit = range.is_some();
@@ -209,6 +220,7 @@ pub fn run(
             &charter,
             &canonical_id,
             merge_into.map(Path::new),
+            round.as_deref(),
         );
     }
 
@@ -220,13 +232,22 @@ pub fn run(
             &charter,
             &canonical_id,
             merge_into.map(Path::new),
+            round.as_deref(),
         );
     }
 
     // Default action: prepare. The --prepare flag is accepted for
     // self-documenting invocations but is also the implicit default.
     let _ = prepare;
-    run_prepare(project_root, &straymark_dir, &audit_dir, &charter, &range, range_explicit)
+    run_prepare(
+        project_root,
+        &straymark_dir,
+        &audit_dir,
+        &charter,
+        &range,
+        range_explicit,
+        round.as_deref(),
+    )
 }
 
 // ── Step 1: prepare ────────────────────────────────────────────────────────
@@ -238,12 +259,16 @@ fn run_prepare(
     charter: &Charter,
     range: &str,
     range_explicit: bool,
+    round: Option<&str>,
 ) -> Result<()> {
     println!(
-        "{} {} ({})",
+        "{} {} ({}{})",
         "PREPARE".cyan().bold(),
         "audit prompt".bold(),
-        charter.frontmatter.charter_id.dimmed()
+        charter.frontmatter.charter_id.dimmed(),
+        round
+            .map(|r| format!(", round {}", r).dimmed().to_string())
+            .unwrap_or_default()
     );
 
     // #208: a multi-batch Charter whose earlier phases already merged to the base
@@ -303,8 +328,9 @@ fn run_prepare(
     println!(
         "    1. Open one or more auditor CLIs (gemini-cli, claude-cli, copilot-cli, etc.)"
     );
+    let round_arg = round.map(|r| format!(" --round {r}")).unwrap_or_default();
     println!("       in this repo and invoke {} in each.",
-        format!("/straymark-audit-execute {}", charter.frontmatter.charter_id).cyan());
+        format!("/straymark-audit-execute {}{}", charter.frontmatter.charter_id, round_arg).cyan());
     println!(
         "       Recommended: at least 2 auditors of different model families."
     );
@@ -323,7 +349,7 @@ fn run_prepare(
     );
     println!(
         "       return to this agent and run: {}",
-        format!("/straymark-audit-review {}", charter.frontmatter.charter_id).cyan()
+        format!("/straymark-audit-review {}{}", charter.frontmatter.charter_id, round_arg).cyan()
     );
     println!("    4. The review skill consolidates the reports and merges YAML");
     println!("       into telemetry.");
@@ -347,6 +373,7 @@ fn run_merge_reports(
     charter: &Charter,
     canonical_id: &str,
     merge_into: Option<&Path>,
+    round: Option<&str>,
 ) -> Result<()> {
     println!(
         "{} {} ({})",
@@ -431,11 +458,12 @@ fn run_merge_reports(
     println!();
 
     if let Some(target) = merge_into {
-        merge_external_audit_into(target, &auditor_summaries, canonical_id)?;
+        merge_external_audit_into(target, &auditor_summaries, canonical_id, round)?;
         println!(
-            "  {} Merged external_audit array into {}",
+            "  {} Merged external_audit array into {}{}",
             "✔".green().bold(),
-            relative_path(project_root, target).display()
+            relative_path(project_root, target).display(),
+            round.map(|r| format!(" (round {r})")).unwrap_or_default(),
         );
         println!();
         println!(
@@ -446,7 +474,7 @@ fn run_merge_reports(
         println!("  {}", "external_audit YAML — paste into telemetry:".bold());
         println!("  {}", "(charter_telemetry.external_audit array)".dimmed());
         println!();
-        println!("{}", render_external_audit_yaml(&auditor_summaries, canonical_id));
+        println!("{}", render_external_audit_yaml(&auditor_summaries, canonical_id, round));
         println!();
     }
     Ok(())
@@ -467,6 +495,7 @@ fn merge_external_audit_into(
     telemetry_path: &Path,
     auditor_summaries: &[AuditorSummary],
     canonical_charter_id: &str,
+    round: Option<&str>,
 ) -> Result<()> {
     if !telemetry_path.exists() {
         bail!(
@@ -517,17 +546,37 @@ fn merge_external_audit_into(
         }
     };
 
+    // #341: a round label lets multiple audit rounds coexist in one telemetry
+    // file. When the array is already populated we APPEND the new round instead
+    // of bailing — provided a round label is given and this exact round isn't
+    // already recorded (the same-round guard prevents silent duplication).
     if matches!(placeholder, ExternalAuditState::Populated) {
-        bail!(
-            "{} already has a populated `external_audit:` block. Re-audit\n  \
-             (appending to an existing array) is not supported in v0. Re-run\n  \
-             `straymark charter audit <id> --merge-reports` (without --merge-into)\n  \
-             to print the new YAML, then merge manually if you want to append.",
-            telemetry_path.display()
-        );
+        let Some(label) = round else {
+            bail!(
+                "{} already has a populated `external_audit:` block. Appending needs a\n  \
+                 round label so the rounds stay distinguishable: re-run with\n  \
+                 `--round <label> --merge-into ...` to add a new round, or omit\n  \
+                 --merge-into to print the YAML and merge manually.",
+                telemetry_path.display()
+            );
+        };
+        if external_audit_has_round(existing_external_audit, label) {
+            bail!(
+                "{} already has external_audit entries for round `{}` — refusing to\n  \
+                 duplicate them. Use a different --round label, or remove that round's\n  \
+                 entries by hand before re-merging.",
+                telemetry_path.display(),
+                label
+            );
+        }
+        let rendered = render_external_audit_yaml(auditor_summaries, canonical_charter_id, round);
+        content = append_to_external_audit_block(&content, &rendered)?;
+        std::fs::write(telemetry_path, &content)
+            .with_context(|| format!("Failed to write {}", telemetry_path.display()))?;
+        return Ok(());
     }
 
-    let rendered = render_external_audit_yaml(auditor_summaries, canonical_charter_id);
+    let rendered = render_external_audit_yaml(auditor_summaries, canonical_charter_id, round);
 
     match placeholder {
         ExternalAuditState::Missing => {
@@ -543,7 +592,7 @@ fn merge_external_audit_into(
         ExternalAuditState::EmptyPlaceholder => {
             content = replace_empty_external_audit_placeholder(&content, &rendered)?;
         }
-        ExternalAuditState::Populated => unreachable!("guarded above"),
+        ExternalAuditState::Populated => unreachable!("handled above"),
     }
 
     std::fs::write(telemetry_path, &content)
@@ -907,10 +956,17 @@ impl AuditorSummary {
     }
 }
 
-fn render_external_audit_yaml(summaries: &[AuditorSummary], canonical_charter_id: &str) -> String {
+fn render_external_audit_yaml(
+    summaries: &[AuditorSummary],
+    canonical_charter_id: &str,
+    round: Option<&str>,
+) -> String {
     let mut out = String::new();
     for (idx, s) in summaries.iter().enumerate() {
         out.push_str(&format!("    - auditor: \"{}\"\n", s.auditor));
+        if let Some(label) = round {
+            out.push_str(&format!("      round: \"{}\"\n", label));
+        }
         out.push_str(&format!("      findings_total: {}\n", s.findings_total));
         out.push_str("      findings_by_category:\n");
         for cat in [
@@ -941,6 +997,122 @@ fn render_external_audit_yaml(summaries: &[AuditorSummary], canonical_charter_id
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
+
+/// Validate a `--round` label as a filesystem-safe slug before it becomes a
+/// path component (#341). Rejects empty, `.`/`..`, over-long, path separators,
+/// spaces, and leading non-alphanumerics — so it can never escape the Charter's
+/// audit directory or collide with a hidden file.
+fn sanitize_round_label(label: &str) -> Result<String> {
+    let trimmed = label.trim();
+    if trimmed.is_empty() {
+        bail!("--round label must not be empty");
+    }
+    if trimmed == "." || trimmed == ".." {
+        bail!("--round label `{}` is not a valid directory name", trimmed);
+    }
+    if trimmed.chars().count() > 64 {
+        bail!("--round label is too long (max 64 chars): `{}`", trimmed);
+    }
+    if !trimmed
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-'))
+    {
+        bail!(
+            "--round label `{}` must be a simple slug (letters, digits, '.', '_', '-') — \
+             no path separators or spaces.",
+            trimmed
+        );
+    }
+    if !trimmed.chars().next().unwrap().is_ascii_alphanumeric() {
+        bail!("--round label `{}` must start with a letter or digit.", trimmed);
+    }
+    Ok(trimmed.to_string())
+}
+
+/// True when the parsed `external_audit` sequence already contains an entry
+/// tagged with the given round label — the same-round guard for append (#341).
+fn external_audit_has_round(external_audit: Option<&serde_yaml::Value>, label: &str) -> bool {
+    external_audit
+        .and_then(|v| v.as_sequence())
+        .map(|seq| {
+            seq.iter().any(|entry| {
+                entry
+                    .as_mapping()
+                    .and_then(|m| m.get(serde_yaml::Value::String("round".into())))
+                    .and_then(|r| r.as_str())
+                    == Some(label)
+            })
+        })
+        .unwrap_or(false)
+}
+
+/// Append a rendered `external_audit` block (4-space `- ` items) to an existing
+/// populated block-style array, right after its last entry line (#341). Bails on
+/// inline flow form (`external_audit: [ ... ]`) or a missing/empty block — those
+/// fall back to a manual-merge instruction upstream.
+fn append_to_external_audit_block(content: &str, rendered: &str) -> Result<String> {
+    let lines: Vec<&str> = content.split_inclusive('\n').collect();
+
+    let mut key_idx = None;
+    for (i, line) in lines.iter().enumerate() {
+        let after_indent = line
+            .trim_end_matches(['\n', '\r'])
+            .trim_start_matches([' ', '\t']);
+        if let Some(rest) = after_indent.strip_prefix("external_audit:") {
+            let rest = rest.trim();
+            if rest.is_empty() || rest.starts_with('#') {
+                key_idx = Some(i);
+                break;
+            }
+            bail!(
+                "external_audit is written in inline flow form; this CLI appends only to \
+                 block-style arrays. Omit --merge-into to print the YAML and merge the new \
+                 round manually."
+            );
+        }
+    }
+    let key_idx = key_idx.ok_or_else(|| {
+        anyhow!("could not locate the `external_audit:` key in the telemetry to append to.")
+    })?;
+    let key_indent = indent_width(lines[key_idx]);
+
+    // The sequence body is the run of following lines that are blank or indented
+    // deeper than the key; the insertion point is after its last non-blank line.
+    let mut insert_after = key_idx;
+    for (j, line) in lines.iter().enumerate().skip(key_idx + 1) {
+        if line.trim().is_empty() {
+            continue;
+        }
+        if indent_width(line) > key_indent {
+            insert_after = j;
+        } else {
+            break;
+        }
+    }
+    if insert_after == key_idx {
+        bail!("`external_audit:` block appears empty; expected a populated array to append to.");
+    }
+
+    let mut out = String::with_capacity(content.len() + rendered.len());
+    for (k, line) in lines.iter().enumerate() {
+        out.push_str(line);
+        if k == insert_after {
+            if !out.ends_with('\n') {
+                out.push('\n');
+            }
+            out.push_str(rendered);
+            if !out.ends_with('\n') {
+                out.push('\n');
+            }
+        }
+    }
+    Ok(out)
+}
+
+/// Count leading spaces/tabs — the indentation width of a YAML line.
+fn indent_width(line: &str) -> usize {
+    line.chars().take_while(|c| *c == ' ' || *c == '\t').count()
+}
 
 fn canonical_charter_id(charter_id: &str) -> String {
     // CHARTER-NN[-slug] → CHARTER-NN.
@@ -1185,5 +1357,112 @@ prompt_used: prompts/auditor-primary.prompt.md
         assert_eq!(s.findings_by_category.get("implementation_gap"), Some(&2));
         assert_eq!(s.audit_quality.as_deref(), Some("high"));
         assert_eq!(s.prompt_used, "prompts/auditor-primary.prompt.md");
+    }
+
+    // ── #341: per-round namespacing ───────────────────────────────────────
+
+    #[test]
+    fn sanitize_round_label_accepts_slugs_rejects_unsafe() {
+        assert_eq!(sanitize_round_label("fase-1").unwrap(), "fase-1");
+        assert_eq!(sanitize_round_label("  round_2.a  ").unwrap(), "round_2.a");
+        let long = "x".repeat(65);
+        for bad in ["", ".", "..", "a/b", "a b", "-lead", "café", long.as_str()] {
+            assert!(sanitize_round_label(bad).is_err(), "should reject {bad:?}");
+        }
+    }
+
+    fn summary(name: &str) -> Vec<AuditorSummary> {
+        vec![AuditorSummary {
+            auditor: name.into(),
+            findings_total: 1,
+            findings_by_category: Default::default(),
+            audit_quality: None,
+            prompt_used: String::new(),
+        }]
+    }
+
+    #[test]
+    fn render_external_audit_yaml_tags_round_when_present() {
+        let with = render_external_audit_yaml(&summary("gpt-5"), "CHARTER-01", Some("fase-1"));
+        assert!(with.contains("round: \"fase-1\""), "got:\n{with}");
+        let without = render_external_audit_yaml(&summary("gpt-5"), "CHARTER-01", None);
+        assert!(!without.contains("round:"), "got:\n{without}");
+    }
+
+    #[test]
+    fn external_audit_has_round_detects_label() {
+        let yaml: serde_yaml::Value =
+            serde_yaml::from_str("- auditor: a\n  round: fase-1\n- auditor: b\n  round: fase-2\n")
+                .unwrap();
+        assert!(external_audit_has_round(Some(&yaml), "fase-1"));
+        assert!(external_audit_has_round(Some(&yaml), "fase-2"));
+        assert!(!external_audit_has_round(Some(&yaml), "fase-3"));
+        assert!(!external_audit_has_round(None, "fase-1"));
+    }
+
+    #[test]
+    fn append_to_external_audit_block_inserts_after_last_entry() {
+        let content = "charter_telemetry:\n  closed_at: \"2026-07-13\"\n  external_audit:\n    - auditor: \"gpt-5\"\n      round: \"fase-1\"\n      findings_total: 3\n  outcome:\n    completed_as_planned: true\n";
+        let rendered = "    - auditor: \"claude\"\n      round: \"fase-2\"\n      findings_total: 1\n";
+        let out = append_to_external_audit_block(content, rendered).unwrap();
+        let ea = out.find("external_audit:").unwrap();
+        let claude = out.find("claude").unwrap();
+        let outcome = out.find("outcome:").unwrap();
+        assert!(ea < claude && claude < outcome, "append must land inside the block:\n{out}");
+        let parsed: serde_yaml::Value = serde_yaml::from_str(&out).unwrap();
+        let seq = parsed["charter_telemetry"]["external_audit"].as_sequence().unwrap();
+        assert_eq!(seq.len(), 2);
+    }
+
+    #[test]
+    fn append_to_external_audit_block_rejects_inline_flow() {
+        let content = "charter_telemetry:\n  external_audit: [ {auditor: x} ]\n";
+        assert!(append_to_external_audit_block(content, "    - auditor: y\n").is_err());
+    }
+
+    fn write_telemetry(dir: &Path, external_audit: &str) -> PathBuf {
+        let p = dir.join("CHARTER-01.telemetry.yaml");
+        std::fs::write(
+            &p,
+            format!(
+                "charter_telemetry:\n  charter_id: \"CHARTER-01\"\n  closed_at: \"2026-07-13\"\n{external_audit}  outcome:\n    completed_as_planned: true\n"
+            ),
+        )
+        .unwrap();
+        p
+    }
+
+    #[test]
+    fn merge_external_audit_into_appends_second_round() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let p = write_telemetry(tmp.path(), "  external_audit: []\n");
+        merge_external_audit_into(&p, &summary("gpt-5"), "CHARTER-01", Some("fase-1")).unwrap();
+        merge_external_audit_into(&p, &summary("claude"), "CHARTER-01", Some("fase-2")).unwrap();
+        let content = std::fs::read_to_string(&p).unwrap();
+        let parsed: serde_yaml::Value = serde_yaml::from_str(&content).unwrap();
+        let ea = &parsed["charter_telemetry"]["external_audit"];
+        assert_eq!(ea.as_sequence().unwrap().len(), 2);
+        assert!(external_audit_has_round(Some(ea), "fase-1"));
+        assert!(external_audit_has_round(Some(ea), "fase-2"));
+    }
+
+    #[test]
+    fn merge_external_audit_into_rejects_same_round_twice() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let p = write_telemetry(tmp.path(), "  external_audit: []\n");
+        merge_external_audit_into(&p, &summary("gpt-5"), "CHARTER-01", Some("fase-1")).unwrap();
+        let err = merge_external_audit_into(&p, &summary("claude"), "CHARTER-01", Some("fase-1"))
+            .unwrap_err();
+        assert!(err.to_string().contains("round `fase-1`"), "got: {err}");
+    }
+
+    #[test]
+    fn merge_external_audit_into_populated_without_round_bails() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let p = write_telemetry(tmp.path(), "  external_audit: []\n");
+        merge_external_audit_into(&p, &summary("gpt-5"), "CHARTER-01", Some("fase-1")).unwrap();
+        let err =
+            merge_external_audit_into(&p, &summary("claude"), "CHARTER-01", None).unwrap_err();
+        assert!(err.to_string().contains("round label"), "got: {err}");
     }
 }

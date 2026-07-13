@@ -378,6 +378,8 @@ These are heuristics, not rigid rules — you are close to the context, refine t
 - The checkpoint **does not** block any subsequent action. If the developer ignores it and runs `charter close`, close proceeds normally — there is no enforcement and there will not be (this is a permanent v0+v1 design decision; see `Propuesta/straymark-audit-skills.md` §2.2).
 - The checkpoint is **not** counted in any quality metric. There is no "% Charters audited" KPI in `straymark metrics` — by design, to avoid creating an incentive to inflate the audit count.
 - If the developer accepts the audit, the workflow proceeds via three skills in sequence: `/straymark-audit-prompt` (writes the unified prompt at the canonical path) → `/straymark-audit-execute` × N (one per auditor-side CLI the operator opens — these run in those CLIs, not in the main agent) → `/straymark-audit-review` (consolidates N reports inline into `.straymark/audits/<id>/review.md` and merges the YAML into telemetry). Operators never copy/paste prompts or reports — file exchange happens via canonical paths under `.straymark/audits/`.
+- **Audit a stable state (#345).** Generate the prompt only when the state under audit is stable — the PR's CI is green, the working tree is clean, and commits are pushed. `charter audit --prepare` embeds the git diff at generation time, so if in-flight CI later forces a fix the prompt goes stale and auditors review a revision that no longer exists. Sequence: **PR → CI green → `--prepare` → launch auditors.** The CLI warns (does not block) on a dirty tree or unpushed commits.
+- **Multi-round audits (#341).** A Charter audited across more than one round (e.g. one round per code-heavy phase) namespaces each round with `--prepare --round <label>`, writing the triad under `.straymark/audits/<id>/<label>/` so rounds do not collide and the `report-*.md` glob scopes per round. See [`AUDIT-ROUNDS-PATTERN.md`](AUDIT-ROUNDS-PATTERN.md).
 
 ---
 
@@ -412,4 +414,4 @@ When a project accumulates a high volume of AILOGs across multiple Charters and 
 
 ---
 
-*StrayMark fw-4.34.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.35.0 | [Strange Days Tech](https://strangedays.tech)*

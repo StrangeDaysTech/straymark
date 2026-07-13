@@ -18,6 +18,8 @@ After the operator has commissioned the audits in N auditor-side CLIs (each runn
 
 If only some audits have completed, **do not proceed** — invoking the skill with incomplete reports produces a partial consolidated analysis. Verify with the operator that all the CLIs they opened have finished writing their reports under `.straymark/audits/<CHARTER-ID>/report-*.md`.
 
+> **Multi-round audits (`--round`).** If the operator passed `--round <label>` (a Charter audited across more than one round), every path in this skill gains a `/<label>/` segment: reports at `.straymark/audits/<CHARTER-ID>/<label>/report-*.md`, the consolidated `review.md` under the same subfolder, and the CLI merge step run with `--round <label>`. Consolidate only the reports in that subfolder. Omit `--round` for single-round Charters. See `.straymark/00-governance/AUDIT-ROUNDS-PATTERN.md`.
+
 ## Instructions
 
 ### 1. Resolve the Charter and verify report set
@@ -198,11 +200,11 @@ Run the CLI's merge step to validate all reports against the schema and emit the
 **Branch A — telemetry exists** (operator already ran `straymark charter close` for this Charter, perhaps without audit, and is now adding audit findings retroactively):
 
 ```bash
-straymark charter audit <CHARTER-ID> --merge-reports \
+straymark charter audit <CHARTER-ID> --merge-reports [--round <label>] \
   --merge-into .straymark/charters/<CHARTER-ID>.telemetry.yaml
 ```
 
-The CLI appends the `external_audit:` array to the telemetry YAML. The CLI v1 deliberately rejects re-audit (file already has `external_audit:`) — if that fires, surface the message to the operator. Manual append is the fallback.
+The CLI appends the `external_audit:` array to the telemetry YAML. If the telemetry already has a populated `external_audit:` block, the CLI rejects the merge **unless** you pass `--round <label>` with a round not already recorded — then it appends the new round's entries (each tagged with `round:`) instead of bailing. Re-merging the *same* round is still rejected to avoid duplication; manual append is the fallback.
 
 **Branch B — telemetry does NOT exist** (the typical case: operator audits BEFORE closing):
 

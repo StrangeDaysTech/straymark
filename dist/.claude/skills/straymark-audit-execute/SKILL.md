@@ -26,14 +26,14 @@ The skill is the second step of the v1 audit cycle:
 Two positional arguments: `<CHARTER-ID>` and an optional `<AUDITOR-SLUG>` — e.g. `/straymark-audit-execute CHARTER-06 deepseek-v4-pro`. The second argument is the operator-provided auditor identity (see step 2); it is never inferred from the CLI you are running in.
 
 **Case A — Charter provided** (`/straymark-audit-execute CHARTER-04 [AUDITOR-SLUG]`):
-Use the literal Charter value. Construct the audit dir path: `.straymark/audits/CHARTER-04/`.
+Use the literal Charter value. Construct the audit dir path: `.straymark/audits/CHARTER-04/` — or, when the operator passed `--round <label>` (a multi-round audit), `.straymark/audits/CHARTER-04/<label>/`. Every path below (prompt, report) gains the same `/<label>/` segment, and the same `--round <label>` is threaded through to `/straymark-audit-review`. See `.straymark/00-governance/AUDIT-ROUNDS-PATTERN.md`.
 
 **Case B — Charter omitted** (`/straymark-audit-execute`):
 Auto-discover pending prompts. Resolve the auditor identity (step 2 — from the argument or the operator) and produce its slug. Then:
 
 ```bash
 # List all audit prompts that exist
-ls .straymark/audits/*/audit-prompt.md 2>/dev/null
+ls .straymark/audits/*/audit-prompt.md .straymark/audits/*/*/audit-prompt.md 2>/dev/null
 ```
 
 For each found `.straymark/audits/<CHARTER-ID>/audit-prompt.md`, check whether a report from this model already exists at `.straymark/audits/<CHARTER-ID>/report-<slug>.md`. The set of "pending" prompts is the ones WITHOUT a corresponding report.

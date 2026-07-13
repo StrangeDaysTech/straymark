@@ -373,6 +373,8 @@ confidence: high | medium | low
 - 检查点**不**阻塞任何后续操作。如果 developer 忽略它并运行 `charter close`，close 正常进行——没有强制执行，将来也不会有（这是 v0+v1 永久设计决策；见 `Propuesta/straymark-audit-skills.md` §2.2）。
 - 检查点**不**计入任何质量度量。`straymark metrics` 中没有"已审计 Charter 百分比"KPI——按设计，避免产生虚胖审计计数的激励。
 - 如果 developer 接受审计，工作流通过三个 skills 依次推进：`/straymark-audit-prompt`（在规范路径写入统一 prompt）→ `/straymark-audit-execute` × N（每个操作员打开的审计员 CLI 一个 — 这些运行在那些 CLI 中，不在主代理中）→ `/straymark-audit-review`（在 `.straymark/audits/<id>/review.md` 中内联合并 N 个 reports 并将 YAML 合并到遥测）。操作员从不复制/粘贴 prompts 或 reports — 文件交换通过 `.straymark/audits/` 下的规范路径进行。
+- **审计一个稳定状态（#345）。** 仅在受审状态稳定时生成 prompt — PR 的 CI 为绿、工作树干净且 commits 已推送。`charter audit --prepare` 在生成时嵌入 git diff，因此若进行中的 CI 之后强制修复，prompt 会过时，审计员会审查一个不再存在的修订版。顺序：**PR → CI 绿 → `--prepare` → 启动审计员。** 当工作树脏或有未推送 commits 时 CLI 会警告（不阻断）。
+- **多轮审计（#341）。** 跨多轮审计的 Charter（例如每个代码密集阶段一轮）用 `--prepare --round <label>` 为每轮命名，将三件套写入 `.straymark/audits/<id>/<label>/`，使各轮不冲突且 `report-*.md` 通配按轮限定。参见 [`AUDIT-ROUNDS-PATTERN.md`](AUDIT-ROUNDS-PATTERN.md)。
 
 ---
 
@@ -407,4 +409,4 @@ confidence: high | medium | low
 
 ---
 
-*StrayMark fw-4.34.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.35.0 | [Strange Days Tech](https://strangedays.tech)*
