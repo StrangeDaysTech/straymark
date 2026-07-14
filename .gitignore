@@ -130,3 +130,30 @@ nul
 
 experiment-loom/web/node_modules/
 experiment-loom/web/dist/
+
+# StrayMark self-adoption (S5, AIDEC-2026-07-13-001): framework files are
+# regenerable from the pinned release (straymark update-framework); do not
+# version them. Only the produced governance artifacts + the pin record
+# (config.yml, .provenance.yml, .checksums.json, dist-manifest.yml, 07-ai-audit/,
+# charters/, numbered dirs) are versioned.
+/.claude/skills/
+/.gemini/skills/
+/.codex/skills/
+/.agent/workflows/
+/STRAYMARK.md
+/.straymark/00-governance/
+/.straymark/templates/
+/.straymark/schemas/
+/.straymark/audit-prompts/
+/.straymark/hooks/
+/.straymark/QUICK-REFERENCE.md
+# runtime-specific directives we don't use (StrayMark dev = Claude Code):
+/GEMINI.md
+/.cursorrules
+/.cursor/
+/.github/copilot-instructions.md
+/.github/workflows/docs-validation.yml
+# framework reference material shipped into numbered dirs / scripts (regenerable):
+/.straymark/scripts/
+/.straymark/03-implementation/NIST-*.md
+/.straymark/03-implementation/i18n/
