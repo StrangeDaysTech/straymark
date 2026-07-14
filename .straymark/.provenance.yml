@@ -1,0 +1,9 @@
+# StrayMark install provenance (auto-adoption safeguard S2). Written by
+# `straymark init`. Marks this .straymark/ as an installed project — as
+# opposed to the framework distribution source (dist/) or a test fixture —
+# and records the pinned framework release the project governs itself with.
+# Do not edit by hand.
+role: installed-project
+framework_version: "4.35.0"
+installed_at: "2026-07-13"
+source_release: "fw-4.35.0"

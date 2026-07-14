@@ -1,0 +1,28 @@
+# StrayMark Configuration
+# https://github.com/StrangeDaysTech/straymark
+
+# Language setting for templates and documentation
+# Supported values: en, es, zh-CN
+# Default: en (English)
+language: en
+
+# Regional regulatory scope.
+# Controls which compliance frameworks are evaluated by `straymark compliance`
+# and which document types are exposed by `straymark new`.
+#
+#   global  → NIST AI RMF + ISO/IEC 42001            (always recommended)
+#   eu      → EU AI Act + GDPR
+#   china   → TC260 v2.0, PIPL/PIPIA, GB 45438, CAC,
+#             GB/T 45652, CSL 2026 incident reporting
+#
+# Default if omitted: [global, eu]
+# Add "china" only if your project operates in mainland China.
+# regional_scope:
+#   - global
+#   - eu
+#   # - china
+
+# Complexity analysis settings (used by: straymark analyze)
+# Uncomment to override the default cognitive complexity threshold
+# complexity:
+#   threshold: 8

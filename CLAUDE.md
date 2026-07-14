@@ -425,3 +425,8 @@ curl -sI https://straymark.dev/ | head -1                     # HTTP/2 200
 curl -sL https://straymark.dev/ | grep -oE '<title>[^<]*</title>'   # site title present
 curl -sIL https://strangedaystech.github.io/straymark/ | head -2    # 301 → straymark.dev
 ```
+
+<!-- straymark:begin -->
+> **Read and follow the rules in [STRAYMARK.md](STRAYMARK.md).**
+> That file contains all StrayMark documentation governance rules for this project.
+<!-- straymark:end -->
