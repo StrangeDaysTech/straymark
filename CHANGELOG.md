@@ -7,6 +7,28 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.36.0 — 2026-07-13
+
+### Added (CLI)
+
+- **Auto-adoption safeguard S3 — framework skew visibility.** When a project carries a sibling
+  `dist/dist-manifest.yml` (i.e. the StrayMark repo governing itself), `straymark status` now prints a
+  `skew:` line comparing the installed framework (pinned — the "yesterday's tail" it is governed by)
+  against the in-development framework under `dist/`. Invisible for normal adopters (no `dist/`).
+
+### Changed (Docs)
+
+- **Auto-adoption safeguard S4 — agent path-discipline directive.** `CLAUDE.md` gains a *"Framework path
+  discipline"* section: `dist/.straymark/` = distribution source / product-under-edit (never read as
+  governance-in-force, never write artifacts into it); `/.straymark/` (once self-adopted) = governance
+  in force, pinned to the last release. Reinforces the S1 mechanical guard with intent.
+- **Auto-adoption safeguard S5 — git strategy spec.** The implementation plan
+  (`docs/decisions/AIDEC-2026-07-13-001-implementation-plan.md`) now carries the ready-to-apply git
+  layout for the eventual root install (recommending: version the whole `/.straymark/`; skew is already
+  surfaced by S3/S4), to be applied at `init` (Fase 2).
+
+---
+
 ## CLI 3.35.0 — 2026-07-13
 
 ### Added (CLI)

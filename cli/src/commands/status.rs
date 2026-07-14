@@ -111,6 +111,29 @@ pub fn run(path: &str) -> Result<()> {
     }
     print_border("  └", label_w, "┴", value_w, "┘");
 
+    // ── S3 (auto-adoption): framework skew ──
+    // When this project is the StrayMark repo governing itself, a sibling
+    // `dist/dist-manifest.yml` (the in-development framework) exists. Surface the
+    // skew between the installed framework (pinned — the "yesterday's tail" the
+    // repo is governed by) and what it is editing under `dist/`. Invisible for
+    // normal adopters (no `dist/`).
+    if let Some(dist_version) = load_dist_source_version(&target) {
+        if dist_version != version {
+            println!();
+            println!(
+                "  {} installed framework {} (pinned) vs dist/ in-development {}",
+                "skew:".yellow().bold(),
+                format!("fw-{version}").yellow(),
+                format!("fw-{dist_version}").yellow(),
+            );
+            println!(
+                "  {}",
+                "        this repo is governed by the last release, not the framework it is editing."
+                    .dimmed()
+            );
+        }
+    }
+
     // ── Structure ──
     println!();
     println!("  {}", "Structure".bold());
@@ -282,6 +305,38 @@ fn load_version(project_root: &std::path::Path) -> String {
             utils::warn("Could not read dist-manifest.yml");
             "unknown".to_string()
         }
+    }
+}
+
+/// The framework version declared by the in-development distribution source at
+/// `<target>/dist/dist-manifest.yml`, if present. Only the StrayMark repo itself
+/// (self-adoption) carries this; normal adopters return `None`. Drives the S3
+/// skew line in `status`.
+fn load_dist_source_version(target: &std::path::Path) -> Option<String> {
+    let manifest_path = target.join("dist").join("dist-manifest.yml");
+    if !manifest_path.exists() {
+        return None;
+    }
+    DistManifest::load(&manifest_path).ok().map(|m| m.version)
+}
+
+#[cfg(test)]
+mod s3_tests {
+    use super::*;
+
+    #[test]
+    fn load_dist_source_version_only_for_self_adoption() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        // Normal adopter: no dist/ → None.
+        assert_eq!(load_dist_source_version(tmp.path()), None);
+        // StrayMark repo self-adopting: dist/dist-manifest.yml present.
+        std::fs::create_dir_all(tmp.path().join("dist")).unwrap();
+        std::fs::write(
+            tmp.path().join("dist/dist-manifest.yml"),
+            "version: \"9.9.9\"\ndescription: \"x\"\nfiles: []\n",
+        )
+        .unwrap();
+        assert_eq!(load_dist_source_version(tmp.path()).as_deref(), Some("9.9.9"));
     }
 }
 
