@@ -8,6 +8,15 @@ This is the StrayMark project repository. It contains two main components, plus 
 
 The Rust code is a **Cargo workspace** (root `Cargo.toml`, members `core` + `cli`): `straymark-core` holds the shared document model and knowledge graph (one parser for the CLI and Loom); `Cargo.lock` and `[profile.release]` live at the workspace root; build artifacts land in the root `target/`.
 
+## Framework path discipline (self-adoption safeguard S4)
+
+StrayMark is preparing to adopt StrayMark for its own development (decision: [`docs/decisions/AIDEC-2026-07-13-001-straymark-self-adoption.md`](docs/decisions/AIDEC-2026-07-13-001-straymark-self-adoption.md)). Two `.straymark/`-shaped things exist in this repo — **never confuse them**:
+
+- **`dist/.straymark/` = the framework DISTRIBUTION SOURCE — product under edit.** This is the shipped template. Edit it as *product* (it's what adopters receive). **Never read it as governance-in-force for this repo, and never write generated artifacts (AILOGs/AIDECs/telemetry) into it.** Never run a mutating `straymark` command with cwd or `--path` inside `dist/` — the CLI now refuses (safeguard S1), but the intent is yours to hold.
+- **`/.straymark/` (repo root) = the installed framework — governance IN FORCE** (once self-adopted; it does not exist yet). It will be **pinned to the last release** ("yesterday's tail"), so it may lag `dist/`. When it exists, *that* is the governance you follow and where your artifacts go; `straymark status` shows the skew (safeguard S3).
+
+Rule of thumb: **`dist/` is what we ship; `/.straymark/` is what governs us.** They are one framework version apart on purpose.
+
 ## Project Structure
 
 ```
