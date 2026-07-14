@@ -6,11 +6,9 @@ created: 2026-07-13
 agent: claude-opus-4-8
 confidence: high
 review_required: true
-
-# --- Approval workflow (fill at review time via `straymark approve`) ---
-# reviewed_by: <reviewer-id>
-# reviewed_at: YYYY-MM-DD
-# review_outcome: approved
+reviewed_by: Jose Villaseñor Montfort
+reviewed_at: 2026-07-13
+review_outcome: approved
 risk_level: medium
 eu_ai_act_risk: not_applicable
 nist_genai_risks: []
@@ -157,6 +155,16 @@ Sequenced so the guard exists before the install (full detail in the accompanyin
 - PR #358 — S1 distribution-source guard + S6 CI hygiene
 - Related: verification-fidelity (#306), the close-time review checkpoint (#350), [ADR-2026-06-03-followups-first-class](ADR-2026-06-03-followups-first-class.md)
 - Design principle #12 (N=2 stabilization gate)
+
+## Approval
+
+**Approved**: 2026-07-13 by `Jose Villaseñor Montfort`.
+
+Signed manually (not via `straymark approve`): this AIDEC is kept in `docs/decisions/` — the
+pre-adoption decision location, outside the installed `/.straymark/` — so the CLI's document search
+does not reach it. Left here by decision as the pre-adoption record (the self-adoption install began
+*after* this decision was made). Future decisions authored under the install go in
+`.straymark/07-ai-audit/decisions/` and are signed via `straymark approve`.
 
 ---
 
