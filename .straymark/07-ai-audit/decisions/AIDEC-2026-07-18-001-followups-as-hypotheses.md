@@ -1,12 +1,15 @@
 ---
 id: AIDEC-2026-07-18-001
 title: Follow-ups are dated hypotheses — verify the premise at execution, not at capture
-status: draft
+status: accepted
 created: 2026-07-18
 updated: 2026-07-18
 agent: claude-opus-4-8-1m
 confidence: high
 review_required: true
+reviewed_by: Jose Villaseñor Montfort
+reviewed_at: 2026-07-18
+review_outcome: approved
 # --- Approval workflow (fill at review time) ---
 # reviewed_by: <reviewer-id>
 # reviewed_at: YYYY-MM-DD
@@ -84,7 +87,7 @@ depth chosen by the operator on 2026-07-18. This AIDEC evolves — does not supe
 [ADR-2026-06-03-001](../../../docs/decisions/ADR-2026-06-03-followups-first-class.md) (the follow-ups
 backlog as a first-class entity). The registry stays `schema_version: v1` (experimental); the
 additions here are optional and backward-compatible, so hard stabilization remains gated on design
-principle #12 as before. **Status: draft — no product files change until this AIDEC is signed.**
+principle #12 as before. **Status: accepted — reviewed and approved 2026-07-18; implementation of the three layers may proceed.**
 
 ### 1. Documentation (governance)
 
@@ -263,8 +266,13 @@ promotion.
 | Date | Change |
 |------|--------|
 | 2026-07-18 | Initial draft (design pass opening for #365 Part 1). Pending human review. |
+| 2026-07-18 | Reviewed and approved by Jose Villaseñor Montfort; status → accepted. |
 
 ---
 
 *This document was produced with assistance from generative AI tools (Claude Opus 4.8); all
 responsibility for the content rests with the human author.*
+
+## Approval
+
+**Approved**: 2026-07-18 by `Jose Villaseñor Montfort`.
