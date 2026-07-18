@@ -13,9 +13,12 @@
 //!   distinct from the drift script's *dynamic* git-range check.
 //! - the `(new)` exemption keeps from flagging files the Charter itself creates.
 //!
-//! The drift script applies a recognized-extension / `.straymark/` filter via
-//! grep; we mirror it in [`looks_like_path`] so a backtick token like
-//! `` `cargo build` `` is not mistaken for a declared file.
+//! [`looks_like_path`] decides which backtick tokens are declared paths. It
+//! originally mirrored the drift script's fixed recognized-extension grep
+//! filter, but that allowlist silently dropped build/manifest files adopters
+//! legitimately declare (`.sln`, `.csproj`, `Cargo.toml`, `Makefile`, …) —
+//! finding #354. It now uses a path-*shape* heuristic instead, so a backtick
+//! token like `` `cargo build` `` is still not mistaken for a declared file.
 
 /// A declared path's exemption from the on-disk existence check (#215 Gap 3).
 ///
@@ -66,16 +69,19 @@ impl DeclaredFile {
     }
 }
 
-/// Recognized source-file extensions, mirroring the grep filter in
-/// `check-charter-drift.sh`. A backtick token is treated as a declared path
-/// only when it ends in one of these or contains `.straymark/`.
+/// Common build/config files declared by *basename* with no extension. A
+/// pure-extension allowlist structurally cannot match these (finding #354), yet
+/// they are among the files a Charter most often declares — so [`looks_like_path`]
+/// recognizes them explicitly. Matched case-sensitively against the whole token.
 ///
 /// Shared with [`crate::ailog`] (the AILOG "Modified Files" parser) so the two
 /// markdown-table extractors agree on what counts as a path.
-pub(crate) const RECOGNIZED_EXTENSIONS: &[&str] = &[
-    ".go", ".sql", ".yaml", ".yml", ".md", ".sh", ".ts", ".tsx", ".js", ".jsx",
-    ".rs", ".py", ".java", ".kt", ".rb", ".cs", ".cpp", ".c", ".h", ".hpp",
-    ".swift", ".toml", ".json", ".tf",
+pub(crate) const EXTENSIONLESS_BUILD_FILES: &[&str] = &[
+    "Makefile", "makefile", "GNUmakefile",
+    "Dockerfile", "Containerfile", "Jenkinsfile",
+    "Gemfile", "Rakefile", "Guardfile", "Berksfile", "Capfile", "Thorfile",
+    "Procfile", "Vagrantfile", "Brewfile", "Justfile", "justfile",
+    "BUILD", "WORKSPACE", "CODEOWNERS",
 ];
 
 /// The `## Files to modify` heading in the three shipped locales.
@@ -91,13 +97,45 @@ pub fn is_wildcard(path: &str) -> bool {
     path.contains("...") || path.contains('*')
 }
 
-/// True if a backtick token looks like a declared file path: it ends with a
-/// recognized extension, or references something under `.straymark/`.
+/// True if a backtick token looks like a declared file path.
+///
+/// Replaces the original fixed source-extension allowlist (finding #354).
+/// Adopters legitimately declare build/manifest files whose extensions the
+/// allowlist omitted (`.sln`, `.csproj`, `.fsproj`, `Cargo.toml`, `go.mod`,
+/// `package.json`, …) plus extension-less build files (`Makefile`,
+/// `Dockerfile`, `Gemfile`) that *no* pure-extension allowlist can match. Those
+/// silently dropped from the declared-set, so `charter drift` re-flagged them as
+/// "scope expansion" on every non-trivial charter — a recurring false positive.
+///
+/// The declaration itself — a backtick token in the table's File column — is the
+/// signal; we only reject tokens that are clearly *not* paths. A token is a path
+/// when it: references `.straymark/`; contains a directory separator (`/`);
+/// carries a dotted, alphabetic extension (`Weft.sln`, `Cargo.toml`,
+/// `.gitignore`); or is a known extension-less build file. Tokens with
+/// whitespace (`cargo build`) or with no path shape (`risk_level`) are rejected,
+/// and a purely numeric dotted suffix (a version like `1.5`) does not count as
+/// an extension.
+///
+/// Shared with [`crate::ailog`] (the AILOG "Modified Files" parser) so the two
+/// markdown-table extractors agree on what counts as a path.
 pub(crate) fn looks_like_path(token: &str) -> bool {
-    if token.contains(".straymark/") {
+    let t = token.trim();
+    if t.is_empty() || t.chars().any(char::is_whitespace) {
+        return false;
+    }
+    if t.contains(".straymark/") || t.contains('/') {
         return true;
     }
-    RECOGNIZED_EXTENSIONS.iter().any(|ext| token.ends_with(ext))
+    // A dotted, *alphabetic* extension marks a file: `Weft.sln`, `Cargo.toml`,
+    // `go.mod`, `.gitignore`. A trailing dot or a purely numeric suffix (a
+    // version like `1.5`) does not qualify.
+    if let Some(dot) = t.rfind('.') {
+        let ext = &t[dot + 1..];
+        if !ext.is_empty() && ext.chars().any(|c| c.is_ascii_alphabetic()) {
+            return true;
+        }
+    }
+    EXTENSIONLESS_BUILD_FILES.contains(&t)
 }
 
 /// Extract the first backtick-quoted token from a string, if any.
@@ -387,5 +425,63 @@ mod tests {
     fn empty_when_section_absent() {
         let body = "## Context\n\nNo files section here.\n";
         assert!(parse_files_to_modify(body).is_empty());
+    }
+
+    #[test]
+    fn recognizes_build_and_manifest_files_across_ecosystems() {
+        // Finding #354: build/project/manifest files must enter the declared-set.
+        // A fixed source-extension allowlist dropped them, so `charter drift`
+        // re-flagged them as "scope expansion" on every non-trivial charter.
+        let body = r#"## Files to modify
+
+| File | Change |
+|---|---|
+| `Weft.sln` | Change — add project |
+| `src/Weft.Server/Weft.Server.csproj` | New — server project |
+| `tests/Weft.Server.Tests/Weft.Server.Tests.csproj` | New — test project |
+| `Cargo.toml` | Change — workspace member |
+| `Cargo.lock` | Change — lockfile |
+| `package.json` | Change — deps |
+| `go.mod` | Change — module |
+| `pyproject.toml` | Change — build config |
+| `pom.xml` | Change — maven |
+| `Makefile` | Change — build target |
+| `Dockerfile` | New — container |
+| `Gemfile` | Change — gems |
+| `.gitignore` | Change — ignore rule |
+"#;
+        // parse_files_to_modify preserves document order (drift.rs sorts).
+        assert_eq!(
+            paths(&parse_files_to_modify(body)),
+            vec![
+                "Weft.sln",
+                "src/Weft.Server/Weft.Server.csproj",
+                "tests/Weft.Server.Tests/Weft.Server.Tests.csproj",
+                "Cargo.toml",
+                "Cargo.lock",
+                "package.json",
+                "go.mod",
+                "pyproject.toml",
+                "pom.xml",
+                "Makefile",
+                "Dockerfile",
+                "Gemfile",
+                ".gitignore",
+            ]
+        );
+    }
+
+    #[test]
+    fn still_rejects_non_path_backticks() {
+        // The widened heuristic must not turn prose/command backticks into paths.
+        // Table form: only col1's first token is considered, so `cargo build` and
+        // the version `1.5` in the Change column are ignored either way; the
+        // bullet form scans every token, which is the real test of the guard.
+        let body = r#"## Files to modify
+
+- setting `risk_level` to low, run `cargo build`, bump to `1.5`
+- `src/real.rs` is the only path here
+"#;
+        assert_eq!(paths(&parse_files_to_modify(body)), vec!["src/real.rs"]);
     }
 }

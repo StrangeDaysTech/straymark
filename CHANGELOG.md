@@ -7,6 +7,25 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.36.1 — 2026-07-17
+
+### Fixed (CLI)
+
+- **`charter drift` no longer drops build/manifest files from the declared-set (#354).** The
+  `## Files to modify` path extractor filtered declared backtick tokens against a fixed
+  source-extension allowlist (`.rs`, `.cs`, `.ts`, …) that omitted project/build files — so
+  `.sln`, `.csproj`, `Cargo.toml`, `go.mod`, `package.json`, `Makefile`, `Dockerfile` and
+  similar were silently discarded and then re-flagged as *"Modified but NOT declared (scope
+  expansion)"* on every non-trivial charter (reported across four .NET charters by the Weft
+  adopter). The allowlist is replaced by a path-*shape* heuristic
+  (`straymark_core::charter_files::looks_like_path`): a backtick token is a declared path when it
+  references `.straymark/`, contains a `/`, carries a dotted alphabetic extension, or is a known
+  extension-less build file (`Makefile`/`Dockerfile`/`Gemfile`/…). Ecosystem-agnostic by
+  construction — no per-extension treadmill. Non-paths (shell commands, version numbers, prose
+  tokens) are still rejected. The same extractor feeds the AILOG `## Modified Files` parser and
+  the `CHARTER-FILES-EXIST` validate rule, so both gain the wider recognition. Requires
+  `straymark-core` 0.9.1.
+
 ## CLI 3.36.0 — 2026-07-13
 
 ### Added (CLI)

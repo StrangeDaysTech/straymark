@@ -238,8 +238,8 @@ mod tests {
     #[test]
     fn preserves_wildcards_raw() {
         // A wildcard token is kept verbatim as long as it still looks like a
-        // path (ends in a recognized extension). A bare `dir/*` with no
-        // extension is filtered out by `looks_like_path`.
+        // path — here it carries a directory separator (`/`), which since #354
+        // is on its own enough for `looks_like_path` to accept it.
         let body = "## Modified Files\n\n| File | Lines |\n|---|---|\n| `cli/src/commands/loom/*.rs` | +1 |\n";
         assert_eq!(parse_modified_files(body), vec!["cli/src/commands/loom/*.rs"]);
     }
@@ -248,6 +248,20 @@ mod tests {
     fn empty_when_section_absent() {
         let body = "## Summary\n\nNo modified-files section here.\n";
         assert!(parse_modified_files(body).is_empty());
+    }
+
+    #[test]
+    fn recognizes_build_and_manifest_files() {
+        // #354: build/manifest files must be extracted here too, so the
+        // architecture `implemented`/`has-debt` projection sees an AILOG's full
+        // footprint — not just its recognized-extension source files.
+        let body = "## Modified Files\n\n| File | Lines |\n|---|---|\n\
+            | `Weft.sln` | +3 |\n| `src/A/A.csproj` | +10 |\n| `Dockerfile` | +5 |\n\
+            | `go.mod` | +1 |\n";
+        assert_eq!(
+            parse_modified_files(body),
+            vec!["Weft.sln", "src/A/A.csproj", "Dockerfile", "go.mod"]
+        );
     }
 
     #[test]
