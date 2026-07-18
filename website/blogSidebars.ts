@@ -13,6 +13,7 @@ const sidebars: SidebarsConfig = {
           collapsible: false,
           collapsed: false,
           items: [
+            '2026-07-18-what-the-follow-up-took-for-granted',
             '2026-07-10-what-a-million-assertions-cant-settle',
             '2026-07-08-who-the-audit-thought-it-was',
             '2026-06-28-what-the-author-already-knew',
