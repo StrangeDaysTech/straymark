@@ -39,6 +39,27 @@ StrayMark 的 per-AILOG `§Follow-ups` 约定在写入时有效 —— 创建 AI
 
 来自参考 adopter 的经验教训（issue #214,N=91 个条目）:backlog 不仅仅是一份延期杂务清单。Follow-ups 不仅源自规划（ex-ante,事前）,也源自**执行现实** —— 测试运行、遥测读数、staging 事故、在真实（非模拟）环境中观察到的 bug —— 并且它们反过来反哺规划:它们变成杂务（chore）、迷你 Charter,甚至重塑已经规划好的 Charter。该注册表是 **SpecKit 的 ex-post（事后）对应物**:SpecKit 从意图反哺规划;backlog 从执行反哺规划。v1 维度（`Origin-class`、`Severity`、`Labels`、`Destination` 词汇表）的存在正是为了让这个规划闭环可被查询。
 
+它*反哺*规划 —— 但不要把它*当作*一份计划来读。每个条目都是取用时需要重新核查的一个赌注,而不是一项已承诺的任务(见下文"认识论地位")。
+
+---
+
+## 认识论地位 —— 条目是有日期的假设
+
+*(AIDEC-2026-07-18-001,来自 Weft 现场报告 #365。)*
+
+follow-ups backlog 是一个**推测性缓冲区(speculative buffer)**。它的价值在于*廉价捕获*,以便在你完成其他工作时不丢失某个信号。这种廉价正是要点所在 —— 它决定了一个条目应当如何被阅读,以及何时应当核查它的前提。
+
+**一个条目是一个有日期、会衰减的假设,而非一条指令。** 它记录的是在捕获时看起来为真且值得做的事 —— 一条在注意力集中于其他工作时随手记下的笔记。这条笔记在写下的那一刻就可能是错的:一个被轻信的注释、一个被过度信任的类比、一个已经开始过时的心智模型。(在奠基性的现场报告中,三个真实的 follow-up 各自都建立在一个*在写下时就为假*的前提上,而几个月后只需 ~30 秒的核查便可将其证伪。)因此:
+
+- **一个未经核查的条目不是撰写缺陷** —— 它是推测性缓冲区中任何事物*预期的*认识论地位。要求在捕获时就核查会破坏缓冲区的目的;理性的反应将是停止撰写 follow-up,从而丢失信号。
+- **唯一真正的 bug 是在不重新验证前提的情况下执行一个条目。** 当作指令来读,虚假的前提会变成被浪费的 Charter;当作有日期、需在执行时重新核查的假设来读,它们就成了廉价的赌注。
+
+**纪律 —— 在捕获时廉价地写;在提升/执行时重新验证前提:**
+
+- 捕获时,自由地记下 follow-up。可选地声明它的 **`Premise`(前提)** —— 支撑它的核心假设 —— 使后续的重新核查有一个具体的靶子。
+- 执行时(你正要在其之上构建),**先针对代码重新验证前提** —— 一次 `grep`、读一个文件、追踪一条调用链。你已经身处那个子系统,所以核查只需数秒。用 `straymark followups verify FU-NNN --verified`(或 `followups promote FU-NNN --premise-verified`)记录它,这会盖上 **`Verified-at`** 印记。
+- `Verified-at` 缺失 = 自捕获以来从未重新核查(诚实的默认状态)。它的存在是一种溯源证据,表明在投入精力之前,该假设已针对现实被检验过。
+
 ---
 
 ## 形式
@@ -113,6 +134,8 @@ bucket 内的每个条目遵循以下形式（标注了 v1 字段;所有这些�
 - **Destination**: chore | mini-charter | charter-replanning | operations | <charter-id> | <TDE id>
 - **Cost**: <工作量估计>
 - **Labels**: <自由标签,逗号分隔>                                                     (v1, 可选)
+- **Premise**: <支撑此条目的核心假设>                                                 (v1, 可选)
+- **Verified-at**: <YYYY-MM-DD,前提上次针对代码重新核查的日期>                        (v1, 可选)
 - **Notes**: <自由格式上下文>
 - **Promoted to**: <TDE id,当 Status: promoted 时 — 见下方"提升为 TDE">
 ```
@@ -125,6 +148,7 @@ bucket 内的每个条目遵循以下形式（标注了 v1 字段;所有这些�
 - **`Severity`** —— `blocking` 标记必须在生产切换之前落地的可靠性类问题。将参考 adopter 在 `Notes` 字段中浮现的 `PROD-BLOCKER` 散文约定规范化（信号 3）。与 bucket 正交:一个 `charter-triggered` 条目也可以是 `blocking`。
 - **`Labels`** —— 用于在 triage 期间将条目分组到已规划的 Charter / 迷你 Charter / 杂务中的自由标签。可通过 `straymark followups list --label <tag>` 查询。
 - **`Destination` 词汇表** —— 形式化触发后工作落地的去向:`chore`、`mini-charter`、`charter-replanning`（该条目重塑一个已规划的 Charter,而不是向其添加一个任务）、`operations`、某个具体的 Charter id,或某个 TDE id。仍接受自由格式的值（宽松解析）。
+- **`Premise` / `Verified-at`** *(AIDEC-2026-07-18-001)* —— 一个条目所依赖的核心假设,以及它上次针对代码重新核查的日期。一个条目是一个*有日期的假设*(见"认识论地位");这两个字段为"在执行时重新验证"的纪律提供了具体的靶子和审计印记。二者皆可选;`Verified-at` 缺失 = 自捕获以来从未重新核查。
 
 ### Status 词汇表
 
@@ -241,8 +265,11 @@ straymark followups status                # 注册表脉搏:计数器(即时重�
 straymark followups status FU-NNN         # 单个条目的详情视图
 straymark followups drift [--apply|--scan-all]   # 漂移检测(见上文)
 straymark followups recount               # 手动分诊会话后重新计算 CLI 拥有的计数器(cli-3.20.0+)
-straymark followups promote FU-NNN        # 自动化 FU → TDE 提升(见上文)
+straymark followups promote FU-NNN [--premise-verified]   # 自动化 FU → TDE 提升;浮现前提重新核查,带该 flag 时盖上 Verified-at(cli-3.37.0+)
+straymark followups verify FU-NNN [--premise "..."] [--verified] [--at 日期]   # 在执行时重新验证一个有日期的假设:浮现/记录前提,盖上 Verified-at(cli-3.37.0+)
 ```
+
+`verify` 与 `promote --premise-verified` 是"认识论地位"纪律的执行时可供性(affordance):它们在投入的那一刻把前提摆在操作员面前,并记录重新核查已经发生。人的判断留在 CLI 之外 —— 它浮现并盖印,从不裁定真伪。
 
 注册表也在 `straymark explore` TUI 中作为一个合成的 **Follow-ups** 分组出现(每个 bucket 一个子节点),并在 `straymark status` 中作为一个计数块出现。
 
@@ -316,4 +343,4 @@ straymark followups promote FU-NNN        # 自动化 FU → TDE 提升(见上�
 
 ---
 
-*StrayMark fw-4.34.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.36.0 | [Strange Days Tech](https://strangedays.tech)*

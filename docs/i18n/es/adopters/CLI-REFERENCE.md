@@ -45,8 +45,8 @@ StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.35.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.36.2` | El binario `straymark` |
+| Framework | `fw-` | `fw-4.36.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| CLI | `cli-` | `cli-3.37.0` | El binario `straymark` |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | El servidor de visualización `straymark-loom`, descargado bajo demanda por `straymark loom serve` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
@@ -744,6 +744,7 @@ El parsing es **tolerante**: los registros v0 (pre-fw-4.21.0) se leen sin errore
 - `straymark followups drift` — sincroniza el registro con los AILOGs (reemplazo nativo del `check-followups-drift.sh` adopter-side, ya deprecado) *(cli-3.19.0+)*
 - `straymark followups recount` — recalcula los contadores propiedad del CLI tras una sesión de triage manual *(cli-3.20.0+)*
 - `straymark followups promote` — eleva una entrada a un documento TDE *(cli-3.19.0+)*
+- `straymark followups verify` — re-verifica la premisa de una hipótesis fechada en tiempo de ejecución *(cli-3.37.0+)*
 
 #### `straymark followups list [--bucket <name>] [--status <s>] [--severity <s>] [--label <tag>] [path]`
 
@@ -795,14 +796,35 @@ $ straymark followups recount
 ✓ Counters recomputed: 0 open / 0 suspected-closed / 2 promoted (total 2).
 ```
 
-#### `straymark followups promote <FU-NNN> [--title <title>] [--path <dir>]`
+#### `straymark followups promote <FU-NNN> [--title <title>] [--premise-verified] [--path <dir>]`
 
 Automatiza la elevación FU → TDE (`FOLLOW-UPS-BACKLOG-PATTERN.md` §Promotion to TDE): crea el documento TDE desde el template del framework con trazabilidad `promoted_from_followup: FU-NNN`, cambia la entrada a `Status: promoted` con `Destination`/`Promoted to` apuntando al id del TDE, y recalcula los contadores. No interactivo (agent-friendly); la descripción del FU se vuelve el título del TDE salvo que `--title` lo sobreescriba. La priorización y la asignación siguen siendo humanas (`AGENT-RULES.md §3`).
 
+Desde **cli-3.37.0** el comando superficie el `Premise` de la entrada (o los `Notes` si falta) con un recordatorio de re-verificación — un follow-up es una *hipótesis fechada* (§Estatus epistémico), así que re-chequea su premisa contra el código antes de construir sobre ella. `--premise-verified` registra que lo hiciste, sellando `Verified-at: <hoy>`. El recordatorio es informativo — la promoción procede de cualquier forma.
+
 ```bash
-$ straymark followups promote FU-010
+$ straymark followups promote FU-010 --premise-verified
 ✓ FU-010 promoted → TDE-2026-06-04-001
   TDE created: .straymark/06-evolution/technical-debt/TDE-2026-06-04-001-harden-staging-probe.md
+  Premise re-verification recorded: Verified-at → 2026-06-04.
+```
+
+#### `straymark followups verify <FU-NNN> [--premise "..."] [--verified] [--at <YYYY-MM-DD>] [--path <dir>]` *(cli-3.37.0+)*
+
+Re-verifica la premisa de un follow-up **en tiempo de ejecución** y la registra. Una entrada del registry es una **hipótesis fechada y decadente** (`AIDEC-2026-07-18-001`, de #365): su premisa pudo ser falsa en la captura o haberse vuelto obsoleta, y el único bug real es actuar sobre una sin re-testear su premisa. El registry es un buffer especulativo — la captura barata es su valor — así que la verificación pertenece al momento barato (actuar sobre la entrada), no a la captura. Este verbo cubre el caso común de una entrada actuada como chore que nunca promueve.
+
+| Flag | Default | Descripción |
+|------|---------|-------------|
+| `--premise <texto>` | — | Registra o actualiza el `Premise` de la entrada (la suposición a re-chequear). Omitido → se superficie la premisa existente. |
+| `--verified` | off | Sella `Verified-at`, confirmando que la premisa se re-chequeó contra el código. |
+| `--at <YYYY-MM-DD>` | hoy | Fecha de verificación. |
+
+Sin `--premise`/`--verified` es **read-only** — superficie la premisa y hace un nudge. El juicio humano queda fuera del CLI: superficie y sella, nunca decide la verdad.
+
+```bash
+$ straymark followups verify FU-016 --premise "yrs tiene una referencia independiente (Yjs)" --verified
+✓ FU-016 premise recorded.
+✓ FU-016 verified — Verified-at → 2026-06-04.
 ```
 
 ---

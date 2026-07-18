@@ -213,6 +213,8 @@ fn print_entry_detail(registry: &Registry, id: &str) -> Result<()> {
         "Severity",
         entry.severity.map(|s| s.as_str()),
     );
+    print_field("Premise", entry.premise.as_deref());
+    print_field("Verified-at", entry.verified_at.as_deref());
     print_field("Origin", entry.origin.as_deref());
     print_field("Origin-class", entry.origin_class.as_deref());
     print_field("Trigger", entry.trigger.as_deref());
@@ -234,8 +236,41 @@ fn print_entry_detail(registry: &Registry, id: &str) -> Result<()> {
         );
         println!();
     }
+    print_premise_nudge(entry);
     let _ = print_promote_hint(entry);
     Ok(())
+}
+
+/// Follow-up entries are *dated hypotheses* (AIDEC-2026-07-18-001): the premise
+/// they rest on may have been false at capture, or gone stale since. Nudge the
+/// operator to re-verify at execution — the cheap moment — before acting. Fires
+/// for actionable entries whose premise has not been re-verified.
+fn print_premise_nudge(entry: &Entry) {
+    if !matches!(entry.status, FuStatus::Open | FuStatus::InProgress) {
+        return;
+    }
+    if entry.verified_at.is_some() {
+        return;
+    }
+    let what = if entry.premise.is_some() {
+        "Its premise hasn't been re-verified since capture."
+    } else {
+        "It carries no explicit premise — state and re-check the assumption it rests on."
+    };
+    println!(
+        "  {} This is a dated hypothesis. {}",
+        "?".yellow().bold(),
+        what.dimmed()
+    );
+    println!(
+        "  {}",
+        format!(
+            "Re-verify against the code before you build on it: `straymark followups verify {}`.",
+            entry.fu_id
+        )
+        .dimmed()
+    );
+    println!();
 }
 
 fn print_field(label: &str, value: Option<&str>) {

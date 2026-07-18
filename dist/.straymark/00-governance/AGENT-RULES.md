@@ -385,7 +385,7 @@ These are heuristics, not rigid rules — you are close to the context, refine t
 
 ## 13. Follow-ups Backlog (registry maintenance)
 
-When the project maintains the central follow-ups registry (`.straymark/follow-ups-backlog.md` — see [`FOLLOW-UPS-BACKLOG-PATTERN.md`](FOLLOW-UPS-BACKLOG-PATTERN.md) and `STRAYMARK.md §16`), the agent is its **primary maintainer**. Three directives:
+When the project maintains the central follow-ups registry (`.straymark/follow-ups-backlog.md` — see [`FOLLOW-UPS-BACKLOG-PATTERN.md`](FOLLOW-UPS-BACKLOG-PATTERN.md) and `STRAYMARK.md §16`), the agent is its **primary maintainer**. Four directives:
 
 ### Session start
 
@@ -394,6 +394,10 @@ Glance at `.straymark/follow-ups-backlog.md` (or run `straymark followups status
 ### Pre-commit
 
 Created or modified any AILOG with `## Follow-ups` or `R<N> (new, not in Charter)` entries? → run `straymark followups drift --apply` so the registry extension rides **the same commit** as the AILOG. Entries the AILOG text already marks as resolved in-Charter are extracted as `suspected-closed` automatically — do not delete them; the operator confirms at the next triage.
+
+### Before acting on an entry (execution)
+
+A registry entry is a **dated, decaying hypothesis, not an instruction** (AIDEC-2026-07-18-001, from #365): its premise may have been false at capture or gone stale since. **Re-verify the premise at execution, not at capture** — the moment you promote or act on an entry you are already in that code, so the check (a `grep`, a file read, a traced call chain) is seconds. Do it *before* you build on the entry: a plausible-but-false premise implemented is a wasted Charter. Record the re-check with `straymark followups verify FU-NNN --verified` (or `followups promote FU-NNN --premise-verified`), which stamps `Verified-at`. Do **not** verify at capture time — the backlog is a speculative buffer whose value is cheap capture; front-loading verification would make the rational move "stop writing follow-ups."
 
 ### Post-Charter close
 
@@ -414,4 +418,4 @@ When a project accumulates a high volume of AILOGs across multiple Charters and 
 
 ---
 
-*StrayMark fw-4.35.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.36.0 | [Strange Days Tech](https://strangedays.tech)*

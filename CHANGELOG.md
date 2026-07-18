@@ -7,6 +7,21 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.36.0 / CLI 3.37.0 — 2026-07-18
+
+Follow-ups are dated hypotheses — verify the premise at execution, not at capture (#365 Part 1, [`AIDEC-2026-07-18-001`](.straymark/07-ai-audit/decisions/AIDEC-2026-07-18-001-followups-as-hypotheses.md)). From the Weft field report: three genuine follow-ups each rested on a premise that was false *at write time* and cheap to falsify at read time.
+
+### Added (Framework)
+
+- **Follow-ups pattern — "Epistemic status" reframe.** [`FOLLOW-UPS-BACKLOG-PATTERN.md`](dist/.straymark/00-governance/FOLLOW-UPS-BACKLOG-PATTERN.md) (EN + es + zh-CN) gains a first-class section framing a registry entry as a **dated, decaying hypothesis, not an instruction**: the backlog is a speculative buffer whose value is cheap capture, an under-verified entry is the *expected* status of a buffer item, and the only real bug is executing one without re-testing its premise. Discipline: **write cheaply at capture; re-verify the premise when you promote/act.** `AGENT-RULES.md §13` gains the matching "before acting on an entry (execution)" directive.
+- **Two optional entry fields** in the registry schema (`$defs.entry`) and pattern doc: **`Premise`** (the load-bearing assumption an entry rests on) and **`Verified-at`** (the date it was last re-checked against the code). Backward-compatible; `schema_version` stays `v1` (experimental). Template documents both.
+
+### Added (CLI)
+
+- **`straymark followups verify FU-NNN`** *(new)* — re-verify a dated hypothesis's premise at execution: surface the `Premise` (or `Notes`), optionally record/update it (`--premise "..."`), and stamp `Verified-at` (`--verified [--at DATE]`). Read-only surfacing with no flags.
+- **`straymark followups promote --premise-verified`** — promotion now surfaces the entry's premise with a re-verify reminder and, with the flag, stamps `Verified-at`. Advisory: promotion proceeds either way.
+- `followups status FU-NNN` shows `Premise`/`Verified-at` and nudges to re-verify when an actionable entry's premise is unverified. The entry parser reads both fields leniently (`Verified-at` / `Verified at` / `verified_at`).
+
 ## CLI 3.36.2 — 2026-07-18
 
 ### Fixed (CLI)

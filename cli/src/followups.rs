@@ -141,6 +141,15 @@ pub struct Entry {
     pub labels: Vec<String>,
     pub notes: Option<String>,
     pub promoted_to: Option<String>,
+    /// The load-bearing assumption the entry rests on, stated so it can be
+    /// re-checked in seconds at execution (AIDEC-2026-07-18-001). Optional; an
+    /// entry is a *dated hypothesis*, and this is the hypothesis to re-test
+    /// before acting. Absent on entries authored before the field existed.
+    pub premise: Option<String>,
+    /// Date the `premise` was last re-verified against reality, stamped by
+    /// `followups verify`/`promote --premise-verified`. Absent = never
+    /// re-checked since capture (the default, honest state).
+    pub verified_at: Option<String>,
     /// Byte offset of the `### ` heading line start, into `Registry::body`.
     pub span_start: usize,
     /// Byte offset one past the entry's last byte (start of the next heading
@@ -397,6 +406,8 @@ fn parse_entries(
             labels: Vec::new(),
             notes: None,
             promoted_to: None,
+            premise: None,
+            verified_at: None,
             span_start: abs_start,
             span_end: abs_end,
         };
@@ -432,6 +443,10 @@ fn parse_entries(
                 "notes" => entry.notes = some_nonempty(value),
                 "promoted to" | "promoted-to" | "promoted_to" => {
                     entry.promoted_to = some_nonempty(value)
+                }
+                "premise" => entry.premise = some_nonempty(value),
+                "verified-at" | "verified at" | "verified_at" => {
+                    entry.verified_at = some_nonempty(value)
                 }
                 _ => {} // unknown field — lenient, preserved in the raw body
             }
@@ -1377,6 +1392,28 @@ fully_extracted_ailogs: []
         assert_eq!(e.origin_class.as_deref(), Some("staging"));
         assert_eq!(e.labels, vec!["staging-hardening", "reliability"]);
         assert_eq!(e.destination.as_deref(), Some("mini-charter"));
+    }
+
+    #[test]
+    fn parses_and_sets_premise_and_verified_at() {
+        // Parse the optional #365-Part-1 fields (lenient aliases too).
+        let content = "---\nschema_version: v1\nfully_extracted_ailogs: []\n---\n\n\
+            ## Bucket: ready\n\n### FU-020 — Loro parity gate\n\
+            - **Status**: open\n\
+            - **Premise**: yrs has an independent reference (Yjs)\n\
+            - **Verified at**: 2026-07-18\n";
+        let reg = parse(content);
+        let e = find_entry(&reg, "20").unwrap();
+        assert_eq!(e.premise.as_deref(), Some("yrs has an independent reference (Yjs)"));
+        assert_eq!(e.verified_at.as_deref(), Some("2026-07-18"));
+
+        // set_entry_field round-trips both (insert-if-absent + replace).
+        let e = e.clone();
+        let body2 = set_entry_field(&reg.body, &e, "Premise", "the reference cannot exist (WASM of same core)");
+        let reg2 = parse(&assemble(&reg.frontmatter_raw, &body2));
+        let e2 = find_entry(&reg2, "20").unwrap();
+        assert_eq!(e2.premise.as_deref(), Some("the reference cannot exist (WASM of same core)"));
+        assert_eq!(e2.verified_at.as_deref(), Some("2026-07-18")); // untouched
     }
 
     #[test]

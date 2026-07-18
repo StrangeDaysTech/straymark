@@ -578,6 +578,127 @@ fn promote_unknown_entry_fails_with_hint() {
         .stderr(predicate::str::contains("not found"));
 }
 
+#[test]
+fn promote_surfaces_premise_reminder_and_does_not_stamp_without_flag() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+    std::fs::write(straymark.join("templates/TEMPLATE-TDE.md"), TDE_TEMPLATE).unwrap();
+
+    cmd()
+        .args(["followups", "promote", "FU-010", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Premise re-check"))
+        .stdout(predicate::str::contains("Is this still true?"));
+
+    // No --premise-verified → no Verified-at stamp.
+    let updated = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    assert!(!updated.contains("- **Verified-at**"));
+}
+
+#[test]
+fn promote_with_premise_verified_stamps_verified_at() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+    std::fs::write(straymark.join("templates/TEMPLATE-TDE.md"), TDE_TEMPLATE).unwrap();
+
+    cmd()
+        .args([
+            "followups", "promote", "FU-010", "--premise-verified",
+            "--path", tmp.path().to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("re-verification recorded"));
+
+    let updated = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    let entry_block = &updated[updated.find("### FU-010").unwrap()..updated.find("### FU-011").unwrap()];
+    assert!(entry_block.contains("- **Status**: promoted"));
+    assert!(entry_block.contains("- **Verified-at**:"));
+}
+
+// ───────────────────────────── verify ─────────────────────────────
+
+#[test]
+fn verify_records_premise_and_stamps_verified_at() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+
+    cmd()
+        .args([
+            "followups", "verify", "FU-011",
+            "--premise", "the rollout runbook template already exists",
+            "--verified", "--at", "2026-07-18",
+            "--path", tmp.path().to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("premise recorded"))
+        .stdout(predicate::str::contains("Verified-at → 2026-07-18"));
+
+    let updated = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    let entry_block = &updated[updated.find("### FU-011").unwrap()..];
+    assert!(entry_block.contains("- **Premise**: the rollout runbook template already exists"));
+    assert!(entry_block.contains("- **Verified-at**: 2026-07-18"));
+    // Verify does not change status.
+    assert!(entry_block.contains("- **Status**: open"));
+}
+
+#[test]
+fn verify_read_only_surfacing_without_flags_does_not_write() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+    let before = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+
+    cmd()
+        .args(["followups", "verify", "FU-010", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Premise"))
+        .stdout(predicate::str::contains("re-checked"));
+
+    // Read-only: registry untouched.
+    let after = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    assert_eq!(before, after);
+}
+
+#[test]
+fn verify_unknown_entry_fails_with_hint() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+
+    cmd()
+        .args(["followups", "verify", "FU-404", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("not found"));
+}
+
+#[test]
+fn status_detail_shows_premise_and_nudges_when_unverified() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    // Add a premise to FU-011 and re-check the nudge fires (no Verified-at).
+    let reg = V1_REGISTRY.replace(
+        "### FU-011 — Document the rollout runbook\n- **Origin**: AILOG-2026-06-01-002 §Follow-ups",
+        "### FU-011 — Document the rollout runbook\n- **Origin**: AILOG-2026-06-01-002 §Follow-ups\n- **Premise**: the runbook does not exist yet",
+    );
+    write_registry(&straymark, &reg);
+
+    cmd()
+        .args(["followups", "status", "FU-011", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("the runbook does not exist yet"))
+        .stdout(predicate::str::contains("dated hypothesis"))
+        .stdout(predicate::str::contains("Re-verify against the code"));
+}
+
 // ───────────────────────────── status command block ─────────────────────────────
 
 #[test]

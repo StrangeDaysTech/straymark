@@ -380,7 +380,7 @@ confidence: high | medium | low
 
 ## 13. Follow-ups Backlog（注册表维护）
 
-当项目维护中央 follow-ups 注册表（`.straymark/follow-ups-backlog.md` —— 见 [`FOLLOW-UPS-BACKLOG-PATTERN.md`](FOLLOW-UPS-BACKLOG-PATTERN.md) 和 `STRAYMARK.md §16`）时,代理是它的**主要维护者**。三条指令:
+当项目维护中央 follow-ups 注册表（`.straymark/follow-ups-backlog.md` —— 见 [`FOLLOW-UPS-BACKLOG-PATTERN.md`](FOLLOW-UPS-BACKLOG-PATTERN.md) 和 `STRAYMARK.md §16`）时,代理是它的**主要维护者**。四条指令:
 
 ### 会话开始
 
@@ -389,6 +389,10 @@ confidence: high | medium | low
 ### Pre-commit
 
 创建或修改了任何带有 `## Follow-ups` 或 `R<N> (new, not in Charter)` 条目的 AILOG 吗? → 运行 `straymark followups drift --apply`,使注册表扩展与 AILOG 搭乘**同一个 commit**。AILOG 文本已标记为在 Charter 内解决的条目会被自动提取为 `suspected-closed` —— 不要删除它们;操作员在下一次 triage 时确认。
+
+### 在对一个条目采取行动之前(执行时)
+
+一个注册表条目是一个**有日期、会衰减的假设,而非一条指令**(AIDEC-2026-07-18-001,来自 #365):它的前提在捕获时可能就为假,或自那以后已经过时。**在执行时重新验证前提,而不是在捕获时** —— 在你提升或对一个条目采取行动的那一刻,你已经身处那段代码之中,所以核查(一次 `grep`、读一个文件、追踪一条调用链)只需数秒。在你于其之上构建*之前*就去做:一个貌似合理却为假的前提一旦被实现,就是一个被浪费的 Charter。用 `straymark followups verify FU-NNN --verified`(或 `followups promote FU-NNN --premise-verified`)记录该次重新核查,它会盖上 `Verified-at` 印记。**不要**在捕获时验证 —— backlog 是一个推测性缓冲区,其价值在于廉价捕获;把验证前置会让理性的做法变成"停止撰写 follow-up"。
 
 ### Charter 关闭后
 
@@ -409,4 +413,4 @@ confidence: high | medium | low
 
 ---
 
-*StrayMark fw-4.35.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.36.0 | [Strange Days Tech](https://strangedays.tech)*

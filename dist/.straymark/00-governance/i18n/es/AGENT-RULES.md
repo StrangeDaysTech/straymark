@@ -385,7 +385,7 @@ Son heurísticas, no reglas rígidas — estás cerca del contexto, afínalas co
 
 ## 13. Follow-ups Backlog (mantenimiento del registry)
 
-Cuando el proyecto mantiene el registry central de follow-ups (`.straymark/follow-ups-backlog.md` — ver [`FOLLOW-UPS-BACKLOG-PATTERN.md`](FOLLOW-UPS-BACKLOG-PATTERN.md) y `STRAYMARK.md §16`), el agente es su **mantenedor primario**. Tres directivas:
+Cuando el proyecto mantiene el registry central de follow-ups (`.straymark/follow-ups-backlog.md` — ver [`FOLLOW-UPS-BACKLOG-PATTERN.md`](FOLLOW-UPS-BACKLOG-PATTERN.md) y `STRAYMARK.md §16`), el agente es su **mantenedor primario**. Cuatro directivas:
 
 ### Session start
 
@@ -394,6 +394,10 @@ Echa un vistazo a `.straymark/follow-ups-backlog.md` (o ejecuta `straymark follo
 ### Pre-commit
 
 ¿Creaste o modificaste algún AILOG con entradas `## Follow-ups` o `R<N> (new, not in Charter)`? → ejecuta `straymark followups drift --apply` para que la extensión del registry viaje en **el mismo commit** que el AILOG. Las entradas que el texto del AILOG ya marca como resueltas in-Charter se extraen como `suspected-closed` automáticamente — no las elimines; el operador las confirma en el siguiente triage.
+
+### Antes de actuar sobre una entrada (ejecución)
+
+Una entrada del registry es una **hipótesis fechada y decadente, no una instrucción** (AIDEC-2026-07-18-001, de #365): su premisa pudo ser falsa en la captura o haberse vuelto obsoleta desde entonces. **Re-verifica la premisa en la ejecución, no en la captura** — en el momento en que promueves o actúas sobre una entrada ya estás dentro de ese código, así que el chequeo (un `grep`, la lectura de un archivo, una cadena de llamadas trazada) son segundos. Hazlo *antes* de construir sobre la entrada: una premisa plausible-pero-falsa implementada es un Charter desperdiciado. Registra el re-chequeo con `straymark followups verify FU-NNN --verified` (o `followups promote FU-NNN --premise-verified`), que sella `Verified-at`. **No** verifiques en la captura — el backlog es un buffer especulativo cuyo valor es la captura barata; adelantar la verificación haría que la jugada racional fuera "dejar de escribir follow-ups".
 
 ### Post-Charter close
 
@@ -414,4 +418,4 @@ Cuando un proyecto acumula un volumen alto de AILOGs a lo largo de múltiples Ch
 
 ---
 
-*StrayMark fw-4.35.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.36.0 | [Strange Days Tech](https://strangedays.tech)*

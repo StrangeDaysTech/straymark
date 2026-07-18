@@ -39,6 +39,27 @@ Below that volume, the per-AILOG convention alone is sufficient — adopting thi
 
 Empirical lesson from the reference adopter (issue #214, N=91 entries): the backlog is more than a list of deferred chores. Follow-ups originate not only from planning (ex-ante) but from **execution reality** — test runs, telemetry readings, staging incidents, bugs observed in real (non-simulated) environments — and they feed planning back: they become chores, mini-charters, or even reshape Charters that were already planned. The registry is the **ex-post counterpart of SpecKit**: SpecKit feeds planning from intent; the backlog feeds it from execution. The v1 dimensions (`Origin-class`, `Severity`, `Labels`, the `Destination` vocabulary) exist to make that planning loop queryable.
 
+It *feeds* planning — but do not read it *as* a plan. Each entry is a bet to re-check when drawn, not a committed task (see "Epistemic status" next).
+
+---
+
+## Epistemic status — entries are dated hypotheses
+
+*(AIDEC-2026-07-18-001, from Weft field report #365.)*
+
+A follow-up backlog is a **speculative buffer**. Its value is *cheap capture* so a signal is not lost while you finish something else. That cheapness is the whole point — and it dictates how an entry should be read and when its premise should be checked.
+
+**An entry is a dated, decaying hypothesis, not an instruction.** It records what looked true and worth doing at capture time — a note jotted with attention on other work. That note can be wrong the moment it is written: a comment believed, an analogy over-trusted, a mental model already going stale. (In the founding field report, three genuine follow-ups each rested on a premise that was false *at write time* and cost a ~30-second check to falsify months later.) So:
+
+- **An under-verified entry is not an authoring defect** — it is the *expected* epistemic status of anything in a speculative buffer. Demanding verification at capture would defeat the buffer's purpose; the rational response would be to stop writing follow-ups and lose the signal.
+- **The only real bug is executing an entry without re-testing its premise.** Read as instructions, false premises become wasted Charters. Read as dated hypotheses to re-check at execution, they become cheap bets.
+
+**Discipline — write cheaply at capture; re-verify the premise when you promote/act:**
+
+- At capture, jot the follow-up freely. Optionally state its **`Premise`** — the load-bearing assumption it rests on — so the later re-check has a concrete target.
+- At execution (you are about to build on it), **re-verify the premise against the code first** — a `grep`, a file read, a traced call chain. You are already inside that subsystem, so the check is seconds. Record it with `straymark followups verify FU-NNN --verified` (or `followups promote FU-NNN --premise-verified`), which stamps **`Verified-at`**.
+- `Verified-at` absent = never re-checked since capture (the honest default). Its presence is provenance that the hypothesis was tested against reality before you spent effort on it.
+
 ---
 
 ## Shape
@@ -113,6 +134,8 @@ Each entry inside a bucket follows this shape (v1 fields marked; all of them opt
 - **Destination**: chore | mini-charter | charter-replanning | operations | <charter-id> | <TDE id>
 - **Cost**: <effort estimate>
 - **Labels**: <free tags, comma-separated>                                            (v1, optional)
+- **Premise**: <the load-bearing assumption this entry rests on>                       (v1, optional)
+- **Verified-at**: <YYYY-MM-DD the premise was last re-checked against the code>       (v1, optional)
 - **Notes**: <free-form context>
 - **Promoted to**: <TDE id, when Status: promoted — see "Promotion to TDE" below>
 ```
@@ -125,6 +148,7 @@ Each entry inside a bucket follows this shape (v1 fields marked; all of them opt
 - **`Severity`** — `blocking` marks reliability-class issues that must land before a production cutover. Canonicalizes the `PROD-BLOCKER` prose convention that emerged in the reference adopter's `Notes` field (Signal 3). Orthogonal to the bucket: a `charter-triggered` entry can be `blocking`.
 - **`Labels`** — free tags for grouping entries into planned Charters / mini-charters / chores during triage. Queryable via `straymark followups list --label <tag>`.
 - **`Destination` vocabulary** — formalizes where the work lands when triggered: `chore`, `mini-charter`, `charter-replanning` (the entry reshapes an already-planned Charter rather than adding a task to it), `operations`, a specific Charter id, or a TDE id. Free-form values remain accepted (lenient parsing).
+- **`Premise` / `Verified-at`** *(AIDEC-2026-07-18-001)* — the load-bearing assumption an entry rests on, and the date it was last re-checked against the code. An entry is a *dated hypothesis* (see "Epistemic status"); these fields give the re-verify-at-execution discipline a concrete target and an audit stamp. Both optional; `Verified-at` absent = never re-checked since capture.
 
 ### Status vocabulary
 
@@ -241,8 +265,11 @@ straymark followups status                # registry pulse: counters (recomputed
 straymark followups status FU-NNN         # detail view of one entry
 straymark followups drift [--apply|--scan-all]   # drift detection (see above)
 straymark followups recount               # recompute the CLI-owned counters after a manual-triage session (cli-3.20.0+)
-straymark followups promote FU-NNN        # automate FU → TDE promotion (see above)
+straymark followups promote FU-NNN [--premise-verified]   # automate FU → TDE promotion; surfaces the premise re-check, stamps Verified-at with the flag (cli-3.37.0+)
+straymark followups verify FU-NNN [--premise "..."] [--verified] [--at DATE]   # re-verify a dated hypothesis at execution: surface/record the premise, stamp Verified-at (cli-3.37.0+)
 ```
+
+`verify` and `promote --premise-verified` are the execution-time affordances of the "Epistemic status" discipline: they put the premise in front of the operator at the moment of spending and record that the re-check happened. Human judgment stays out of the CLI — it surfaces and stamps, it never decides truth.
 
 The registry also appears as a synthetic **Follow-ups** group in the `straymark explore` TUI (sub-nodes per bucket) and as a counts block in `straymark status`.
 
@@ -316,4 +343,4 @@ Contributed via [issue #111](https://github.com/StrangeDaysTech/straymark/issues
 
 ---
 
-*StrayMark fw-4.34.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.36.0 | [Strange Days Tech](https://strangedays.tech)*

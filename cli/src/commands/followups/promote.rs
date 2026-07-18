@@ -23,7 +23,7 @@ use std::path::Path;
 use crate::followups::{self, FuStatus};
 use crate::utils;
 
-pub fn run(path: &str, fu_id: &str, title: Option<&str>) -> Result<()> {
+pub fn run(path: &str, fu_id: &str, title: Option<&str>, premise_verified: bool) -> Result<()> {
     let resolved = utils::resolve_project_root(path)
         .ok_or_else(|| anyhow!("StrayMark not installed. Run 'straymark init' first."))?;
     let project_root = &resolved.path;
@@ -61,6 +61,12 @@ pub fn run(path: &str, fu_id: &str, title: Option<&str>) -> Result<()> {
         );
     }
 
+    // ── 0. Surface the premise for a re-check at execution ──
+    // A follow-up is a dated, decaying hypothesis (AIDEC-2026-07-18-001). The
+    // cheap moment to re-test its premise is now — acting on it — not at
+    // capture. Advisory, never a gate: promotion proceeds either way.
+    print_premise_reminder(&entry, premise_verified);
+
     // ── 1. Create the TDE document ──
     let tde_title = title.unwrap_or(&entry.description).to_string();
     let (tde_id, tde_path) = create_tde(project_root, &straymark_dir, &tde_title, &entry)?;
@@ -81,6 +87,20 @@ pub fn run(path: &str, fu_id: &str, title: Option<&str>) -> Result<()> {
     let entry3 = followups::find_entry(&reparsed, &entry.fu_id).unwrap().clone();
     body = followups::set_entry_field(&body, &entry3, "Promoted to", &tde_id);
 
+    // Stamp Verified-at only when the operator confirmed the premise re-check.
+    let stamped_verified = if premise_verified {
+        let reparsed = followups::parse_registry_str(
+            &registry_path,
+            &followups::assemble(&registry.frontmatter_raw, &body),
+        )?;
+        let entry4 = followups::find_entry(&reparsed, &entry.fu_id).unwrap().clone();
+        let today = Local::now().format("%Y-%m-%d").to_string();
+        body = followups::set_entry_field(&body, &entry4, "Verified-at", &today);
+        Some(today)
+    } else {
+        None
+    };
+
     let final_registry = followups::parse_registry_str(
         &registry_path,
         &followups::assemble(&registry.frontmatter_raw, &body),
@@ -100,6 +120,9 @@ pub fn run(path: &str, fu_id: &str, title: Option<&str>) -> Result<()> {
         "  Registry updated: Status promoted, Destination/Promoted to → {} (counters recomputed).",
         tde_id
     );
+    if let Some(date) = &stamped_verified {
+        println!("  Premise re-verification recorded: Verified-at → {}.", date);
+    }
     println!();
     println!("  {}", "Next steps:".bold());
     println!("    1. Fill impact / effort / type and the body sections in the TDE.");
@@ -110,6 +133,50 @@ pub fn run(path: &str, fu_id: &str, title: Option<&str>) -> Result<()> {
     );
     println!();
     Ok(())
+}
+
+/// Surface the entry's premise before promotion so the operator re-checks it at
+/// the cheap moment — acting on the entry — rather than trusting a note that may
+/// have been false at capture or gone stale since (AIDEC-2026-07-18-001). Prints
+/// the `Premise` (falling back to `Notes`), then either confirms the recorded
+/// re-verification or reminds the operator to run one. Never blocks promotion.
+fn print_premise_reminder(entry: &followups::Entry, premise_verified: bool) {
+    let premise = entry
+        .premise
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .or(entry.notes.as_deref().filter(|s| !s.is_empty()));
+
+    println!();
+    println!("  {}", "Premise re-check (this entry is a dated hypothesis):".bold());
+    match premise {
+        Some(text) => println!("    {}", text),
+        None => println!(
+            "    {}",
+            "(no premise or notes recorded — state the assumption this entry rests on)".dimmed()
+        ),
+    }
+    if premise_verified {
+        println!(
+            "    {}",
+            "✓ You confirmed the premise still holds (--premise-verified).".green()
+        );
+    } else {
+        println!(
+            "    {}",
+            "Is this still true? Re-verify against the code before you build on it."
+                .yellow()
+        );
+        println!(
+            "    {}",
+            format!(
+                "If you have: `straymark followups promote {} --premise-verified` (or `followups verify {} --verified` first).",
+                entry.fu_id, entry.fu_id
+            )
+            .dimmed()
+        );
+    }
+    println!();
 }
 
 /// Create the TDE document from the (localized) framework template. Returns
