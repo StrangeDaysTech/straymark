@@ -121,22 +121,27 @@ experimental — no schema-breaking change, no bump of `schema_version`.
 
 ### 3. CLI affordance at execution time
 
-Surface the premise **when the operator acts**, so the re-check happens at the cheap moment. Two
-candidate shapes (final choice deferred to implementation, recommendation **A**):
+Surface the premise **when the operator acts**, so the re-check happens at the cheap moment.
+**Both shapes ship** (operator decision, 2026-07-18) — together they cover the two ways an entry is
+executed: promotion and direct chore work.
 
-- **(A, recommended) Extend `followups promote FU-NNN`.** Before promoting, print the entry's
-  `Premise` (falling back to `Notes` when absent) and emit an explicit **"Is this still true?
-  re-verify against the code before you build on it."** reminder. Keep human judgment out of the
-  CLI (as `promote` already does): the command _surfaces_ the premise and _stamps_ `verified-at`
-  when the operator passes a confirmation flag (e.g. `--premise-verified`); it never decides truth
-  itself.
-- **(B, alternative) New `followups verify FU-NNN` verb.** A dedicated read/act step that prints
-  the premise, optionally records/updates `premise` (`--premise "..."`), and stamps `verified-at`.
-  Heavier surface; keep in reserve if the promote-time reminder proves too narrow (many entries are
-  acted on as chores that never promote).
+- **(A) Extend `followups promote FU-NNN`.** Before promoting, print the entry's `Premise`
+  (falling back to `Notes` when absent) and emit an explicit **"Is this still true? re-verify
+  against the code before you build on it."** reminder. Keep human judgment out of the CLI (as
+  `promote` already does): the command _surfaces_ the premise and _stamps_ `verified-at` when the
+  operator passes a confirmation flag (`--premise-verified`); it never decides truth itself. Without
+  the flag, promotion still proceeds — the reminder is advisory, not a gate.
+- **(B) New `followups verify FU-NNN` verb.** A dedicated read/act step for entries acted on as
+  chores that never promote (the common case). Prints the premise, optionally records/updates it
+  (`--premise "..."`), and stamps `verified-at` (`--verified`). This is the primary place a chore's
+  premise gets re-checked and recorded.
 
-Human prioritization stays out of the CLI, consistent with `promote`. The CLI's job is to put the
-premise in front of the operator at the moment of spending, and to record that the check happened.
+Rationale for both: many entries are acted on as chores and never promote, so a promote-only
+reminder would miss them — `verify` covers that path; while `promote`'s inline reminder keeps the
+re-check in view at the one moment a follow-up graduates into committed TDE work. Human
+prioritization stays out of the CLI, consistent with `promote`: the CLI puts the premise in front
+of the operator at the moment of spending and records that the check happened — it never verifies
+for them.
 
 ## Alternatives Considered
 
@@ -207,7 +212,8 @@ reminder — no data migration, no breaking change.
 | `dist/.straymark/00-governance/AGENT-RULES.md §13` (+ i18n) | Add the "re-verify the premise at promote/act, not capture" directive |
 | `dist/.straymark/schemas/follow-ups-backlog.schema.v1.json` | Add optional `premise`, `verified-at` to `$defs.entry` |
 | `dist/.straymark/templates/follow-ups-backlog.md` | Optional example entry showing `Premise` / `Verified-at` |
-| `cli/src/commands/followups/promote.rs` (or a new `verify.rs`) | Surface premise + stamp `verified-at`; `--premise-verified` flag |
+| `cli/src/commands/followups/promote.rs` | Surface premise + `--premise-verified` reminder/stamp (shape A) |
+| `cli/src/commands/followups/verify.rs` (new) + `mod.rs` wiring | `followups verify FU-NNN`: print premise, `--premise "..."`, `--verified` stamp (shape B) |
 | `cli/src/followups.rs` | Parse/`set` `Premise` / `Verified-at` fields (lenient) |
 | `docs/adopters/CLI-REFERENCE.md` (+ i18n) | Document the new affordance |
 | `CHANGELOG.md` | Framework + CLI entries |
@@ -220,14 +226,16 @@ Ships as one framework + CLI pair once this ADR is signed:
    all three locales. Reviewable on its own.
 2. **Schema fields** (framework): optional `premise` / `verified-at` in `$defs.entry` + template
    example.
-3. **CLI affordance** (CLI): shape A (promote-time surfacing + `verified-at` stamp) with unit +
-   integration tests; lenient parse/set for the two fields.
+3. **CLI affordance** (CLI): **both shapes** — (A) promote-time surfacing + `--premise-verified`
+   stamp, and (B) a new `followups verify FU-NNN` verb — with unit + integration tests; lenient
+   parse/`set` for the two fields.
 4. **Version bumps**: framework minor (`fw-4.36.0`) for the pattern-doc + schema change; CLI minor
    (`cli-3.37.0`) for the new affordance. Update the six version tables + `CHANGELOG.md`.
 5. **AILOG** for the change set, per governance.
 
-Sub-decision left open for the operator at sign-off: **CLI shape A vs B** (extend `promote` vs a
-dedicated `followups verify`).
+CLI shape resolved (2026-07-18): **both A and B** ship — `promote` gains the inline reminder for
+entries that graduate to TDE work, and `verify` covers the common case of chores acted on without
+promotion.
 
 ## Success Metrics
 
