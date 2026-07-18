@@ -144,6 +144,28 @@ const config: Config = {
         href: 'https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap',
       },
     },
+    // Blog feed autodiscovery. The blog is a docs-plugin instance, so Docusaurus
+    // does not emit or advertise a feed — these point at the files written by
+    // scripts/gen-feeds.ts (postbuild). Site-wide advertisement of the canonical
+    // (en) feed; per-locale feeds also exist at /<locale>/blog/{rss,atom}.xml.
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'alternate',
+        type: 'application/rss+xml',
+        title: 'StrayMark Blog (RSS)',
+        href: '/blog/rss.xml',
+      },
+    },
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'alternate',
+        type: 'application/atom+xml',
+        title: 'StrayMark Blog (Atom)',
+        href: '/blog/atom.xml',
+      },
+    },
   ],
 
   future: {
