@@ -1,5 +1,5 @@
 ---
-id: ADR-2026-07-18-001
+id: AIDEC-2026-07-18-001
 title: Follow-ups are dated hypotheses — verify the premise at execution, not at capture
 status: draft
 created: 2026-07-18
@@ -13,6 +13,7 @@ review_required: true
 # review_outcome: approved
 risk_level: low
 eu_ai_act_risk: not_applicable
+nist_genai_risks: []
 iso_42001_clause: []
 alternatives_documented: [doc-only, doc-plus-schema, doc-plus-schema-plus-cli, verify-at-capture]
 api_changes: [followups-entry-schema, followups-cli-surface]
@@ -21,16 +22,7 @@ related: [FOLLOW-UPS-BACKLOG-PATTERN, ADR-2026-06-03-001]
 supersedes: []
 ---
 
-# ADR: Follow-ups are dated hypotheses — verify the premise at execution, not at capture
-
-## Status
-
-**Draft — pending human review.** Recording the decision and its implementation shape across
-three layers (pattern doc, entry schema, CLI affordance). No product files change until this ADR
-is signed. Evolves — does not supersede — [ADR-2026-06-03-001](ADR-2026-06-03-followups-first-class.md)
-(the follow-ups backlog as a first-class entity). The registry stays `schema_version: v1`
-(experimental); the additions here are optional and backward-compatible, so hard stabilization
-remains gated on design principle #12 as before.
+# AIDEC: Follow-ups are dated hypotheses — verify the premise at execution, not at capture
 
 ## Context
 
@@ -60,6 +52,8 @@ months later:
 Three distinct failure modes — a comment believed, an analogy over-trusted, a mental model gone
 stale — one shared shape: **each premise was false at write time and cheap to falsify at read time.**
 
+## Problem
+
 There are two moments a "verify the premise" rule could live:
 
 - **Write (capture) time is the worst moment to verify.** A follow-up is a note jotted while
@@ -76,7 +70,7 @@ defect; it is the expected epistemic status of anything in a speculative buffer.
 **dated, decaying hypothesis**, and the only real bug is _executing one without re-testing its
 premise_.
 
-The pattern's current framing works against this. [`FOLLOW-UPS-BACKLOG-PATTERN.md`](../../dist/.straymark/00-governance/FOLLOW-UPS-BACKLOG-PATTERN.md)
+The pattern's current framing works against this. [`FOLLOW-UPS-BACKLOG-PATTERN.md`](../../../dist/.straymark/00-governance/FOLLOW-UPS-BACKLOG-PATTERN.md)
 presents the registry as **"planning input"** and a to-do list ("### The registry as planning
 input"). Read as instructions, false premises become wasted Charters. Read as dated hypotheses to
 re-check at execution, they become cheap bets. This is a framing + verification-placement gap, not
@@ -86,11 +80,15 @@ a correctness bug in any existing command.
 
 **Reframe follow-up entries as dated, decaying hypotheses, and place premise verification at
 execution (promote / act), never at capture.** Implement the reframe across three layers — the
-depth chosen by the operator on 2026-07-18:
+depth chosen by the operator on 2026-07-18. This AIDEC evolves — does not supersede —
+[ADR-2026-06-03-001](../../../docs/decisions/ADR-2026-06-03-followups-first-class.md) (the follow-ups
+backlog as a first-class entity). The registry stays `schema_version: v1` (experimental); the
+additions here are optional and backward-compatible, so hard stabilization remains gated on design
+principle #12 as before. **Status: draft — no product files change until this AIDEC is signed.**
 
 ### 1. Documentation (governance)
 
-In [`FOLLOW-UPS-BACKLOG-PATTERN.md`](../../dist/.straymark/00-governance/FOLLOW-UPS-BACKLOG-PATTERN.md)
+In [`FOLLOW-UPS-BACKLOG-PATTERN.md`](../../../dist/.straymark/00-governance/FOLLOW-UPS-BACKLOG-PATTERN.md)
 (EN + `i18n/es` + `i18n/zh-CN`):
 
 - Add a first-class section — **"Epistemic status: entries are dated hypotheses"** — stating: the
@@ -106,7 +104,7 @@ In [`FOLLOW-UPS-BACKLOG-PATTERN.md`](../../dist/.straymark/00-governance/FOLLOW-
 
 ### 2. Entry schema (optional, backward-compatible)
 
-In [`follow-ups-backlog.schema.v1.json`](../../dist/.straymark/schemas/follow-ups-backlog.schema.v1.json)
+In [`follow-ups-backlog.schema.v1.json`](../../../dist/.straymark/schemas/follow-ups-backlog.schema.v1.json)
 `$defs.entry` (the documented-but-lenient entry vocabulary) and the pattern doc's "Entry schema
 (v1)" block, add two **optional** fields:
 
@@ -169,7 +167,7 @@ cheap moment and gives the discipline a concrete target and an audit stamp.
 Require the follow-up author to verify before writing the entry. **Rejected on principle**: it
 destroys the speculative buffer. The value of the backlog is cheap capture while finishing other
 work; demanding a context switch to verify at capture would make the rational move "stop writing
-follow-ups," losing the signal entirely. This is precisely the anti-pattern the ADR names.
+follow-ups," losing the signal entirely. This is precisely the anti-pattern this AIDEC names.
 
 ## Consequences
 
@@ -182,7 +180,7 @@ follow-ups," losing the signal entirely. This is precisely the anti-pattern the 
 - **`premise` makes entries auditable as hypotheses**: a reader (or Loom node model) can see the
   assumption an entry rests on, and `verified-at` shows whether it has been re-checked since birth.
 - **Directly complements the #365 title-fidelity fix** (cli-3.36.2): titles now read faithfully,
-  and this ADR settles how the entry _behind_ the title should be read.
+  and this AIDEC settles how the entry _behind_ the title should be read.
 
 ### Negative
 
@@ -220,7 +218,7 @@ reminder — no data migration, no breaking change.
 
 ## Implementation Plan
 
-Ships as one framework + CLI pair once this ADR is signed:
+Ships as one framework + CLI pair once this AIDEC is signed:
 
 1. **Doc reframe** (framework): the "Epistemic status" section + directive + schema-field docs in
    all three locales. Reviewable on its own.
@@ -255,9 +253,9 @@ promotion.
 ## References
 
 - [StrayMark #365](https://github.com/StrangeDaysTech/straymark/issues/365) — the field report.
-- [ADR-2026-06-03-001](ADR-2026-06-03-followups-first-class.md) — follow-ups as a first-class entity (this ADR evolves it).
-- [FOLLOW-UPS-BACKLOG-PATTERN.md](../../dist/.straymark/00-governance/FOLLOW-UPS-BACKLOG-PATTERN.md) — the pattern being reframed.
-- #366 (cli-3.36.2) — the #365 title-fidelity fix (extractor half; this ADR is the framing half).
+- [ADR-2026-06-03-001](../../../docs/decisions/ADR-2026-06-03-followups-first-class.md) — follow-ups as a first-class entity (this AIDEC evolves it).
+- [FOLLOW-UPS-BACKLOG-PATTERN.md](../../../dist/.straymark/00-governance/FOLLOW-UPS-BACKLOG-PATTERN.md) — the pattern being reframed.
+- #366 (cli-3.36.2) — the #365 title-fidelity fix (extractor half; this AIDEC is the framing half).
 - Related open adopter issues: #360 (ex-ante creation path), #355 (`note`/`set-status` verbs), #346 (drift extraction fidelity).
 
 ## Revision History
