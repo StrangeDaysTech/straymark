@@ -121,6 +121,14 @@
           "type": "string",
           "pattern": "^TDE-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3}.*$",
           "description": "TDE id, present when Status: promoted. The TDE's frontmatter carries the reverse pointer (promoted_from_followup: FU-NNN)."
+        },
+        "premise": {
+          "type": "string",
+          "description": "NEW in v1 (optional, AIDEC-2026-07-18-001). The load-bearing assumption the entry rests on, stated so it can be re-checked in seconds at execution. A follow-up is a dated, decaying hypothesis: the only real bug is acting on one without re-testing its premise. Making the premise explicit turns 're-verify' from a vague nudge into a concrete, targetable check. Absent on entries authored before the field existed."
+        },
+        "verified_at": {
+          "type": "string",
+          "description": "NEW in v1 (optional, AIDEC-2026-07-18-001). Date (YYYY-MM-DD) the premise was last re-verified against reality, stamped by `straymark followups verify --verified` or `followups promote --premise-verified`. Absent = never re-checked since capture (the default, honest state). Advisory provenance, not a validation signal — the pattern warns, never fails, on its absence."
         }
       },
       "required": ["fu_id", "origin", "status"]

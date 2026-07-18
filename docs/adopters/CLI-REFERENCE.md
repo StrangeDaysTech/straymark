@@ -45,8 +45,8 @@ StrayMark uses **independent version tags** for each component:
 
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
-| Framework | `fw-` | `fw-4.35.0` | Templates (12 types), governance docs, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.36.2` | The `straymark` binary |
+| Framework | `fw-` | `fw-4.36.0` | Templates (12 types), governance docs, directives, Charter template + schema |
+| CLI | `cli-` | `cli-3.37.0` | The `straymark` binary |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | The `straymark-loom` visualization server, downloaded on demand by `straymark loom serve` |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
@@ -940,6 +940,7 @@ Parsing is **lenient**: v0 registries (pre-fw-4.21.0) are read without errors; t
 - `straymark followups drift` — sync the registry with AILOGs (native replacement for the deprecated adopter-side `check-followups-drift.sh`) *(cli-3.19.0+)*
 - `straymark followups recount` — recompute the CLI-owned counters after a manual-triage session *(cli-3.20.0+)*
 - `straymark followups promote` — elevate an entry to a TDE document *(cli-3.19.0+)*
+- `straymark followups verify` — re-verify a dated hypothesis's premise at execution time *(cli-3.37.0+)*
 
 #### `straymark followups list [--bucket <name>] [--status <s>] [--severity <s>] [--label <tag>] [path]`
 
@@ -991,14 +992,35 @@ $ straymark followups recount
 ✓ Counters recomputed: 0 open / 0 suspected-closed / 2 promoted (total 2).
 ```
 
-#### `straymark followups promote <FU-NNN> [--title <title>] [--path <dir>]`
+#### `straymark followups promote <FU-NNN> [--title <title>] [--premise-verified] [--path <dir>]`
 
 Automate the FU → TDE elevation (`FOLLOW-UPS-BACKLOG-PATTERN.md` §Promotion to TDE): creates the TDE document from the framework template with `promoted_from_followup: FU-NNN` traceability, flips the entry to `Status: promoted` with `Destination`/`Promoted to` pointing at the TDE id, and recomputes the counters. Non-interactive (agent-friendly); the FU description becomes the TDE title unless `--title` overrides it. Prioritization and assignment stay human (`AGENT-RULES.md §3`).
 
+Since **cli-3.37.0** the command surfaces the entry's `Premise` (falling back to `Notes`) with a re-verify reminder — a follow-up is a *dated hypothesis* (§Epistemic status), so re-check its premise against the code before building on it. `--premise-verified` records that you did, stamping `Verified-at: <today>`. The reminder is advisory — promotion proceeds either way.
+
 ```bash
-$ straymark followups promote FU-010
+$ straymark followups promote FU-010 --premise-verified
 ✓ FU-010 promoted → TDE-2026-06-04-001
   TDE created: .straymark/06-evolution/technical-debt/TDE-2026-06-04-001-harden-staging-probe.md
+  Premise re-verification recorded: Verified-at → 2026-06-04.
+```
+
+#### `straymark followups verify <FU-NNN> [--premise "..."] [--verified] [--at <YYYY-MM-DD>] [--path <dir>]` *(cli-3.37.0+)*
+
+Re-verify a follow-up's premise **at execution time** and record it. A registry entry is a **dated, decaying hypothesis** (`AIDEC-2026-07-18-001`, from #365): its premise may have been false at capture or gone stale since, and the only real bug is acting on one without re-testing its premise. The registry is a speculative buffer — cheap capture is its value — so verification belongs at the cheap moment (acting on the entry), not at capture. This verb covers the common case of an entry acted on as a chore that never promotes.
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--premise <text>` | — | Record or update the entry's `Premise` (the assumption to re-check). Omitted → the existing premise is surfaced. |
+| `--verified` | off | Stamp `Verified-at`, confirming the premise was re-checked against the code. |
+| `--at <YYYY-MM-DD>` | today | Verification date. |
+
+With no `--premise`/`--verified` it is **read-only** — it surfaces the premise and nudges. Human judgment stays out of the CLI: it surfaces and stamps, it never decides truth.
+
+```bash
+$ straymark followups verify FU-016 --premise "yrs has an independent reference (Yjs)" --verified
+✓ FU-016 premise recorded.
+✓ FU-016 verified — Verified-at → 2026-06-04.
 ```
 
 ---

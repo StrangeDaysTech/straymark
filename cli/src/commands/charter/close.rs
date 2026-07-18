@@ -286,7 +286,9 @@ fn offer_followup_promotions(path: &str, project_root: &Path) -> Result<()> {
             marker
         );
         if prompts::prompt_bool(&label, false)? {
-            promote::run(path, &fu.fu_id, None)?;
+            // premise_verified: false — close-time promotion surfaces the
+            // premise re-check reminder; the operator hasn't confirmed it here.
+            promote::run(path, &fu.fu_id, None, false)?;
         }
     }
     Ok(())

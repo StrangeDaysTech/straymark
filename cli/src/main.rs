@@ -435,6 +435,34 @@ enum FollowupsCommands {
         /// TDE title override (default: the FU description)
         #[arg(long)]
         title: Option<String>,
+        /// Confirm the entry's premise was re-verified against the code before
+        /// promoting. Stamps `Verified-at: <today>`. A follow-up is a dated
+        /// hypothesis (AIDEC-2026-07-18-001) — re-check its premise at
+        /// execution, not capture. Advisory: promotion proceeds either way.
+        #[arg(long = "premise-verified")]
+        premise_verified: bool,
+        /// Project directory (default: current directory)
+        #[arg(long = "path", default_value = ".")]
+        path: String,
+    },
+    /// Re-verify a follow-up's premise at execution time and record it. A
+    /// follow-up is a dated, decaying hypothesis (AIDEC-2026-07-18-001): the
+    /// only real bug is acting on one without re-testing its premise. Surfaces
+    /// the premise, optionally records/updates it, and stamps `Verified-at`.
+    Verify {
+        /// Entry identifier (FU-NNN or just NNN)
+        fu_id: String,
+        /// Record or update the entry's premise (the load-bearing assumption
+        /// to re-check). When omitted, the existing premise is surfaced.
+        #[arg(long)]
+        premise: Option<String>,
+        /// Stamp `Verified-at: <today>`, confirming the premise was re-checked
+        /// against the code. Without it, the command only surfaces the premise.
+        #[arg(long)]
+        verified: bool,
+        /// Verification date (default: today, format YYYY-MM-DD)
+        #[arg(long)]
+        at: Option<String>,
         /// Project directory (default: current directory)
         #[arg(long = "path", default_value = ".")]
         path: String,
@@ -945,9 +973,30 @@ fn main() {
                 path,
             } => commands::followups::drift::run(&path, apply, scan_all, range.as_deref()),
             FollowupsCommands::Recount { path } => commands::followups::recount::run(&path),
-            FollowupsCommands::Promote { fu_id, title, path } => {
-                commands::followups::promote::run(&path, &fu_id, title.as_deref())
-            }
+            FollowupsCommands::Promote {
+                fu_id,
+                title,
+                premise_verified,
+                path,
+            } => commands::followups::promote::run(
+                &path,
+                &fu_id,
+                title.as_deref(),
+                premise_verified,
+            ),
+            FollowupsCommands::Verify {
+                fu_id,
+                premise,
+                verified,
+                at,
+                path,
+            } => commands::followups::verify::run(
+                &path,
+                &fu_id,
+                premise.as_deref(),
+                verified,
+                at.as_deref(),
+            ),
         },
         Commands::Architecture { command } => match command {
             ArchitectureCommands::Generate { path, force, out } => {

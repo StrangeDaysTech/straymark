@@ -39,6 +39,27 @@ Por debajo de ese volumen, la convención per-AILOG por sí sola es suficiente �
 
 Lección empírica del adopter de referencia (issue #214, N=91 entradas): el backlog es más que una lista de chores diferidos. Los follow-ups se originan no solo de la planificación (ex-ante) sino de la **realidad de ejecución** — corridas de tests, lecturas de telemetría, incidentes de staging, bugs observados en entornos reales (no simulados) — y retroalimentan la planificación: se vuelven chores, mini-charters, o incluso reconfiguran Charters que ya estaban planeados. El registry es el **contraparte ex-post de SpecKit**: SpecKit alimenta la planificación desde la intención; el backlog la alimenta desde la ejecución. Las dimensiones de v1 (`Origin-class`, `Severity`, `Labels`, el vocabulario de `Destination`) existen para hacer ese bucle de planificación consultable.
 
+*Alimenta* la planificación — pero no lo leas *como* un plan. Cada entrada es una apuesta a re-chequear cuando se toma, no una tarea comprometida (ver "Estatus epistémico" a continuación).
+
+---
+
+## Estatus epistémico — las entradas son hipótesis fechadas
+
+*(AIDEC-2026-07-18-001, del reporte de campo de Weft #365.)*
+
+Un backlog de follow-ups es un **buffer especulativo**. Su valor es la *captura barata* para no perder una señal mientras terminas otra cosa. Esa baratura es justamente el punto — y dicta cómo debe leerse una entrada y cuándo debe verificarse su premisa.
+
+**Una entrada es una hipótesis fechada y decadente, no una instrucción.** Registra lo que parecía cierto y valía la pena hacer en el momento de captura — una nota anotada con la atención puesta en otro trabajo. Esa nota puede ser falsa en el instante en que se escribe: un comentario creído, una analogía sobre-confiada, un modelo mental ya volviéndose obsoleto. (En el reporte fundacional, tres follow-ups genuinos descansaban cada uno sobre una premisa que era falsa *al momento de escribirse* y costó un chequeo de ~30 segundos falsificar meses después.) Por lo tanto:
+
+- **Una entrada sub-verificada no es un defecto de autoría** — es el estatus epistémico *esperado* de cualquier cosa en un buffer especulativo. Exigir verificación en la captura anularía el propósito del buffer; la respuesta racional sería dejar de escribir follow-ups y perder la señal.
+- **El único bug real es ejecutar una entrada sin re-testear su premisa.** Leídas como instrucciones, las premisas falsas se vuelven Charters desperdiciados. Leídas como hipótesis fechadas a re-chequear en la ejecución, se vuelven apuestas baratas.
+
+**Disciplina — escribe barato en la captura; re-verifica la premisa cuando promuevas/actúes:**
+
+- En la captura, anota el follow-up libremente. Opcionalmente declara su **`Premise`** — la suposición que lo sostiene — para que el re-chequeo posterior tenga un blanco concreto.
+- En la ejecución (estás por construir sobre ella), **re-verifica la premisa contra el código primero** — un `grep`, la lectura de un archivo, una cadena de llamadas trazada. Ya estás dentro de ese subsistema, así que el chequeo son segundos. Regístralo con `straymark followups verify FU-NNN --verified` (o `followups promote FU-NNN --premise-verified`), que sella **`Verified-at`**.
+- `Verified-at` ausente = nunca re-chequeada desde la captura (el default honesto). Su presencia es la procedencia de que la hipótesis se probó contra la realidad antes de gastar esfuerzo en ella.
+
 ---
 
 ## Forma
@@ -113,6 +134,8 @@ Cada entrada dentro de un bucket sigue esta forma (campos v1 marcados; todos opc
 - **Destination**: chore | mini-charter | charter-replanning | operations | <charter-id> | <TDE id>
 - **Cost**: <estimación de esfuerzo>
 - **Labels**: <tags libres, separados por comas>                                       (v1, opcional)
+- **Premise**: <la suposición que sostiene esta entrada>                               (v1, opcional)
+- **Verified-at**: <YYYY-MM-DD en que la premisa se re-chequeó contra el código>       (v1, opcional)
 - **Notes**: <contexto libre>
 - **Promoted to**: <id de TDE, cuando Status: promoted — ver "Promoción a TDE" abajo>
 ```
@@ -125,6 +148,7 @@ Cada entrada dentro de un bucket sigue esta forma (campos v1 marcados; todos opc
 - **`Severity`** — `blocking` marca issues de clase fiabilidad que deben aterrizar antes de un cutover a producción. Canonicaliza la convención en prosa `PROD-BLOCKER` que emergió en el campo `Notes` del adopter de referencia (Señal 3). Ortogonal al bucket: una entrada `charter-triggered` puede ser `blocking`.
 - **`Labels`** — tags libres para agrupar entradas en Charters / mini-charters / chores planeados durante el triage. Consultable vía `straymark followups list --label <tag>`.
 - **Vocabulario de `Destination`** — formaliza dónde aterriza el trabajo cuando se dispara: `chore`, `mini-charter`, `charter-replanning` (la entrada reconfigura un Charter ya planeado en vez de agregarle una tarea), `operations`, un id de Charter específico, o un id de TDE. Los valores free-form siguen siendo aceptados (parsing tolerante).
+- **`Premise` / `Verified-at`** *(AIDEC-2026-07-18-001)* — la suposición que sostiene una entrada, y la fecha en que se re-chequeó por última vez contra el código. Una entrada es una *hipótesis fechada* (ver "Estatus epistémico"); estos campos le dan a la disciplina de re-verificar-en-ejecución un blanco concreto y un sello de auditoría. Ambos opcionales; `Verified-at` ausente = nunca re-chequeada desde la captura.
 
 ### Vocabulario de status
 
@@ -241,8 +265,11 @@ straymark followups status                # pulso del registry: contadores (reca
 straymark followups status FU-NNN         # vista de detalle de una entrada
 straymark followups drift [--apply|--scan-all]   # detección de drift (ver arriba)
 straymark followups recount               # recalcula los contadores CLI-owned tras una sesión de triage manual (cli-3.20.0+)
-straymark followups promote FU-NNN        # automatiza la promoción FU → TDE (ver arriba)
+straymark followups promote FU-NNN [--premise-verified]   # automatiza la promoción FU → TDE; superficie el re-chequeo de la premisa, sella Verified-at con el flag (cli-3.37.0+)
+straymark followups verify FU-NNN [--premise "..."] [--verified] [--at FECHA]   # re-verifica una hipótesis fechada en la ejecución: superficie/registra la premisa, sella Verified-at (cli-3.37.0+)
 ```
+
+`verify` y `promote --premise-verified` son las afordancias en tiempo de ejecución de la disciplina de "Estatus epistémico": ponen la premisa frente al operador en el momento del gasto y registran que el re-chequeo ocurrió. El juicio humano queda fuera del CLI — superficie y sella, nunca decide la verdad.
 
 El registry también aparece como un grupo sintético **Follow-ups** en la TUI de `straymark explore` (sub-nodos por bucket) y como un bloque de conteos en `straymark status`.
 
@@ -316,4 +343,4 @@ Contribuido vía [issue #111](https://github.com/StrangeDaysTech/straymark/issue
 
 ---
 
-*StrayMark fw-4.34.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.36.0 | [Strange Days Tech](https://strangedays.tech)*

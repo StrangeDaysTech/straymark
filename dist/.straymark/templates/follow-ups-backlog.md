@@ -34,7 +34,15 @@ Entry shape (v1 — optional fields marked):
 - **Destination**: chore | mini-charter | charter-replanning | operations | <charter-id> | <TDE id>
 - **Cost**: <effort estimate>
 - **Labels**: <free tags, comma-separated>                                            (optional)
+- **Premise**: <the load-bearing assumption this entry rests on>                       (optional)
+- **Verified-at**: <YYYY-MM-DD the premise was last re-checked against the code>       (optional)
 - **Notes**: <free-form context>
+
+An entry is a dated, decaying *hypothesis*, not an instruction. Its premise may
+have been false at capture or gone stale since. Re-verify it at execution — the
+cheap moment — not at capture: `straymark followups verify FU-NNN --verified`
+(or `followups promote FU-NNN --premise-verified`). See the pattern doc's
+"Epistemic status" section.
 -->
 
 ## Bucket: ready

@@ -45,8 +45,8 @@ StrayMark 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.35.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.36.2` | `straymark` 二进制文件 |
+| Framework | `fw-` | `fw-4.36.0` | 模板（12 种类型）、治理文档、指令 |
+| CLI | `cli-` | `cli-3.37.0` | `straymark` 二进制文件 |
 | Loom（实验性） | `loom-` | `loom-0.4.2` | `straymark-loom` 可视化服务器，由 `straymark loom serve` 按需下载 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
@@ -787,6 +787,7 @@ $ straymark charter audit CHARTER-05 --finalize
 - `straymark followups drift` — 将注册表与 AILOG 同步（已弃用的 adopter 侧 `check-followups-drift.sh` 的原生替代）*(cli-3.19.0+)*
 - `straymark followups recount` — 手动分诊会话后重新计算 CLI 拥有的计数器 *(cli-3.20.0+)*
 - `straymark followups promote` — 将条目提升为 TDE 文档 *(cli-3.19.0+)*
+- `straymark followups verify` — 在执行时重新验证一个有日期假设的前提 *(cli-3.37.0+)*
 
 #### `straymark followups list [--bucket <name>] [--status <s>] [--severity <s>] [--label <tag>] [path]`
 
@@ -838,14 +839,35 @@ $ straymark followups recount
 ✓ Counters recomputed: 0 open / 0 suspected-closed / 2 promoted (total 2).
 ```
 
-#### `straymark followups promote <FU-NNN> [--title <title>] [--path <dir>]`
+#### `straymark followups promote <FU-NNN> [--title <title>] [--premise-verified] [--path <dir>]`
 
 自动化 FU → TDE 的提升（`FOLLOW-UPS-BACKLOG-PATTERN.md` §Promotion to TDE）：从框架模板创建带 `promoted_from_followup: FU-NNN` 溯源的 TDE 文档，将条目翻转为 `Status: promoted` 并使 `Destination`/`Promoted to` 指向该 TDE id，再重新计算计数器。非交互式（对 agent 友好）；除非 `--title` 覆盖，否则 FU 描述将成为 TDE 标题。优先级排序与分配仍由人工决定（`AGENT-RULES.md §3`）。
 
+自 **cli-3.37.0** 起,该命令会浮现条目的 `Premise`(缺失则回退到 `Notes`)并附上重新验证提醒 —— 一个 follow-up 是一个*有日期的假设*(§认识论地位),所以在其之上构建之前,先针对代码重新核查它的前提。`--premise-verified` 记录你已这样做,并盖上 `Verified-at: <今天>`。该提醒是信息性的 —— 提升无论如何都会进行。
+
 ```bash
-$ straymark followups promote FU-010
+$ straymark followups promote FU-010 --premise-verified
 ✓ FU-010 promoted → TDE-2026-06-04-001
   TDE created: .straymark/06-evolution/technical-debt/TDE-2026-06-04-001-harden-staging-probe.md
+  Premise re-verification recorded: Verified-at → 2026-06-04.
+```
+
+#### `straymark followups verify <FU-NNN> [--premise "..."] [--verified] [--at <YYYY-MM-DD>] [--path <dir>]` *(cli-3.37.0+)*
+
+在**执行时**重新验证一个 follow-up 的前提并记录它。一个注册表条目是一个**有日期、会衰减的假设**(`AIDEC-2026-07-18-001`,来自 #365):它的前提在捕获时可能就为假,或自那以后已经过时,而唯一真正的 bug 是在不重新测试其前提的情况下对它采取行动。注册表是一个推测性缓冲区 —— 廉价捕获是它的价值 —— 所以验证属于那个廉价的时刻(对条目采取行动时),而不是捕获时。此动词覆盖了一个条目作为杂务被执行、却从不提升的常见情形。
+
+| Flag | 默认 | 描述 |
+|------|------|------|
+| `--premise <文本>` | — | 记录或更新条目的 `Premise`(需重新核查的假设)。省略 → 浮现现有前提。 |
+| `--verified` | 关 | 盖上 `Verified-at`,确认前提已针对代码重新核查。 |
+| `--at <YYYY-MM-DD>` | 今天 | 验证日期。 |
+
+不带 `--premise`/`--verified` 时它是**只读的** —— 浮现前提并做提示。人的判断留在 CLI 之外:它浮现并盖印,从不裁定真伪。
+
+```bash
+$ straymark followups verify FU-016 --premise "yrs 有一个独立的参照物(Yjs)" --verified
+✓ FU-016 premise recorded.
+✓ FU-016 verified — Verified-at → 2026-06-04.
 ```
 
 ---
