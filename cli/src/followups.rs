@@ -676,7 +676,15 @@ pub fn assemble(fm: &str, body: &str) -> String {
 /// A follow-up bullet extracted from an AILOG.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtractedFu {
-    /// First line of the bullet, cleaned of list markers.
+    /// The display title for the registry heading — a high-fidelity summary of
+    /// the bullet (un-wrapped lead, markup stripped, first sentence, capped).
+    /// See [`entry_title`]. Decoupled from `description` so improving titles
+    /// never perturbs the dedup hash (#365).
+    pub title: String,
+    /// The bullet's raw first line, cleaned of list markers. Kept **stable** as
+    /// the seed of the dedup `Source-hash` (`fu_content_hash`) — it must not
+    /// change when `title` extraction improves, or every already-extracted
+    /// entry in an adopter's registry would re-flag as a duplicate (#365).
     pub description: String,
     /// Origin pointer suffix, e.g. "§Follow-ups" or "§R3 (new, not in Charter)".
     pub origin_section: String,
@@ -751,8 +759,10 @@ pub fn extract_followups_from_ailog(content: &str) -> Vec<ExtractedFu> {
             // remediation (if any) lives in the body — judge closure over both.
             let heading_text = heading.as_deref().unwrap_or_default();
             let combined = format!("{heading_text}\n{body}");
+            let desc = clean_risk_desc(heading_text);
             out.push(ExtractedFu {
-                description: clean_risk_desc(heading_text),
+                title: desc.clone(),
+                description: desc,
                 origin_section: format!("§{} (new, not in Charter)", rn),
                 suspected_closed: risk_section_resolved(&combined),
             });
@@ -790,8 +800,10 @@ fn extract_inline_risks(body: &str, out: &mut Vec<ExtractedFu>) {
                 break;
             }
         }
+        let desc = clean_risk_desc(lines[i]);
         out.push(ExtractedFu {
-            description: clean_risk_desc(lines[i]),
+            title: desc.clone(),
+            description: desc,
             origin_section: format!("§{} (new, not in Charter)", rn),
             suspected_closed: risk_section_resolved(&group),
         });
@@ -800,11 +812,15 @@ fn extract_inline_risks(body: &str, out: &mut Vec<ExtractedFu>) {
 }
 
 fn push_extracted(out: &mut Vec<ExtractedFu>, bullet: &str, origin: &str) {
+    // `description` is the hash seed and MUST stay the raw first line (#365) —
+    // the dedup `Source-hash` derives from it, so it cannot change with title
+    // extraction or every prior extraction re-flags as a duplicate.
     let desc = first_line(bullet);
     if desc.is_empty() {
         return;
     }
     out.push(ExtractedFu {
+        title: entry_title(bullet),
         description: desc,
         origin_section: origin.to_string(),
         suspected_closed: has_closure_marker(bullet),
@@ -813,6 +829,86 @@ fn push_extracted(out: &mut Vec<ExtractedFu>, bullet: &str, origin: &str) {
 
 fn first_line(s: &str) -> String {
     s.lines().next().unwrap_or("").trim().to_string()
+}
+
+/// Derive a high-fidelity display title for an extracted `§Follow-ups` bullet.
+///
+/// The bullet arrives hard-wrapped: [`extract_followups_from_ailog`] joins a
+/// top-level bullet with its continuation lines using `\n`. Taking the first
+/// *physical* line (the pre-#365 behaviour) truncated the title at the author's
+/// soft-wrap column — mid-sentence, sometimes mid-word — so entries landed with
+/// headings like `**Footgun de pack local…**: el pack lee de` cut off at the
+/// wrap. Reported by the Weft adopter (StrayMark #365).
+///
+/// Strategy, in order:
+/// 1. **Un-wrap** the lead paragraph (join lines up to the first blank line)
+///    into one logical line.
+/// 2. If it opens with a substantial `**bold**` span, use that span's content —
+///    the observed authoring convention leads a bullet with `**short title**`
+///    then prose. This is the highest-fidelity title when present.
+/// 3. Otherwise strip inline emphasis (backticks kept) and take the first
+///    sentence.
+/// 4. Cap at a word boundary with an ellipsis so a long lead never runs away.
+///
+/// The dedup hash is computed from `description` (the raw first line), never
+/// from this title, so sharpening titles is hash-neutral for existing entries.
+fn entry_title(bullet: &str) -> String {
+    const MAX_CHARS: usize = 120;
+    let para = unwrap_lead_paragraph(bullet);
+    if let Some(bold) = leading_bold_title(&para) {
+        return cap_title(&bold, MAX_CHARS);
+    }
+    let cleaned = crate::commands::charter::new::strip_inline_markup(&para);
+    let sentence = crate::commands::charter::new::leading_sentences(&cleaned, 1);
+    cap_title(sentence.trim(), MAX_CHARS)
+}
+
+/// Join a bullet's hard-wrapped lines into one logical line, stopping at the
+/// first blank line (paragraph break). List markers are already stripped by the
+/// caller's grouping.
+fn unwrap_lead_paragraph(bullet: &str) -> String {
+    let mut para = String::new();
+    for line in bullet.lines() {
+        let t = line.trim();
+        if t.is_empty() {
+            if !para.is_empty() {
+                break;
+            }
+            continue;
+        }
+        if !para.is_empty() {
+            para.push(' ');
+        }
+        para.push_str(t);
+    }
+    para
+}
+
+/// If `para` opens with a `**…**` bold span whose content is substantial
+/// (≥ 15 chars, so a bare `**R6**` tag falls through to first-sentence), return
+/// that content with inline emphasis stripped (backticks kept). This matches the
+/// convention of leading a follow-up bullet with a bolded title (#365).
+fn leading_bold_title(para: &str) -> Option<String> {
+    let rest = para.strip_prefix("**")?;
+    let end = rest.find("**")?;
+    let inner = crate::commands::charter::new::strip_inline_markup(rest[..end].trim());
+    let inner = inner.trim();
+    if inner.chars().count() >= 15 {
+        Some(inner.to_string())
+    } else {
+        None
+    }
+}
+
+/// Trim to `max` chars at a word boundary, appending an ellipsis when cut.
+fn cap_title(s: &str, max: usize) -> String {
+    let s = s.trim();
+    if s.chars().count() <= max {
+        return s.to_string();
+    }
+    let truncated: String = s.chars().take(max).collect();
+    let cut = truncated.rfind(char::is_whitespace).unwrap_or(truncated.len());
+    format!("{}…", truncated[..cut].trim_end())
 }
 
 /// Split an AILOG body into `## ` sections. Returns `(heading, body)` pairs
@@ -1103,7 +1199,7 @@ pub fn render_new_entry(
          - **Destination**: TBD\n\
          - **Cost**: TBD\n\
          - **Notes**: {}\n",
-        fu_number, extracted.description, ailog_id, extracted.origin_section, source_hash, status, notes
+        fu_number, extracted.title, ailog_id, extracted.origin_section, source_hash, status, notes
     )
 }
 
@@ -1552,6 +1648,69 @@ Done.
     }
 
     #[test]
+    fn entry_title_uses_leading_bold_and_unwraps_hardwrapped_bullets() {
+        // The three real Weft shapes (#365): each leads with a bold title and
+        // hard-wraps the prose. The pre-#365 first-line title truncated at the
+        // wrap column ("…el pack lee de", "…**dos afirmaciones falsas**, y ya").
+        let ailog = "# AILOG\n\n## Follow-ups\n\n\
+            - **Comentario obsoleto en `ci.yml:76-81`** — **dos afirmaciones falsas**, y ya\n  \
+            demostró que hace daño: (1) dice que el job es continue-on-error.\n\
+            - **Footgun de pack local contaminado con `test-hooks`**: el pack lee de\n  \
+            `native/target/<triple>/release/`. Quien compile con la feature.\n\
+            - **Guards de CI para las sub-clases del anti-patrón** (paso 5 del walkthrough). El\n  \
+            gap #1 es mecánicamente detectable.\n";
+        let found = extract_followups_from_ailog(ailog);
+        let titles: Vec<&str> = found.iter().map(|f| f.title.as_str()).collect();
+        assert_eq!(
+            titles,
+            vec![
+                "Comentario obsoleto en `ci.yml:76-81`",
+                "Footgun de pack local contaminado con `test-hooks`",
+                "Guards de CI para las sub-clases del anti-patrón",
+            ]
+        );
+        // The hash seed (`description`) stays the raw first line — unchanged, so
+        // dedup is unperturbed by the nicer title (#365).
+        assert_eq!(
+            found[1].description,
+            "**Footgun de pack local contaminado con `test-hooks`**: el pack lee de"
+        );
+    }
+
+    #[test]
+    fn entry_title_falls_back_to_first_sentence_and_caps() {
+        // No bold lead → strip markup, take the first sentence.
+        let ailog = "# AILOG\n\n## Follow-ups\n\n\
+            - Reponer el job de CI del adaptador Redis con un service container.\n  \
+            Corre local con Valkey y se omite en CI hoy.\n";
+        let found = extract_followups_from_ailog(ailog);
+        assert_eq!(
+            found[0].title,
+            "Reponer el job de CI del adaptador Redis con un service container."
+        );
+
+        // A runaway lead with no early sentence break caps at a word boundary.
+        let long_word = "palabra ".repeat(40);
+        let ailog2 = format!("# AILOG\n\n## Follow-ups\n\n- {long_word}fin\n");
+        let found2 = extract_followups_from_ailog(&ailog2);
+        assert!(found2[0].title.ends_with('…'));
+        assert!(found2[0].title.chars().count() <= 121); // 120 + the ellipsis
+        assert!(!found2[0].title.contains("  ")); // trimmed cleanly at a boundary
+    }
+
+    #[test]
+    fn entry_title_ignores_trivial_bold_tag() {
+        // A bare `**R6**`-style tag is too short to be a title — fall through to
+        // the first sentence so the title carries context.
+        let ailog = "# AILOG\n\n## Follow-ups\n\n- **R6** endurecer el decoder ante amplificación de memoria.\n";
+        let found = extract_followups_from_ailog(ailog);
+        assert_eq!(
+            found[0].title,
+            "R6 endurecer el decoder ante amplificación de memoria."
+        );
+    }
+
+    #[test]
     fn is_followup_heading_matches_prefix_not_substring() {
         assert!(is_followup_heading("Follow-ups"));
         assert!(is_followup_heading("Follow-ups (auditoría externa)"));
@@ -1636,6 +1795,7 @@ Done.
         let block = render_new_entry(
             5,
             &ExtractedFu {
+                title: "New thing".to_string(),
                 description: "New thing".to_string(),
                 origin_section: "§Follow-ups".to_string(),
                 suspected_closed: false,
@@ -1696,6 +1856,7 @@ Done.
         let block = render_new_entry(
             92,
             &ExtractedFu {
+                title: "Formal run".to_string(),
                 description: "Formal run".to_string(),
                 origin_section: "§Follow-ups".to_string(),
                 suspected_closed: true,
@@ -1746,6 +1907,7 @@ Done.
     #[test]
     fn render_new_entry_embeds_matching_source_hash() {
         let fu = ExtractedFu {
+            title: "Backfill the missing migration".to_string(),
             description: "Backfill the missing migration".to_string(),
             origin_section: "§Follow-ups".to_string(),
             suspected_closed: false,

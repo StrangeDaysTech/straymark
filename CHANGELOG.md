@@ -7,6 +7,20 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.36.2 — 2026-07-18
+
+### Fixed (CLI)
+
+- **`followups drift --apply` extracts high-fidelity entry titles (#365).** The extractor took the
+  **first physical line** of an AILOG `§Follow-ups` bullet as the entry title, so a hard-wrapped lead
+  sentence was truncated at the author's wrap column — mid-thought, sometimes mid-word (reported by the
+  Weft adopter: entries titled e.g. *"**Footgun de pack local…**: el pack lee de"*, cut off). The title
+  is now derived by un-wrapping the lead paragraph, preferring a substantial leading `**bold**` span
+  (the observed authoring convention), else stripping inline emphasis and taking the first sentence,
+  capped at a word boundary with an ellipsis. **Hash-neutral:** the dedup `Source-hash` still derives
+  from the raw first line (a new, decoupled `title` feeds only the display heading), so sharpening
+  titles never re-flags an already-extracted entry — existing registries upgrade with zero duplicates.
+
 ## CLI 3.36.1 — 2026-07-17
 
 ### Fixed (CLI)

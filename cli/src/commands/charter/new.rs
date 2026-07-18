@@ -401,7 +401,7 @@ fn find_section_paragraph(body: &str, headers: &[&str]) -> Option<String> {
     None
 }
 
-fn strip_inline_markup(s: &str) -> String {
+pub(crate) fn strip_inline_markup(s: &str) -> String {
     // Strip bold (**x** or __x__) and italic (*x* or _x_) markers but leave
     // their content. Backticks are preserved (code spans are useful).
     let mut out = String::with_capacity(s.len());
@@ -427,7 +427,7 @@ fn strip_inline_markup(s: &str) -> String {
     out
 }
 
-fn leading_sentences(s: &str, n: usize) -> String {
+pub(crate) fn leading_sentences(s: &str, n: usize) -> String {
     let mut sentences = Vec::new();
     let mut buf = String::new();
     let chars: Vec<char> = s.chars().collect();
