@@ -13,6 +13,8 @@
     "start": "docusaurus serve",
     "prebuild": "npm run sync:docs && npm run generate:llms",
     "build": "docusaurus build",
+    "postbuild": "npm run generate:feeds",
+    "generate:feeds": "tsx scripts/gen-feeds.ts",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
