@@ -267,9 +267,22 @@ straymark followups drift [--apply|--scan-all]   # drift detection (see above)
 straymark followups recount               # recompute the CLI-owned counters after a manual-triage session (cli-3.20.0+)
 straymark followups promote FU-NNN [--premise-verified]   # automate FU → TDE promotion; surfaces the premise re-check, stamps Verified-at with the flag (cli-3.37.0+)
 straymark followups verify FU-NNN [--premise "..."] [--verified] [--at DATE]   # re-verify a dated hypothesis at execution: surface/record the premise, stamp Verified-at (cli-3.37.0+)
+straymark followups note FU-NNN "<text>" [--source CHARTER-NN|AILOG-…]   # append a dated annotation to Notes (cli-3.39.0+)
+straymark followups set-status FU-NNN <status>   # change status AND recompute the counters in one step (cli-3.39.0+)
+straymark followups new --title "..." --origin "CHARTER-NN §Scope" [--bucket …] [--cost …] [--trigger …] [--premise …]   # create an entry declared ex-ante (cli-3.39.0+)
 ```
 
 `verify` and `promote --premise-verified` are the execution-time affordances of the "Epistemic status" discipline: they put the premise in front of the operator at the moment of spending and record that the re-check happened. Human judgment stays out of the CLI — it surfaces and stamps, it never decides truth.
+
+### Mutating and creating entries (cli-3.39.0+)
+
+`note`, `set-status` and `new` replace the last flows that required hand-editing this CLI-parsed file. Two things went wrong there: a hand-edit can malform an entry and break `list`/`status`/`drift`, and the status-change flow was a **two-step** — edit the bullet, then remember `recount` — that desyncs the moment you forget the second half, leaving the counters quietly lying about the backlog.
+
+- **`note`** appends to `Notes` (a single-line field, so annotations compose rather than stack), stamped with the date and, with `--source`, with the Charter or AILOG that motivated it. Use it for the common case of recording a *partial* mitigation without changing status.
+- **`set-status`** writes the status and recomputes the counters in the same step. It refuses a status outside the vocabulary — the parser is lenient, so a typo would not fail, it would silently drop the entry from every counter — and redirects `promoted` to `followups promote`, which also writes the TDE that gives the status something to point at.
+- **`new`** creates an entry whose origin is a **Charter declaration** (`Origin-class: ex-ante-planning`). Both older population paths assume an ex-post origin: `drift --apply` extracts from AILOGs, and a deferral decided at declaration time precedes any AILOG by design. `new` assigns the id atomically and prints it, so the Charter body cites an entry that **exists** instead of a reserved guess that the next `drift --apply` could hand to a different entry. An ex-ante entry carries **no `Source-hash`**: there is no AILOG to hash, and inventing one would make a later `drift --apply` believe it had already extracted something it never saw.
+
+All three refuse to write when the registry has parse warnings: a surgical edit against a structure the parser mis-read can corrupt neighbouring entries. `recount` remains the escape hatch for a bulk manual-triage session — and the idempotent check that these verbs got the arithmetic right.
 
 The registry also appears as a synthetic **Follow-ups** group in the `straymark explore` TUI (sub-nodes per bucket) and as a counts block in `straymark status`.
 
@@ -343,4 +356,4 @@ Contributed via [issue #111](https://github.com/StrangeDaysTech/straymark/issues
 
 ---
 
-*StrayMark fw-4.36.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.37.0 | [Strange Days Tech](https://strangedays.tech)*

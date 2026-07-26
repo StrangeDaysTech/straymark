@@ -1,7 +1,9 @@
 ---
 charter_id: CHARTER-01-follow-ups-registry-mutation-and-ex-ante-creation
-status: declared
+status: closed
+closed_at: 2026-07-26
 effort_estimate: M
+execution_ailogs: [AILOG-2026-07-26-001]
 trigger: "Two adopter field reports from Weft (#355, #360) filed against the same seam: every path that mutates or creates a registry entry currently goes through hand-editing a CLI-parsed file. #360 documents a live id-collision hazard in the adopter's tree — CHARTER-06 cites FU-011 three times as a forward reference with nothing reserving it."
 work_verb: implement
 design_provenance: new
@@ -9,7 +11,7 @@ design_provenance: new
 
 # Charter: Follow-ups registry: mutation and ex-ante creation verbs
 
-> **Status (mirrored from frontmatter — source of truth is above):** declared. Effort: M (1–3 days).
+> **Status (mirrored from frontmatter — source of truth is above):** closed 2026-07-26. Effort: M (declared 1–3 days; executed in one session). Execution: `AILOG-2026-07-26-001`. Released as fw-4.37.0 / cli-3.39.0.
 >
 > **Origin:** adopter field reports [#355](https://github.com/StrangeDaysTech/straymark/issues/355) and [#360](https://github.com/StrangeDaysTech/straymark/issues/360), both from the Weft adopter (registered in #357). No originating AILOG — this Charter precedes execution.
 
@@ -167,3 +169,15 @@ When closing this Charter:
 4. **Status frontmatter** moves from `in-progress` to `closed` (+ `closed_at:`).
 5. **Do not delete** this file.
 6. Close #355 and #360 with a comment stating what shipped and what was deliberately not built (the two deferred options above), so the adopter sees the reasoning rather than silence.
+
+## Closing notes
+
+`straymark charter drift CHARTER-01` reports **1 omission and 14 scope expansions** against `## Files to modify` (29 declared, 43 modified). All four causes, remediated atomically in this same PR:
+
+- **`dist/.gemini/skills/…` and `dist/.agent/workflows/…` were declared as "Regenerated (same generator)" — they are not.** `gen_codex_skills` emits only the `.codex` surface; the Gemini and `.agent` mirrors have been hand-maintained since fw-4.22.0 (#221). Hand-synced with the same content edits instead. The declaration was authored from the CI check's name (`gen_codex_skills --check`) rather than from what the generator actually writes — the reconnaissance discipline (#210) was applied to the *files* but not to the *mechanism* that maintains them.
+- **The governance version footers were not declared.** A framework bump requires updating the `fw-X.Y.Z` footer in `QUICK-REFERENCE`, `AGENT-RULES`, `DOCUMENTATION-POLICY`, `C4-DIAGRAM-GUIDE` and `FOLLOW-UPS-BACKLOG-PATTERN` (×3 locales each) per the release protocol in `CLAUDE.md`; `## Files to modify` listed only `dist-manifest.yml`. Applied.
+- **`dist/.straymark/schemas/follow-ups-backlog.schema.v1.json` was declared and NOT modified** — correctly. The Charter declared it conditionally ("confirm the ex-ante shape validates; adjust `$defs.entry` if it does not"), and it validates unchanged: `origin_class` already contains `ex-ante-planning`, and `source_hash` is not a schema property at all. Kept in the declaration rather than deleted: the check was real work, and its outcome sharpened what #360 was — the vocabulary for the ex-ante case already existed, only the creation path was missing.
+
+- **`cli/src/commands/followups/verify.rs` and `Cargo.lock` were not declared.** `verify.rs` was refactored onto the shared `write_recounted` path — the same consolidation the Charter declared for `recount.rs`, but only that one file was named; the declaration under-counted its own de-duplication. `Cargo.lock` moves with any version bump and is mechanical.
+
+One new risk emerged, documented in the AILOG as `R6 (new, not in Charter)`: two pre-existing markdown-shape defects in the shared write helpers (`set_entry_field` collapsing an entry's trailing blank line; `insert_into_bucket` omitting the one before the next section), which every `drift`/`promote`/`verify` write had been degrading the registry with. Fixed at the root with regression tests, since `note` would otherwise have made the reshaping visible on every call.

@@ -7,6 +7,30 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.37.0 / CLI 3.39.0 — 2026-07-26
+
+Closes the last flows that required hand-editing the CLI-parsed follow-ups registry (CHARTER-01; Weft field reports #355 and #360).
+
+### Added (CLI)
+
+- **`straymark followups note FU-NNN "<text>" [--source ID]`** *(new)* — append a dated annotation to an entry's `Notes` in one validated edit. `Notes` is a single-line field by parser contract, so annotations **compose** onto the existing value rather than stacking. `--source CHARTER-NN|AILOG-…` records what motivated the note, so it stays attributable instead of becoming undated prose. Covers #355's case: recording a *partial* mitigation without changing status.
+- **`straymark followups set-status FU-NNN <status>`** *(new)* — change the status **and** recompute the CLI-owned counters in the same step, closing the desync window `recount` exists to clean up after (#355): the two-step it replaces desyncs the moment you forget the second half, leaving the counters quietly lying about the backlog. A status outside the vocabulary is **refused, not written** — the parser is lenient, so a typo would not fail: it would silently drop the entry from every counter. `promoted` redirects to `followups promote`, which also writes the TDE that gives the status something to point at.
+- **`straymark followups new --title … --origin …`** *(new)* — create an entry whose origin is a **Charter declaration** (ex-ante), before any AILOG exists (#360). Written with `Origin-class: ex-ante-planning` and **no `Source-hash`** (there is no AILOG to hash; inventing one would make a later `drift --apply` believe it had extracted something it never saw). The id is assigned atomically and printed, so a Charter cites an entry that **exists** instead of a reserved guess: ids are minted `max(existing) + 1` at extraction time, so the reporting adopter's forward-referenced `FU-011` would have been handed to an unrelated entry by the next `drift --apply`.
+- All three **refuse to write a registry with parse warnings** — a surgical edit against a structure the parser mis-read can corrupt neighbouring entries.
+
+### Fixed (CLI)
+
+- **Field writes no longer nudge the registry's markdown shape.** `set_entry_field` collapsed an entry's trailing `"\n\n"` to `"\n"`, gluing the edited entry to the following `## Bucket:` heading; `insert_into_bucket` appended entries with no blank line before the next section. Both are shared helpers, so `drift --apply`, `promote` and `verify` were reshaping the file a little on every write. Surfaced by making field writes routine.
+
+### Changed (Framework)
+
+- [`FOLLOW-UPS-BACKLOG-PATTERN.md`](dist/.straymark/00-governance/FOLLOW-UPS-BACKLOG-PATTERN.md) (EN + es + zh-CN) documents the three verbs and the ex-ante origin (`Origin: CHARTER-NN §Scope`) as a first-class case alongside the ex-post one. The registry template documents the write path and states that entries are never hand-edited.
+- The `/straymark-followups` skill (all four agent surfaces) uses `set-status` + `note` for post-Charter-close triage instead of hand-flips-then-`recount`, and gains a **Charter-declaration** step for registering an ex-ante deferral.
+
+### Changed (CLI)
+
+- **Internal:** one shared recompute-and-write path (`followups::write_recounted`) for every mutating verb, so "the entry edit and the counter update are one step" holds by construction. `recount` uses the same function, keeping it the idempotent check on the verbs' arithmetic rather than a second implementation that could disagree.
+
 ## CLI 3.38.0 — 2026-07-25
 
 Auditor isolation is enforced where the prompt is built, not where the report is read (#372, Sentinel field report).

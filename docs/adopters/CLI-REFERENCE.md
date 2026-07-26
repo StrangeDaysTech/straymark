@@ -45,8 +45,8 @@ StrayMark uses **independent version tags** for each component:
 
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
-| Framework | `fw-` | `fw-4.36.0` | Templates (12 types), governance docs, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.38.0` | The `straymark` binary |
+| Framework | `fw-` | `fw-4.37.0` | Templates (12 types), governance docs, directives, Charter template + schema |
+| CLI | `cli-` | `cli-3.39.0` | The `straymark` binary |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | The `straymark-loom` visualization server, downloaded on demand by `straymark loom serve` |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
@@ -958,6 +958,9 @@ Parsing is **lenient**: v0 registries (pre-fw-4.21.0) are read without errors; t
 - `straymark followups recount` — recompute the CLI-owned counters after a manual-triage session *(cli-3.20.0+)*
 - `straymark followups promote` — elevate an entry to a TDE document *(cli-3.19.0+)*
 - `straymark followups verify` — re-verify a dated hypothesis's premise at execution time *(cli-3.37.0+)*
+- `straymark followups note` — append a dated annotation to an entry's `Notes` *(cli-3.39.0+)*
+- `straymark followups set-status` — change an entry's status and recompute the counters in one step *(cli-3.39.0+)*
+- `straymark followups new` — create an entry declared **ex-ante**, at Charter-declaration time *(cli-3.39.0+)*
 
 #### `straymark followups list [--bucket <name>] [--status <s>] [--severity <s>] [--label <tag>] [path]`
 
@@ -1039,6 +1042,61 @@ $ straymark followups verify FU-016 --premise "yrs has an independent reference 
 ✓ FU-016 premise recorded.
 ✓ FU-016 verified — Verified-at → 2026-06-04.
 ```
+
+#### `straymark followups note <FU-NNN> "<text>" [--source <ID>] [--path <dir>]` *(cli-3.39.0+)*
+
+Append a dated annotation to an entry's `Notes` in one validated edit. Before this verb (#355), recording that an entry received a *partial* mitigation — without changing its status — meant hand-editing a CLI-parsed file: an edit that can malform the entry and break `list`/`status`/`drift`, with nothing recording when the note was made or what motivated it.
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--source <ID>` | — | The Charter or AILOG that motivated the note (e.g. `CHARTER-04`), recorded alongside the date so the annotation stays attributable. |
+
+`Notes` is a single-line field by parser contract, so annotations **compose** onto the existing value rather than stacking as new bullets.
+
+```bash
+$ straymark followups note FU-002 "Part-a shipped (size cap in the codec); part-b deferred." --source CHARTER-04
+✓ FU-002 annotated.
+  Notes: Extracted 2026-07-20. · [2026-07-26 · CHARTER-04] Part-a shipped (size cap in the codec); part-b deferred.
+```
+
+#### `straymark followups set-status <FU-NNN> <status> [--path <dir>]` *(cli-3.39.0+)*
+
+Change an entry's status **and** recompute the CLI-owned counters in the same step. This closes the desync window `recount` exists to clean up after (#355): the two-step it replaces — hand-edit the `Status` bullet, then remember `recount` — desyncs the moment you forget the second half, leaving the counters quietly lying about the backlog.
+
+Valid statuses: `open` · `in-progress` · `suspected-closed` · `closed` · `superseded`. A value outside that vocabulary is **refused**, not written — the parser is lenient, so a typo would not fail: it would silently drop the entry from every counter. `promoted` redirects to `followups promote`, which also writes the TDE that gives the status something to point at.
+
+```bash
+$ straymark followups set-status FU-002 closed
+✓ FU-002: open → closed
+  Counters: 2 open / 0 in-progress / 0 suspected-closed / 1 closed (was 3 / 0 / 0 / 0).
+```
+
+#### `straymark followups new --title <title> --origin <origin> [--bucket <name>] [--status <s>] [--trigger <t>] [--destination <d>] [--cost <c>] [--premise <p>] [--path <dir>]` *(cli-3.39.0+)*
+
+Create an entry whose origin is a **Charter declaration** (ex-ante), before any execution exists (#360). Both older population paths assume an ex-post origin: `drift --apply` extracts from AILOGs, and a deferral decided *at declaration time* — "the Redis CI job is out of scope; register the coverage gap so it is deferred, not silenced" — precedes any AILOG by design.
+
+The hazard this closes is correctness, not ergonomics. Lacking a creation verb, the reporting adopter forward-referenced `FU-011` in the Charter body with nothing reserving it; since ids are minted `max(existing) + 1` at extraction time, the next unrelated `drift --apply` would hand `FU-011` to a different entry and silently point the Charter's citations at the wrong follow-up. `new` assigns the id atomically and prints it, so by the time the Charter cites it the entry exists.
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--title <title>` | *(required)* | Entry title — the first thing every later reader sees. |
+| `--origin <origin>` | *(required)* | The document that decided the deferral, e.g. `"CHARTER-06 §Scope"`. Required because schema v1 requires an origin on every entry. |
+| `--bucket <name>` | `charter-triggered` | One of the five canonical buckets. |
+| `--status <s>` | `open` | Initial status. |
+| `--trigger` / `--destination` / `--cost` | `TBD` | The usual entry fields; unset ones are written as `TBD`, matching the template's convention. |
+| `--premise <p>` | — | The load-bearing assumption the entry rests on, so acting on it later is a seconds-long re-check. |
+
+The entry is written with `Origin-class: ex-ante-planning` and **no `Source-hash`**: there is no AILOG to hash, and inventing one would make a later `drift --apply` believe it had already extracted something it never saw.
+
+```bash
+$ straymark followups new --title "Redis CI job deferred" --origin "CHARTER-06 §Scope" --cost S
+✓ FU-012 created in bucket `charter-triggered` (open).
+  Counters: 3 open / 0 in-progress / 0 suspected-closed (total 3).
+
+  Next: the id is assigned and written — cite FU-012 in the Charter body now, not a reserved guess.
+```
+
+> **All three refuse to write a registry with parse warnings.** A surgical edit against a structure the parser mis-read can corrupt neighbouring entries, so a malformed entry must be fixed first. `recount` remains the escape hatch for a bulk manual-triage session — and the idempotent check that these verbs got the arithmetic right.
 
 ---
 

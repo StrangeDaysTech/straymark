@@ -467,6 +467,70 @@ enum FollowupsCommands {
         #[arg(long = "path", default_value = ".")]
         path: String,
     },
+    /// Append a dated annotation to an entry's Notes, in one validated edit.
+    /// Replaces hand-editing the CLI-parsed registry (#355).
+    Note {
+        /// Entry identifier (FU-NNN or just NNN)
+        fu_id: String,
+        /// The annotation to append. Stamped with today's date.
+        text: String,
+        /// What motivated the note (e.g. CHARTER-04, AILOG-2026-07-20-001).
+        /// Recorded alongside the date so the annotation stays attributable.
+        #[arg(long)]
+        source: Option<String>,
+        /// Project directory (default: current directory)
+        #[arg(long = "path", default_value = ".")]
+        path: String,
+    },
+    /// Change an entry's status AND recompute the CLI-owned counters in the
+    /// same step, closing the edit-then-recount desync window (#355).
+    SetStatus {
+        /// Entry identifier (FU-NNN or just NNN)
+        fu_id: String,
+        /// New status: open | in-progress | suspected-closed | closed |
+        /// superseded. (`promoted` is reached via `followups promote`, which
+        /// also writes the TDE the status points at.)
+        status: String,
+        /// Project directory (default: current directory)
+        #[arg(long = "path", default_value = ".")]
+        path: String,
+    },
+    /// Create an entry declared ex-ante — at Charter-declaration time, before
+    /// any AILOG exists (#360). Assigns the id atomically and prints it, so the
+    /// Charter body cites an entry that already exists instead of a reserved
+    /// guess that the next `drift --apply` could hand to something else.
+    New {
+        /// Entry title (the first thing every later reader sees)
+        #[arg(long)]
+        title: String,
+        /// The document that decided the deferral, e.g. "CHARTER-06 §Scope".
+        /// Required — schema v1 requires an origin on every entry.
+        #[arg(long)]
+        origin: String,
+        /// Bucket (when it becomes actionable)
+        #[arg(long, default_value = "charter-triggered")]
+        bucket: String,
+        /// Initial status
+        #[arg(long, default_value = "open")]
+        status: String,
+        /// Observable condition that makes it actionable (default: TBD)
+        #[arg(long)]
+        trigger: Option<String>,
+        /// Where the work lands: chore | mini-charter | charter-replanning |
+        /// operations | <charter-id> (default: TBD)
+        #[arg(long)]
+        destination: Option<String>,
+        /// Effort estimate, free-form (default: TBD)
+        #[arg(long)]
+        cost: Option<String>,
+        /// The load-bearing assumption this entry rests on — what a future
+        /// reader must re-check before acting (AIDEC-2026-07-18-001)
+        #[arg(long)]
+        premise: Option<String>,
+        /// Project directory (default: current directory)
+        #[arg(long = "path", default_value = ".")]
+        path: String,
+    },
 }
 
 /// Sub-analyses under `straymark analyze`.
@@ -1007,6 +1071,38 @@ fn main() {
                 verified,
                 at.as_deref(),
             ),
+            FollowupsCommands::Note {
+                fu_id,
+                text,
+                source,
+                path,
+            } => commands::followups::note::run(&path, &fu_id, &text, source.as_deref()),
+            FollowupsCommands::SetStatus {
+                fu_id,
+                status,
+                path,
+            } => commands::followups::set_status::run(&path, &fu_id, &status),
+            FollowupsCommands::New {
+                title,
+                origin,
+                bucket,
+                status,
+                trigger,
+                destination,
+                cost,
+                premise,
+                path,
+            } => commands::followups::new::run(commands::followups::new::NewArgs {
+                path: &path,
+                title: &title,
+                origin: &origin,
+                bucket: &bucket,
+                status: &status,
+                trigger: trigger.as_deref(),
+                destination: destination.as_deref(),
+                cost: cost.as_deref(),
+                premise: premise.as_deref(),
+            }),
         },
         Commands::Architecture { command } => match command {
             ArchitectureCommands::Generate { path, force, out } => {

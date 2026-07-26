@@ -267,9 +267,22 @@ straymark followups drift [--apply|--scan-all]   # 漂移检测(见上文)
 straymark followups recount               # 手动分诊会话后重新计算 CLI 拥有的计数器(cli-3.20.0+)
 straymark followups promote FU-NNN [--premise-verified]   # 自动化 FU → TDE 提升;浮现前提重新核查,带该 flag 时盖上 Verified-at(cli-3.37.0+)
 straymark followups verify FU-NNN [--premise "..."] [--verified] [--at 日期]   # 在执行时重新验证一个有日期的假设:浮现/记录前提,盖上 Verified-at(cli-3.37.0+)
+straymark followups note FU-NNN "<文本>" [--source CHARTER-NN|AILOG-…]   # 向 Notes 追加一条带日期的注记(cli-3.39.0+)
+straymark followups set-status FU-NNN <status>   # 修改状态**并**在同一步骤重算计数器(cli-3.39.0+)
+straymark followups new --title "..." --origin "CHARTER-NN §Scope" [--bucket …] [--cost …] [--trigger …] [--premise …]   # 创建一条事前(ex-ante)声明的条目(cli-3.39.0+)
 ```
 
 `verify` 与 `promote --premise-verified` 是"认识论地位"纪律的执行时可供性(affordance):它们在投入的那一刻把前提摆在操作员面前,并记录重新核查已经发生。人的判断留在 CLI 之外 —— 它浮现并盖印,从不裁定真伪。
+
+### 修改与创建条目(cli-3.39.0+)
+
+`note`、`set-status` 与 `new` 取代了最后那些必须手工编辑这个由 CLI 解析的文件的流程。那里有两处会出错:手工编辑可能让条目变形,进而破坏 `list`/`status`/`drift`;而修改状态是一个**两步流程** —— 先编辑 bullet,再记得运行 `recount` —— 一旦忘了后半步就会失同步,让计数器悄悄谎报 backlog。
+
+- **`note`** 向 `Notes` 追加内容(该字段只有一行,所以注记是组合而非堆叠),盖上日期;带 `--source` 时还记录促成它的 Charter 或 AILOG。用于最常见的场景:记录**部分**缓解措施而不改变状态。
+- **`set-status`** 在同一步骤写入状态并重算计数器。它拒绝词表之外的状态 —— 解析器是宽容的,所以一个拼写错误不会失败,而是会悄悄把该条目从所有计数器中剔除 —— 并把 `promoted` 重定向到 `followups promote`,后者还会写出让该状态有所指的 TDE。
+- **`new`** 创建其来源为**Charter 声明**的条目(`Origin-class: ex-ante-planning`)。此前两条填充路径都假定来源是事后的:`drift --apply` 从 AILOG 中提取,而在声明时刻做出的推迟按设计先于任何 AILOG。`new` 原子地分配并打印 id,于是 Charter 正文引用的是一条**已存在**的条目,而不是下一次 `drift --apply` 可能分配给别的条目的预留猜测。事前条目**不携带 `Source-hash`**:没有 AILOG 可供哈希,而编造一个会让后续的 `drift --apply` 以为自己已经提取过它从未见过的东西。
+
+三者在注册表存在解析告警时都拒绝写入:针对被解析器误读的结构做手术式编辑,可能损坏相邻条目。`recount` 仍是批量手工 triage 的逃生通道 —— 也是这些动词算术是否正确的幂等校验。
 
 注册表也在 `straymark explore` TUI 中作为一个合成的 **Follow-ups** 分组出现(每个 bucket 一个子节点),并在 `straymark status` 中作为一个计数块出现。
 
@@ -343,4 +356,4 @@ straymark followups verify FU-NNN [--premise "..."] [--verified] [--at 日期]  
 
 ---
 
-*StrayMark fw-4.36.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.37.0 | [Strange Days Tech](https://strangedays.tech)*
