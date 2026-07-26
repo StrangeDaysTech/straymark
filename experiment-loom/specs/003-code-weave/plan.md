@@ -2,7 +2,7 @@
 
 > **SpecKit artifact — the HOW.** Derives from `spec.md` (the WHAT) and feeds `tasks.md` (the
 > ordered work). The source-of-the-code-graph decision is recorded as a dogfood ADR:
-> `docs/decisions/ADR-2026-06-26-001-code-weave-source.md`. The work block is
+> `.straymark/02-design/decisions/ADR-2026-06-26-001-code-weave-source.md`. The work block is
 > `../../CHARTER-02-code-weave.md`. Status: **draft / experimental**.
 
 ## 1. Architecture at a glance
@@ -177,7 +177,7 @@ core/
 ## 9. References
 
 - `spec.md` (this feature's WHAT) and `tasks.md` (ordered work).
-- `docs/decisions/ADR-2026-06-26-001-code-weave-source.md` (native vs. external code graph).
+- `.straymark/02-design/decisions/ADR-2026-06-26-001-code-weave-source.md` (native vs. external code graph).
 - `../../CHARTER-02-code-weave.md` (the work-block Charter; `originating_spec` → this spec).
 - Prior art in-repo: `core/src/architecture/{projection,gather}.rs` (the pure-function +
   impure-gatherer split the weave mirrors), `core/src/graph.rs` (the audit oracle),

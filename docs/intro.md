@@ -22,4 +22,4 @@ StrayMark externalizes the cognitive discipline of AI-assisted engineering — r
 
 ## Decisions
 
-The [Decisions directory on GitHub](https://github.com/StrangeDaysTech/straymark/tree/main/docs/decisions) tracks ADRs — every load-bearing technical or process choice with its rationale.
+The [decision records in the governed tree](https://github.com/StrangeDaysTech/straymark/tree/main/.straymark/02-design/decisions) track ADRs — every load-bearing technical or process choice with its rationale. StrayMark governs its own development with StrayMark, so its ADRs live where an adopter's would.

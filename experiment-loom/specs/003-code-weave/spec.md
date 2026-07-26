@@ -5,7 +5,7 @@
 > decision that governs it live in **one woven graph**, not two neighbouring views. Companion
 > to Spec 001 (the knowledge graph of documents) and Spec 002 (the architecture plan). The
 > HOW is in `plan.md`; the source-of-the-code-graph decision (native vs. external indexer) is
-> recorded in `docs/decisions/ADR-2026-06-26-001-code-weave-source.md`. The work block is
+> recorded in `.straymark/02-design/decisions/ADR-2026-06-26-001-code-weave-source.md`. The work block is
 > `experiment-loom/CHARTER-02-code-weave.md`. Status: **draft / experimental (v0, N=1)**.
 
 ## 1. Problem & intent

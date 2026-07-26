@@ -25,7 +25,7 @@ StrayMark 里每个 AILOG 都可以用一节 `## Follow-ups` 收尾：这次变�
 
 ## 一等公民，带着闸门
 
-回应是 [ADR-2026-06-03-001](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/ADR-2026-06-03-followups-first-class.md)：follow-ups backlog 不再是一个约定，而成为 StrayMark 的第二个一等公民工件，走 Charter 走过的同一条车道 —— 自己的规范路径、自己的 schema、自己的 CLI namespace、自己在 `explore` TUI 中的分组。
+回应是 [ADR-2026-06-03-001](https://github.com/StrangeDaysTech/straymark/blob/main/.straymark/02-design/decisions/ADR-2026-06-03-001-followups-first-class.md)：follow-ups backlog 不再是一个约定，而成为 StrayMark 的第二个一等公民工件，走 Charter 走过的同一条车道 —— 自己的规范路径、自己的 schema、自己的 CLI namespace、自己在 `explore` TUI 中的分组。
 
 [`fw-4.21.0` / `cli-3.19.0`](https://github.com/StrangeDaysTech/straymark/releases/tag/cli-3.19.0) 交付了实质内容：
 
@@ -76,6 +76,6 @@ schema 仍是**实验性 v1**。两次生产迁移、零 schema 层面的发现�
 
 ---
 
-*StrayMark `fw-4.21.0` → `fw-4.23.1`，`cli-3.19.0` → `cli-3.20.0` — ADR [2026-06-03-001](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/ADR-2026-06-03-followups-first-class.md) · Issues [#214](https://github.com/StrangeDaysTech/straymark/issues/214) · [#220](https://github.com/StrangeDaysTech/straymark/issues/220) · [#222](https://github.com/StrangeDaysTech/straymark/issues/222) · [#225](https://github.com/StrangeDaysTech/straymark/issues/225) · PRs [#217](https://github.com/StrangeDaysTech/straymark/pull/217) · [#218](https://github.com/StrangeDaysTech/straymark/pull/218) · [#221](https://github.com/StrangeDaysTech/straymark/pull/221) · [#223](https://github.com/StrangeDaysTech/straymark/pull/223) · [#227](https://github.com/StrangeDaysTech/straymark/pull/227)。Pattern：[`FOLLOW-UPS-BACKLOG-PATTERN.md`](https://github.com/StrangeDaysTech/straymark/blob/main/dist/.straymark/00-governance/FOLLOW-UPS-BACKLOG-PATTERN.md)（v1，实验性）。前篇：[二进制藏不住的东西](what-the-binary-couldnt-hide) · [What the feature flag compiled away](what-the-feature-flag-compiled-away)。*
+*StrayMark `fw-4.21.0` → `fw-4.23.1`，`cli-3.19.0` → `cli-3.20.0` — ADR [2026-06-03-001](https://github.com/StrangeDaysTech/straymark/blob/main/.straymark/02-design/decisions/ADR-2026-06-03-001-followups-first-class.md) · Issues [#214](https://github.com/StrangeDaysTech/straymark/issues/214) · [#220](https://github.com/StrangeDaysTech/straymark/issues/220) · [#222](https://github.com/StrangeDaysTech/straymark/issues/222) · [#225](https://github.com/StrangeDaysTech/straymark/issues/225) · PRs [#217](https://github.com/StrangeDaysTech/straymark/pull/217) · [#218](https://github.com/StrangeDaysTech/straymark/pull/218) · [#221](https://github.com/StrangeDaysTech/straymark/pull/221) · [#223](https://github.com/StrangeDaysTech/straymark/pull/223) · [#227](https://github.com/StrangeDaysTech/straymark/pull/227)。Pattern：[`FOLLOW-UPS-BACKLOG-PATTERN.md`](https://github.com/StrangeDaysTech/straymark/blob/main/dist/.straymark/00-governance/FOLLOW-UPS-BACKLOG-PATTERN.md)（v1，实验性）。前篇：[二进制藏不住的东西](what-the-binary-couldnt-hide) · [What the feature flag compiled away](what-the-feature-flag-compiled-away)。*
 
 *本文档在生成式 AI 工具（Claude Opus 4.8）的协助下完成；内容的全部责任由人类作者承担。*

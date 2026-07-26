@@ -4,7 +4,7 @@
 > `plan.md` (the HOW). Each task is verifiable; phases map to releasable increments. This is
 > the **ex-ante skeleton for C1** (the file-level weave); C2/C3/C4 tasks get refined when
 > those tracks start (the same way Spec 002's A2/A3 were stubs until they began). FR/NFR ids
-> reference `spec.md`. The source decision is `docs/decisions/ADR-2026-06-26-001-code-weave-source.md`.
+> reference `spec.md`. The source decision is `.straymark/02-design/decisions/ADR-2026-06-26-001-code-weave-source.md`.
 > Status: **draft**.
 
 ## Track map (from `spec.md` §9)

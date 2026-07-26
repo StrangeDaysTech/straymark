@@ -1,8 +1,14 @@
 # Implementation plan — StrayMark self-adoption (AIDEC-2026-07-13-001)
 
-> Companion to [`AIDEC-2026-07-13-001-straymark-self-adoption.md`](AIDEC-2026-07-13-001-straymark-self-adoption.md).
+> Companion to [`AIDEC-2026-07-13-001-straymark-self-adoption.md`](../../../.straymark/07-ai-audit/decisions/AIDEC-2026-07-13-001-straymark-self-adoption.md).
 > Living checklist of the safeguard sequence and its status, kept **versioned** so we can retrace
 > our steps (and roll back) if self-adoption misbehaves. Last updated: 2026-07-13.
+>
+> **Not a StrayMark document type.** This is a working checklist, not a decision record: it has no
+> frontmatter and it keeps changing, whereas the AIDEC it serves is signed and immutable. It was
+> previously named `AIDEC-2026-07-13-001-implementation-plan.md`, which made it look like a second
+> AIDEC **sharing the parent's id**. Renamed and relocated alongside the other non-doctype working
+> documents when the real decision records moved into the governed tree (issue #368).
 
 ## Gate (non-negotiable)
 
@@ -79,6 +85,6 @@ audit trail of the pin over time.
 
 ## References
 
-- Decision: [`AIDEC-2026-07-13-001-straymark-self-adoption.md`](AIDEC-2026-07-13-001-straymark-self-adoption.md)
+- Decision: [`AIDEC-2026-07-13-001`](../../../.straymark/07-ai-audit/decisions/AIDEC-2026-07-13-001-straymark-self-adoption.md)
 - Working analyses (local, non-versioned): `analisis-autoadopcion.md`, `spike-b-autoadopcion-riesgos.md`, `PLAN-centro-de-control.md`
 - S1+S6: PR #358 (`cli-3.34.0`)

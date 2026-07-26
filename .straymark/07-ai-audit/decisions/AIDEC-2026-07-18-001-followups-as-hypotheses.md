@@ -84,7 +84,7 @@ a correctness bug in any existing command.
 **Reframe follow-up entries as dated, decaying hypotheses, and place premise verification at
 execution (promote / act), never at capture.** Implement the reframe across three layers — the
 depth chosen by the operator on 2026-07-18. This AIDEC evolves — does not supersede —
-[ADR-2026-06-03-001](../../../docs/decisions/ADR-2026-06-03-followups-first-class.md) (the follow-ups
+[ADR-2026-06-03-001](../../02-design/decisions/ADR-2026-06-03-001-followups-first-class.md) (the follow-ups
 backlog as a first-class entity). The registry stays `schema_version: v1` (experimental); the
 additions here are optional and backward-compatible, so hard stabilization remains gated on design
 principle #12 as before. **Status: accepted — reviewed and approved 2026-07-18; implementation of the three layers may proceed.**
@@ -256,7 +256,7 @@ promotion.
 ## References
 
 - [StrayMark #365](https://github.com/StrangeDaysTech/straymark/issues/365) — the field report.
-- [ADR-2026-06-03-001](../../../docs/decisions/ADR-2026-06-03-followups-first-class.md) — follow-ups as a first-class entity (this AIDEC evolves it).
+- [ADR-2026-06-03-001](../../02-design/decisions/ADR-2026-06-03-001-followups-first-class.md) — follow-ups as a first-class entity (this AIDEC evolves it).
 - [FOLLOW-UPS-BACKLOG-PATTERN.md](../../../dist/.straymark/00-governance/FOLLOW-UPS-BACKLOG-PATTERN.md) — the pattern being reframed.
 - #366 (cli-3.36.2) — the #365 title-fidelity fix (extractor half; this AIDEC is the framing half).
 - Related open adopter issues: #360 (ex-ante creation path), #355 (`note`/`set-status` verbs), #346 (drift extraction fidelity).

@@ -2,7 +2,7 @@
 
 > **SpecKit artifact — the HOW.** Derives from `spec.md` (the WHAT) and feeds `tasks.md`
 > (the ordered work). The repo-wide architecture decision is recorded as a dogfood ADR:
-> `docs/decisions/ADR-2026-06-02-loom-stack.md`. Status: **draft / experimental**.
+> `.straymark/02-design/decisions/ADR-2026-06-02-001-loom-stack.md`. Status: **draft / experimental**.
 
 ## 1. Architecture at a glance
 
@@ -142,7 +142,7 @@ All JS is confined to `experiment-loom/web/` and built **only in CI** — mirror
 > DrawIO render + live overlay + layer toggle, a `loom-0.x` release alongside/after M2);
 > **A3** (axonometric/BIM) is the north star. A1 reuses `charter_files`, `charter drift`,
 > `metrics_engine`, TDE docs, and `analyze declared-vs-wired` — all already in the CLI. See
-> `docs/decisions/ADR-2026-06-02-002-architecture-plan-format.md`.
+> `.straymark/02-design/decisions/ADR-2026-06-02-002-architecture-plan-format.md`.
 
 ## 8. Risks
 
@@ -163,7 +163,7 @@ All JS is confined to `experiment-loom/web/` and built **only in CI** — mirror
 ## 9. References
 
 - `spec.md` (this feature's WHAT) and `tasks.md` (ordered work).
-- `docs/decisions/ADR-2026-06-02-loom-stack.md` (the architecture decision record).
+- `.straymark/02-design/decisions/ADR-2026-06-02-001-loom-stack.md` (the architecture decision record).
 - `../../CHARTER-01-loom-server.md` (the work-block Charter; `originating_spec` → this spec).
 - Reused CLI infra: `cli/src/document.rs`, `cli/src/audit_engine.rs`, `cli/src/download.rs`,
   `cli/src/platform.rs`, `cli/src/self_update.rs`, `.github/workflows/release-cli.yml`.

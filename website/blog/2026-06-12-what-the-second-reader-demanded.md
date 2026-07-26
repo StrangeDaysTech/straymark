@@ -36,7 +36,7 @@ None of these is a headline. Together they're the difference between starting a 
 
 ## One parser, or two truths
 
-Then the actual pivot: [`cli-3.23.1`](https://github.com/StrangeDaysTech/straymark/releases/tag/cli-3.23.1), recorded in [`ADR-2026-06-02-001`](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/ADR-2026-06-02-loom-stack.md), Loom milestone M0.
+Then the actual pivot: [`cli-3.23.1`](https://github.com/StrangeDaysTech/straymark/releases/tag/cli-3.23.1), recorded in [`ADR-2026-06-02-001`](https://github.com/StrangeDaysTech/straymark/blob/main/.straymark/02-design/decisions/ADR-2026-06-02-001-loom-stack.md), Loom milestone M0.
 
 The repository root became a Cargo **workspace** (`core` + `cli`). The document model — `DocType`, `Frontmatter`, `StrayMarkDocument`, `parse_document`, `discover_documents` — moved verbatim out of `cli/src/document.rs` into a new crate, **`straymark-core`**, published to crates.io. And `audit_engine::build_traceability`, the CLI's private graph assembler, generalized into `core::graph`: a typed, bidirectional, orphan-preserving knowledge graph over the frontmatter cross-links, with one deliberate design choice that matters later — **dangling references are kept as first-class `resolved: false` edges**, not dropped. A link to a document that doesn't exist is data, not an error to swallow.
 
@@ -56,6 +56,6 @@ The portable exercise: find the format your project parses in more than one plac
 
 ---
 
-*StrayMark `fw-4.24.0` → `fw-4.26.0`, `cli-3.22.0` → `cli-3.23.1` — ADR [2026-06-02-001](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/ADR-2026-06-02-loom-stack.md) · Charter [`CHARTER-01-loom-server`](https://github.com/StrangeDaysTech/straymark/blob/main/experiment-loom/CHARTER-01-loom-server.md) · Issues [#135](https://github.com/StrangeDaysTech/straymark/issues/135) · [#232](https://github.com/StrangeDaysTech/straymark/issues/232) · [#237](https://github.com/StrangeDaysTech/straymark/issues/237) · PRs [#238](https://github.com/StrangeDaysTech/straymark/pull/238) · [#239](https://github.com/StrangeDaysTech/straymark/pull/239). Predecessor: [What the bash script said was in sync](what-the-bash-script-said-was-in-sync). Next: [What the graph couldn't draw yet](what-the-graph-couldnt-draw-yet).*
+*StrayMark `fw-4.24.0` → `fw-4.26.0`, `cli-3.22.0` → `cli-3.23.1` — ADR [2026-06-02-001](https://github.com/StrangeDaysTech/straymark/blob/main/.straymark/02-design/decisions/ADR-2026-06-02-001-loom-stack.md) · Charter [`CHARTER-01-loom-server`](https://github.com/StrangeDaysTech/straymark/blob/main/experiment-loom/CHARTER-01-loom-server.md) · Issues [#135](https://github.com/StrangeDaysTech/straymark/issues/135) · [#232](https://github.com/StrangeDaysTech/straymark/issues/232) · [#237](https://github.com/StrangeDaysTech/straymark/issues/237) · PRs [#238](https://github.com/StrangeDaysTech/straymark/pull/238) · [#239](https://github.com/StrangeDaysTech/straymark/pull/239). Predecessor: [What the bash script said was in sync](what-the-bash-script-said-was-in-sync). Next: [What the graph couldn't draw yet](what-the-graph-couldnt-draw-yet).*
 
 *This document was produced with assistance from generative AI tools (Claude Opus 4.8); all responsibility for the content rests with the human author.*

@@ -12,7 +12,7 @@ related: [CHARTER-01-loom-server, ADR-2026-06-26-001]
 > **Status (mirrored from frontmatter — source of truth is above):** draft. Effort: L.
 >
 > **Origin:** SpecKit spec `experiment-loom/specs/003-code-weave/spec.md`. Source-of-the-code-
-> graph decision recorded in `docs/decisions/ADR-2026-06-26-001-code-weave-source.md`.
+> graph decision recorded in `.straymark/02-design/decisions/ADR-2026-06-26-001-code-weave-source.md`.
 > Successor to `CHARTER-01-loom-server` (kept separate — see Context).
 
 ## Context

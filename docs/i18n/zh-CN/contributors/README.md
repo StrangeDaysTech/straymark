@@ -33,7 +33,7 @@
 | `2026-05-03-audit-skills-rollout.md` | 2026-05-03 | audit skill 的运营性铺开计划（gating 标准、遥测、分阶段发布）。 |
 | `2026-05-04-audit-cli-flow.md` | 2026-05-04 | 在首次实际遇到一个跨多次提交的 L 级 Charter（Sentinel CHARTER-07）之后，对外部审计流程的重新设计。在 `cli-3.10+` 中实施。 |
 
-当前代码库的 ADR（架构决策记录）位于 GitHub 上的 [`docs/decisions/`](https://github.com/StrangeDaysTech/straymark/tree/main/docs/decisions)。
+当前代码库的 ADR（架构决策记录）位于 GitHub 上的 [`.straymark/02-design/decisions/`](https://github.com/StrangeDaysTech/straymark/tree/main/.straymark/02-design/decisions) —— 即受治理树，因为 StrayMark 自我采用。AI 决策（AIDEC）位于 [`.straymark/07-ai-audit/decisions/`](https://github.com/StrangeDaysTech/straymark/tree/main/.straymark/07-ai-audit/decisions)。
 
 ---
 
