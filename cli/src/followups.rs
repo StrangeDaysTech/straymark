@@ -1229,12 +1229,19 @@ pub fn insert_into_bucket(registry: &Registry, bucket: &str, block: &str) -> Str
 
     match target {
         Some(section) => {
-            // Insert before the next section heading, trimming trailing blank
-            // lines of the section so spacing stays tight.
+            // Insert before the next section heading, normalizing the blank
+            // lines on both sides: one before the new entry, and one after it
+            // when a following section exists — otherwise the appended entry
+            // butts straight against the next `## Bucket:` heading.
             let head = &body[..section.end];
             let tail = &body[section.end..];
             let head_trimmed = head.trim_end_matches('\n');
-            format!("{}\n\n{}\n{}", head_trimmed, block.trim_end_matches('\n'), tail)
+            let block_trimmed = block.trim_end_matches('\n');
+            if tail.is_empty() {
+                format!("{}\n\n{}\n", head_trimmed, block_trimmed)
+            } else {
+                format!("{}\n\n{}\n\n{}", head_trimmed, block_trimmed, tail)
+            }
         }
         None => {
             let trimmed = body.trim_end_matches('\n');
@@ -1272,8 +1279,12 @@ pub fn set_entry_field(body: &str, entry: &Entry, field: &str, value: &str) -> S
         lines.insert(insert_at, format!("- **{}**: {}", field, value));
     }
     let mut new_block = lines.join("\n");
-    // Preserve the block's trailing newline shape.
-    if block.ends_with('\n') && !new_block.ends_with('\n') {
+    // Preserve the block's trailing newline shape *exactly*. Collapsing
+    // "\n\n" to "\n" (the earlier behavior) ate the blank line separating the
+    // edited entry from the next heading, so every field write nudged the
+    // registry's markdown shape — visible once `note` made field writes routine.
+    let trailing = block.len() - block.trim_end_matches('\n').len();
+    while new_block.len() - new_block.trim_end_matches('\n').len() < trailing {
         new_block.push('\n');
     }
     let mut out = String::with_capacity(body.len() + 32);
@@ -1281,6 +1292,112 @@ pub fn set_entry_field(body: &str, entry: &Entry, field: &str, value: &str) -> S
     out.push_str(&new_block);
     out.push_str(&body[entry.span_end..]);
     out
+}
+
+/// The five canonical buckets (schema v1 `buckets` enum). Stable at N=91
+/// entries in the reference adopter — no sixth has been needed.
+pub const CANONICAL_BUCKETS: &[&str] = &[
+    "ready",
+    "time-triggered",
+    "charter-triggered",
+    "phase-blocked",
+    "operational",
+];
+
+/// Recompute the CLI-owned counters from `body` and return the frontmatter
+/// carrying them (plus the v0 → v1 upgrade every write command performs).
+///
+/// Counters are derived from the entries *as they will be written*, not from
+/// the registry as it was read — which is what makes "the entry edit and the
+/// counter update are one step" true rather than a convention the operator has
+/// to remember (#355: the hand-edit + `recount` two-step is desyncable).
+pub fn recounted_frontmatter(
+    path: &Path,
+    frontmatter_raw: &str,
+    body: &str,
+) -> Result<(String, Counters)> {
+    let reparsed = parse_registry_str(path, &assemble(frontmatter_raw, body))?;
+    let counters = compute_counters(&reparsed);
+    Ok((fm_apply_counters_and_v1(frontmatter_raw, &counters), counters))
+}
+
+/// Persist `body` to `path` with the counters recomputed from it. The single
+/// write path for every mutating verb (`note`, `set-status`, `new`, `verify`).
+pub fn write_recounted(path: &Path, frontmatter_raw: &str, body: &str) -> Result<Counters> {
+    let (fm, counters) = recounted_frontmatter(path, frontmatter_raw, body)?;
+    std::fs::write(path, assemble(&fm, body))
+        .with_context(|| format!("Failed to write registry at {}", path.display()))?;
+    Ok(counters)
+}
+
+/// Compose the new value of an entry's `Notes` bullet when appending an
+/// annotation.
+///
+/// `Notes` is a single-line bullet (the parser reads one line per field), so
+/// accumulating annotations means composing, not stacking. Each is stamped
+/// `[date]` — and `[date · source]` when the caller passes what motivated it —
+/// so an entry's note history stays attributable instead of becoming an
+/// undated blur. Pure, so the composition is unit-testable.
+pub fn append_note(existing: Option<&str>, text: &str, date: &str, source: Option<&str>) -> String {
+    let stamp = match source.map(str::trim).filter(|s| !s.is_empty()) {
+        Some(src) => format!("[{} · {}]", date, src),
+        None => format!("[{}]", date),
+    };
+    let addition = format!("{} {}", stamp, text.trim());
+    match existing.map(str::trim).filter(|s| !s.is_empty()) {
+        Some(prev) => format!("{} · {}", prev, addition),
+        None => addition,
+    }
+}
+
+/// Render an entry declared **ex-ante** — at Charter-declaration time, before
+/// any execution (#360).
+///
+/// Deliberately not [`render_new_entry`]: that one serves `drift --apply` and
+/// stamps a `Source-hash` derived from the originating AILOG. An ex-ante entry
+/// has no AILOG to hash (the Charter precedes execution by design), and
+/// inventing a hash would make a later `drift --apply` believe it had already
+/// extracted something it never saw. Omitting the field is the honest encoding:
+/// the dedup key is absent because the source it keys on does not exist yet.
+#[allow(clippy::too_many_arguments)]
+pub fn render_declared_entry(
+    fu_number: u32,
+    title: &str,
+    origin: &str,
+    status: &str,
+    trigger: Option<&str>,
+    destination: Option<&str>,
+    cost: Option<&str>,
+    premise: Option<&str>,
+    notes: &str,
+) -> String {
+    let field = |v: Option<&str>| {
+        v.map(str::trim)
+            .filter(|s| !s.is_empty())
+            .unwrap_or("TBD")
+            .to_string()
+    };
+    let mut block = format!(
+        "### FU-{:03} — {}\n\
+         - **Origin**: {}\n\
+         - **Origin-class**: ex-ante-planning\n\
+         - **Status**: {}\n\
+         - **Trigger**: {}\n\
+         - **Destination**: {}\n\
+         - **Cost**: {}\n",
+        fu_number,
+        title.trim(),
+        origin.trim(),
+        status,
+        field(trigger),
+        field(destination),
+        field(cost),
+    );
+    if let Some(p) = premise.map(str::trim).filter(|s| !s.is_empty()) {
+        block.push_str(&format!("- **Premise**: {}\n", p));
+    }
+    block.push_str(&format!("- **Notes**: {}\n", notes.trim()));
+    block
 }
 
 #[cfg(test)]
@@ -1886,6 +2003,104 @@ Done.
             find_entry(&reparsed, "FU-001").unwrap().promoted_to.as_deref(),
             Some("TDE-2026-06-04-001")
         );
+    }
+
+    #[test]
+    fn set_entry_field_preserves_the_blank_line_before_the_next_heading() {
+        // A field write used to collapse the entry's trailing "\n\n" to "\n",
+        // gluing the edited entry to the following heading — invisible until
+        // `note` made field writes routine (CHARTER-01).
+        let reg = parse(V0_REGISTRY);
+        // FU-002 is the last entry of the `ready` section, so the next line is
+        // a section heading — the case the collapse used to break.
+        let entry = find_entry(&reg, "FU-002").unwrap().clone();
+        let new_body = set_entry_field(&reg.body, &entry, "Cost", "M");
+        assert!(
+            new_body.contains("- **Cost**: M\n\n## Bucket: phase-blocked"),
+            "blank line before the next section must survive:\n{new_body}"
+        );
+    }
+
+    #[test]
+    fn insert_into_bucket_keeps_a_blank_line_before_the_following_section() {
+        let reg = parse(V0_REGISTRY);
+        let block = "### FU-050 — Appended\n- **Status**: open\n";
+        let new_body = insert_into_bucket(&reg, "ready", block);
+        assert!(
+            new_body.contains("### FU-050 — Appended\n- **Status**: open\n\n## Bucket: phase-blocked"),
+            "appended entry must not butt against the next heading:\n{new_body}"
+        );
+    }
+
+    #[test]
+    fn append_note_stamps_and_composes() {
+        // No prior notes: the annotation stands alone, dated.
+        assert_eq!(
+            append_note(None, "part-a shipped", "2026-07-26", None),
+            "[2026-07-26] part-a shipped"
+        );
+        // With a source: attributable to what motivated it.
+        assert_eq!(
+            append_note(None, "part-a shipped", "2026-07-26", Some("CHARTER-04")),
+            "[2026-07-26 · CHARTER-04] part-a shipped"
+        );
+        // Existing notes are composed onto, never replaced — Notes is a
+        // single-line field, so history accumulates in one bullet.
+        assert_eq!(
+            append_note(Some("Extracted 2026-07-20."), "part-b deferred", "2026-07-26", None),
+            "Extracted 2026-07-20. · [2026-07-26] part-b deferred"
+        );
+        // Whitespace-only existing notes are treated as absent.
+        assert_eq!(
+            append_note(Some("   "), "first", "2026-07-26", None),
+            "[2026-07-26] first"
+        );
+        // A blank --source falls back to the bare date stamp.
+        assert_eq!(
+            append_note(None, "text", "2026-07-26", Some("  ")),
+            "[2026-07-26] text"
+        );
+    }
+
+    #[test]
+    fn render_declared_entry_is_ex_ante_and_hash_less() {
+        let block = render_declared_entry(
+            12,
+            "Redis CI job deferred",
+            "CHARTER-06 §Scope",
+            "open",
+            None,
+            None,
+            Some("S"),
+            Some("the Redis adapter has no CI coverage today"),
+            "Created by `straymark followups new` 2026-07-26.",
+        );
+        assert!(block.starts_with("### FU-012 — Redis CI job deferred\n"));
+        assert!(block.contains("- **Origin**: CHARTER-06 §Scope\n"));
+        assert!(block.contains("- **Origin-class**: ex-ante-planning\n"));
+        assert!(block.contains("- **Premise**: the Redis adapter has no CI coverage today\n"));
+        // Unset optional fields become TBD, matching the template's convention.
+        assert!(block.contains("- **Trigger**: TBD\n"));
+        assert!(block.contains("- **Destination**: TBD\n"));
+        assert!(block.contains("- **Cost**: S\n"));
+        // No AILOG to hash — see the doc comment on why absence is the honest encoding.
+        assert!(!block.contains("Source-hash"));
+
+        // Round-trips through the parser as a well-formed entry.
+        let reg = parse(V0_REGISTRY);
+        let body = insert_into_bucket(&reg, "charter-triggered", &block);
+        let reparsed = parse(&assemble(&reg.frontmatter_raw, &body));
+        let entry = find_entry(&reparsed, "FU-012").unwrap();
+        assert_eq!(entry.status, FuStatus::Open);
+        assert_eq!(entry.origin.as_deref(), Some("CHARTER-06 §Scope"));
+        assert_eq!(entry.origin_class.as_deref(), Some("ex-ante-planning"));
+        assert!(entry.source_hash.is_none());
+    }
+
+    #[test]
+    fn render_declared_entry_omits_premise_when_absent() {
+        let block = render_declared_entry(1, "T", "CHARTER-01 §Scope", "open", None, None, None, None, "n");
+        assert!(!block.contains("Premise"));
     }
 
     #[test]

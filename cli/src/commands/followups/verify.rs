@@ -110,13 +110,7 @@ pub fn run(
         // Recompute the CLI-owned counters + v0→v1 upgrade, like every write
         // command — even though status is unchanged, this keeps the registry
         // canonical and idempotent.
-        let final_registry = followups::parse_registry_str(
-            &registry_path,
-            &followups::assemble(&registry.frontmatter_raw, &body),
-        )?;
-        let counters = followups::compute_counters(&final_registry);
-        let fm = followups::fm_apply_counters_and_v1(&registry.frontmatter_raw, &counters);
-        std::fs::write(&registry_path, followups::assemble(&fm, &body))?;
+        followups::write_recounted(&registry_path, &registry.frontmatter_raw, &body)?;
 
         if premise.filter(|s| !s.trim().is_empty()).is_some() {
             utils::success(&format!("{} premise recorded.", entry.fu_id));

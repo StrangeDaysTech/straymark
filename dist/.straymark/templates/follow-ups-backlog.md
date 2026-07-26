@@ -18,7 +18,8 @@ fully_extracted_ailogs: []
 # Follow-ups Backlog
 
 > Central registry of `§Follow-ups` and `R<N> (new, not in Charter)` entries across AILOGs.
-> Maintained by `straymark followups drift --apply`; counters are CLI-owned.
+> Maintained by `straymark followups drift --apply` (ex-post) and `straymark followups new`
+> (ex-ante, for a deferral decided at Charter-declaration time); counters are CLI-owned.
 > Convention: `.straymark/00-governance/FOLLOW-UPS-BACKLOG-PATTERN.md` ·
 > Schema: `.straymark/schemas/follow-ups-backlog.schema.v1.json`
 
@@ -26,7 +27,7 @@ fully_extracted_ailogs: []
 Entry shape (v1 — optional fields marked):
 
 ### FU-NNN — <short description>
-- **Origin**: AILOG-NNNN-NN-NN-NNN <pointer to source section>
+- **Origin**: AILOG-NNNN-NN-NN-NNN <pointer to source section>   (or CHARTER-NN §Scope for an ex-ante deferral)
 - **Origin-class**: ex-ante-planning | testing | telemetry | staging | real-env-bug   (optional)
 - **Status**: open | in-progress | suspected-closed | closed | superseded | promoted
 - **Severity**: normal | blocking                                                     (optional)
@@ -43,6 +44,12 @@ have been false at capture or gone stale since. Re-verify it at execution — th
 cheap moment — not at capture: `straymark followups verify FU-NNN --verified`
 (or `followups promote FU-NNN --premise-verified`). See the pattern doc's
 "Epistemic status" section.
+
+Never hand-edit an entry: `straymark followups note FU-NNN "<text>"` appends a
+dated annotation, `straymark followups set-status FU-NNN <status>` flips the
+status and recomputes the counters in the same step (no `recount` to forget),
+and `straymark followups new` creates one with an atomically-assigned id. A
+hand-edit can malform an entry and break `list`/`status`/`drift`.
 -->
 
 ## Bucket: ready

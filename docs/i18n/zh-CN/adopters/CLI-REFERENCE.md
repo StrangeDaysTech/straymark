@@ -45,8 +45,8 @@ StrayMark 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.36.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.38.0` | `straymark` 二进制文件 |
+| Framework | `fw-` | `fw-4.37.0` | 模板（12 种类型）、治理文档、指令 |
+| CLI | `cli-` | `cli-3.39.0` | `straymark` 二进制文件 |
 | Loom（实验性） | `loom-` | `loom-0.4.2` | `straymark-loom` 可视化服务器，由 `straymark loom serve` 按需下载 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
@@ -886,6 +886,32 @@ $ straymark followups verify FU-016 --premise "yrs 有一个独立的参照物(Y
 ✓ FU-016 premise recorded.
 ✓ FU-016 verified — Verified-at → 2026-06-04.
 ```
+
+#### `straymark followups note <FU-NNN> "<文本>" [--source <ID>] [--path <dir>]` *(cli-3.39.0+)*
+
+以一次经过校验的编辑,向条目的 `Notes` 追加一条带日期的注记。在此动词出现之前(#355),记录某条目收到了**部分**缓解措施 —— 而不改变其状态 —— 意味着手工编辑一个由 CLI 解析的文件:这种编辑可能让条目变形并破坏 `list`/`status`/`drift`,而且没有任何东西记录该注记是何时写的、由什么促成。
+
+| Flag | 默认 | 说明 |
+|------|------|------|
+| `--source <ID>` | — | 促成该注记的 Charter 或 AILOG(如 `CHARTER-04`),与日期一并记录,使注记保持可归因。 |
+
+按解析器契约,`Notes` 是单行字段,因此注记是在既有值上**组合**,而不是堆叠为新的 bullet。
+
+#### `straymark followups set-status <FU-NNN> <status> [--path <dir>]` *(cli-3.39.0+)*
+
+修改条目状态**并**在同一步骤重算 CLI 拥有的计数器。这关闭了 `recount` 本来用于事后清理的失同步窗口(#355):它所取代的两步流程 —— 手工编辑 `Status` bullet,再记得运行 `recount` —— 一旦忘了后半步就会失同步,让计数器悄悄谎报 backlog。
+
+有效状态:`open` · `in-progress` · `suspected-closed` · `closed` · `superseded`。词表之外的取值会被**拒绝**而非写入 —— 解析器是宽容的,所以拼写错误不会失败:它会悄悄把该条目从所有计数器中剔除。`promoted` 会重定向到 `followups promote`,后者还会写出让该状态有所指的 TDE。
+
+#### `straymark followups new --title <标题> --origin <来源> [--bucket <name>] [--status <s>] [--trigger <t>] [--destination <d>] [--cost <c>] [--premise <p>] [--path <dir>]` *(cli-3.39.0+)*
+
+创建来源为**Charter 声明**(事前)的条目,此时尚不存在任何执行(#360)。此前两条填充路径都假定来源是事后的:`drift --apply` 从 AILOG 提取,而在**声明时刻**做出的推迟 —— "Redis 的 CI job 不在范围内;登记这个覆盖缺口,使其被推迟而非被消音" —— 按设计先于任何 AILOG。
+
+它关闭的是正确性风险,而非人机工程问题。由于缺少创建动词,提交该报告的采用方在 Charter 正文中前向引用了 `FU-011`,却没有任何东西为其预留;而 id 是在提取时按 `max(既有) + 1` 铸造的,于是下一次无关的 `drift --apply` 会把 `FU-011` 分配给别的条目,悄悄让 Charter 的引用指向错误的 follow-up。`new` 原子地分配并打印 id,因此当 Charter 引用它时该条目已经存在。
+
+该条目写入时带 `Origin-class: ex-ante-planning` 且**不带 `Source-hash`**:没有 AILOG 可供哈希,而编造一个会让后续的 `drift --apply` 以为自己已经提取过它从未见过的东西。
+
+> **三者都拒绝写入存在解析告警的注册表。** 针对被解析器误读的结构做手术式编辑可能损坏相邻条目,因此必须先修好变形的条目。`recount` 仍是批量手工 triage 的逃生通道 —— 也是这些动词算术是否正确的幂等校验。
 
 ---
 

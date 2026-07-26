@@ -727,3 +727,270 @@ fn project_status_hints_when_no_registry() {
         .success()
         .stdout(predicate::str::contains("No follow-ups registry yet"));
 }
+
+// ──────────────── note / set-status / new (CHARTER-01, #355 + #360) ────────────────
+
+#[test]
+fn note_appends_dated_annotation_with_source_and_preserves_status() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+
+    cmd()
+        .args([
+            "followups", "note", "FU-011",
+            "Part-a shipped (size cap in the codec); part-b deferred.",
+            "--source", "CHARTER-04",
+            "--path", tmp.path().to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("FU-011 annotated"));
+
+    let updated = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    let block = &updated[updated.find("### FU-011").unwrap()..];
+    assert!(block.contains("CHARTER-04"), "source must be recorded: {block}");
+    assert!(block.contains("part-b deferred."));
+    // The point of #355's case: annotate WITHOUT changing status.
+    assert!(block.contains("- **Status**: open"));
+}
+
+#[test]
+fn note_composes_onto_existing_notes_instead_of_replacing_them() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+    let path = tmp.path().to_str().unwrap();
+
+    cmd()
+        .args(["followups", "note", "FU-011", "first", "--path", path])
+        .assert()
+        .success();
+    cmd()
+        .args(["followups", "note", "FU-011", "second", "--path", path])
+        .assert()
+        .success();
+
+    let updated = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    let block = &updated[updated.find("### FU-011").unwrap()..];
+    assert!(block.contains("first"), "earlier note must survive: {block}");
+    assert!(block.contains("second"));
+    // One Notes bullet, not two — the field is a single line by parser contract.
+    assert_eq!(block.matches("- **Notes**").count(), 1);
+}
+
+#[test]
+fn note_refuses_to_write_a_malformed_registry() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    // A `### FU-` heading the parser cannot read: a surgical edit against a
+    // mis-read structure could corrupt neighbouring entries (CHARTER-01 R1).
+    write_registry(
+        &straymark,
+        &format!("{V1_REGISTRY}\n### FU-malformed heading with no id\n- **Status**: open\n"),
+    );
+    let before = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+
+    cmd()
+        .args([
+            "followups", "note", "FU-011", "must not be written",
+            "--path", tmp.path().to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Refusing to write"));
+
+    let after = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    assert_eq!(before, after, "nothing may be written when the guard fires");
+}
+
+#[test]
+fn set_status_flips_status_and_recomputes_counters_in_one_step() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    // v0 fixture: frontmatter claims total_open 47, reality is 2.
+    write_registry(&straymark, V0_REGISTRY);
+    let path = tmp.path().to_str().unwrap();
+
+    cmd()
+        .args(["followups", "set-status", "FU-002", "closed", "--path", path])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("open"))
+        .stdout(predicate::str::contains("closed"));
+
+    let updated = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    assert!(updated.contains("total_open: 1"), "counters must move with the status: {updated}");
+    assert!(updated.contains("schema_version: v1"), "write commands upgrade v0 → v1");
+    let block = &updated[updated.find("### FU-002").unwrap()..];
+    assert!(block.contains("- **Status**: closed"));
+
+    // The desync #355 describes cannot happen: `recount` has nothing left to do.
+    cmd()
+        .args(["followups", "recount", "--path", path])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("already in sync"));
+}
+
+#[test]
+fn set_status_rejects_unknown_status_and_redirects_promoted() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+    let path = tmp.path().to_str().unwrap();
+    let before = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+
+    // A typo would parse as `unknown` and silently drop the entry from every
+    // counter, so it is refused rather than written.
+    cmd()
+        .args(["followups", "set-status", "FU-011", "done", "--path", path])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Unknown status"));
+
+    // `promoted` requires the TDE that gives the status meaning.
+    cmd()
+        .args(["followups", "set-status", "FU-011", "promoted", "--path", path])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("followups promote"));
+
+    let after = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    assert_eq!(before, after);
+}
+
+#[test]
+fn set_status_is_a_noop_when_already_in_that_status() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+    let before = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+
+    cmd()
+        .args([
+            "followups", "set-status", "FU-011", "open",
+            "--path", tmp.path().to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("already"));
+
+    let after = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    assert_eq!(before, after);
+}
+
+#[test]
+fn new_mints_ex_ante_entry_with_assigned_id_and_no_source_hash() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+
+    // V1_REGISTRY's highest entry is FU-011 → the next id is FU-012, assigned
+    // and written here, so the Charter can cite an entry that exists (#360).
+    cmd()
+        .args([
+            "followups", "new",
+            "--title", "Redis CI job deferred",
+            "--origin", "CHARTER-06 §Scope",
+            "--cost", "S",
+            "--trigger", "when the Actions budget resets",
+            "--premise", "the Redis adapter has no CI coverage today",
+            "--path", tmp.path().to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("FU-012"))
+        .stdout(predicate::str::contains("charter-triggered"));
+
+    let updated = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    let block = &updated[updated.find("### FU-012").unwrap()..];
+    assert!(block.contains("- **Origin**: CHARTER-06 §Scope"));
+    // The schema already had a name for this origin; only the creation path was missing.
+    assert!(block.contains("- **Origin-class**: ex-ante-planning"));
+    assert!(block.contains("- **Status**: open"));
+    assert!(block.contains("- **Cost**: S"));
+    assert!(block.contains("- **Premise**: the Redis adapter has no CI coverage today"));
+    // No AILOG exists to hash: inventing a Source-hash would make a later
+    // `drift --apply` believe it had extracted something it never saw.
+    assert!(!block.contains("Source-hash"), "ex-ante entry must carry no Source-hash: {block}");
+    assert!(updated.contains("total_open: 3"), "counters include the new entry: {updated}");
+}
+
+#[test]
+fn new_lands_in_the_requested_bucket_and_defaults_unset_fields_to_tbd() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+
+    cmd()
+        .args([
+            "followups", "new",
+            "--title", "Revisit the probe interval",
+            "--origin", "CHARTER-07 §Out of scope",
+            "--bucket", "ready",
+            "--path", tmp.path().to_str().unwrap(),
+        ])
+        .assert()
+        .success();
+
+    let updated = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    let ready = &updated[updated.find("## Bucket: ready").unwrap()..];
+    assert!(ready.contains("### FU-012 — Revisit the probe interval"));
+    let block = &updated[updated.find("### FU-012").unwrap()..];
+    assert!(block.contains("- **Trigger**: TBD"));
+    assert!(block.contains("- **Cost**: TBD"));
+}
+
+#[test]
+fn new_requires_origin_and_a_canonical_bucket() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+    let path = tmp.path().to_str().unwrap();
+
+    cmd()
+        .args([
+            "followups", "new", "--title", "No origin", "--origin", "   ",
+            "--path", path,
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("--origin is required"));
+
+    cmd()
+        .args([
+            "followups", "new", "--title", "Bad bucket",
+            "--origin", "CHARTER-06 §Scope", "--bucket", "someday",
+            "--path", path,
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Unknown bucket"));
+}
+
+#[test]
+fn new_then_drift_does_not_re_extract_or_duplicate(/* CHARTER-01 R4 */) {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+    let path = tmp.path().to_str().unwrap();
+
+    cmd()
+        .args([
+            "followups", "new", "--title", "Redis CI job deferred",
+            "--origin", "CHARTER-06 §Scope", "--path", path,
+        ])
+        .assert()
+        .success();
+
+    // A hash-less entry must not make drift misbehave (it scans AILOGs; there
+    // are none here, and the ex-ante entry is not derived from one).
+    cmd()
+        .args(["followups", "drift", "--scan-all", "--path", path])
+        .assert()
+        .success();
+
+    let updated = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    assert_eq!(updated.matches("### FU-012").count(), 1, "no duplicate: {updated}");
+}

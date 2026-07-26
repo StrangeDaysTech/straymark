@@ -38,8 +38,14 @@ pub fn run(path: &str) -> Result<()> {
         utils::warn(w);
     }
 
-    let counters = followups::compute_counters(&registry);
-    let fm = followups::fm_apply_counters_and_v1(&registry.frontmatter_raw, &counters);
+    // Same recompute path the mutating verbs use (`note` / `set-status` /
+    // `new` / `verify`), so this stays the idempotent check on their arithmetic
+    // rather than a second implementation that could disagree with them.
+    let (fm, counters) = followups::recounted_frontmatter(
+        &registry_path,
+        &registry.frontmatter_raw,
+        &registry.body,
+    )?;
 
     if fm == registry.frontmatter_raw {
         println!(

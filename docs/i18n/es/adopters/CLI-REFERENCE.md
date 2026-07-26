@@ -45,8 +45,8 @@ StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.36.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.38.0` | El binario `straymark` |
+| Framework | `fw-` | `fw-4.37.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| CLI | `cli-` | `cli-3.39.0` | El binario `straymark` |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | El servidor de visualización `straymark-loom`, descargado bajo demanda por `straymark loom serve` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
@@ -843,6 +843,32 @@ $ straymark followups verify FU-016 --premise "yrs tiene una referencia independ
 ✓ FU-016 premise recorded.
 ✓ FU-016 verified — Verified-at → 2026-06-04.
 ```
+
+#### `straymark followups note <FU-NNN> "<texto>" [--source <ID>] [--path <dir>]` *(cli-3.39.0+)*
+
+Anexa una anotación fechada a los `Notes` de una entrada en una sola edición validada. Antes de este verbo (#355), registrar que una entrada recibió una mitigación *parcial* — sin cambiar su status — implicaba editar a mano un archivo parseado por el CLI: una edición que puede malformar la entrada y romper `list`/`status`/`drift`, sin nada que registre cuándo se hizo la nota ni qué la motivó.
+
+| Flag | Default | Descripción |
+|------|---------|-------------|
+| `--source <ID>` | — | El Charter o AILOG que motivó la nota (ej. `CHARTER-04`), registrado junto a la fecha para que la anotación siga siendo atribuible. |
+
+`Notes` es un campo de una sola línea por contrato del parser, así que las anotaciones se **componen** sobre el valor existente en vez de apilarse como bullets nuevos.
+
+#### `straymark followups set-status <FU-NNN> <status> [--path <dir>]` *(cli-3.39.0+)*
+
+Cambia el status de una entrada **y** recomputa los contadores CLI-owned en el mismo paso. Cierra la ventana de desincronización que `recount` existe para limpiar (#355): el dos-pasos que reemplaza — editar el bullet `Status` y luego acordarse de `recount` — se desincroniza en cuanto olvidas la segunda mitad, dejando a los contadores mintiendo en silencio sobre el backlog.
+
+Statuses válidos: `open` · `in-progress` · `suspected-closed` · `closed` · `superseded`. Un valor fuera de ese vocabulario se **rechaza**, no se escribe — el parser es indulgente, así que un typo no fallaría: sacaría la entrada de todos los contadores en silencio. `promoted` redirige a `followups promote`, que además escribe el TDE que le da a ese status algo a lo que apuntar.
+
+#### `straymark followups new --title <título> --origin <origen> [--bucket <name>] [--status <s>] [--trigger <t>] [--destination <d>] [--cost <c>] [--premise <p>] [--path <dir>]` *(cli-3.39.0+)*
+
+Crea una entrada cuyo origen es una **declaración de Charter** (ex-ante), antes de que exista ejecución alguna (#360). Las dos rutas de poblado anteriores asumen origen ex-post: `drift --apply` extrae de AILOGs, y un diferimiento decidido *en tiempo de declaración* — "el job de CI de Redis queda fuera de alcance; registra el hueco de cobertura para que quede diferido, no silenciado" — precede a cualquier AILOG por diseño.
+
+El riesgo que cierra es de corrección, no de ergonomía. A falta de un verbo de creación, el adoptante que lo reportó forward-referenció `FU-011` en el cuerpo del Charter sin nada que lo reservara; y como los ids se acuñan `max(existente) + 1` en tiempo de extracción, el siguiente `drift --apply` no relacionado le daría `FU-011` a otra entrada, apuntando en silencio las citas del Charter al follow-up equivocado. `new` asigna el id de forma atómica y lo imprime, así que cuando el Charter lo cita la entrada ya existe.
+
+La entrada se escribe con `Origin-class: ex-ante-planning` y **sin `Source-hash`**: no hay AILOG que hashear, e inventar uno haría que un `drift --apply` posterior creyera haber extraído algo que nunca vio.
+
+> **Los tres se niegan a escribir un registro con avisos de parseo.** Una edición quirúrgica contra una estructura mal leída puede corromper entradas vecinas, así que primero hay que arreglar la entrada malformada. `recount` sigue siendo la vía de escape para una sesión de triage manual masivo — y el chequeo idempotente de que estos verbos hicieron bien la aritmética.
 
 ---
 

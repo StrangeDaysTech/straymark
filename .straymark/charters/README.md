@@ -10,8 +10,10 @@ Rows move from `## Active` to `## Closed` as part of the closing PR, not afterwa
 
 | NN | Charter | Status | Effort | Origin |
 |---|---|---|---|---|
-| 01 | [Follow-ups registry: mutation and ex-ante creation verbs](01-follow-ups-registry-mutation-and-ex-ante-creation.md) | declared | M | Adopter feedback [#355](https://github.com/StrangeDaysTech/straymark/issues/355), [#360](https://github.com/StrangeDaysTech/straymark/issues/360) |
+| — | _None._ | | | |
 
 ## Closed
 
-_None yet._
+| NN | Charter | Closed | Effort | Shipped as | PR |
+|---|---|---|---|---|---|
+| 01 | [Follow-ups registry: mutation and ex-ante creation verbs](01-follow-ups-registry-mutation-and-ex-ante-creation.md) | 2026-07-26 | M | fw-4.37.0 / cli-3.39.0 | #376 |

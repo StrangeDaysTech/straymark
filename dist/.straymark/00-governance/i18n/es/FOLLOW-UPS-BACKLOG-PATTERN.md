@@ -267,9 +267,22 @@ straymark followups drift [--apply|--scan-all]   # detección de drift (ver arri
 straymark followups recount               # recalcula los contadores CLI-owned tras una sesión de triage manual (cli-3.20.0+)
 straymark followups promote FU-NNN [--premise-verified]   # automatiza la promoción FU → TDE; superficie el re-chequeo de la premisa, sella Verified-at con el flag (cli-3.37.0+)
 straymark followups verify FU-NNN [--premise "..."] [--verified] [--at FECHA]   # re-verifica una hipótesis fechada en la ejecución: superficie/registra la premisa, sella Verified-at (cli-3.37.0+)
+straymark followups note FU-NNN "<texto>" [--source CHARTER-NN|AILOG-…]   # anexa una anotación fechada a Notes (cli-3.39.0+)
+straymark followups set-status FU-NNN <status>   # cambia el status Y recomputa los contadores en un solo paso (cli-3.39.0+)
+straymark followups new --title "..." --origin "CHARTER-NN §Scope" [--bucket …] [--cost …] [--trigger …] [--premise …]   # crea una entrada declarada ex-ante (cli-3.39.0+)
 ```
 
 `verify` y `promote --premise-verified` son las afordancias en tiempo de ejecución de la disciplina de "Estatus epistémico": ponen la premisa frente al operador en el momento del gasto y registran que el re-chequeo ocurrió. El juicio humano queda fuera del CLI — superficie y sella, nunca decide la verdad.
+
+### Mutar y crear entradas (cli-3.39.0+)
+
+`note`, `set-status` y `new` reemplazan los últimos flujos que exigían editar a mano este archivo parseado por el CLI. Ahí fallaban dos cosas: una edición a mano puede malformar una entrada y romper `list`/`status`/`drift`, y el cambio de status era un **dos-pasos** — editar el bullet y luego acordarse de `recount` — que se desincroniza en cuanto olvidas la segunda mitad, dejando a los contadores mintiendo en silencio sobre el backlog.
+
+- **`note`** anexa a `Notes` (campo de una sola línea, así que las anotaciones se componen en vez de apilarse), con la fecha sellada y, con `--source`, con el Charter o AILOG que la motivó. Sirve para el caso común: registrar una mitigación *parcial* sin cambiar el status.
+- **`set-status`** escribe el status y recomputa los contadores en el mismo paso. Rechaza un status fuera del vocabulario — el parser es indulgente, así que un typo no fallaría: sacaría la entrada de todos los contadores en silencio — y redirige `promoted` a `followups promote`, que además escribe el TDE que le da a ese status algo a lo que apuntar.
+- **`new`** crea una entrada cuyo origen es una **declaración de Charter** (`Origin-class: ex-ante-planning`). Las dos rutas anteriores asumen origen ex-post: `drift --apply` extrae de AILOGs, y un diferimiento decidido en tiempo de declaración precede a cualquier AILOG por diseño. `new` asigna el id de forma atómica y lo imprime, así que el cuerpo del Charter cita una entrada que **existe** en vez de una reserva conjeturada que el siguiente `drift --apply` podría entregarle a otra entrada. Una entrada ex-ante no lleva **`Source-hash`**: no hay AILOG que hashear, e inventar uno haría que un `drift --apply` posterior creyera haber extraído algo que nunca vio.
+
+Los tres se niegan a escribir si el registro tiene avisos de parseo: una edición quirúrgica contra una estructura mal leída puede corromper entradas vecinas. `recount` sigue siendo la vía de escape para una sesión de triage manual masivo — y el chequeo idempotente de que estos verbos hicieron bien la aritmética.
 
 El registry también aparece como un grupo sintético **Follow-ups** en la TUI de `straymark explore` (sub-nodos por bucket) y como un bloque de conteos en `straymark status`.
 
@@ -343,4 +356,4 @@ Contribuido vía [issue #111](https://github.com/StrangeDaysTech/straymark/issue
 
 ---
 
-*StrayMark fw-4.36.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.37.0 | [Strange Days Tech](https://strangedays.tech)*

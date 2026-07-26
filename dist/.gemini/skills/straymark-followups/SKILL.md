@@ -1,11 +1,11 @@
 ---
 name: straymark-followups
-description: Maintain the follow-ups backlog registry — the canonical answer to "what's pending?". Session-start glance, pre-commit drift --apply, post-Charter-close triage and operator-gated promote. Thin wrapper over the straymark followups CLI; never edits CLI-owned counters by hand.
+description: Maintain the follow-ups backlog registry — the canonical answer to "what's pending?". Session-start glance, pre-commit drift --apply, post-Charter-close triage (note / set-status), ex-ante creation at Charter declaration (new), and operator-gated promote. Thin wrapper over the straymark followups CLI; never edits CLI-owned counters by hand.
 ---
 
 # StrayMark Follow-ups Registry Skill
 
-Maintain the central follow-ups registry (`.straymark/follow-ups-backlog.md`) — the first-class artifact that aggregates `§Follow-ups` and `R<N> (new, not in Charter)` entries across AILOGs *(first-class since fw-4.21.0 / cli-3.19.0)*. The agent is the registry's **primary maintainer**; this skill drives the three directives of `AGENT-RULES.md §13` by delegating every mutation to the CLI (`straymark followups list/status/drift/promote`). The skill contains no extraction or counting logic of its own — parsing, schema validation, counter recomputation, and FU → TDE elevation all live in the CLI.
+Maintain the central follow-ups registry (`.straymark/follow-ups-backlog.md`) — the first-class artifact that aggregates `§Follow-ups` and `R<N> (new, not in Charter)` entries across AILOGs *(first-class since fw-4.21.0 / cli-3.19.0)*. The agent is the registry's **primary maintainer**; this skill drives the three directives of `AGENT-RULES.md §13` by delegating every mutation to the CLI (`straymark followups list/status/drift/note/set-status/new/promote`). The skill contains no extraction or counting logic of its own — parsing, schema validation, counter recomputation, and FU → TDE elevation all live in the CLI.
 
 > See `.straymark/00-governance/FOLLOW-UPS-BACKLOG-PATTERN.md` and `STRAYMARK.md §16` for the pattern; `AGENT-RULES.md §13` for the shipped directives this skill wraps.
 
@@ -54,14 +54,28 @@ Review the registry entries the just-closed Charter resolved:
 
 ```bash
 straymark followups list --status suspected-closed   # entries awaiting confirm-or-reopen
-straymark followups recount                          # reconcile the CLI-owned counters after manual status flips (cli-3.20.0+)
+straymark followups set-status FU-NNN closed         # status + counters in one step (cli-3.39.0+)
+straymark followups note FU-NNN "<text>" --source CHARTER-NN   # dated annotation (cli-3.39.0+)
+straymark followups recount                          # reconcile counters after a BULK hand-triage session (cli-3.20.0+)
 straymark followups promote FU-NNN                   # FU → TDE elevation (operator-approved)
 ```
 
-- Mark resolved entries `closed` (with the closing Charter id in `Notes`) or `superseded`.
+- Mark resolved entries `closed` (or `superseded`) with **`straymark followups set-status`** — it recomputes the counters in the same step, so there is no `recount` to forget. Record *why* with `straymark followups note FU-NNN "..." --source CHARTER-NN`.
 - Confirm or reopen any `suspected-closed` entries that the Charter's AILOGs produced.
-- After flipping statuses by hand, run `straymark followups recount` so the CLI-owned counters ride the same commit as the triage.
+- **Never hand-edit an entry.** A hand-edit can malform it and break `list`/`status`/`drift`; the verbs write through the same validated helpers and refuse to touch a registry with parse warnings. `recount` remains for a bulk session where statuses were flipped by hand anyway.
 - For un-resolved entries that meet the TDE criteria of `AGENT-RULES.md §3` (heritage, transversal, dedicated Charter, human prioritization), **propose** promotion via `straymark followups promote FU-NNN` — promotion itself is operator-approved, per the autonomy limits of §3.
+
+### 3b. Charter declaration — register an ex-ante deferral (cli-3.39.0+)
+
+Declaring a Charter and deferring something out of scope? Register it so the gap is **deferred, not silenced** — before any AILOG exists:
+
+```bash
+straymark followups new --title "<what was deferred>" \
+  --origin "CHARTER-NN §Scope" --cost S --trigger "<observable condition>" \
+  --premise "<the assumption this rests on>"
+```
+
+The command prints the assigned `FU-NNN`. **Cite that id in the Charter body** — never a guessed id: the entry now exists, so a later `drift --apply` cannot hand the same number to a different entry.
 
 ### 4. Report result
 
@@ -78,6 +92,7 @@ StrayMark: registry synced — commit it together with the AILOG.
 ## What this skill does NOT do
 
 - **It does not edit the frontmatter counters** (`total_open`, `total_promoted`, `total_suspected_closed`, …). They are CLI-owned: `straymark followups recount` (or any write command) recomputes them. Hand-editing them is a §13 violation.
+- **It does not hand-edit entries.** `note` / `set-status` / `new` (cli-3.39.0+) are the write path; hand-editing a CLI-parsed registry is what those verbs exist to replace.
 - **It does not promote without the operator.** `straymark followups promote` is proposed, never auto-run — prioritization and assignment stay human (`AGENT-RULES.md §3`).
 - **It does not delete `suspected-closed` entries.** The operator confirms (→ `closed`) or reopens them at the next triage.
 - **It does not re-scan AILOGs to answer "what's pending?"** when the registry exists — the registry is canonical; `drift` tells you when it is not trustworthy.
