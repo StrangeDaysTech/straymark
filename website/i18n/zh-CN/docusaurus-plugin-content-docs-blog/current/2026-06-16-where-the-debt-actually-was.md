@@ -17,7 +17,7 @@ description: 操作员每天真正的问题不是"把文档给我看",而是"我
 
 ## 重新构帧
 
-这次转向记录在 [`ADR-2026-06-02-002`](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/ADR-2026-06-02-002-architecture-plan-format.md)。Loom 原本被定义为文档的知识图谱视图;来自 Sentinel 的操作员反馈把它重新构了帧。对一个大型项目而言,操作员每天的问题不是"把文档之网给我看",而是*"我们现在在哪里?"* —— 针对**实现地图**而言,也就是架构。这个隐喻来自土木工程和 BIM:**一个模型,多种视图**,layer 点亮以显示状态。
+这次转向记录在 [`ADR-2026-06-02-002`](https://github.com/StrangeDaysTech/straymark/blob/main/.straymark/02-design/decisions/ADR-2026-06-02-002-architecture-plan-format.md)。Loom 原本被定义为文档的知识图谱视图;来自 Sentinel 的操作员反馈把它重新构了帧。对一个大型项目而言,操作员每天的问题不是"把文档之网给我看",而是*"我们现在在哪里?"* —— 针对**实现地图**而言,也就是架构。这个隐喻来自土木工程和 BIM:**一个模型,多种视图**,layer 点亮以显示状态。
 
 这次重新构帧撞上了探索早已标好的一堵墙:**StrayMark 没有 `component` 的概念。**它把文档映射到*文件* —— Charter 的"Files to modify"、AILOG 的"Modified Files"、`api_changes`。所以一个架构表面需要三样新东西:一种*model* component 和 layer 的方式,一种把活的治理状态 *project* 到它们之上的方式,以及一种能承载人类 author 的布局、又不被工具踩烂的可编辑格式。使能的事实其实早已在手 —— Charter 状态(`declared` / `in-progress` / `closed`)和声明对比修改的 drift 今天就在计算,ADR 已经内嵌 C4 图和"Affected Components"表,而 `.straymark/` 的 00–09 各 stage 形成了一种天然的 layering。
 
@@ -79,6 +79,6 @@ description: 操作员每天真正的问题不是"把文档给我看",而是"我
 
 ---
 
-*StrayMark `cli-3.25.0` → `cli-3.28.0`、`core-0.5.0` → `core-0.8.0`、`fw-4.27.0` → `fw-4.28.0`、`loom-0.5.0` → `loom-0.6.2` — ADR [2026-06-02-002](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/ADR-2026-06-02-002-architecture-plan-format.md) · Spec [002-architecture-plan](https://github.com/StrangeDaysTech/straymark/blob/main/experiment-loom/specs/002-architecture-plan/spec.md) · Adopter 指南 [LOOM.md](https://github.com/StrangeDaysTech/straymark/blob/main/docs/adopters/LOOM.md) · Issues [#268](https://github.com/StrangeDaysTech/straymark/issues/268) · [#273](https://github.com/StrangeDaysTech/straymark/issues/273) · [#276](https://github.com/StrangeDaysTech/straymark/issues/276) · [#279](https://github.com/StrangeDaysTech/straymark/issues/279) · [#280](https://github.com/StrangeDaysTech/straymark/issues/280)。前篇:[第二个读者提出的要求](what-the-second-reader-demanded) · [这张图还画不出来的东西](what-the-graph-couldnt-draw-yet)。*
+*StrayMark `cli-3.25.0` → `cli-3.28.0`、`core-0.5.0` → `core-0.8.0`、`fw-4.27.0` → `fw-4.28.0`、`loom-0.5.0` → `loom-0.6.2` — ADR [2026-06-02-002](https://github.com/StrangeDaysTech/straymark/blob/main/.straymark/02-design/decisions/ADR-2026-06-02-002-architecture-plan-format.md) · Spec [002-architecture-plan](https://github.com/StrangeDaysTech/straymark/blob/main/experiment-loom/specs/002-architecture-plan/spec.md) · Adopter 指南 [LOOM.md](https://github.com/StrangeDaysTech/straymark/blob/main/docs/adopters/LOOM.md) · Issues [#268](https://github.com/StrangeDaysTech/straymark/issues/268) · [#273](https://github.com/StrangeDaysTech/straymark/issues/273) · [#276](https://github.com/StrangeDaysTech/straymark/issues/276) · [#279](https://github.com/StrangeDaysTech/straymark/issues/279) · [#280](https://github.com/StrangeDaysTech/straymark/issues/280)。前篇:[第二个读者提出的要求](what-the-second-reader-demanded) · [这张图还画不出来的东西](what-the-graph-couldnt-draw-yet)。*
 
 *本文档在生成式 AI 工具（Claude Opus 4.8）的协助下完成；内容的全部责任由人类作者承担。*

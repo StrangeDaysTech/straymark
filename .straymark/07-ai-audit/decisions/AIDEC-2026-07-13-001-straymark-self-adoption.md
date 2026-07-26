@@ -14,7 +14,7 @@ eu_ai_act_risk: not_applicable
 nist_genai_risks: []
 iso_42001_clause: []
 tags: [self-adoption, dogfooding, governance, control-center, ouroboros]
-related: [ADR-2026-06-03-followups-first-class]
+related: [ADR-2026-06-03-001]
 ---
 
 # AIDEC: StrayMark adopts StrayMark — scoped, lagged self-adoption
@@ -153,18 +153,23 @@ Sequenced so the guard exists before the install (full detail in the accompanyin
 
 - Working analyses (local): `analisis-autoadopcion.md`, `spike-b-autoadopcion-riesgos.md`, `PLAN-centro-de-control.md`
 - PR #358 — S1 distribution-source guard + S6 CI hygiene
-- Related: verification-fidelity (#306), the close-time review checkpoint (#350), [ADR-2026-06-03-followups-first-class](ADR-2026-06-03-followups-first-class.md)
+- Related: verification-fidelity (#306), the close-time review checkpoint (#350), [ADR-2026-06-03-001](../../02-design/decisions/ADR-2026-06-03-001-followups-first-class.md)
 - Design principle #12 (N=2 stabilization gate)
 
 ## Approval
 
 **Approved**: 2026-07-13 by `Jose Villaseñor Montfort`.
 
-Signed manually (not via `straymark approve`): this AIDEC is kept in `docs/decisions/` — the
-pre-adoption decision location, outside the installed `/.straymark/` — so the CLI's document search
-does not reach it. Left here by decision as the pre-adoption record (the self-adoption install began
-*after* this decision was made). Future decisions authored under the install go in
+Signed manually (not via `straymark approve`): at signing time this AIDEC lived in `docs/decisions/` —
+the pre-adoption decision location, outside the installed `/.straymark/` — so the CLI's document
+search did not reach it. Decisions authored under the install go in
 `.straymark/07-ai-audit/decisions/` and are signed via `straymark approve`.
+
+> **Migrated 2026-07-25** (issue #368, unchanged in substance). This record now lives in the governed
+> tree at `.straymark/07-ai-audit/decisions/`, where `straymark validate` / `status` see it — the
+> location the decision itself made canonical. The signature above stands as recorded; only the file's
+> path changed. Its companion checklist moved to
+> [`docs/decisions/proposals/2026-07-13-self-adoption-implementation-plan.md`](../../../docs/decisions/proposals/2026-07-13-self-adoption-implementation-plan.md).
 
 ---
 

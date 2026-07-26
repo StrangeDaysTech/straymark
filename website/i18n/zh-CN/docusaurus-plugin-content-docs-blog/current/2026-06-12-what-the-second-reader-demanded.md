@@ -29,7 +29,7 @@ description: 在 Loom 能画出任何东西之前，StrayMark 的文档模型必
 
 ## 一个 parser，还是两个真相
 
-接着是真正的转向：[`cli-3.23.1`](https://github.com/StrangeDaysTech/straymark/releases/tag/cli-3.23.1)，记录在 [`ADR-2026-06-02-001`](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/ADR-2026-06-02-loom-stack.md)，Loom 里程碑 M0。
+接着是真正的转向：[`cli-3.23.1`](https://github.com/StrangeDaysTech/straymark/releases/tag/cli-3.23.1)，记录在 [`ADR-2026-06-02-001`](https://github.com/StrangeDaysTech/straymark/blob/main/.straymark/02-design/decisions/ADR-2026-06-02-001-loom-stack.md)，Loom 里程碑 M0。
 
 仓库根目录变成了一个 Cargo **workspace**（`core` + `cli`）。文档模型 —— `DocType`、`Frontmatter`、`StrayMarkDocument`、`parse_document`、`discover_documents` —— 原封不动地从 `cli/src/document.rs` 移进一个新 crate，**`straymark-core`**，发布到 crates.io。而 `audit_engine::build_traceability`，CLI 那个私有的图装配器，泛化成了 `core::graph`：一张在 frontmatter 交叉链接之上的、带类型、双向、保留孤儿的 knowledge graph，外加一个稍后才显出分量的刻意设计抉择 —— **悬空引用被保留为一等的 `resolved: false` 边**，而不是丢弃。一条指向不存在文档的链接是数据，不是一个该被吞掉的错误。
 
@@ -49,6 +49,6 @@ description: 在 Loom 能画出任何东西之前，StrayMark 的文档模型必
 
 ---
 
-*StrayMark `fw-4.24.0` → `fw-4.26.0`，`cli-3.22.0` → `cli-3.23.1` — ADR [2026-06-02-001](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/ADR-2026-06-02-loom-stack.md) · Charter [`CHARTER-01-loom-server`](https://github.com/StrangeDaysTech/straymark/blob/main/experiment-loom/CHARTER-01-loom-server.md) · Issues [#135](https://github.com/StrangeDaysTech/straymark/issues/135) · [#232](https://github.com/StrangeDaysTech/straymark/issues/232) · [#237](https://github.com/StrangeDaysTech/straymark/issues/237) · PRs [#238](https://github.com/StrangeDaysTech/straymark/pull/238) · [#239](https://github.com/StrangeDaysTech/straymark/pull/239)。前篇：[bash 脚本口中的"in sync"](what-the-bash-script-said-was-in-sync)。下一篇：[这张图还画不出来的东西](what-the-graph-couldnt-draw-yet)。*
+*StrayMark `fw-4.24.0` → `fw-4.26.0`，`cli-3.22.0` → `cli-3.23.1` — ADR [2026-06-02-001](https://github.com/StrangeDaysTech/straymark/blob/main/.straymark/02-design/decisions/ADR-2026-06-02-001-loom-stack.md) · Charter [`CHARTER-01-loom-server`](https://github.com/StrangeDaysTech/straymark/blob/main/experiment-loom/CHARTER-01-loom-server.md) · Issues [#135](https://github.com/StrangeDaysTech/straymark/issues/135) · [#232](https://github.com/StrangeDaysTech/straymark/issues/232) · [#237](https://github.com/StrangeDaysTech/straymark/issues/237) · PRs [#238](https://github.com/StrangeDaysTech/straymark/pull/238) · [#239](https://github.com/StrangeDaysTech/straymark/pull/239)。前篇：[bash 脚本口中的"in sync"](what-the-bash-script-said-was-in-sync)。下一篇：[这张图还画不出来的东西](what-the-graph-couldnt-draw-yet)。*
 
 *本文档在生成式 AI 工具（Claude Opus 4.8）的协助下完成；内容的全部责任由人类作者承担。*

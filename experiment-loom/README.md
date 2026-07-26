@@ -131,13 +131,13 @@ experiment-loom/
 The shared document/graph model lives in a **new `straymark-core` crate** (extracted from
 `cli/src/document.rs` + `cli/src/audit_engine.rs`) so that Loom and the CLI parse
 frontmatter with the exact same code and the graph can never drift from the CLI's truth.
-See `specs/001-loom-server/plan.md` and `docs/decisions/ADR-2026-06-02-loom-stack.md`.
+See `specs/001-loom-server/plan.md` and `.straymark/02-design/decisions/ADR-2026-06-02-001-loom-stack.md`.
 
 ## Dogfooding
 
 Loom's own construction is documented with StrayMark's own document types: two **ADRs** —
-the stack decision (`docs/decisions/ADR-2026-06-02-loom-stack.md`, `ADR-2026-06-02-001`) and
-the Architecture Plan format decision (`docs/decisions/ADR-2026-06-02-002-architecture-plan-format.md`,
+the stack decision (`.straymark/02-design/decisions/ADR-2026-06-02-001-loom-stack.md`, `ADR-2026-06-02-001`) and
+the Architecture Plan format decision (`.straymark/02-design/decisions/ADR-2026-06-02-002-architecture-plan-format.md`,
 `ADR-2026-06-02-002`) — and a **Charter** for the work block (`CHARTER-01-loom-server.md`,
 whose `originating_spec` points at `specs/001-loom-server/spec.md` — the SpecKit→Charter
 bridge). The corpus Loom renders therefore includes the governance docs of Loom itself: a

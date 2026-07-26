@@ -19,7 +19,7 @@ description: Loom 的首个 release 在不到一秒内就把文档图谱实时�
 
 [`loom-0.1.0` / `cli-3.24.0`](https://github.com/StrangeDaysTech/straymark/releases/tag/cli-3.24.0)（[#240](https://github.com/StrangeDaysTech/straymark/issues/240)）就是 Loom M1：一个仅 loopback、read-only 的 Web 仪表盘，实时渲染项目的文档图谱。
 
-技术栈记录在 [`ADR-2026-06-02-001`](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/ADR-2026-06-02-loom-stack.md) 里：一个 **`axum` + `tokio`** 服务器，通过 `straymark-core` 构建图谱，并提供一个小巧的读 API 外加一个 WebSocket；一个 **`notify`** 文件系统 watcher（250 ms debounce），在 `.md` 文件改动稳定下来后重新解析，并通过 socket 推送一次重建 —— 打开着的浏览器会在远不到一秒内反映出一次编辑（实测约 ~255 ms）；一个 **Sigma.js + graphology** 前端，force-directed，按文档类型着色，选中一个 node 会点亮它完整的传递性 thread 并淡化其余部分。整个 Web UI 都**通过 rust-embed 嵌入** —— adopter 从不运行 `npm`，他们下载的是一个二进制。
+技术栈记录在 [`ADR-2026-06-02-001`](https://github.com/StrangeDaysTech/straymark/blob/main/.straymark/02-design/decisions/ADR-2026-06-02-001-loom-stack.md) 里：一个 **`axum` + `tokio`** 服务器，通过 `straymark-core` 构建图谱，并提供一个小巧的读 API 外加一个 WebSocket；一个 **`notify`** 文件系统 watcher（250 ms debounce），在 `.md` 文件改动稳定下来后重新解析，并通过 socket 推送一次重建 —— 打开着的浏览器会在远不到一秒内反映出一次编辑（实测约 ~255 ms）；一个 **Sigma.js + graphology** 前端，force-directed，按文档类型着色，选中一个 node 会点亮它完整的传递性 thread 并淡化其余部分。整个 Web UI 都**通过 rust-embed 嵌入** —— adopter 从不运行 `npm`，他们下载的是一个二进制。
 
 两条不可妥协的要求来自规范的安全姿态，值得点名，因为它们塑造了之后的一切：服务器**专一绑定 `127.0.0.1`** 并**拒绝非 loopback 的 `Host` 头**（防 DNS-rebinding），而且它在构造上就是 **read-only** 的。没有一条以后再补、却忘了加固的写入路径，因为根本就不存在写入路径。CLI 的 `straymark loom serve` 是一个按需下载的启动器 —— 下载这道闸门*正是*实验性的 opt-in 边界 —— 并在离线时回退到缓存的二进制。
 
@@ -69,6 +69,6 @@ M2 和 M3 把画面变成了你会真正去用的东西。[`loom-0.2.0`](https:/
 
 ---
 
-*StrayMark `loom-0.1.0` → `loom-0.5.0`，`cli-3.24.0` — ADR [2026-06-02-001](https://github.com/StrangeDaysTech/straymark/blob/main/docs/decisions/ADR-2026-06-02-loom-stack.md) · Spec [001-loom-server](https://github.com/StrangeDaysTech/straymark/blob/main/experiment-loom/specs/001-loom-server/spec.md) · Issues [#240](https://github.com/StrangeDaysTech/straymark/issues/240) · [#241](https://github.com/StrangeDaysTech/straymark/issues/241) · [#243](https://github.com/StrangeDaysTech/straymark/issues/243) · [#246](https://github.com/StrangeDaysTech/straymark/issues/246) · [#247](https://github.com/StrangeDaysTech/straymark/issues/247) · [#262](https://github.com/StrangeDaysTech/straymark/issues/262)。前篇：[第二个读者提出的要求](what-the-second-reader-demanded)。下一篇：[债务究竟在哪里](where-the-debt-actually-was)。*
+*StrayMark `loom-0.1.0` → `loom-0.5.0`，`cli-3.24.0` — ADR [2026-06-02-001](https://github.com/StrangeDaysTech/straymark/blob/main/.straymark/02-design/decisions/ADR-2026-06-02-001-loom-stack.md) · Spec [001-loom-server](https://github.com/StrangeDaysTech/straymark/blob/main/experiment-loom/specs/001-loom-server/spec.md) · Issues [#240](https://github.com/StrangeDaysTech/straymark/issues/240) · [#241](https://github.com/StrangeDaysTech/straymark/issues/241) · [#243](https://github.com/StrangeDaysTech/straymark/issues/243) · [#246](https://github.com/StrangeDaysTech/straymark/issues/246) · [#247](https://github.com/StrangeDaysTech/straymark/issues/247) · [#262](https://github.com/StrangeDaysTech/straymark/issues/262)。前篇：[第二个读者提出的要求](what-the-second-reader-demanded)。下一篇：[债务究竟在哪里](where-the-debt-actually-was)。*
 
 *本文档在生成式 AI 工具（Claude Opus 4.8）的协助下完成；内容的全部责任由人类作者承担。*

@@ -11,7 +11,7 @@ originating_spec: experiment-loom/specs/001-loom-server/spec.md
 > **Status (mirrored from frontmatter — source of truth is above):** in-progress. Effort: L.
 >
 > **Origin:** SpecKit spec `experiment-loom/specs/001-loom-server/spec.md`. Architecture
-> decision recorded in `docs/decisions/ADR-2026-06-02-loom-stack.md`
+> decision recorded in `.straymark/02-design/decisions/ADR-2026-06-02-001-loom-stack.md`
 > (`ADR-2026-06-02-001`).
 
 ## Context

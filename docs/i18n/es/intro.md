@@ -22,4 +22,4 @@ StrayMark externaliza la disciplina cognitiva de la ingeniería asistida por IA 
 
 ## Decisiones
 
-El [directorio Decisions en GitHub](https://github.com/StrangeDaysTech/straymark/tree/main/docs/decisions) registra los ADRs — cada decisión técnica o de proceso que carga peso, con su justificación.
+Los [registros de decisión del árbol gobernado](https://github.com/StrangeDaysTech/straymark/tree/main/.straymark/02-design/decisions) registran los ADRs — cada decisión técnica o de proceso que carga peso, con su justificación. StrayMark gobierna su propio desarrollo con StrayMark, así que sus ADRs viven donde vivirían los de un adoptante.

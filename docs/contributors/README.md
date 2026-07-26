@@ -33,7 +33,7 @@ Proposals and roadmaps from the project's pre-CLI evolution, preserved for conte
 | `2026-05-03-audit-skills-rollout.md` | 2026-05-03 | Operational rollout plan for the audit skills (gating criteria, telemetry, phased shipping). |
 | `2026-05-04-audit-cli-flow.md` | 2026-05-04 | Redesign of the external-audit flow after the first empirical encounter with a multi-commit L Charter (Sentinel CHARTER-07). Implemented in `cli-3.10+`. |
 
-Decision records (ADRs) for the live codebase live on GitHub at [`docs/decisions/`](https://github.com/StrangeDaysTech/straymark/tree/main/docs/decisions).
+Decision records (ADRs) for the live codebase live on GitHub at [`.straymark/02-design/decisions/`](https://github.com/StrangeDaysTech/straymark/tree/main/.straymark/02-design/decisions) — the governed tree, since StrayMark self-adopts. AI decisions (AIDECs) are at [`.straymark/07-ai-audit/decisions/`](https://github.com/StrangeDaysTech/straymark/tree/main/.straymark/07-ai-audit/decisions).
 
 ---
 

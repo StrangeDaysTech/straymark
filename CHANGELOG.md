@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to StrayMark (formerly DevTrail; rebranded 2026-05-08, see [`ADR-2026-05-08-001`](docs/decisions/ADR-2026-05-08-rebranding-straymark.md)) will be documented in this file. Historical entries below preserve the "DevTrail" name where present — that was the project's name at the time of those releases.
+All notable changes to StrayMark (formerly DevTrail; rebranded 2026-05-08, see [`ADR-2026-05-08-001`](.straymark/02-design/decisions/ADR-2026-05-08-001-rebranding-straymark.md)) will be documented in this file. Historical entries below preserve the "DevTrail" name where present — that was the project's name at the time of those releases.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project uses [independent versioning](README.md#versioning) for Framework (`fw-`) and CLI (`cli-`).
@@ -88,7 +88,7 @@ Follow-ups are dated hypotheses — verify the premise at execution, not at capt
   governance-in-force, never write artifacts into it); `/.straymark/` (once self-adopted) = governance
   in force, pinned to the last release. Reinforces the S1 mechanical guard with intent.
 - **Auto-adoption safeguard S5 — git strategy spec.** The implementation plan
-  (`docs/decisions/AIDEC-2026-07-13-001-implementation-plan.md`) now carries the ready-to-apply git
+  (`docs/decisions/proposals/2026-07-13-self-adoption-implementation-plan.md`) now carries the ready-to-apply git
   layout for the eventual root install (recommending: version the whole `/.straymark/`; skew is already
   surfaced by S3/S4), to be applied at `init` (Fase 2).
 
@@ -886,7 +886,7 @@ Patch found by validating cli-3.19.0 against the Sentinel production registry (6
 
 ## CLI 3.19.0 — `straymark followups` namespace (companion to fw-4.21.0)
 
-Ships the native CLI surface for the follow-ups backlog registry crystallized in fw-4.21.0 ([`ADR-2026-06-03-001`](docs/decisions/ADR-2026-06-03-followups-first-class.md), driven by [#214](https://github.com/StrangeDaysTech/straymark/issues/214)). The registry stops being invisible to tooling: it gains a CLI namespace, a synthetic group in `explore`, and a block in `status`. Collapses Tiers 2 and 4 of [#135](https://github.com/StrangeDaysTech/straymark/issues/135) into one native implementation; Tier 3 (`charter close` soft-integration) remains gated.
+Ships the native CLI surface for the follow-ups backlog registry crystallized in fw-4.21.0 ([`ADR-2026-06-03-001`](.straymark/02-design/decisions/ADR-2026-06-03-001-followups-first-class.md), driven by [#214](https://github.com/StrangeDaysTech/straymark/issues/214)). The registry stops being invisible to tooling: it gains a CLI namespace, a synthetic group in `explore`, and a block in `status`. Collapses Tiers 2 and 4 of [#135](https://github.com/StrangeDaysTech/straymark/issues/135) into one native implementation; Tier 3 (`charter close` soft-integration) remains gated.
 
 ### Added (CLI)
 
@@ -910,7 +910,7 @@ Run `straymark update` (CLI → `cli-3.19.0`, framework → `fw-4.21.0`). If you
 
 ## Framework 4.21.0 — Follow-ups backlog becomes a first-class entity (schema v1)
 
-Promotes the follow-ups backlog from documented convention (v0, adopter-side bash) to **first-class framework entity**, following the lane Charter used: canonical schema, shipped agent directives, onboarding-level visibility. Driven by [#214](https://github.com/StrangeDaysTech/straymark/issues/214) (Sentinel post-stage triage at N=91 FUs — extractor noise ×2, silent counter drift, ad-hoc severity) and recorded in [`ADR-2026-06-03-001`](docs/decisions/ADR-2026-06-03-followups-first-class.md), which documents the design-principle #12 reframe: the structural evidence (91 FUs, schema already iterated under empirical pressure, 0 extraction false positives across 76 AILOGs, stable bucket vocabulary, internal Loom roadmap demand) justifies crystallizing as **v1 experimental**; hard stabilization stays gated on a second adopter. The native CLI surface (`straymark followups list/status/drift/promote`) ships in the companion release cli-3.19.0.
+Promotes the follow-ups backlog from documented convention (v0, adopter-side bash) to **first-class framework entity**, following the lane Charter used: canonical schema, shipped agent directives, onboarding-level visibility. Driven by [#214](https://github.com/StrangeDaysTech/straymark/issues/214) (Sentinel post-stage triage at N=91 FUs — extractor noise ×2, silent counter drift, ad-hoc severity) and recorded in [`ADR-2026-06-03-001`](.straymark/02-design/decisions/ADR-2026-06-03-001-followups-first-class.md), which documents the design-principle #12 reframe: the structural evidence (91 FUs, schema already iterated under empirical pressure, 0 extraction false positives across 76 AILOGs, stable bucket vocabulary, internal Loom roadmap demand) justifies crystallizing as **v1 experimental**; hard stabilization stays gated on a second adopter. The native CLI surface (`straymark followups list/status/drift/promote`) ships in the companion release cli-3.19.0.
 
 ### Added (Framework)
 
@@ -1564,7 +1564,7 @@ Closes the two Charter-related gaps surfaced by real adopters in the issue track
 
 ## Framework 4.11.0 / CLI 3.11.0 — StrayMark rebranding
 
-The project formerly known as DevTrail is now **StrayMark**. The decision was made on 2026-05-08 by the operator after external trademark conflict research, motivated by **legal certainty over the project's mark**. See [`ADR-2026-05-08-001`](docs/decisions/ADR-2026-05-08-rebranding-straymark.md) for the full record.
+The project formerly known as DevTrail is now **StrayMark**. The decision was made on 2026-05-08 by the operator after external trademark conflict research, motivated by **legal certainty over the project's mark**. See [`ADR-2026-05-08-001`](.straymark/02-design/decisions/ADR-2026-05-08-001-rebranding-straymark.md) for the full record.
 
 This release ships the rebrand end-to-end across the **live state** of the project. **Historical state is preserved literally** — prior CHANGELOG entries, release titles, tags, the `devtrail-cli@3.10.0` crate (not yanked), and closed issues/PRs all retain the "DevTrail" name as historical record. The single Sentinel adopter (operator-owned) migrates manually via `mv .devtrail .straymark` + `git mv DEVTRAIL.md STRAYMARK.md` + updating refs in their `CLAUDE.md`/`AGENT.md`.
 

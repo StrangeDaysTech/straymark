@@ -4,7 +4,7 @@
 > the shared `../001-loom-server/plan.md` (the HOW). Each task is verifiable. Phases map to
 > releasable increments. This is the ex-ante skeleton for **A1**; A2/A3 tasks get refined
 > when those tracks start. FR/NFR ids reference `spec.md`. The format/projection/generator
-> decisions are recorded in `docs/decisions/ADR-2026-06-02-002-architecture-plan-format.md`.
+> decisions are recorded in `.straymark/02-design/decisions/ADR-2026-06-02-002-architecture-plan-format.md`.
 > Status: **draft**.
 
 ## Track map (from `spec.md` §12)

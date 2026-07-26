@@ -216,7 +216,7 @@ C4Container
 ## References
 
 - `experimento/specs/002-architecture-plan/spec.md`
-- `docs/decisions/ADR-2026-06-02-001-loom-stack.md` (stack/distribution)
+- `.straymark/02-design/decisions/ADR-2026-06-02-001-loom-stack.md` (stack/distribution)
 - `experimento/CHARTER-01-loom-server.md`
 - Reused CLI code: `cli/src/charter_files.rs`, `cli/src/charter.rs`,
   `cli/src/commands/charter/drift.rs`, `cli/src/metrics_engine.rs`,

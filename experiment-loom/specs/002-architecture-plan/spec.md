@@ -4,7 +4,7 @@
 > the **architectural plan** of the system, with a live status overlay that answers the
 > operator's daily question — *"where are we?"*. Companion to Spec 001 (the knowledge
 > graph). The HOW is in `plan.md` (shared with 001); the format/model decision is recorded
-> in `docs/decisions/ADR-2026-06-02-002-architecture-plan-format.md`. Status: **draft /
+> in `.straymark/02-design/decisions/ADR-2026-06-02-002-architecture-plan-format.md`. Status: **draft /
 > experimental (v0, N=1)**.
 
 ## 1. Problem & intent

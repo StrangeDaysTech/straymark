@@ -4,7 +4,7 @@
 **Fecha:** 3 de junio de 2026 (v0.1) · 12 de junio de 2026 (v0.2)
 **Autor:** Jose Villaseñor Montfort — StrangeDaysTech
 **Propósito:** Evaluar la viabilidad de usar el recién anunciado `microsoft/coreutils` (Build 2026) para emparejar la experiencia StrayMark en equipos Windows/PowerShell, e identificar cuál es realmente la ruta de menor costo hacia la paridad.
-**Documentos relacionados:** `ADR-2026-06-03-followups-first-class.md` (precedente de cristalización bash → CLI nativo), `2026-05-03-cli-roadmap.md` (items diferidos con criterio de salida explícito), `CHANGELOG.md` (entrada "pure-Rust fallback for Windows-without-bash deferred until requested").
+**Documentos relacionados:** `ADR-2026-06-03-001-followups-first-class.md` (precedente de cristalización bash → CLI nativo), `2026-05-03-cli-roadmap.md` (items diferidos con criterio de salida explícito), `CHANGELOG.md` (entrada "pure-Rust fallback for Windows-without-bash deferred until requested").
 
 ---
 
@@ -34,7 +34,7 @@ Por qué se conservaron (fuentes en el repo):
 
 - `cli/src/commands/charter/drift.rs` (doc-comment, líneas 11–16): *"Bash delegation only. Windows native (no WSL, no Git Bash) currently has no path; [...] A Rust-native fallback is feasible but deferred until a real adopter reports the need."*
 - `CHANGELOG.md`: *"Bash delegation only; pure-Rust fallback for Windows-without-bash deferred until requested."*
-- `ADR-2026-06-03-followups-first-class.md`: los scripts bash son **prototipos de validación empírica** (Sentinel, N=91 FUs); una vez validado el patrón, la inversión va al CLI Rust ("citizenship"), no al script. `check-followups-drift.sh` ya recorrió ese camino completo.
+- `ADR-2026-06-03-001-followups-first-class.md`: los scripts bash son **prototipos de validación empírica** (Sentinel, N=91 FUs); una vez validado el patrón, la inversión va al CLI Rust ("citizenship"), no al script. `check-followups-drift.sh` ya recorrió ese camino completo.
 
 ---
 

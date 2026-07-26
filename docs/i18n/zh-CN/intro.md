@@ -22,4 +22,4 @@ StrayMark 将 AI 协同工程的认知纪律外化出来 —— 原生于仓库�
 
 ## 决策
 
-[决策（Decisions）](https://github.com/StrangeDaysTech/straymark/tree/main/docs/decisions) 目录追踪所有 ADR —— 每一个承重的技术或流程选择，及其背后的理由。
+[受治理树中的决策记录](https://github.com/StrangeDaysTech/straymark/tree/main/.straymark/02-design/decisions) 追踪所有 ADR —— 每一个承重的技术或流程选择，及其背后的理由。StrayMark 用 StrayMark 治理自身的开发，因此它的 ADR 就存放在采用方的 ADR 会存放的位置。
