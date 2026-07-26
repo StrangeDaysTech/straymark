@@ -46,7 +46,7 @@ StrayMark 为每个组件使用**独立的版本标签**：
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
 | Framework | `fw-` | `fw-4.36.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.37.0` | `straymark` 二进制文件 |
+| CLI | `cli-` | `cli-3.38.0` | `straymark` 二进制文件 |
 | Loom（实验性） | `loom-` | `loom-0.4.2` | `straymark-loom` 可视化服务器，由 `straymark loom serve` 按需下载 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
@@ -687,7 +687,24 @@ OK `### Batch 5` written.
 | `--range` | `origin/main..HEAD`（回退到 `origin/master..HEAD`，再到 `HEAD~1..HEAD` 并告警） | 审计员将审查的 git 修订范围。**多批次陷阱：** 对于早期阶段已合并到基础分支的章程，做按阶段审计时，默认的 `origin/main..HEAD` 会*排除*已合并的提交，从而静默地覆盖不足——请传入显式的 `--range <章程首个提交>..HEAD` 以覆盖整个阶段。当 `--prepare` 检测到已完成批次且未指定显式范围时会打印告警。 |
 | `--calibrate` | off | 运行步骤 2。与 `--finalize` 互斥。 |
 | `--finalize` | off | 运行步骤 3。与 `--calibrate` 互斥。 |
+| `--include-audit-artifacts` | off | 将 `.straymark/audits/**` 嵌入发送给审计员的 diff。自 **cli-3.38.0** 起默认关闭 —— 参见下方 §审计员隔离。仅当审计审计轨迹本身就是目的时才传入。 |
 | `--path` | `.` | 项目目录。 |
+
+##### 审计员隔离 —— 审计产物被排除在 diff 之外 *(cli-3.38.0+)*
+
+`--prepare` 会把被审计范围的 git diff 嵌入提示词。由于该流程要求报告与 review 存放在 `.straymark/audits/` 下,落地它们的提交就会把**上一轮的报告和合并 review 放进下一轮被要求审计的那份 diff 里**。审计员于是在形成自己的判断之前先读到了同侪的意见 —— 而 N 份继承了同一框架的报告是戴着 N 顶帽子的同一个数据点,不是 N 个数据点。只有当每位审计员各自独立得出结论时,跨模型的趋同才是信号。
+
+自 **cli-3.38.0** 起,嵌入的 diff 默认排除 `.straymark/audits/**`(在 `git diff` 上使用 `:(exclude)` pathspec)。审计报告从来不是审计的对象;它们是恰好位于版本树中的治理副产物。当范围确实触及它们时,`--prepare` 会明确说明并列出被丢弃的内容:
+
+```text
+  ℹ Excluded 2 audit artifact(s) from the embedded diff (prior-round reports/reviews) — auditor isolation preserved.
+      .straymark/audits/CHARTER-55/ronda-1/report-gemini-3-pro.md
+      .straymark/audits/CHARTER-55/ronda-1/review.md
+```
+
+`--include-audit-artifacts` 可重新纳入,并会告警:该轮的趋同不构成独立证据。
+
+> **为何是预防而非检测。** `/straymark-audit-review` skill 有一个污染守卫,会标记出显示读过同侪迹象的报告。该守卫保留 —— 但它只能*标记*被污染的报告,无法去污染,而一份被标记的报告就是一次浪费掉的审计。提示词或 README 里写"不要读这些"同样不是隔离:模型可以把先前的报告合理化为"有用的上下文"。强制独立性最便宜的位置,是构建提示词的那一刻。(由 Sentinel 采用方在一个 4 轮周期中报告,其中嵌入 diff 的 1,581 行里有 1,092 行是上一轮的审计文字 —— issue #372。)
 
 ##### 异质性建议（在 v0 中不强制）
 

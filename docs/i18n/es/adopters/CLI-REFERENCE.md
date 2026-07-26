@@ -46,7 +46,7 @@ StrayMark usa **tags de versión independientes** para cada componente:
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
 | Framework | `fw-` | `fw-4.36.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.37.0` | El binario `straymark` |
+| CLI | `cli-` | `cli-3.38.0` | El binario `straymark` |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | El servidor de visualización `straymark-loom`, descargado bajo demanda por `straymark loom serve` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
@@ -670,12 +670,29 @@ Dos pasos, cada uno invocable independientemente:
 | `--prepare` | off (acción default cuando ningún otro flag se pasa) | Corre el paso 1. Mutuamente excluyente con `--merge-reports`. |
 | `--merge-reports` | off | Corre el paso 2. Mutuamente excluyente con `--prepare`. |
 | `--merge-into <PATH>` | — | Con `--merge-reports`: anexa el array `external_audit:` directamente a la telemetría YAML en `<PATH>` en lugar de imprimir a stdout. El CLI rechaza re-audit (la telemetría ya tiene la clave) con error claro. |
+| `--include-audit-artifacts` | off | Embebe `.straymark/audits/**` en el diff que se manda a los auditores. Apagado por default desde **cli-3.38.0** — ver §Aislamiento de auditores abajo. Pásalo solo cuando auditar el propio rastro de auditoría sea el punto. |
 | `--path` | `.` | Directorio del proyecto. |
 
 **Flags v0 deprecated (ocultos en `--help`):**
 
 - `--calibrate` — emite warning y sale con error. El paso v0 calibrate se reemplaza por la skill `/straymark-audit-review` que reconcilia N reports inline con acceso al filesystem (sin prompt paste-based separado).
 - `--finalize` — alias deprecated de `--merge-reports` con comportamiento backwards-compat. Emite warning y rutea por la nueva ruta.
+
+##### Aislamiento de auditores — los artefactos de auditoría se excluyen del diff *(cli-3.38.0+)*
+
+`--prepare` embebe el git diff del rango auditado en el prompt. Como el flujo indica que los reportes y reviews vivan bajo `.straymark/audits/`, un commit que los aterriza mete **los reportes y el review consolidado de la ronda anterior dentro del mismísimo diff que la siguiente ronda debe auditar**. El auditor lee entonces la opinión de sus pares antes de formar la propia — y N reportes que heredaron un mismo encuadre son un solo dato con N sombreros, no N datos. La convergencia entre modelos solo es señal si cada auditor llegó a ella de forma independiente.
+
+Desde **cli-3.38.0** el diff embebido excluye `.straymark/audits/**` por default (un pathspec `:(exclude)` sobre el `git diff`). Los reportes de auditoría nunca son el objeto de una auditoría; son subproducto de gobernanza que casualmente vive en el árbol versionado. Cuando el rango sí los toca, `--prepare` lo dice y lista lo que descartó:
+
+```text
+  ℹ Excluded 2 audit artifact(s) from the embedded diff (prior-round reports/reviews) — auditor isolation preserved.
+      .straymark/audits/CHARTER-55/ronda-1/report-gemini-3-pro.md
+      .straymark/audits/CHARTER-55/ronda-1/review.md
+```
+
+`--include-audit-artifacts` reactiva la inclusión y advierte que la convergencia de esa ronda no es evidencia independiente.
+
+> **Por qué prevención y no detección.** La skill `/straymark-audit-review` tiene un guard de contaminación que marca reportes con señales de haber leído a sus pares. Ese guard se queda — pero solo puede *marcar* un reporte contaminado, nunca descontaminarlo, y un reporte marcado es una auditoría desperdiciada. Una regla en el prompt o un README que diga "no leas esto" tampoco es aislamiento: un modelo puede racionalizar los reportes previos como contexto útil. El lugar más barato para hacer valer la independencia es el momento en que se construye el prompt. (Reportado por el adoptante Sentinel en un ciclo de 4 rondas donde 1,092 de 1,581 líneas del diff embebido eran prosa de auditoría de la ronda anterior — issue #372.)
 
 ##### Recomendación de heterogeneidad (no enforced en v0)
 

@@ -133,17 +133,39 @@ fn parse_unpushed_count(rev_list: &str) -> u64 {
     rev_list.trim().parse().unwrap_or(0)
 }
 
-pub fn run(
-    path: &str,
-    charter_id: &str,
-    range: Option<&str>,
-    prepare: bool,
-    merge_reports: bool,
-    calibrate: bool,
-    finalize: bool,
-    merge_into: Option<&str>,
-    round: Option<&str>,
-) -> Result<()> {
+/// Invocation of `straymark charter audit`, bundled so the entry point stays
+/// under the argument budget as flags accumulate (#356).
+pub struct AuditArgs<'a> {
+    pub path: &'a str,
+    pub charter_id: &'a str,
+    pub range: Option<&'a str>,
+    pub prepare: bool,
+    pub merge_reports: bool,
+    /// Deprecated v0 flag (bails with guidance).
+    pub calibrate: bool,
+    /// Deprecated v0 alias for `merge_reports`.
+    pub finalize: bool,
+    pub merge_into: Option<&'a str>,
+    pub round: Option<&'a str>,
+    /// Escape hatch for the rare case where auditing the audit trail itself is
+    /// the point. Off by default — see [`AUDIT_ARTIFACTS_PATHSPEC`].
+    pub include_audit_artifacts: bool,
+}
+
+pub fn run(args: AuditArgs<'_>) -> Result<()> {
+    let AuditArgs {
+        path,
+        charter_id,
+        range,
+        prepare,
+        merge_reports,
+        calibrate,
+        finalize,
+        merge_into,
+        round,
+        include_audit_artifacts,
+    } = args;
+
     // --merge-into only makes sense with --merge-reports (or the deprecated
     // --finalize that aliases to it).
     if merge_into.is_some() && !merge_reports && !finalize {
@@ -239,28 +261,42 @@ pub fn run(
     // Default action: prepare. The --prepare flag is accepted for
     // self-documenting invocations but is also the implicit default.
     let _ = prepare;
-    run_prepare(
+    run_prepare(PrepareArgs {
         project_root,
-        &straymark_dir,
-        &audit_dir,
-        &charter,
-        &range,
+        straymark_dir: &straymark_dir,
+        audit_dir: &audit_dir,
+        charter: &charter,
+        range: &range,
         range_explicit,
-        round.as_deref(),
-    )
+        round: round.as_deref(),
+        include_audit_artifacts,
+    })
 }
 
 // ── Step 1: prepare ────────────────────────────────────────────────────────
 
-fn run_prepare(
-    project_root: &Path,
-    straymark_dir: &Path,
-    audit_dir: &Path,
-    charter: &Charter,
-    range: &str,
+struct PrepareArgs<'a> {
+    project_root: &'a Path,
+    straymark_dir: &'a Path,
+    audit_dir: &'a Path,
+    charter: &'a Charter,
+    range: &'a str,
     range_explicit: bool,
-    round: Option<&str>,
-) -> Result<()> {
+    round: Option<&'a str>,
+    include_audit_artifacts: bool,
+}
+
+fn run_prepare(args: PrepareArgs<'_>) -> Result<()> {
+    let PrepareArgs {
+        project_root,
+        straymark_dir,
+        audit_dir,
+        charter,
+        range,
+        range_explicit,
+        round,
+        include_audit_artifacts,
+    } = args;
     println!(
         "{} {} ({}{})",
         "PREPARE".cyan().bold(),
@@ -299,7 +335,12 @@ fn run_prepare(
     // review a revision that a later fix invalidates.
     warn_unstable_state(project_root);
 
-    let context = build_audit_context(project_root, charter, range)?;
+    // #372: tell the operator when the audited range carries prior-round audit
+    // artifacts, whether or not they were excluded. Silence here would hide the
+    // exact condition that defeats auditor independence.
+    report_audit_artifacts_in_range(project_root, range, include_audit_artifacts);
+
+    let context = build_audit_context(project_root, charter, range, include_audit_artifacts)?;
 
     let lang = crate::config::StrayMarkConfig::resolve_language(project_root);
     let template_path = crate::utils::resolve_localized_path(
@@ -341,7 +382,7 @@ fn run_prepare(
         audit_dir
             .join("report-<sluggified-model-id>.md")
             .strip_prefix(project_root)
-            .unwrap_or_else(|_| audit_dir.as_ref())
+            .unwrap_or(audit_dir)
             .display()
     );
     println!(
@@ -688,6 +729,7 @@ fn build_audit_context(
     project_root: &Path,
     charter: &Charter,
     range: &str,
+    include_audit_artifacts: bool,
 ) -> Result<AuditContext> {
     let charter_content = std::fs::read_to_string(&charter.path)
         .with_context(|| format!("Failed to read {}", charter.path.display()))?;
@@ -696,7 +738,7 @@ fn build_audit_context(
         .to_string();
 
     let (ailog_paths, ailog_contents) = read_originating_ailogs(project_root, charter)?;
-    let git_diff = run_git_diff(project_root, range)?;
+    let git_diff = run_git_diff(project_root, range, include_audit_artifacts)?;
 
     Ok(AuditContext {
         charter_id: charter.frontmatter.charter_id.clone(),
@@ -804,9 +846,38 @@ fn walk_for_prefix(dir: &Path, prefix: &str) -> Option<PathBuf> {
     None
 }
 
-fn run_git_diff(project_root: &Path, range: &str) -> Result<String> {
+/// Pathspec that keeps the audit trail out of the diff embedded in the prompt.
+///
+/// #372: audit reports live in the tracked tree because that is where the flow
+/// tells them to live — so a commit that adds them lands round N-1's reports
+/// and consolidated review *inside the diff round N is asked to audit*. The
+/// auditor then reads its siblings' opinions before forming its own, and the
+/// independence the whole cycle rests on is gone: N reports that inherited one
+/// framing are one data point wearing N hats, not N data points.
+///
+/// Prevention here beats detection later. The `-review` skill's contamination
+/// guard can flag a report that read its siblings, but it cannot un-read them —
+/// a flagged report is a wasted audit. The cheapest place to enforce
+/// independence is the moment the prompt is built.
+///
+/// Audit reports are never the object of an audit; they are governance
+/// byproduct. A commit that adds them should show, in the diff, the *code* it
+/// changed. `--include-audit-artifacts` opts back in for the rare case where
+/// auditing the audit trail itself is the point.
+const AUDIT_ARTIFACTS_PATHSPEC: &str = ":(exclude).straymark/audits";
+
+fn run_git_diff(project_root: &Path, range: &str, include_audit_artifacts: bool) -> Result<String> {
+    let mut args: Vec<&str> = vec!["diff", range];
+    if !include_audit_artifacts {
+        // A negative-only pathspec implies "everything else": no positive
+        // pathspec is added, so the diff keeps its full scope minus the
+        // excluded subtree — including when the project root is a subdirectory
+        // of the git repo.
+        args.push("--");
+        args.push(AUDIT_ARTIFACTS_PATHSPEC);
+    }
     let output = std::process::Command::new("git")
-        .args(["diff", range])
+        .args(&args)
         .current_dir(project_root)
         .output()
         .with_context(|| format!("Failed to invoke git diff {range}"))?;
@@ -815,6 +886,66 @@ fn run_git_diff(project_root: &Path, range: &str) -> Result<String> {
         bail!("git diff {range} failed: {err}");
     }
     Ok(String::from_utf8_lossy(&output.stdout).into_owned())
+}
+
+/// Audit artifacts touched in the range — the paths whose presence in the
+/// embedded diff would leak one auditor's reasoning into another's prompt.
+///
+/// Scoped to reports and consolidated reviews under `.straymark/audits/`; the
+/// resolved `audit-prompt.md` is not contaminating (it is the auditor's own
+/// instruction sheet). Pure so the classification is unit-testable without git.
+fn audit_artifact_paths(name_only: &str) -> Vec<&str> {
+    name_only
+        .lines()
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+        .filter(|path| path.contains(".straymark/audits/"))
+        .filter(|path| {
+            let file = path.rsplit('/').next().unwrap_or(path);
+            file == "review.md" || (file.starts_with("report-") && file.ends_with(".md"))
+        })
+        .collect()
+}
+
+/// Print what the range carries in the way of prior-round audit prose, and what
+/// was done about it. Advisory only — never blocks, and a git failure here is
+/// silent (the check informs, it does not gate).
+fn report_audit_artifacts_in_range(project_root: &Path, range: &str, included: bool) {
+    let Ok(output) = std::process::Command::new("git")
+        .args(["diff", "--name-only", range])
+        .current_dir(project_root)
+        .output()
+    else {
+        return;
+    };
+    if !output.status.success() {
+        return;
+    }
+    let name_only = String::from_utf8_lossy(&output.stdout);
+    let artifacts = audit_artifact_paths(&name_only);
+    if artifacts.is_empty() {
+        return;
+    }
+    let n = artifacts.len();
+    if included {
+        eprintln!(
+            "{} --include-audit-artifacts is embedding {n} prior-round audit \
+             artifact(s) in the diff. Auditors will read reports written by \
+             other auditors, so convergence between this round's reports is \
+             NOT independent evidence. Drop the flag unless auditing the audit \
+             trail is the point.",
+            "warn:".yellow().bold()
+        );
+    } else {
+        println!(
+            "  {} Excluded {n} audit artifact(s) from the embedded diff \
+             (prior-round reports/reviews) — auditor isolation preserved.",
+            "ℹ".cyan().bold()
+        );
+    }
+    for path in artifacts {
+        println!("      {}", path.dimmed());
+    }
 }
 
 /// Substitute `{{placeholder}}` tokens in `template` with values from `ctx`.
@@ -1150,6 +1281,39 @@ mod tests {
         assert_eq!(parse_unpushed_count(""), 0);
         // git error text on stdout must not become a false alarm.
         assert_eq!(parse_unpushed_count("fatal: no upstream\n"), 0);
+    }
+
+    #[test]
+    fn audit_artifact_paths_detects_reports_and_reviews() {
+        let name_only = "\
+src/foo.rs
+.straymark/audits/CHARTER-55/report-gemini-3-pro.md
+.straymark/audits/CHARTER-55/review.md
+.straymark/audits/CHARTER-55/ronda-2/report-claude-opus-5.md
+";
+        assert_eq!(
+            audit_artifact_paths(name_only),
+            vec![
+                ".straymark/audits/CHARTER-55/report-gemini-3-pro.md",
+                ".straymark/audits/CHARTER-55/review.md",
+                ".straymark/audits/CHARTER-55/ronda-2/report-claude-opus-5.md",
+            ]
+        );
+    }
+
+    #[test]
+    fn audit_artifact_paths_ignores_non_contaminating_paths() {
+        // The resolved prompt is the auditor's own instruction sheet, not a
+        // sibling's opinion; a report-shaped file outside .straymark/audits/
+        // is ordinary code/docs and must not be reported as contamination.
+        let name_only = "\
+.straymark/audits/CHARTER-55/audit-prompt.md
+docs/report-quarterly.md
+src/review.md
+.straymark/charters/55-example.md
+
+";
+        assert!(audit_artifact_paths(name_only).is_empty());
     }
 
     #[test]
