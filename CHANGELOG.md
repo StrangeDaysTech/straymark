@@ -7,6 +7,23 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.38.0 — 2026-07-25
+
+Auditor isolation is enforced where the prompt is built, not where the report is read (#372, Sentinel field report).
+
+### Fixed (CLI)
+
+- **`charter audit --prepare` no longer embeds prior-round audit reports in the diff (#372).** Because the audit flow tells reports and reviews to live under `.straymark/audits/`, a commit that lands them put **round N-1's reports and consolidated review inside the very diff round N was asked to audit** — auditors read their siblings' opinions before forming their own, and the independence that makes cross-model convergence signal collapsed silently. Sentinel hit this across a 4-round cycle on CHARTER-55: 1,092 of 1,581 embedded diff lines were prior-round audit prose; one auditor inherited another's scope, another resubmitted its previous report byte-for-byte. The embedded diff now excludes `.straymark/audits/**` via a `:(exclude)` pathspec. Prevention at `--prepare` beats detection at `--review`: the review skill's contamination guard can flag a contaminated report but never un-contaminate it, and a "do not read these" rule in a prompt or README is not isolation — a model can rationalize prior reports as useful context.
+
+### Added (CLI)
+
+- **`charter audit --include-audit-artifacts`** *(new)* — escape hatch for the rare case where auditing the audit trail itself is the point. Warns that the round's convergence is not independent evidence.
+- `--prepare` reports what the range carried: it lists the excluded prior-round reports/reviews so the operator knows contamination was a risk even though the exclude handled it.
+
+### Changed (CLI)
+
+- **Internal:** `audit::run` takes an `AuditArgs` struct instead of 9 positional arguments, and `run_prepare` a `PrepareArgs` (#356). Pure refactor, no behavior change; clears the two standing clippy warnings in `audit.rs`.
+
 ## Framework 4.36.0 / CLI 3.37.0 — 2026-07-18
 
 Follow-ups are dated hypotheses — verify the premise at execution, not at capture (#365 Part 1, [`AIDEC-2026-07-18-001`](.straymark/07-ai-audit/decisions/AIDEC-2026-07-18-001-followups-as-hypotheses.md)). From the Weft field report: three genuine follow-ups each rested on a premise that was false *at write time* and cheap to falsify at read time.

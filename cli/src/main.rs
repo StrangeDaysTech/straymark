@@ -647,6 +647,14 @@ enum CharterCommands {
         /// The label must be a simple slug ([A-Za-z0-9._-], no path separators).
         #[arg(long)]
         round: Option<String>,
+        /// Embed `.straymark/audits/**` in the diff sent to auditors. OFF by
+        /// default (#372): audit reports live in the tracked tree, so a commit
+        /// that adds them would hand round N's auditors the reports and reviews
+        /// of round N-1 — collapsing the independence that makes cross-model
+        /// convergence signal. Pass this only when auditing the audit trail
+        /// itself is the point.
+        #[arg(long)]
+        include_audit_artifacts: bool,
         /// Project directory (default: current directory)
         #[arg(long = "path", default_value = ".")]
         path: String,
@@ -914,18 +922,20 @@ fn main() {
                 finalize,
                 merge_into,
                 round,
+                include_audit_artifacts,
                 path,
-            } => commands::charter::audit::run(
-                &path,
-                &charter_id,
-                range.as_deref(),
+            } => commands::charter::audit::run(commands::charter::audit::AuditArgs {
+                path: &path,
+                charter_id: &charter_id,
+                range: range.as_deref(),
                 prepare,
                 merge_reports,
                 calibrate,
                 finalize,
-                merge_into.as_deref(),
-                round.as_deref(),
-            ),
+                merge_into: merge_into.as_deref(),
+                round: round.as_deref(),
+                include_audit_artifacts,
+            }),
             CharterCommands::RefreshSuggest {
                 module,
                 threshold,

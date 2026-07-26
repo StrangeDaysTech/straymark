@@ -252,6 +252,125 @@ fn audit_prepare_writes_unified_prompt_to_canonical_location() {
     );
 }
 
+/// Reproduces the #372 condition: a commit that lands a remediation *and* the
+/// previous round's audit reports, which is what the flow produces when reports
+/// are committed under `.straymark/audits/` as the docs instruct.
+fn init_repo_with_prior_round_reports(dir: &Path) {
+    std::fs::create_dir_all(dir.join("src")).unwrap();
+    std::fs::write(dir.join("src/foo.rs"), "// initial\n").unwrap();
+    git(dir, &["init", "-q", "-b", "main"]);
+    git(dir, &["add", "."]);
+    git(dir, &["commit", "-q", "-m", "initial"]);
+
+    // Round N: the remediation commit also carries round N-1's audit trail.
+    std::fs::write(dir.join("src/foo.rs"), "// edited\n").unwrap();
+    let prior = audit_dir(dir, "CHARTER-01").join("ronda-1");
+    std::fs::create_dir_all(&prior).unwrap();
+    std::fs::write(
+        prior.join("report-gemini-3-pro.md"),
+        "# Report\n\nFINDING F1: PRIOR_ROUND_SECRET_OPINION — severity high.\n",
+    )
+    .unwrap();
+    std::fs::write(
+        prior.join("review.md"),
+        "# Consolidated review\n\nCONSOLIDATED_PRIOR_VERDICT: F1 confirmed.\n",
+    )
+    .unwrap();
+    git(dir, &["add", "."]);
+    git(dir, &["commit", "-q", "-m", "remediation + round 1 reports"]);
+}
+
+#[test]
+fn audit_prepare_excludes_prior_round_reports_from_embedded_diff() {
+    if !bash_available() {
+        eprintln!("skipping: git not available");
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    write_charter(dir.path());
+    init_repo_with_prior_round_reports(dir.path());
+
+    cargo_bin_cmd!("straymark")
+        .args(["charter", "audit", "CHARTER-01", "--path"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Excluded 2 audit artifact(s)"));
+
+    let resolved =
+        std::fs::read_to_string(audit_dir(dir.path(), "CHARTER-01").join("audit-prompt.md"))
+            .expect("resolved prompt");
+
+    // The auditor must never meet a sibling's reasoning inside the diff it is
+    // asked to audit — that is the whole point of commissioning N auditors.
+    assert!(
+        !resolved.contains("PRIOR_ROUND_SECRET_OPINION"),
+        "prior-round report content leaked into the prompt"
+    );
+    assert!(
+        !resolved.contains("CONSOLIDATED_PRIOR_VERDICT"),
+        "prior-round consolidated review leaked into the prompt"
+    );
+    // The code under audit is still there — the exclusion is surgical.
+    assert!(
+        resolved.contains("// edited"),
+        "the code change must survive the exclusion"
+    );
+}
+
+#[test]
+fn audit_prepare_include_audit_artifacts_opts_back_in_with_warning() {
+    if !bash_available() {
+        eprintln!("skipping: git not available");
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    write_charter(dir.path());
+    init_repo_with_prior_round_reports(dir.path());
+
+    cargo_bin_cmd!("straymark")
+        .args([
+            "charter",
+            "audit",
+            "CHARTER-01",
+            "--include-audit-artifacts",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("NOT independent evidence"));
+
+    let resolved =
+        std::fs::read_to_string(audit_dir(dir.path(), "CHARTER-01").join("audit-prompt.md"))
+            .expect("resolved prompt");
+    assert!(
+        resolved.contains("PRIOR_ROUND_SECRET_OPINION"),
+        "the escape hatch must actually include the audit trail"
+    );
+}
+
+#[test]
+fn audit_prepare_stays_silent_when_range_has_no_audit_artifacts() {
+    if !bash_available() {
+        eprintln!("skipping: git not available");
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    write_charter(dir.path());
+    init_repo_with_diff(dir.path());
+
+    cargo_bin_cmd!("straymark")
+        .args(["charter", "audit", "CHARTER-01", "--path"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("audit artifact(s)").not());
+}
+
 #[test]
 fn audit_merge_reports_with_no_reports_fails_helpfully() {
     if !bash_available() {

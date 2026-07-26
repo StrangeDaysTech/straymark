@@ -46,7 +46,7 @@ StrayMark uses **independent version tags** for each component:
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
 | Framework | `fw-` | `fw-4.36.0` | Templates (12 types), governance docs, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.37.0` | The `straymark` binary |
+| CLI | `cli-` | `cli-3.38.0` | The `straymark` binary |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | The `straymark-loom` visualization server, downloaded on demand by `straymark loom serve` |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
@@ -736,7 +736,7 @@ OK `### Batch 5` written.
 
 **Workflow integration.** Per `Charter §Tasks` template guidance, run `batch-complete` *immediately after* the batch commit lands but *before* pushing. The AILOG update and the work it documents then ride the same push. The drift gate at close (`straymark charter drift CHARTER-NN`) rejects any pending batch and prints the list — making "forgot to update the ledger" a hard failure rather than silent erosion of the audit trail.
 
-#### `straymark charter audit <CHARTER-ID> [--range <REV..REV>] [--prepare | --merge-reports] [--merge-into <PATH>] [--path <dir>]` {#straymark-charter-audit}
+#### `straymark charter audit <CHARTER-ID> [--range <REV..REV>] [--prepare | --merge-reports] [--merge-into <PATH>] [--include-audit-artifacts] [--path <dir>]` {#straymark-charter-audit}
 
 *Available since **cli-3.8.0** + **fw-4.7.0**. v1 unified flow shipped in **cli-3.10.0** + **fw-4.9.0** — replaces the v0 three-step (PREPARE/CALIBRATE/FINALIZE) with a two-step (PREPARE/MERGE-REPORTS), unifies the auditor template, and moves canonical paths to `.straymark/audits/`.*
 
@@ -756,12 +756,29 @@ Two steps, each invokable independently:
 | `--prepare` | off (default action when no other flag) | Run step 1. Mutually exclusive with `--merge-reports`. |
 | `--merge-reports` | off | Run step 2. Mutually exclusive with `--prepare`. |
 | `--merge-into <PATH>` | — | With `--merge-reports`: append the `external_audit:` array directly into the telemetry YAML at `<PATH>` instead of printing to stdout. The CLI rejects re-audit (telemetry already has the key) with a clear error. |
+| `--include-audit-artifacts` | off | Embed `.straymark/audits/**` in the diff sent to auditors. Off by default since **cli-3.38.0** — see §Auditor isolation below. Pass only when auditing the audit trail itself is the point. |
 | `--path` | `.` | Project directory |
 
 **Deprecated v0 flags (hidden in `--help`):**
 
 - `--calibrate` — emits a warning and exits with error. The v0 calibrate step is replaced by the `/straymark-audit-review` skill, which reconciles N reports inline with filesystem access (no separate paste-based prompt).
 - `--finalize` — deprecated alias for `--merge-reports` with backwards-compat behavior. Emits a warning and routes through the new path.
+
+### Auditor isolation — audit artifacts are excluded from the diff *(cli-3.38.0+)*
+
+`--prepare` embeds the git diff of the audited range in the prompt. Because the flow tells reports and reviews to live under `.straymark/audits/`, a commit that lands them puts **the previous round's reports and consolidated review inside the very diff the next round is asked to audit**. The auditor then reads its siblings' opinions before forming its own — and N reports that inherited one framing are one data point wearing N hats, not N data points. Cross-model convergence is only signal when each auditor reached it independently.
+
+Since **cli-3.38.0** the embedded diff excludes `.straymark/audits/**` by default (a `:(exclude)` pathspec on the `git diff`). Audit reports are never the object of an audit; they are governance byproduct that happens to sit in the tracked tree. When the range does touch them, `--prepare` says so and lists what it dropped:
+
+```text
+  ℹ Excluded 2 audit artifact(s) from the embedded diff (prior-round reports/reviews) — auditor isolation preserved.
+      .straymark/audits/CHARTER-55/ronda-1/report-gemini-3-pro.md
+      .straymark/audits/CHARTER-55/ronda-1/review.md
+```
+
+`--include-audit-artifacts` opts back in and warns that this round's convergence is not independent evidence.
+
+> **Why prevention, not detection.** The `/straymark-audit-review` skill has a contamination guard that flags reports showing signs of having read their siblings. That guard stays — but it can only flag a contaminated report, never un-contaminate it, and a flagged report is a wasted audit. A prompt or README rule saying "do not read these" is not isolation either: a model can rationalize prior reports as useful context. The cheapest place to enforce independence is the moment the prompt is built. (Reported by the Sentinel adopter across a 4-round cycle where 1,092 of 1,581 embedded diff lines were prior-round audit prose — issue #372.)
 
 ### Heterogeneity recommendation (not enforced in v0)
 
