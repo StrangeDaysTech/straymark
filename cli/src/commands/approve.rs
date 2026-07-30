@@ -4,6 +4,11 @@
 //! `review_outcome` frontmatter fields and appends the canonical `## Approval`
 //! body section in one atomic edit.
 //!
+//! When the outcome is `approved`, the document's `status` field is also
+//! transitioned to `accepted` (cli-3.40.0, #378): a document that is approved
+//! is, by definition, accepted. This removes the contradictory `status: draft`
+//! + `review_outcome: approved` state that previously required a manual edit.
+//!
 //! Two operating modes:
 //! - **Flag-driven** (CI / scripted): `straymark approve <doc-id> --outcome
 //!   approved --reviewer <id> [--notes "..."] [--at YYYY-MM-DD]`. Fully
@@ -192,6 +197,8 @@ fn resolve_reviewer(flag: Option<&str>) -> Result<String> {
 /// Mutations:
 /// - Frontmatter: insert/update the three approval fields (after
 ///   `review_required:` or, lacking that line, before the closing `---`).
+/// - Frontmatter: when outcome is `approved`, transition `status` to
+///   `accepted` (#378).
 /// - Body: append a `## Approval` section near the end (before any final
 ///   HTML comment marker, e.g., `<!-- Template: StrayMark | ... -->`).
 fn apply_approval(
@@ -210,9 +217,17 @@ fn apply_approval(
 /// We operate on text rather than re-serializing YAML to preserve comments,
 /// field order, and any project-specific extensions the framework doesn't
 /// know about.
+///
+/// When `outcome` is `"approved"`, also transitions `status` to `accepted`
+/// (#378): an approved document is accepted by definition.
 fn update_frontmatter(raw: &str, reviewer: &str, at: &str, outcome: &str) -> Result<String> {
     let (frontmatter, rest) = split_frontmatter(raw)?;
     let new_fm = upsert_approval_fields(&frontmatter, reviewer, at, outcome);
+    let new_fm = if outcome == "approved" {
+        transition_status_to_accepted(&new_fm)
+    } else {
+        new_fm
+    };
     Ok(format!("---\n{}---{}", new_fm, rest))
 }
 
@@ -293,6 +308,35 @@ fn upsert_approval_fields(fm: &str, reviewer: &str, at: &str, outcome: &str) -> 
         }
     }
 
+    let mut out = lines.join("\n");
+    if !out.ends_with('\n') {
+        out.push('\n');
+    }
+    out
+}
+
+/// Transition the `status:` field to `accepted` in a frontmatter body.
+/// If `status:` is present, replace its value. If absent, insert it after
+/// `id:` (or at the top if `id:` is also absent).
+fn transition_status_to_accepted(fm: &str) -> String {
+    let mut lines: Vec<String> = fm.lines().map(|s| s.to_string()).collect();
+    let mut found = false;
+    for line in lines.iter_mut() {
+        if line.starts_with("status:") {
+            *line = "status: accepted".to_string();
+            found = true;
+            break;
+        }
+    }
+    if !found {
+        // Insert after `id:` line, or at the beginning.
+        let idx = lines
+            .iter()
+            .position(|l| l.starts_with("id:"))
+            .map(|i| i + 1)
+            .unwrap_or(0);
+        lines.insert(idx, "status: accepted".to_string());
+    }
     let mut out = lines.join("\n");
     if !out.ends_with('\n') {
         out.push('\n');
@@ -473,5 +517,53 @@ mod tests {
             parsed.get("review_outcome").and_then(|v| v.as_str()),
             Some("approved")
         );
+    }
+
+    // --- #378: status transition on approval ---
+
+    #[test]
+    fn transition_status_replaces_draft() {
+        let fm = "id: AILOG-2026-07-28-001\nstatus: draft\ntitle: Test\n";
+        let out = transition_status_to_accepted(fm);
+        assert!(out.contains("status: accepted"));
+        assert!(!out.contains("status: draft"));
+    }
+
+    #[test]
+    fn transition_status_replaces_review() {
+        let fm = "id: AILOG-x\nstatus: review\n";
+        let out = transition_status_to_accepted(fm);
+        assert!(out.contains("status: accepted"));
+        assert!(!out.contains("status: review"));
+    }
+
+    #[test]
+    fn transition_status_inserts_when_absent() {
+        let fm = "id: AILOG-x\ntitle: No status field\n";
+        let out = transition_status_to_accepted(fm);
+        assert!(out.contains("status: accepted"));
+        // Inserted after id: line.
+        let lines: Vec<&str> = out.lines().collect();
+        let id_pos = lines.iter().position(|l| l.starts_with("id:")).unwrap();
+        let status_pos = lines.iter().position(|l| l.starts_with("status:")).unwrap();
+        assert_eq!(status_pos, id_pos + 1);
+    }
+
+    #[test]
+    fn apply_approval_transitions_draft_to_accepted() {
+        let raw = "---\nid: AILOG-2026-07-28-001\ntitle: Test\nstatus: draft\nreview_required: true\n---\n\n# Body\n";
+        let out = apply_approval(raw, "reviewer@x.com", "2026-07-29", "approved", None).unwrap();
+        assert!(out.contains("status: accepted"));
+        assert!(!out.contains("status: draft"));
+        assert!(out.contains("review_outcome: approved"));
+    }
+
+    #[test]
+    fn apply_approval_revisions_requested_does_not_change_status() {
+        let raw = "---\nid: AILOG-2026-07-28-001\ntitle: Test\nstatus: draft\nreview_required: true\n---\n\n# Body\n";
+        let out = apply_approval(raw, "reviewer@x.com", "2026-07-29", "revisions_requested", None).unwrap();
+        // Status must remain draft — only `approved` transitions.
+        assert!(out.contains("status: draft"));
+        assert!(out.contains("review_outcome: revisions_requested"));
     }
 }
