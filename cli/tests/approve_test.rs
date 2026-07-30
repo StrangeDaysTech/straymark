@@ -484,3 +484,98 @@ fn approve_quiet_suppresses_review_required_false_warning() {
         .stderr(predicate::str::contains("review_required").not())
         .stdout(predicate::str::is_empty());
 }
+
+// --- #378: approve transitions status: draft → accepted ---
+
+fn write_ailog_draft(dir: &Path, id: &str) -> std::path::PathBuf {
+    let path = dir.join(format!(
+        ".straymark/03-implementation/{}-test-ailog.md",
+        id
+    ));
+    std::fs::create_dir_all(dir.join(".straymark/03-implementation")).unwrap();
+    let body = format!(
+        r#"---
+id: {id}
+title: Test AILOG
+status: draft
+created: 2026-07-28
+agent: test-v1.0
+confidence: high
+review_required: true
+risk_level: medium
+---
+
+# AILOG: Test
+
+## Summary
+
+Body.
+
+<!-- Template: StrayMark | https://strangedays.tech -->
+"#,
+        id = id,
+    );
+    std::fs::write(&path, body).unwrap();
+    path
+}
+
+#[test]
+fn approve_transitions_draft_to_accepted() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    let doc_path = write_ailog_draft(dir.path(), "AILOG-2026-07-28-001");
+
+    cargo_bin_cmd!("straymark")
+        .args([
+            "approve",
+            "AILOG-2026-07-28-001",
+            "--outcome",
+            "approved",
+            "--reviewer",
+            "reviewer@example.com",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    let content = std::fs::read_to_string(&doc_path).unwrap();
+    assert!(
+        content.contains("status: accepted"),
+        "status should be transitioned to accepted"
+    );
+    assert!(
+        !content.contains("status: draft"),
+        "status: draft should no longer be present"
+    );
+    assert!(content.contains("review_outcome: approved"));
+    assert!(content.contains("reviewed_by: reviewer@example.com"));
+}
+
+#[test]
+fn approve_revisions_requested_keeps_status_draft() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    let doc_path = write_ailog_draft(dir.path(), "AILOG-2026-07-28-002");
+
+    cargo_bin_cmd!("straymark")
+        .args([
+            "approve",
+            "AILOG-2026-07-28-002",
+            "--outcome",
+            "revisions_requested",
+            "--reviewer",
+            "reviewer@example.com",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    let content = std::fs::read_to_string(&doc_path).unwrap();
+    assert!(
+        content.contains("status: draft"),
+        "status must remain draft for revisions_requested"
+    );
+    assert!(content.contains("review_outcome: revisions_requested"));
+}
