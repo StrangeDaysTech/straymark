@@ -8,9 +8,12 @@
 //! `--non-interactive` (requires `--note`), prompts are disabled outright
 //! so a missing `--note` aborts cleanly instead of hanging.
 //!
-//! Reads the originating AILOG from the Charter frontmatter
-//! `originating_ailogs[0]`. Rejects with a clear error if:
-//! - the Charter has no originating AILOG (cannot resolve target file)
+//! Reads the target AILOG from the Charter frontmatter, resolving in order:
+//! 1. `originating_ailogs[0]` (AILOG-originated Charters)
+//! 2. `execution_ailogs[0]` (spec-originated Charters, #379)
+//!
+//! Rejects with a clear error if:
+//! - the Charter has neither `originating_ailogs` nor `execution_ailogs`
 //! - the AILOG file is not found under `.straymark/07-ai-audit/agent-logs/`
 //! - the AILOG has no `## Batch Ledger` section
 //! - no `### Batch <N>` heading exists in the ledger
@@ -49,12 +52,23 @@ pub fn run(
         })?
         .clone();
 
+    // Resolve the target AILOG: originating_ailogs first (AILOG-originated
+    // Charters), then execution_ailogs (spec-originated Charters, #379).
     let ailog_ids = match &charter.frontmatter.originating_ailogs {
         Some(ids) if !ids.is_empty() => ids.clone(),
-        _ => bail!(
-            "Charter {} has no `originating_ailogs` in frontmatter.\n  hint: batch-complete writes to the originating AILOG; add it to the Charter or run the command directly on the AILOG file.",
-            charter.frontmatter.charter_id
-        ),
+        _ => match &charter.frontmatter.execution_ailogs {
+            Some(ids) if !ids.is_empty() => {
+                eprintln!(
+                    "{} Charter is spec-originated; using execution_ailogs[0].",
+                    "note:".cyan().bold(),
+                );
+                ids.clone()
+            }
+            _ => bail!(
+                "Charter {} has neither `originating_ailogs` nor `execution_ailogs` in frontmatter.\n  hint: batch-complete writes to the execution AILOG. For spec-originated Charters,\n  add `execution_ailogs: [AILOG-YYYY-MM-DD-NNN]` to the Charter frontmatter.",
+                charter.frontmatter.charter_id
+            ),
+        },
     };
     let ailog_id = &ailog_ids[0];
     if ailog_ids.len() > 1 {

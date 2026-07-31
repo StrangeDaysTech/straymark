@@ -936,3 +936,137 @@ fn test_charter_design_provenance_invalid_value_warns() {
         .success()
         .stdout(predicate::str::contains("CHARTER-DESIGN-PROVENANCE"));
 }
+
+// ── #377: validate covers .telemetry.yaml ────────────────────────────────
+
+fn setup_telemetry_schema(dir: &std::path::Path) {
+    let schemas = dir.join(".straymark/schemas");
+    std::fs::create_dir_all(&schemas).unwrap();
+    std::fs::write(
+        schemas.join("charter-telemetry.schema.v0.json"),
+        r#"{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["charter_telemetry"],
+  "properties": {
+    "charter_telemetry": {
+      "type": "object",
+      "required": ["charter_id", "charter_title", "closed_at", "effort", "outcome"],
+      "properties": {
+        "charter_id": { "type": "string", "pattern": "^CHARTER-[0-9]{2,}(-[a-z0-9-]+)?$" },
+        "charter_title": { "type": "string" },
+        "closed_at": { "type": "string" },
+        "effort": {
+          "type": "object",
+          "required": ["estimated_effort"],
+          "properties": {
+            "estimated_effort": { "type": "string", "pattern": "^(XS|S|M|L)( \\(~.+\\))?$" }
+          }
+        },
+        "outcome": {
+          "type": "object",
+          "required": ["completed_as_planned", "scope_changes"],
+          "properties": {
+            "completed_as_planned": { "type": "boolean" },
+            "scope_changes": { "type": "string", "enum": ["ninguno", "menor", "mayor"] }
+          }
+        },
+        "trigger": {
+          "type": "object",
+          "properties": {
+            "declared_kind": { "type": "string", "enum": ["event_trigger", "date", "metric_threshold", "infrastructure_milestone"] }
+          }
+        }
+      }
+    }
+  }
+}"#,
+    )
+    .unwrap();
+}
+
+#[test]
+fn test_validate_catches_invalid_telemetry() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    setup_telemetry_schema(dir.path());
+    let charters = dir.path().join(".straymark/charters");
+    std::fs::create_dir_all(&charters).unwrap();
+    std::fs::write(
+        charters.join("CHARTER-99.telemetry.yaml"),
+        r#"charter_telemetry:
+  charter_id: "CHARTER-99"
+  charter_title: "Reproducing the validation gap"
+  closed_at: "2026-07-28"
+  trigger:
+    declared_kind: "this_is_not_in_the_enum"
+  effort:
+    estimated_effort: "L (>= 1 week)"
+  outcome:
+    completed_as_planned: true
+    scope_changes: ninguno
+"#,
+    )
+    .unwrap();
+
+    cargo_bin_cmd!("straymark")
+        .arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .arg("--include-charters")
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("TELEMETRY-SCHEMA"));
+}
+
+#[test]
+fn test_validate_passes_valid_telemetry() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    setup_telemetry_schema(dir.path());
+    let charters = dir.path().join(".straymark/charters");
+    std::fs::create_dir_all(&charters).unwrap();
+    std::fs::write(
+        charters.join("CHARTER-01.telemetry.yaml"),
+        r#"charter_telemetry:
+  charter_id: "CHARTER-01"
+  charter_title: "Valid telemetry"
+  closed_at: "2026-07-28"
+  effort:
+    estimated_effort: "M"
+  outcome:
+    completed_as_planned: true
+    scope_changes: ninguno
+"#,
+    )
+    .unwrap();
+
+    cargo_bin_cmd!("straymark")
+        .arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .arg("--include-charters")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("TELEMETRY-SCHEMA").not());
+}
+
+#[test]
+fn test_validate_catches_unparseable_telemetry() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    setup_telemetry_schema(dir.path());
+    let charters = dir.path().join(".straymark/charters");
+    std::fs::create_dir_all(&charters).unwrap();
+    std::fs::write(
+        charters.join("CHARTER-02.telemetry.yaml"),
+        "charter_telemetry:\n  charter_id: [invalid yaml\n",
+    )
+    .unwrap();
+
+    cargo_bin_cmd!("straymark")
+        .arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .arg("--include-charters")
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("TELEMETRY-PARSE"));
+}

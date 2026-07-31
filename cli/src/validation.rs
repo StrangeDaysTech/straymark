@@ -278,6 +278,65 @@ pub fn validate_charters(project_root: &Path, straymark_dir: &Path) -> (Validati
         }
     }
 
+    // Step 4 (#377): validate .telemetry.yaml files against the telemetry
+    // schema. These are the only Charter-related artifacts that `charter close`
+    // validates but `validate --include-charters` previously skipped, allowing
+    // schema-invalid telemetry to accumulate with every gate reporting green.
+    let telemetry_schema = crate::telemetry_schema::TelemetrySchema::load(straymark_dir).ok();
+    if let Some(schema) = telemetry_schema {
+        let charters_dir = straymark_dir.join("charters");
+        if charters_dir.exists() {
+            if let Ok(entries) = std::fs::read_dir(&charters_dir) {
+                let mut telemetry_paths: Vec<PathBuf> = entries
+                    .filter_map(|e| e.ok())
+                    .map(|e| e.path())
+                    .filter(|p| {
+                        p.file_name()
+                            .and_then(|n| n.to_str())
+                            .map(|n| n.ends_with(".telemetry.yaml"))
+                            .unwrap_or(false)
+                    })
+                    .collect();
+                telemetry_paths.sort();
+                for tpath in &telemetry_paths {
+                    match std::fs::read_to_string(tpath) {
+                        Ok(raw) => match serde_yaml::from_str::<serde_yaml::Value>(&raw) {
+                            Ok(yaml_value) => {
+                                for issue in schema.validate(&yaml_value, tpath) {
+                                    result.errors.push(issue);
+                                }
+                            }
+                            Err(e) => {
+                                result.errors.push(ValidationIssue {
+                                    file: tpath.clone(),
+                                    rule: "TELEMETRY-PARSE".to_string(),
+                                    message: format!("Telemetry YAML is not parseable: {e}"),
+                                    severity: Severity::Error,
+                                    fix_hint: Some(
+                                        "Check YAML syntax (indentation, colons, quotes)."
+                                            .to_string(),
+                                    ),
+                                });
+                            }
+                        },
+                        Err(e) => {
+                            result.errors.push(ValidationIssue {
+                                file: tpath.clone(),
+                                rule: "TELEMETRY-READ".to_string(),
+                                message: format!("Cannot read telemetry file: {e}"),
+                                severity: Severity::Error,
+                                fix_hint: None,
+                            });
+                        }
+                    }
+                }
+                // Count telemetry files in the document total.
+                let telemetry_count = telemetry_paths.len();
+                return (result, charter_count + telemetry_count);
+            }
+        }
+    }
+
     (result, charter_count)
 }
 
