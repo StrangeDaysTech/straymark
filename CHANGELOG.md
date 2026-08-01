@@ -7,13 +7,15 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
-## Unreleased — work_verb fields + Baton hardening
+## Unreleased — work_verb fields + Baton hardening + audit prompt hardening
 
-Baton post-calibration: `work_verb`/`design_provenance` graduated to framework templates; three experiment-hardening fixes (#319, #315, #314).
+Baton post-calibration: `work_verb`/`design_provenance` graduated to framework templates; three experiment-hardening fixes (#319, #315, #314). Audit prompt hardened from a 4-model cycle that missed an unreachable feature (#382).
 
 ### Added (Framework)
 
 - **`work_verb` / `design_provenance` in templates** (Baton #332, schema ratified in `experiment-baton/06-work-verb-schema-ratification.md`). Optional declared work-classification fields added to Charter template (EN/ES/zh-CN — already present), AILOG template (EN/ES/zh-CN), and follow-ups backlog entry shape. Undeclared units route conservatively to frontier; out-of-vocabulary values trigger an advisory `straymark validate` warning (never blocking).
+- **Audit prompt v1.2 — enumerate callers of new public entry points** (#382). New mandatory Step 3: for each public method, endpoint, or component the Charter adds, run a call-site search across production code and state the count. Zero production callers is a High finding by default — the Charter added a capability that nothing reaches. Also: consolidated-test seam check (Step 2.6) and red-gate enumeration (Step 4).
+- **Verification quality guidance in AILOG + Charter templates** (#382). "Tests pass" checkbox now requires declaring the exact command run; a verification that cannot produce a negative result is not verification. Charter template Local checks section carries the same anti-pattern warning.
 
 ### Added (CLI)
 
