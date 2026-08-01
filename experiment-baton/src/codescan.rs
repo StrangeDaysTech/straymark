@@ -9,8 +9,14 @@
 //!    keys a generated types file (`types.gen.ts`) whose declarations carry no
 //!    endpoint anchor of their own — they'd otherwise all collapse onto one
 //!    coarse contract (or be dropped entirely).
-//! 2. **Nearest endpoint anchor**: the `/api/...` reference at or above a
-//!    declaration. Used when no call-site binds the type.
+//! 2. **Producer-side route keying** (#319): a huma route-registration call
+//!    (`huma.Get(api, "/path", h.handlerMethod)`) binds the handler symbol to
+//!    the route; the handler's output struct (`<handler>Output`) then keys to
+//!    that route instead of the nearest anchor. Fixes the huma pattern where
+//!    all registrations sit in one block and the struct is defined ~75 lines
+//!    below, so nearest-anchor binds it to the wrong route.
+//! 3. **Nearest endpoint anchor**: the `/api/...` reference at or above a
+//!    declaration. Used when no binding keys the type.
 //!
 //! Conservative by design (R3/R6): a declaration with neither a binding nor an
 //! anchor yields nothing rather than a guess; a type bound to two different
@@ -61,10 +67,13 @@ pub fn scan(root: &Path) -> Vec<ContractShape> {
     // keys an anchorless generated types file (#313).
     let bindings = collect_bindings(&files);
 
+    // Pass 1b: Go producer-side route registrations → handler→route map (#319).
+    let go_bindings = collect_go_bindings(&files);
+
     // Pass 2: extract shapes, binding-first keying.
     let mut out = Vec::new();
     for (rel, lang, content) in &files {
-        out.extend(extract_file(rel, content, *lang, &bindings));
+        out.extend(extract_file(rel, content, *lang, &bindings, &go_bindings));
     }
     out.sort_by(|a, b| (&a.contract, &a.source.file).cmp(&(&b.contract, &b.source.file)));
     out
@@ -95,6 +104,89 @@ fn collect_bindings(files: &[(String, Lang, String)]) -> BTreeMap<String, String
         }
     }
     seen.into_iter().filter_map(|(k, v)| v.map(|c| (k, c))).collect()
+}
+
+/// Mine huma route-registration calls across Go files into a
+/// `TypeName → ContractId` map (#319). Parses `huma.Get(api, "/path", h.handlerMethod)`
+/// (and Post/Put/Patch/Delete) to extract `(handlerMethod, route)`, then keys
+/// `<handlerMethod>Output` → route via the huma naming convention.
+/// Conservative (R6): only binds when the convention resolves unambiguously.
+fn collect_go_bindings(files: &[(String, Lang, String)]) -> BTreeMap<String, String> {
+    let mut seen: BTreeMap<String, Option<String>> = BTreeMap::new();
+    for (_, lang, content) in files {
+        if *lang != Lang::Go {
+            continue;
+        }
+        for line in content.lines() {
+            if let Some((handler, cid)) = parse_huma_registration(line) {
+                // Key both the handler itself and the `<handler>Output` struct.
+                for key in [handler.clone(), format!("{handler}Output")] {
+                    match seen.get(&key) {
+                        None => {
+                            seen.insert(key, Some(cid.clone()));
+                        }
+                        Some(Some(prev)) if *prev != cid => {
+                            seen.insert(key, None);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
+    }
+    seen.into_iter().filter_map(|(k, v)| v.map(|c| (k, c))).collect()
+}
+
+/// Parse a huma route registration line into `(handler_name, ContractId)`.
+/// Recognizes: `huma.Get(api, "/path", h.handlerMethod)` and the other HTTP
+/// method variants (Post, Put, Patch, Delete, Head, Options).
+fn parse_huma_registration(line: &str) -> Option<(String, String)> {
+    let trimmed = line.trim();
+    // Must contain a huma method call with a route literal.
+    let methods = ["huma.Get(", "huma.Post(", "huma.Put(", "huma.Patch(", "huma.Delete(", "huma.Head(", "huma.Options("];
+    let rest = methods.iter().find_map(|m| trimmed.find(m).map(|i| &trimmed[i + m.len()..]))?;
+    // First arg after the method is the API handle (skip it), then the route literal.
+    let route = first_path_literal_after_comma(rest)?;
+    let cid = normalize_endpoint(&route);
+    if cid.is_empty() {
+        return None;
+    }
+    // Handler: the last argument — `h.handlerMethod` or `h.handlerMethod,` (with options).
+    let handler = extract_huma_handler(trimmed)?;
+    Some((handler, cid))
+}
+
+/// Extract the route literal (second argument) from a huma registration call.
+fn first_path_literal_after_comma(args: &str) -> Option<String> {
+    // Skip the first argument (api handle), find the comma.
+    let comma = args.find(',')?;
+    let after = args[comma + 1..].trim_start();
+    first_path_literal(after)
+}
+
+/// Extract the handler method name from a huma registration line.
+/// Looks for `h.handlerMethod` pattern — the last `h.<identifier>` before `)` or `,`.
+fn extract_huma_handler(line: &str) -> Option<String> {
+    // Find `h.<identifier>` patterns.
+    let mut last_handler = None;
+    let bytes = line.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'h' && i + 1 < bytes.len() && bytes[i + 1] == b'.' {
+            let start = i + 2;
+            let mut end = start;
+            while end < bytes.len() && (bytes[end].is_ascii_alphanumeric() || bytes[end] == b'_') {
+                end += 1;
+            }
+            if end > start {
+                last_handler = Some(line[start..end].to_string());
+            }
+            i = end;
+        } else {
+            i += 1;
+        }
+    }
+    last_handler
 }
 
 /// Extract `(TypeName, ContractId)` from a single line's `…<Type>('/path')` call
@@ -172,6 +264,7 @@ fn extract_file(
     content: &str,
     lang: Lang,
     bindings: &BTreeMap<String, String>,
+    go_bindings: &BTreeMap<String, String>,
 ) -> Vec<ContractShape> {
     let anchors = anchors(content);
     let decls = match lang {
@@ -182,6 +275,13 @@ fn extract_file(
     let role = match lang {
         Lang::Go => ShapeRole::Producer,
         _ => ShapeRole::Consumer,
+    };
+
+    // Select the binding map for this language: Go uses huma route registrations
+    // (#319), TS uses typed-client call sites (#313).
+    let lang_bindings = match lang {
+        Lang::Go => go_bindings,
+        _ => bindings,
     };
 
     // Index named enum decls so an interface bound to a route can pull in the
@@ -199,7 +299,7 @@ fn extract_file(
     let mut by_contract: BTreeMap<String, Agg> = BTreeMap::new();
     for d in &decls {
         // Binding-first (a usage-grounded type→route link), then nearest anchor.
-        let Some(cid) = bindings
+        let Some(cid) = lang_bindings
             .get(&d.name)
             .cloned()
             .or_else(|| contract_for_line(&anchors, d.line))
@@ -517,6 +617,10 @@ mod tests {
         BTreeMap::new()
     }
 
+    fn no_go_bindings() -> BTreeMap<String, String> {
+        BTreeMap::new()
+    }
+
     #[test]
     fn go_struct_and_enum_extracted() {
         let src = "// GET /api/v1/services/{id}/health\n\
@@ -530,7 +634,7 @@ mod tests {
                    \tA HealthState = \"OPERATIONAL\"\n\
                    \tB HealthState = \"IDLE\"\n\
                    )\n";
-        let shapes = extract_file("h.go", src, Lang::Go, &no_bindings());
+        let shapes = extract_file("h.go", src, Lang::Go, &no_bindings(), &no_go_bindings());
         assert_eq!(shapes.len(), 1);
         let s = &shapes[0];
         assert_eq!(s.contract, "services.health");
@@ -551,7 +655,7 @@ mod tests {
                    \tstatus: HealthStatus;\n\
                    \tcpu?: number;\n\
                    }\n";
-        let shapes = extract_file("t.ts", src, Lang::Ts, &no_bindings());
+        let shapes = extract_file("t.ts", src, Lang::Ts, &no_bindings(), &no_go_bindings());
         assert_eq!(shapes.len(), 1);
         let s = &shapes[0];
         assert_eq!(s.contract, "services.health");
@@ -565,7 +669,7 @@ mod tests {
     #[test]
     fn no_endpoint_anchor_yields_nothing() {
         let src = "type Foo struct {\n\tBar string `json:\"bar\"`\n}\n";
-        assert!(extract_file("x.go", src, Lang::Go, &no_bindings()).is_empty());
+        assert!(extract_file("x.go", src, Lang::Go, &no_bindings(), &no_go_bindings()).is_empty());
     }
 
     // ---- call-site binding (#313) ----------------------------------------
@@ -602,12 +706,12 @@ mod tests {
                    \tcpu?: number;\n\
                    }\n";
         // Without a binding the anchorless file yields nothing (conservative).
-        assert!(extract_file("types.gen.ts", src, Lang::Ts, &no_bindings()).is_empty());
+        assert!(extract_file("types.gen.ts", src, Lang::Ts, &no_bindings(), &no_go_bindings()).is_empty());
 
         // With a call-site binding the interface keys to its route, and the
         // referenced union's variants ride along (for C3).
         let bindings = BTreeMap::from([("DashboardComponent".to_string(), "services.health".to_string())]);
-        let shapes = extract_file("types.gen.ts", src, Lang::Ts, &bindings);
+        let shapes = extract_file("types.gen.ts", src, Lang::Ts, &bindings, &no_go_bindings());
         assert_eq!(shapes.len(), 1);
         let s = &shapes[0];
         assert_eq!(s.contract, "services.health");
@@ -615,5 +719,47 @@ mod tests {
         assert_eq!(names, vec!["name", "status", "cpu"]);
         let variants: Vec<String> = s.enums.iter().flat_map(|e| e.variants.clone()).collect();
         assert_eq!(variants, vec!["GREEN", "RED"]);
+    }
+
+    // ---- huma route keying (#319) ----------------------------------------
+
+    #[test]
+    fn huma_registration_parsed() {
+        let (handler, cid) = parse_huma_registration(
+            "huma.Get(api, \"/api/v1/services/{service_id}/health\", h.getServiceHealth)"
+        ).unwrap();
+        assert_eq!(handler, "getServiceHealth");
+        assert_eq!(cid, "services.health");
+
+        let (handler, cid) = parse_huma_registration(
+            "huma.Post(api, \"/api/v1/incidents\", h.createIncident)"
+        ).unwrap();
+        assert_eq!(handler, "createIncident");
+        assert_eq!(cid, "incidents");
+    }
+
+    #[test]
+    fn huma_output_struct_keys_to_route_not_nearest_anchor() {
+        // Huma pattern: registrations in one block, struct defined far below.
+        // Without go_bindings, nearest-anchor binds to the wrong route.
+        let src = "huma.Get(api, \"/api/v1/services/{id}/health\", h.getServiceHealth)\n\
+                   huma.Get(api, \"/api/v1/services/{id}/metrics\", h.getServiceMetrics)\n\
+                   \n\
+                   type getServiceHealthOutput struct {\n\
+                   \tName   string `json:\"name\"`\n\
+                   \tState  string `json:\"state\"`\n\
+                   }\n";
+        let files = vec![("handlers.go".to_string(), Lang::Go, src.to_string())];
+        let go_bindings = collect_go_bindings(&files);
+        // getServiceHealthOutput should bind to services.health, not services.metrics.
+        assert_eq!(
+            go_bindings.get("getServiceHealthOutput").map(|s| s.as_str()),
+            Some("services.health")
+        );
+        let shapes = extract_file("handlers.go", src, Lang::Go, &no_bindings(), &go_bindings);
+        assert_eq!(shapes.len(), 1);
+        assert_eq!(shapes[0].contract, "services.health");
+        let names: Vec<&str> = shapes[0].fields.iter().map(|f| f.name.as_str()).collect();
+        assert_eq!(names, vec!["name", "state"]);
     }
 }

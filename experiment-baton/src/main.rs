@@ -124,6 +124,13 @@ impl From<MinConf> for Confidence {
 }
 
 fn main() -> anyhow::Result<()> {
+    // Reset SIGPIPE to the default (terminate) so piping to `head`/`less` exits
+    // cleanly instead of crashing with EPIPE (#315). Standard CLI behaviour.
+    #[cfg(unix)]
+    unsafe {
+        libc::signal(libc::SIGPIPE, libc::SIG_DFL);
+    }
+
     let cli = Cli::parse();
     match cli.command {
         Command::Inspect { path, out } => inspect(path.unwrap_or_else(|| PathBuf::from(".")), out),
