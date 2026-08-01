@@ -78,7 +78,10 @@ related: []
 ## Verificación
 
 - [ ] El código compila sin errores
-- [ ] Las pruebas pasan
+- [ ] Las pruebas pasan — declara el comando exacto ejecutado. Una verificación
+  que no puede producir un resultado negativo no es verificación: sumar passes
+  sin revisar fallos es un anti-patrón conocido (#382). Prefiere el exit code
+  del runner o su veredicto final sobre parsing custom.
 - [ ] Se realizó revisión manual
 - [ ] Escaneo de seguridad pasado (si risk_level: high/critical)
 - [ ] Revisión de privacidad completada (si maneja PII)

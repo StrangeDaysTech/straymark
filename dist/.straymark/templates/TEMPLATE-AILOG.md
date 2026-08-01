@@ -80,7 +80,10 @@ related: []
 ## Verification
 
 - [ ] Code compiles without errors
-- [ ] Tests pass
+- [ ] Tests pass — declare the exact command run. A verification that cannot
+  produce a negative result is not verification: summing pass counts without
+  checking failure output is a known anti-pattern (#382). Prefer the test
+  runner's exit code or summary verdict over custom parsing.
 - [ ] Manual review performed
 - [ ] Security scan passed (if risk_level: high/critical)
 - [ ] Privacy review completed (if handling PII)

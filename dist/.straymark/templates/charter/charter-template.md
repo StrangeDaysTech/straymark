@@ -89,6 +89,11 @@ do not classify them as gaps. Ideally cite the Charter or initiative where they 
 Commands executable literal in a clean shell — include explicit setup of dependencies.
 Any failure of these commands indicates real debt.
 
+> **Verification quality**: a check that cannot produce a red result is not
+> a check. Summing pass counts without inspecting failure output is the
+> canonical anti-pattern (#382). Prefer the test runner's own exit code or
+> summary verdict over custom parsing of intermediate output.
+
 ```bash
 # Build & test (adapt to your stack)
 <build-command>
