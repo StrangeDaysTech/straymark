@@ -7,6 +7,14 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.38.1 — 2026-07-29
+
+### Fixed (Framework)
+
+- **Audit prompt v1.2 not included in distribution** (#386). The 4.38.0 CHANGELOG announced audit prompt v1.2 (enumerate-callers Step 3, consolidated-test seam check, red-gate enumeration — #382), but the changes were applied only to the governance-in-force copy (`/.straymark/audit-prompts/`) and not to the distribution source (`dist/.straymark/audit-prompts/`). Both EN and ES dist templates now carry v1.2. The irony is noted: #382 exists because a Charter declared a capability nothing reached; the fix for it declared a rule nothing carried.
+
+---
+
 ## Framework 4.38.0 / CLI 3.40.0 — 2026-07-29
 
 Baton post-calibration: `work_verb`/`design_provenance` graduated to framework templates; three experiment-hardening fixes (#319, #315, #314). Audit prompt hardened from a 4-model cycle that missed an unreachable feature (#382).

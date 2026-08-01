@@ -1,5 +1,5 @@
 <!--
-Plantilla unificada de auditoría StrayMark v1.1 — traducción ES.
+Plantilla unificada de auditoría StrayMark v1.2 — traducción ES.
 
 La versión canónica está en EN en `dist/.straymark/audit-prompts/audit-prompt.md`.
 `straymark charter audit <CHARTER-ID>` resuelve los placeholders contra el
@@ -174,10 +174,21 @@ Para CADA tarea en el Charter, realiza estos pasos en orden:
 4. **Verificar tests**: localiza los tests correspondientes. Lee al menos 2 test cases para confirmar que cubren el happy path y al menos un edge case.
 5. **Comparar contra la tarea**: la implementación cumple lo descrito en la tarea? Si hay discrepancias, reporta con evidencia (`archivo:línea`).
 6. **Verificar la fidelidad de la verificación**: para cada afirmación de "verificado / resuelto / hecho" que encuentres (en el Charter o en los originating AILOGs), pregúntate *contra qué realidad* se comprobó — la **condición que realmente importa** (CI real, datos con forma de producción, el código o contrato vivo) o un **proxy conveniente** (un test local, un mock, la propia aseveración del doc). Una afirmación verificada solo contra un proxy aún no es confiable: márcala, y re-verifícala contra la condición real donde tus herramientas lo permitan. **No** confíes en un resumen downstream de un artefacto — si una afirmación se apoya en "el AILOG dice que se hizo", abre el artefacto (archivo / función / migración) y confírmalo tú mismo. Y cuando el código en alcance consume un contrato definido por una decisión en otra parte (un AILOG / AIDEC / PM-backlog / spec), verifica que lo referencie explícitamente; un consumidor sin un puntero a la decisión que define su contrato es un smell de deriva que amerita un finding.
+   Cuando un test está documentado como "consolidado" o "fusionado" en otro test, verifica que el reemplazo ejercita el MISMO SEAM, no meramente la misma unidad. Las notas de cierre del propio Charter declarando "cobertura equivalente" son una afirmación de la parte auditada — trátalas como hipótesis a verificar, no como evidencia. La parte auditada escribe esas notas; es un conflicto de interés estructural que la auditoría debe corregir.
 
 > **Disciplina de evidencia.** Solo puedes opinar sobre archivos que has abierto vía tool call (Read, Grep, etc.). Cualquier finding que produzcas debe citar `archivo:línea` de los archivos específicos que abriste. Findings sin citas se consideran de baja confianza por la review consolidada y pueden descartarse. Si no abriste un archivo, no puedes inferir comportamiento, estructura, ni corrección sobre él.
 
-### Paso 3 — Ejecutar verificaciones (cuando aplique)
+### Paso 3 — Enumerar llamadores de nuevos entry points públicos (OBLIGATORIO)
+
+Para cada método público, endpoint o componente que el Charter AÑADE (no modifica — añade), ejecuta una búsqueda de call-sites en el código de producción (excluyendo tests) y declara el count explícitamente en tu reporte.
+
+- **Cero llamadores en producción** es un hallazgo **Alto** por defecto, sin juicio requerido: el Charter añadió una capacidad que nada alcanza. Categoría: `implementation_gap`.
+- **Count no-cero**: verifica que los llamadores son los PREVISTOS. Un overload existente, un path legacy, o un sibling síncrono puede seguir ganando — el método nuevo existe y es llamado, pero los call-sites que importan siguen enrutando por el path viejo. Eso también es un hallazgo (Alto si el path viejo bypassa el propósito del Charter).
+- **Dónde buscar**: el árbol completo de código de producción, no solo el `git_range`. Los llamadores que importan pueden vivir en archivos no tocados por este Charter — ese es precisamente el defecto que este paso captura.
+
+> *Por qué existe este paso.* Un ciclo de 4 auditores missed un feature completamente inalcanzable: el Charter añadió `ResolverAsync` (el único método que consulta estado de elevación), los 8 consumidores seguían llamando al `Resolver` síncrono. Tres auditores verificaron el mecanismo (existe, es correcto, tiene tests) sin preguntar la pregunta adyacente — ¿quién lo llama? Un grep lo habría cazado. Este paso hace ese grep obligatorio. (#382)
+
+### Paso 4 — Ejecutar verificaciones (cuando aplique)
 
 Si tu entorno te permite ejecutar comandos del proyecto (build, lint, test), ejecútalos sobre el alcance del Charter y reporta los resultados textualmente. **Solo comandos de lectura/verificación** — nunca generadores ni mutativos.
 
@@ -189,11 +200,13 @@ Si tu entorno te permite ejecutar comandos del proyecto (build, lint, test), eje
 
 Si tu entorno NO te permite ejecución de comandos, omite este paso y enfoca el audit en lectura estática de código + tests.
 
-### Paso 4 — Evaluar el cierre del Charter
+Cuando un gate de verificación está rojo (un test falla, un lint check da error, un build se rompe), no te detengas en reportar el fallo. Enumera qué SOLO ese gate pudo haber cazado — ¿contra qué clase de defecto estaba protegiendo? Un guard test roto reportado como "defecto de config" sin preguntar qué estaba protegiendo es un hallazgo perdido. El propósito del gate es parte de la evidencia del hallazgo.
+
+### Paso 5 — Evaluar el cierre del Charter
 
 Lee el criterio de cierre declarado por el Charter. Evalúa: **se cumple este criterio con la implementación actual?** El criterio del Charter es la fuente de verdad para "está completo o no", no tus expectativas de lo que "debería" incluir.
 
-### Paso 5 — Calibrar severidad contra la configuración REAL del proyecto
+### Paso 6 — Calibrar severidad contra la configuración REAL del proyecto
 
 Antes de asignar severidad a CADA hallazgo, verifica el driver, flag o configuración realmente activa en el código, NO el caso teórico peor.
 
@@ -341,4 +354,4 @@ Observaciones sobre código que NO es parte del alcance de este Charter pero que
 
 ---
 
-*Plantilla unificada StrayMark v1.1 — traducción ES (añade: objeto-de-auditoría-vs-oráculo-de-verdad + contratos cross-boundary #303, fidelidad de verificación #306, registry de follow-ups como destino canónico de real_debt). Las siete secciones universales (REGLA ABSOLUTA, Tu rol, Reglas de alcance, Paso 2 verificación obligatoria, Paso 5 calibración de severidad, Lo que NO debes hacer, Formato de salida) provienen del skill `audit/SKILL.md` maduro pre-StrayMark de Sentinel, contribuido vía issue #102 por José Villaseñor Montfort (StrangeDaysTech). Hardcodes específicos a Sentinel (paths de specs, headings de Etapa, módulos internos) parametrizados contra el Charter doc, originating AILOGs, git range y project context.*
+*Plantilla unificada StrayMark v1.2 — traducción ES (añade: enumerar-llamadores Paso 3 #382, verificación de seam en tests consolidados #382, enumeración de gates rojos #382, objeto-de-auditoría-vs-oráculo-de-verdad + contratos cross-boundary #303, fidelidad de verificación #306, registry de follow-ups como destino canónico de real_debt). Las siete secciones universales (REGLA ABSOLUTA, Tu rol, Reglas de alcance, Paso 2 verificación obligatoria, Paso 5 calibración de severidad, Lo que NO debes hacer, Formato de salida) provienen del skill `audit/SKILL.md` maduro pre-StrayMark de Sentinel, contribuido vía issue #102 por José Villaseñor Montfort (StrangeDaysTech). Hardcodes específicos a Sentinel (paths de specs, headings de Etapa, módulos internos) parametrizados contra el Charter doc, originating AILOGs, git range y project context.*
