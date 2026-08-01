@@ -34,6 +34,8 @@ Entry shape (v1 — optional fields marked):
 - **Trigger**: ready | <calendar date> | when <X> | <other>
 - **Destination**: chore | mini-charter | charter-replanning | operations | <charter-id> | <TDE id>
 - **Cost**: <effort estimate>
+- **Work verb**: design | implement | audit | operate                              (optional, Baton #332)
+- **Design provenance**: new | upstream                                            (optional, only for implement)
 - **Labels**: <free tags, comma-separated>                                            (optional)
 - **Premise**: <the load-bearing assumption this entry rests on>                       (optional)
 - **Verified-at**: <YYYY-MM-DD the premise was last re-checked against the code>       (optional)

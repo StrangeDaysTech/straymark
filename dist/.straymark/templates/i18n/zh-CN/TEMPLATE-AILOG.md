@@ -13,6 +13,11 @@ iso_42001_clause: []            # 4 | 5 | 6 | 7 | 8 | 9 | 10
 lines_changed: 0                # 可自动计算
 files_modified: []              # 可自动计算
 observability_scope: none        # none | basic | full — 当 OTel 监测相关时设置
+# 声明的工作分类（Baton #332，可选 — 编写时成本 ≈ 0）。
+# work_verb: design | implement | audit | operate。映射到路由层级。
+# design_provenance: new | upstream —— 仅对 implement 有意义（upstream 降级为 operator）。
+# work_verb: implement
+# design_provenance: new
 tags: []
 related: []
 ---

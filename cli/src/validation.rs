@@ -388,6 +388,48 @@ fn check_charter_work_verb(raw_yaml: &serde_yaml::Value, path: &Path, result: &m
     }
 }
 
+/// Advisory check for `**Work verb**:` / `**Design provenance**:` lines in the
+/// follow-ups backlog (Baton #332, same vocabulary as `check_charter_work_verb`).
+/// Anti-noise: only flags values *present but outside* the controlled vocabulary.
+fn check_followups_work_verb(straymark_dir: &Path, result: &mut ValidationResult) {
+    const WORK_VERBS: &[&str] = &["design", "implement", "audit", "operate"];
+    const PROVENANCES: &[&str] = &["new", "upstream"];
+
+    let backlog = straymark_dir.join("follow-ups-backlog.md");
+    let Ok(content) = std::fs::read_to_string(&backlog) else {
+        return; // No backlog — nothing to check.
+    };
+
+    for (line_no, line) in content.lines().enumerate() {
+        let trimmed = line.trim();
+        for (prefix, valid, rule) in [
+            ("- **Work verb**:", WORK_VERBS, "FOLLOWUP-WORK-VERB"),
+            ("- **Design provenance**:", PROVENANCES, "FOLLOWUP-DESIGN-PROVENANCE"),
+        ] {
+            if let Some(value) = trimmed.strip_prefix(prefix) {
+                let declared = value.trim();
+                if !valid.contains(&declared) {
+                    result.add(ValidationIssue {
+                        file: backlog.clone(),
+                        rule: rule.to_string(),
+                        message: format!(
+                            "line {}: `{}` is outside the controlled vocabulary (expected one of: {}).",
+                            line_no + 1,
+                            declared,
+                            valid.join(", ")
+                        ),
+                        severity: Severity::Warning,
+                        fix_hint: Some(format!(
+                            "Declare one of: {}. Leave the line out if undeclared.",
+                            valid.join(", ")
+                        )),
+                    });
+                }
+            }
+        }
+    }
+}
+
 /// True if an AILOG file matching the given ID exists under
 /// `.straymark/07-ai-audit/agent-logs/`. The match is by filename prefix:
 /// `AILOG-2026-04-28-021` matches `AILOG-2026-04-28-021-anything.md` but not
@@ -443,6 +485,9 @@ pub fn validate_all(straymark_dir: &Path) -> (ValidationResult, usize) {
             }
         }
     }
+
+    // Follow-ups backlog: advisory work_verb vocabulary check (Baton #332).
+    check_followups_work_verb(straymark_dir, &mut result);
 
     // REF-002: Detect orphan documents (no traceability links)
     check_orphan_documents(&mut result, &paths, straymark_dir);

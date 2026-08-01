@@ -24,6 +24,10 @@ pub struct IntendedComponent {
     pub kind: MemoryKind,
     /// Source filenames (relative to `memory/`) that declared it.
     pub sources: Vec<String>,
+    /// Explicit path globs from the memory file's frontmatter (#314). When
+    /// present, C1 uses these instead of the slug heuristic and reports at
+    /// High confidence instead of Low.
+    pub paths: Vec<String>,
 }
 
 /// Which memory docs declared a component.
@@ -74,17 +78,20 @@ pub fn mine(memory_dir: &Path) -> Vec<IntendedComponent> {
             continue;
         };
         let id = slug(&label);
+        let paths = read_component_paths(&path);
         let entry = acc.entry(id.clone()).or_insert_with(|| Acc {
             label: label.clone(),
             has_arch: false,
             has_req: false,
             sources: Vec::new(),
+            paths: Vec::new(),
         });
         match kind {
             DocKind::Arch => entry.has_arch = true,
             DocKind::Req => entry.has_req = true,
         }
         entry.sources.push(fname.to_string());
+        entry.paths.extend(paths);
     }
 
     acc.into_iter()
@@ -97,6 +104,7 @@ pub fn mine(memory_dir: &Path) -> Vec<IntendedComponent> {
                 _ => MemoryKind::Architecture,
             },
             sources: a.sources,
+            paths: a.paths,
         })
         .collect()
 }
@@ -106,6 +114,7 @@ struct Acc {
     has_arch: bool,
     has_req: bool,
     sources: Vec<String>,
+    paths: Vec<String>,
 }
 
 /// Returns `(label, kind)` if the filename matches a recognized prefix.
@@ -139,6 +148,34 @@ fn slug(label: &str) -> String {
         }
     }
     out.trim_end_matches('-').to_string()
+}
+
+/// Read the optional `paths:` list from a memory file's YAML frontmatter (#314).
+/// Returns an empty vec when absent or unparseable (the heuristic stays the default).
+fn read_component_paths(path: &Path) -> Vec<String> {
+    let Ok(content) = std::fs::read_to_string(path) else {
+        return Vec::new();
+    };
+    // Extract frontmatter between --- delimiters.
+    let trimmed = content.trim_start();
+    let Some(fm_start) = trimmed.strip_prefix("---") else {
+        return Vec::new();
+    };
+    let Some(fm_end) = fm_start.find("\n---") else {
+        return Vec::new();
+    };
+    let fm = &fm_start[..fm_end];
+    let Ok(yaml) = serde_yaml::from_str::<serde_yaml::Value>(fm) else {
+        return Vec::new();
+    };
+    yaml.get("paths")
+        .and_then(|v| v.as_sequence())
+        .map(|seq| {
+            seq.iter()
+                .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 #[cfg(test)]

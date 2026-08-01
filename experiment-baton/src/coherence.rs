@@ -198,19 +198,24 @@ pub fn analyze(model: &IntentModel, inv: &Inventory) -> CoherenceReport {
     };
 
     // --- C1: intended component with no implementing files -----------------
-    // Memory naming is free-form, so C1 is a low-confidence INFO hint (R1): it
-    // catches real gaps (a designed module with no code) but also flags
-    // architectural concepts that were never meant to be a module.
+    // Memory naming is free-form, so C1 is a low-confidence INFO hint (R1) by
+    // default. When a component declares explicit `paths:` in its frontmatter
+    // (#314), the finding is trustworthy and promoted to Warning/High.
     for comp in &model.intended_components {
         if !component_implemented(comp, inv) {
+            let (severity, confidence, qualifier) = if comp.paths.is_empty() {
+                (Severity::Info, Confidence::Low, " (low-confidence hint)")
+            } else {
+                (Severity::Warning, Confidence::High, " (explicit paths declared)")
+            };
             findings.push(Finding {
                 id: next_id(FindingClass::IntendedNotImplemented),
                 class: FindingClass::IntendedNotImplemented,
-                severity: Severity::Info,
-                confidence: Confidence::Low,
+                severity,
+                confidence,
                 message: format!(
-                    "component '{}' is designed in .specify/memory ({:?}) but no implementing files were found (low-confidence hint)",
-                    comp.label, comp.kind
+                    "component '{}' is designed in .specify/memory ({:?}) but no implementing files were found{}",
+                    comp.label, comp.kind, qualifier
                 ),
                 locations: comp
                     .sources
@@ -384,6 +389,15 @@ fn slugify(s: &str) -> String {
 /// label's first word — so `Identity Module` matches `internal/modules/identity`
 /// without `identity-module` ever matching literally.
 fn component_implemented(comp: &IntendedComponent, inv: &Inventory) -> bool {
+    // Explicit paths (#314): when the memory file declares globs, a component is
+    // implemented iff at least one glob matches at least one file. This replaces
+    // the slug heuristic entirely — no false positives from concept-name collisions.
+    if !comp.paths.is_empty() {
+        return comp.paths.iter().any(|glob| {
+            inv.files.iter().any(|f| glob_match(glob, f))
+        });
+    }
+    // Heuristic fallback: slug-match any file path segment.
     let slug = slugify(&comp.id);
     let first = comp.label.split_whitespace().next().map(slugify).unwrap_or_default();
     inv.files.iter().any(|f| {
@@ -392,4 +406,97 @@ fn component_implemented(comp: &IntendedComponent, inv: &Inventory) -> bool {
             (!slug.is_empty() && s == slug) || (!first.is_empty() && s == first)
         })
     })
+}
+
+/// Minimal glob matching: `*` matches within a segment, `**` matches zero or
+/// more whole segments. Sufficient for component→path declarations.
+fn glob_match(pattern: &str, path: &str) -> bool {
+    let pat_segs: Vec<&str> = pattern.split('/').collect();
+    let path_segs: Vec<&str> = path.split('/').collect();
+    glob_segs(&pat_segs, &path_segs)
+}
+
+fn glob_segs(pat: &[&str], path: &[&str]) -> bool {
+    if pat.is_empty() {
+        return path.is_empty();
+    }
+    if pat[0] == "**" {
+        // `**` matches zero or more path segments: try the rest of the pattern
+        // at every position in the remaining path.
+        return (0..=path.len()).any(|i| glob_segs(&pat[1..], &path[i..]));
+    }
+    if path.is_empty() || !seg_match(pat[0], path[0]) {
+        return false;
+    }
+    glob_segs(&pat[1..], &path[1..])
+}
+
+fn seg_match(pat: &str, seg: &str) -> bool {
+    if pat == "*" {
+        return true;
+    }
+    if let Some((pre, post)) = pat.split_once('*') {
+        return seg.starts_with(pre) && seg.ends_with(post);
+    }
+    pat == seg
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::speckit::MemoryKind;
+
+    fn comp(id: &str, label: &str, paths: Vec<&str>) -> IntendedComponent {
+        IntendedComponent {
+            id: id.to_string(),
+            label: label.to_string(),
+            kind: MemoryKind::Architecture,
+            sources: vec![],
+            paths: paths.into_iter().map(|s| s.to_string()).collect(),
+        }
+    }
+
+    fn inv(files: Vec<&str>) -> Inventory {
+        Inventory {
+            files: files.into_iter().map(|s| s.to_string()).collect(),
+        }
+    }
+
+    #[test]
+    fn glob_match_exact_and_wildcard() {
+        assert!(glob_match("src/policyengine", "src/policyengine"));
+        assert!(glob_match("src/*/handler.go", "src/policyengine/handler.go"));
+        assert!(glob_match("src/poli*", "src/policyengine"));
+        assert!(!glob_match("src/other", "src/policyengine"));
+    }
+
+    #[test]
+    fn glob_match_double_star() {
+        assert!(glob_match("src/**/policyengine/**", "src/internal/policyengine/handler.go"));
+        assert!(glob_match("src/**", "src/anything/at/all.go"));
+        assert!(!glob_match("src/**/other/**", "src/internal/policyengine/handler.go"));
+    }
+
+    #[test]
+    fn explicit_paths_replace_heuristic() {
+        // With explicit paths, a concept that would false-positive via slug match
+        // is correctly reported as not-implemented when no glob matches.
+        let c = comp("policyengine", "PolicyEngine", vec!["src/policyengine/**"]);
+        let files = inv(vec!["src/identity/handler.go", "web/app.ts"]);
+        assert!(!component_implemented(&c, &files));
+
+        // And correctly reports implemented when a glob matches.
+        let files = inv(vec!["src/policyengine/handler.go", "web/app.ts"]);
+        assert!(component_implemented(&c, &files));
+    }
+
+    #[test]
+    fn no_paths_falls_back_to_heuristic() {
+        let c = comp("identity-module", "Identity Module", vec![]);
+        let files = inv(vec!["internal/modules/identity/handler.go"]);
+        assert!(component_implemented(&c, &files));
+
+        let files = inv(vec!["web/app.ts"]);
+        assert!(!component_implemented(&c, &files));
+    }
 }

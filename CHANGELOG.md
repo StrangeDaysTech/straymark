@@ -7,6 +7,26 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Unreleased — work_verb fields + Baton hardening
+
+Baton post-calibration: `work_verb`/`design_provenance` graduated to framework templates; three experiment-hardening fixes (#319, #315, #314).
+
+### Added (Framework)
+
+- **`work_verb` / `design_provenance` in templates** (Baton #332, schema ratified in `experiment-baton/06-work-verb-schema-ratification.md`). Optional declared work-classification fields added to Charter template (EN/ES/zh-CN — already present), AILOG template (EN/ES/zh-CN), and follow-ups backlog entry shape. Undeclared units route conservatively to frontier; out-of-vocabulary values trigger an advisory `straymark validate` warning (never blocking).
+
+### Added (CLI)
+
+- **Follow-ups `work_verb` vocabulary check in `straymark validate`** — validates `**Work verb**:` and `**Design provenance**:` lines in the follow-ups backlog against the controlled vocabulary (design/implement/audit/operate, new/upstream). Advisory only, same anti-noise posture as the existing charter check: absent fields emit nothing, present-but-invalid values emit a Warning.
+
+### Fixed (Baton — experiment)
+
+- **#319: Producer-side route keying for huma Go.** `huma.Get(api, "/path", h.handlerMethod)` registrations are now parsed to bind handler→route, and `<handler>Output` structs key to the correct route instead of the nearest anchor. Fixes the pattern where all registrations sit in one block and the struct is defined ~75 lines below, causing C2/C3 to miss producer shapes entirely.
+- **#315: EPIPE/SIGPIPE handling.** The CLI now resets SIGPIPE to the default (terminate) so piping to `head`/`less` exits cleanly instead of crashing.
+- **#314: Component→path mapping for C1.** Memory files (`.specify/memory/Arquitectura - <X>.md`) can now declare explicit `paths:` globs in their frontmatter. When present, C1 uses these instead of the slug heuristic and reports at Warning/High confidence instead of Info/Low — no more false positives from concept-name collisions.
+
+---
+
 ## Framework 4.37.0 / CLI 3.39.0 — 2026-07-26
 
 Closes the last flows that required hand-editing the CLI-parsed follow-ups registry (CHARTER-01; Weft field reports #355 and #360).
