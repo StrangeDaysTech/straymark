@@ -2565,6 +2565,7 @@ dependencies = [
  "anyhow",
  "clap",
  "colored",
+ "libc",
  "serde",
  "serde_json",
  "serde_yaml",
@@ -2573,7 +2574,7 @@ dependencies = [
 
 [[package]]
 name = "straymark-cli"
-version = "3.39.0"
+version = "3.40.0"
 dependencies = [
  "anyhow",
  "arborist-metrics",

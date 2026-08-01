@@ -7,7 +7,7 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
-## Unreleased — work_verb fields + Baton hardening + audit prompt hardening
+## Framework 4.38.0 / CLI 3.40.0 — 2026-07-29
 
 Baton post-calibration: `work_verb`/`design_provenance` graduated to framework templates; three experiment-hardening fixes (#319, #315, #314). Audit prompt hardened from a 4-model cycle that missed an unreachable feature (#382).
 
