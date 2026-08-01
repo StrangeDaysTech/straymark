@@ -1,5 +1,5 @@
 <!--
-StrayMark unified audit prompt — v1.1 (EN canonical).
+StrayMark unified audit prompt — v1.2 (EN canonical).
 
 This file is a TEMPLATE. `straymark charter audit <CHARTER-ID>` resolves the
 placeholders below against the Charter's content + git range + originating
@@ -177,10 +177,21 @@ For EACH task in the Charter, perform these steps in order:
 4. **Verify tests**: locate the corresponding tests. Read at least 2 test cases to confirm they cover the happy path and at least one edge case.
 5. **Compare against the task**: does the implementation match what the task describes? If there are discrepancies, report with evidence (`file:line`).
 6. **Check verification fidelity**: for each "verified / resolved / done" claim you meet (in the Charter or the originating AILOGs), ask *against which reality* it was checked — the **condition that actually matters** (real CI, production-shaped data, the live source or contract) or a **convenient proxy** (a local test, a mock, the doc's own assertion). A claim verified only against a proxy is not yet trustworthy: flag it, and re-verify against the real condition where your tools allow. Do **not** trust a downstream summary of an artifact — if a claim rests on "the AILOG says it was done", open the artifact (file / function / migration) and confirm it yourself. And when the in-scope code consumes a contract defined by a decision elsewhere (an AILOG / AIDEC / PM-backlog / spec), check that it explicitly references that defining decision; a consumer with no pointer to the decision that defines its contract is a drift smell worth a finding.
+   When a test is documented as "consolidated" or "merged" into another test, verify the replacement exercises the SAME SEAM, not merely the same unit. A Charter's own closing notes declaring "coverage equivalent" are a claim by the audited party — treat them as a hypothesis to verify, not as evidence. The audited party writes those notes; that is a structural conflict of interest the audit must correct for.
 
 > **Evidence discipline.** You may only opine on files you have opened via a tool call (Read, Grep, etc.). Any finding you produce must cite `file:line` of the specific files you opened. Findings without citations are treated as low confidence by the consolidated review and may be dropped. If you did not open a file, you cannot infer behavior, structure, or correctness about it.
 
-### Step 3 — Run verifications (when applicable)
+### Step 3 — Enumerate callers of new public entry points (MANDATORY)
+
+For each public method, endpoint, or component the Charter ADDS (not modifies — adds), run a call-site search across production code (excluding tests) and state the count explicitly in your report.
+
+- **Zero production callers** is a **High** finding by default, with no judgement required: the Charter added a capability that nothing reaches. Category: `implementation_gap`.
+- **Non-zero count**: check that the callers are the INTENDED ones. An existing overload, a legacy path, or a synchronous sibling may still be winning — the new method exists and is called, but the call sites that matter still route through the old path. That is also a finding (High if the old path bypasses the Charter's purpose).
+- **Where to search**: the full production source tree, not just the `git_range`. The callers that matter may live in files untouched by this Charter — that is precisely the defect this step catches.
+
+> *Why this step exists.* A 4-auditor cycle missed a feature that was entirely unreachable: the Charter added `ResolverAsync` (the only method consulting elevation state), all 8 consumers still called the synchronous `Resolver`. Three auditors verified the mechanism (exists, is correct, has tests) without asking the adjacent question — who calls this? One grep would have caught it. This step makes that grep mandatory. (#382)
+
+### Step 4 — Run verifications (when applicable)
 
 If your environment allows you to run project commands (build, lint, test), run them over the Charter's scope and report the output verbatim. **Read/verify commands only** — never generators or mutating commands.
 
@@ -192,11 +203,13 @@ If your environment allows you to run project commands (build, lint, test), run 
 
 If your environment does NOT allow command execution, skip this step and focus the audit on static reading of code + tests.
 
-### Step 4 — Evaluate Charter closure
+When a verification gate is red (a test fails, a lint check errors, a build breaks), do not stop at reporting the failure. Enumerate what ONLY that gate could have caught — what class of defect was it protecting against? A broken guard test reported as a "config defect" without asking what it was protecting is a missed finding. The gate's purpose is part of the finding's evidence.
+
+### Step 5 — Evaluate Charter closure
 
 Read the closure criterion declared by the Charter. Assess: **is this criterion met by the current implementation?** The Charter's criterion is the source of truth for "complete or not", not your expectation of what it "should" include.
 
-### Step 5 — Calibrate severity against the project's REAL configuration
+### Step 6 — Calibrate severity against the project's REAL configuration
 
 Before assigning severity to EACH finding, verify the driver, flag, or configuration actually active in the code, NOT the theoretical worst case.
 
@@ -344,4 +357,4 @@ Does the implementation meet the closure criterion declared by `{{charter_id}}`?
 
 ---
 
-*StrayMark unified audit template v1.1 (adds: audit-object-vs-truth-oracle + cross-boundary contract checks #303, verification-fidelity #306, follow-ups registry as the canonical real_debt destination). The seven universal sections (ABSOLUTE RULE, Your role, Scope rules, Step 2 mandatory verification, Step 5 severity calibration, What you must NOT do, Output format) come from the `audit/SKILL.md` skill mature pre-StrayMark in Sentinel, contributed via issue #102 by José Villaseñor Montfort (StrangeDaysTech). Sentinel-specific hardcodes (spec paths, Etapa headings, internal modules) were parameterized against the Charter doc, originating AILOGs, git range, and project context.*
+*StrayMark unified audit template v1.2 (adds: enumerate-callers Step 3 #382, consolidated-test seam check #382, red-gate enumeration #382, audit-object-vs-truth-oracle + cross-boundary contract checks #303, verification-fidelity #306, follow-ups registry as the canonical real_debt destination). The seven universal sections (ABSOLUTE RULE, Your role, Scope rules, Step 2 mandatory verification, Step 5 severity calibration, What you must NOT do, Output format) come from the `audit/SKILL.md` skill mature pre-StrayMark in Sentinel, contributed via issue #102 by José Villaseñor Montfort (StrangeDaysTech). Sentinel-specific hardcodes (spec paths, Etapa headings, internal modules) were parameterized against the Charter doc, originating AILOGs, git range, and project context.*
