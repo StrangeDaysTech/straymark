@@ -13,6 +13,8 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
+use straymark_baton::overlay::{self as baton_overlay, ComponentIntent};
+use straymark_baton::speckit;
 use straymark_core::ailog;
 use straymark_core::architecture::{
     build_governance_state, collect_source_files, parse_model, project, ArchModel, Projection,
@@ -51,6 +53,12 @@ fn load_model(arch_dir: &Path) -> Option<ArchModel> {
 pub struct ArchResponse {
     /// False when no `model.yml` exists — the SPA shows a "run generate" hint.
     pub model_present: bool,
+    /// True when the project has a SpecKit layout (`.specify/` or `specs/`).
+    /// The SPA hides the Intent plane toggle otherwise (gate #5).
+    pub speckit_present: bool,
+    /// Baton's intent overlay — intended-vs-implemented per component. `None`
+    /// when there are no intended components (nothing to lay over the model).
+    pub intent: Option<Vec<ComponentIntent>>,
     pub layers: Vec<ArchLayer>,
     pub components: Vec<ArchComponent>,
     pub edges: Vec<ArchEdge>,
@@ -87,17 +95,39 @@ pub struct ArchEdge {
 
 /// Build the `/api/architecture` payload: the model (from `arch_dir`) enriched
 /// with its projected per-component / per-layer status (governance scanned from
-/// `project_root`).
+/// `project_root`), plus Baton's intent overlay when the project declares
+/// SpecKit intent (gate #5 — the "third plane" Loom consumes).
 pub fn build_architecture(project_root: &Path, arch_dir: &Path) -> ArchResponse {
+    let speckit_present = !speckit::SpecKitSource::discover(project_root).is_empty();
     let Some(model) = load_model(arch_dir) else {
         return ArchResponse {
             model_present: false,
+            speckit_present,
+            intent: None,
             layers: Vec::new(),
             components: Vec::new(),
             edges: Vec::new(),
         };
     };
     let projection = projected(project_root, &model);
+
+    // Intent plane: SpecKit's intended components (memory mining, no codescan)
+    // laid over THIS model via Baton's pure computation — same `core` matcher
+    // and inventory semantics as the projection, so the planes can't disagree.
+    let artifacts = speckit::load(project_root);
+    let intent = if artifacts.intended_components.is_empty() {
+        None
+    } else {
+        let inventory: Vec<String> = collect_source_files(project_root)
+            .iter()
+            .map(|p| p.to_string_lossy().to_string())
+            .collect();
+        Some(baton_overlay::compute(
+            Some(&model),
+            &artifacts.intended_components,
+            &inventory,
+        ))
+    };
 
     let layers = model
         .layers
@@ -143,7 +173,7 @@ pub fn build_architecture(project_root: &Path, arch_dir: &Path) -> ArchResponse 
         })
         .collect();
 
-    ArchResponse { model_present: true, layers, components, edges }
+    ArchResponse { model_present: true, speckit_present, intent, layers, components, edges }
 }
 
 // ── GET /api/architecture/component/:id ──────────────────────────────────────
@@ -460,5 +490,44 @@ components:
         assert!(is_architecture_relevant(Path::new("a/plan.drawio")));
         assert!(!is_architecture_relevant(Path::new("a/.straymark/config.yml")));
         assert!(!is_architecture_relevant(Path::new("a/notes.txt")));
+    }
+
+    #[test]
+    fn intent_overlay_folded_for_speckit_project() {
+        use straymark_baton::overlay::IntentState;
+        let tmp = fixture();
+        let memory = tmp.path().join(".specify/memory");
+        std::fs::create_dir_all(&memory).unwrap();
+        // "Auth" matches the modeled + implemented component.
+        std::fs::write(memory.join("Arquitectura - Auth.md"), "# Auth\n").unwrap();
+        // "PolicyEngine" is designed but never implemented (and not modeled).
+        std::fs::write(memory.join("Arquitectura - PolicyEngine.md"), "# PE\n").unwrap();
+
+        let r = build_architecture(tmp.path(), &arch(tmp.path()));
+        assert!(r.speckit_present);
+        let intent = r.intent.as_ref().expect("intent overlay present");
+        let find = |id: &str| intent.iter().find(|c| c.component == id).unwrap();
+
+        let auth = find("auth");
+        assert_eq!(auth.state, IntentState::IntendedAndImplemented);
+        assert!(auth.modeled);
+        assert_eq!(auth.matched_intent.as_deref(), Some("auth"));
+
+        // billing has code but the design never mentioned it.
+        let billing = find("billing");
+        assert_eq!(billing.state, IntentState::ImplementedNotIntended);
+
+        let pe = find("policyengine");
+        assert_eq!(pe.state, IntentState::IntendedNotImplemented);
+        assert!(!pe.modeled);
+    }
+
+    #[test]
+    fn intent_overlay_absent_without_speckit() {
+        // The base fixture has no `.specify/` or `specs/` — the plane stays off.
+        let tmp = fixture();
+        let r = build_architecture(tmp.path(), &arch(tmp.path()));
+        assert!(!r.speckit_present);
+        assert!(r.intent.is_none());
     }
 }

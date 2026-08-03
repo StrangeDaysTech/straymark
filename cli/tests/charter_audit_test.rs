@@ -755,8 +755,8 @@ fn audit_merge_into_appends_external_audit_to_telemetry() {
         "second auditor present in merged output"
     );
     assert!(
-        merged.contains("audit/charters/CHARTER-01/"),
-        "audit_notes must reference real charter id (not <charter-id> placeholder)"
+        merged.contains(".straymark/audits/CHARTER-01/report-"),
+        "audit_notes must reference the real report path on disk (#378)"
     );
     // Pre-existing keys preserved.
     assert!(merged.contains("charter_id: \"CHARTER-01\""));

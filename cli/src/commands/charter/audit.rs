@@ -484,7 +484,10 @@ fn run_merge_reports(
             }
             bail!("auditor report failed schema validation");
         }
-        let summary = AuditorSummary::from_frontmatter(&fm)?;
+        let mut summary = AuditorSummary::from_frontmatter(&fm)?;
+        summary.source_file = relative_path(project_root, path)
+            .display()
+            .to_string();
         println!(
             "  {} Validated {} ({} findings)",
             "✔".green().bold(),
@@ -1045,6 +1048,10 @@ struct AuditorSummary {
     /// covers it.
     #[allow(dead_code)]
     prompt_used: String,
+    /// Relative path (from project root) to the report file this summary was
+    /// parsed from. Used by `render_external_audit_yaml` to emit a truthful
+    /// `audit_notes` pointer (#378 friction #2).
+    source_file: String,
 }
 
 impl AuditorSummary {
@@ -1083,17 +1090,18 @@ impl AuditorSummary {
             findings_by_category,
             audit_quality,
             prompt_used,
+            source_file: String::new(),
         })
     }
 }
 
 fn render_external_audit_yaml(
     summaries: &[AuditorSummary],
-    canonical_charter_id: &str,
+    _canonical_charter_id: &str,
     round: Option<&str>,
 ) -> String {
     let mut out = String::new();
-    for (idx, s) in summaries.iter().enumerate() {
+    for s in summaries.iter() {
         out.push_str(&format!("    - auditor: \"{}\"\n", s.auditor));
         if let Some(label) = round {
             out.push_str(&format!("      round: \"{}\"\n", label));
@@ -1112,17 +1120,16 @@ fn render_external_audit_yaml(
         if let Some(quality) = &s.audit_quality {
             out.push_str(&format!("      audit_quality: \"{}\"\n", quality));
         }
-        // First summary maps to auditor-primary.md, second to
-        // auditor-secondary.md — that's the order finalize reads them in.
-        let role_file = if idx == 0 {
-            "auditor-primary"
-        } else {
-            "auditor-secondary"
-        };
-        out.push_str(&format!(
-            "      audit_notes: \"see audit/charters/{}/{}.md\"\n",
-            canonical_charter_id, role_file
-        ));
+        // Point to the real report file on disk (#378 friction #2: the old
+        // code invented audit/charters/<id>/auditor-primary.md which never
+        // existed). source_file is populated from the actual path in
+        // run_merge_reports.
+        if !s.source_file.is_empty() {
+            out.push_str(&format!(
+                "      audit_notes: \"see {}\"\n",
+                s.source_file
+            ));
+        }
     }
     out
 }
@@ -1542,6 +1549,7 @@ prompt_used: prompts/auditor-primary.prompt.md
             findings_by_category: Default::default(),
             audit_quality: None,
             prompt_used: String::new(),
+            source_file: format!(".straymark/audits/CHARTER-01/report-{name}.md"),
         }]
     }
 

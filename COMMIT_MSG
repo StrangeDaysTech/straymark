@@ -1,0 +1,68 @@
+feat(baton): graduate work_verb to framework + harden coherence engine (#332/#319/#315/#314)
+
+Baton post-calibration: the Sentinel E1/E2/E3 calibration (#331) proved
+title-scan unviable and ratified `work_verb`/`design_provenance` as the
+sole classification signal (#332, schema ratification in
+experiment-baton/06-work-verb-schema-ratification.md). This commit
+graduates those fields to the framework (Track A) and applies three
+hardening fixes to the experiment (Track B).
+
+== Track A: work_verb graduation ==
+
+Templates:
+- AILOG template (EN/ES/zh-CN): added optional `work_verb` and
+  `design_provenance` frontmatter comments, matching the Charter
+  template which already had them.
+- Follow-ups backlog template: added `**Work verb**:` and
+  `**Design provenance**:` to the entry shape comment.
+
+Validation:
+- `straymark validate` now checks follow-ups backlog `**Work verb**:`
+  and `**Design provenance**:` lines against the controlled vocabulary
+  (design/implement/audit/operate, new/upstream). Advisory only —
+  same anti-noise posture as the existing charter check: absent fields
+  emit nothing, present-but-invalid values emit a Warning.
+
+Documentation:
+- QUICK-REFERENCE.md: added "Work Classification (Baton #332)" section
+  with the verbo→tier table and determination rules.
+- CHANGELOG.md: unreleased entry covering all changes.
+
+== Track B: Baton hardening ==
+
+#319 — Producer-side route keying (huma Go):
+- codescan.rs gains `collect_go_bindings()` which parses
+  `huma.Get(api, "/path", h.handlerMethod)` registrations to bind
+  handler→route, then keys `<handler>Output` structs to the correct
+  route via the huma naming convention. Previously, nearest-anchor
+  bound structs to whatever route was registered last before the
+  struct definition (~75 lines below in Sentinel), causing C2/C3 to
+  miss producer shapes entirely on un-remediated repos.
+
+#315 — EPIPE/SIGPIPE handling:
+- main.rs resets SIGPIPE to SIG_DFL on Unix so piping to `head`/`less`
+  exits cleanly instead of crashing with EPIPE.
+
+#314 — Component→path mapping for C1:
+- Memory files (`.specify/memory/Arquitectura - <X>.md`) can now
+  declare explicit `paths:` globs in frontmatter. When present, C1
+  uses glob matching instead of the slug heuristic, and the finding
+  is promoted from Info/Low to Warning/High confidence — no more
+  false positives from concept-name collisions.
+- Includes a proper recursive glob matcher (`**` = zero or more
+  whole segments, `*` = within-segment wildcard).
+
+== Deferred ==
+
+- #321 (language-agnostic codescan): blocked on N=2 (second adopter
+  with non-Go⇄TS stack). The `LanguageAdapter` seam is documented
+  but not built.
+- #335 (declared-signal principle for codescan): design note, no new
+  functionality needed.
+- A5 (framework version bump): deferred to release time.
+
+== Verification ==
+
+- `cargo test -p straymark-baton` — 51 passed, 0 failed
+- `cargo check -p straymark-cli` — clean
+- `cargo test -p straymark-cli -- validate` — green

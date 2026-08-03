@@ -187,6 +187,6 @@ Baton se gradúa a `straymark-core` cuando:
 2. ⬜ Schema work_verb graduado al framework (Track A)
 3. ⬜ Forward-validation con ≥1 adopter (Track C)
 4. ⬜ Codescan generalizado (Track D, N=2)
-5. ⬜ Loom overlay integrado (parcial — overlay.rs existe, falta integración con servidor)
+5. ✅ Loom overlay integrado (loom 0.7.0 — Loom consume la lib `straymark-baton`: `speckit::load` + `overlay::compute` plegados en `GET /api/architecture`; plano Status ⇄ Intent en 2D/3D)
 
-El gate #1 está cumplido. Los demás son trabajo planificado arriba.
+Los gates #1 y #5 están cumplidos. Los demás son trabajo planificado arriba.

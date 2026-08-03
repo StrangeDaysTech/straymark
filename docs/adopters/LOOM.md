@@ -34,6 +34,8 @@ From that one model, StrayMark renders **three projections**, all from the *same
 
 The **status overlay is computed live, never hand-maintained.** You author *structure* (which files belong to which component, how components relate); StrayMark colors it (`active` / `in-progress` / `implemented` / `has-debt` / `uncharted`) from governance signals every time you look.
 
+**The Intent plane (SpecKit projects only).** Beside the status overlay, Loom 0.7.0 adds a switchable second plane — the **Status | Intent** toggle in the toolbar — that lays your *design intent* over the same map, computed by [Baton](./BATON.md) (experimental). Components named in your SpecKit memory (`.specify/memory/Arquitectura - X.md` / `Architecture - X.md`) are matched against the model and the source files, and colored by verdict: **designed & built**, **designed, not built** (the plan exists but no code matches it), or **built, never designed** (code exists, no memory doc ever named it); components the overlay doesn't cover stay a muted neutral. The legend and the component-detail badge switch with the plane, in 2D and 3D alike. Projects without SpecKit memory never see the toggle.
+
 ---
 
 ## The recommended workflow

@@ -2560,7 +2560,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "straymark-baton"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -2617,7 +2617,7 @@ dependencies = [
 
 [[package]]
 name = "straymark-loom"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -2628,6 +2628,7 @@ dependencies = [
  "rust-embed",
  "serde",
  "serde_json",
+ "straymark-baton",
  "straymark-core",
  "tempfile",
  "tokio",

@@ -157,3 +157,13 @@ experiment-loom/web/dist/
 /.straymark/scripts/
 /.straymark/03-implementation/NIST-*.md
 /.straymark/03-implementation/i18n/
+
+# Local scratch — docs de trabajo del Centro de Control (no versionados, decisión local)
+experimento-avances.md
+analisis-autoadopcion.md
+centro-de-control-analisis.md
+spike-a-formato-receta.md
+spike-b-autoadopcion-riesgos.md
+spike-c-tooling-landscape.md
+spike-d-extraccion-quirurgica.md
+PLAN-centro-de-control.md

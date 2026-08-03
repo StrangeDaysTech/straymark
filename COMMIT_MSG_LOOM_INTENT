@@ -1,0 +1,48 @@
+feat(loom): intent plane — Baton's overlay served in the Architecture panel (loom 0.7.0, baton gate #5)
+
+Baton graduation gate #5 ("Loom overlay integrado — falta integración con
+servidor") closes here. Baton's intent overlay (overlay.rs, B4) existed as a
+pure computation + CLI report; nothing served it. Loom now consumes the
+straymark-baton lib as a path dependency and folds the overlay into its
+existing GET /api/architecture response, rendering it as a toggleable third
+plane — Status | Intent — over the same plan.drawio / axonometric
+projections. Baton needed zero code changes: speckit::load and
+overlay::compute were already pub, pure, and codescan-free.
+
+== Backend (experiment-loom) ==
+
+Cargo.toml: + straymark-baton path dep, version 0.6.2 -> 0.7.0.
+architecture.rs: ArchResponse gains speckit_present +
+intent: Option<Vec<ComponentIntent>>; build_architecture composes Baton's
+speckit::load + overlay::compute with Loom's own load_model(arch_dir) result
+(--arch-dir respected) and the same collect_source_files inventory the
+projection already uses. No new endpoint; component_detail untouched. Two
+fixture tests: SpecKit project -> expected overlay states (matched intent,
+modeled flags); non-SpecKit root -> intent: None.
+
+== Frontend (experiment-loom/web) ==
+
+A Status | Intent toggle (#plane-mode) beside the 2D|3D switch, visible only
+when the backend reports intent entries (body.plane-available). Intent
+palette deliberately avoids the status hues (teal / amber / violet);
+components the overlay doesn't cover paint a muted neutral. Legend, 2D cell
+coloring, 3D box coloring (attention glow moves to intended-not-implemented)
+and the detail badge (state + matched SpecKit slug) all switch with the
+plane. 2D renderer, 3D renderer and detail panel share one intent cache. 8
+i18n keys x3 locales (en/es/zh-CN).
+
+== Bookkeeping ==
+
+straymark-baton 0.2.0 -> 0.2.1 (lib-consumption bump only; no CLI-visible
+change, no new baton-* release). CHANGELOG: Loom 0.7.0 section. LOOM.md
+adopter paragraph (en/es/zh-CN, docs + website mirrors). Gate #5 checked in
+experiment-baton/PLAN-avance-post-calibracion.md.
+
+== Verification ==
+
+Fixture tests cover the fold both ways. cargo test -p straymark-loom
+-p straymark-baton and npm run build in experiment-loom/web (release-loom.yml
+asserts dist/index.html). Dogfood: this repo has SpecKit memory under
+experiment-baton/.specify and experiment-loom/architecture/model.yml —
+cargo run -p straymark-loom -- . --arch-dir experiment-loom/architecture.
+Tracked in experiment-baton/AILOG-2026-08-02-005.
