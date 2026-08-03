@@ -34,7 +34,13 @@ El oráculo sigues siendo tú, que hiciste el trabajo.
 
 - **Framework ≥ 4.38.0** (`straymark update` para refrescar plantillas) o plantillas
   con los campos `work_verb` / `design_provenance` (Charter, AILOG, follow-ups).
-- El binario `straymark-baton` (te lo pasamos, o compílalo desde `experiment-baton/`).
+- El binario `straymark-baton`: descárgalo del release **`baton-*`** en
+  [GitHub Releases](https://github.com/StrangeDaysTech/straymark/releases) —
+  busca el asset para tu plataforma (`straymark-baton-v{version}-{target}.tar.gz`
+  o `.zip`; targets: `x86_64-unknown-linux-gnu`, `x86_64-apple-darwin`,
+  `aarch64-apple-darwin`, `x86_64-pc-windows-msvc`), extráelo y colócalo en tu
+  `PATH`. Alternativa: compílalo desde el repo
+  (`cargo build --release --manifest-path experiment-baton/Cargo.toml`).
 - Tu repo con su `.straymark/` habitual.
 
 Comprobación rápida (no muta nada):
