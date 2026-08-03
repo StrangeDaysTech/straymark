@@ -110,6 +110,17 @@ straymark loom serve         # the visual dashboard (downloads the loom-* binary
 
 架构地图由一个你先生成、再精修的模型驱动——推荐的 `generate → refine → validate → sync → serve` 工作流（精修步骤可以由人或 AI 辅助完成）参见 **[Loom 与架构地图指南](./LOOM.md)**。
 
+### 声明式工作路由（Baton，实验性）
+
+**EXPERIMENTAL** 的 Baton 根据声明的 `work_verb` 对你的工作单元分类，并给出成本敏感的路由建议——只读、仅建议：
+
+```bash
+straymark-baton classify .          # 你已记录工作单元的声明类别
+straymark-baton route . --dry-run   # 层级路由建议；绝不执行任何操作
+```
+
+该二进制是仅存于 GitHub Release 的资产（与 Loom 相同）——下载方式及 Track C 对采纳者的要求参见 **[Baton 指南](./BATON.md)**。
+
 ---
 
 ## 使用 Skills（主动文档）
