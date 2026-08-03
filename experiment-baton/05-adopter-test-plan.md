@@ -1,5 +1,11 @@
 # Baton — plan de prueba de calibración para adoptantes (read-only)
 
+> ⚠️ **Post-graduación (fw 4.38.0):** la terna E1/E2/E3 de este plan fue reemplazada
+> por la E1 simplificada de [`07-track-c-adopter-kit.md`](07-track-c-adopter-kit.md).
+> E2 quedó obsoleto por diseño (la señal ahora es `work_verb` declarado, decisión #332)
+> y E3 no es necesaria para forward-validation. Este documento se conserva como
+> registro histórico de la calibración pre-graduación.
+
 > **Para:** el equipo de un repo adoptante (referencia: Sentinel). **Desde:** StrayMark / experimento Baton.
 > **Naturaleza:** read-only, **recommend-only**. Nada de esto ejecuta un modelo, dispatcha un agente, abre red, ni muta tu repo. `straymark-baton route` exige `--dry-run`.
 > **Motiva:** el hallazgo [#328 "La granularidad NO es la palanca"](https://github.com/StrangeDaysTech/straymark/issues/328) y `experiment-baton/04-phase2-dry-run-dogfood.md`.

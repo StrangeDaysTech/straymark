@@ -96,7 +96,8 @@ Framework: `fw-X.Y.Z` (minor — nuevos campos opcionales en schemas)
 ## Track C — Forward-validation (adopter)
 
 **Origen:** #332 paso 3 · **Bloquea:** decisión de Fase 3
-**Requiere:** Track A completo (schema graduado)
+**Requiere:** Track A completo (schema graduado) ✅ — graduado en fw 4.38.0 / cli 3.40.0 (2026-07-29)
+**Kit para el adoptante:** [`07-track-c-adopter-kit.md`](07-track-c-adopter-kit.md) (2026-08-02)
 
 ### Qué esperamos del adoptante
 
