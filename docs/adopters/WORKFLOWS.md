@@ -110,6 +110,17 @@ straymark loom serve         # the visual dashboard (downloads the loom-* binary
 
 The architecture map is driven by a model you generate and then refine — see the **[Loom & the Architecture Map guide](./LOOM.md)** for the recommended `generate → refine → validate → sync → serve` workflow (the refinement step can be human or AI-assisted).
 
+### Declared work routing (Baton, experimental)
+
+The **EXPERIMENTAL** Baton classifies your work units from the declared `work_verb` and gives cost-aware routing advice — read-only, recommend-only:
+
+```bash
+straymark-baton classify .          # declared classes of your recorded work units
+straymark-baton route . --dry-run   # tier routing advice; never executes anything
+```
+
+The binary is a GitHub-release-only asset (like Loom's) — see the **[Baton guide](./BATON.md)** for the download and what Track C asks of adopters.
+
 ---
 
 ## Using Skills (Active Documentation)
