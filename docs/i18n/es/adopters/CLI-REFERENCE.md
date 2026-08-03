@@ -45,7 +45,7 @@ StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.38.1` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| Framework | `fw-` | `fw-4.39.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
 | CLI | `cli-` | `cli-3.40.0` | El binario `straymark` |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | El servidor de visualización `straymark-loom`, descargado bajo demanda por `straymark loom serve` |
 
@@ -341,6 +341,7 @@ Valida documentos StrayMark verificando cumplimiento y corrección.
 - `REF-001`: Documentos referenciados existen
 - `SEC-001`: No contiene información sensible
 - `OBS-001`: Tag observabilidad requiere sección de alcance
+- Vocabulario de clasificación declarada de trabajo *(fw-4.38.0+)*: el frontmatter de Charter (`work_verb` / `design_provenance`) y las entradas del backlog de follow-ups (`**Work verb**:` / `**Design provenance**:`) se verifican contra el vocabulario controlado — `design | implement | audit | operate` y `new | upstream`. **Solo advisory** (Baton #332): campos ausentes no emiten nada — no declarado es un estado honesto, nunca un error — y valores fuera del vocabulario emiten un warning que nunca bloquea.
 
 Cuando `regional_scope` incluye `china`, se activan doce reglas adicionales (`CROSS-004` a `CROSS-011`, `TYPE-003` a `TYPE-006`) que cubren escalado de revisión TC260, vínculo PIPIA desde documentos con datos sensibles, cross-references de CACFILE / AILABEL, coherencia severidad-deadline CSL, y retención de 3 años de PIPIA. Sin `china` en scope, estas reglas se omiten — sin falsos positivos.
 
@@ -470,6 +471,8 @@ Crea un Charter desde el template del framework en `.straymark/charters/NN-slug.
 | `--from-spec` | — | Path a un spec.md de SpecKit (p.ej. `specs/001-feature/spec.md`). Pre-popula `originating_spec` en el frontmatter. El path se verifica al crear. **Mutuamente excluyente con `--from-ailog`.** |
 
 Cuando ningún flag de origen se pasa, ambos `originating_ailogs` y `originating_spec` quedan comentados en el frontmatter generado — el Charter se crea "sin origen explícito" y el usuario lo llena antes de mover el status a `in-progress`.
+
+El frontmatter generado también incluye dos campos opcionales de **clasificación declarada de trabajo** *(fw-4.38.0+, Baton #332)*: `work_verb: design | implement | audit | operate` y `design_provenance: new | upstream`. Declararlos cuesta ≈ 0 en autoría y son la señal autoritativa para el routing de modelos consciente de costo; un Charter sin declarar es inclasificable y se rutea conservadoramente al tier frontier. Dos reglas de determinación: definir un contrato fundacional acotado es `implement`, NO `design`; e `implement` + `design_provenance: upstream` (solo instrumenta diseño previo) degrada a trabajo mecánico.
 
 **Ejemplos:**
 

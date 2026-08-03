@@ -45,7 +45,7 @@ StrayMark 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.38.1` | 模板（12 种类型）、治理文档、指令 |
+| Framework | `fw-` | `fw-4.39.0` | 模板（12 种类型）、治理文档、指令 |
 | CLI | `cli-` | `cli-3.40.0` | `straymark` 二进制文件 |
 | Loom（实验性） | `loom-` | `loom-0.4.2` | `straymark-loom` 可视化服务器，由 `straymark loom serve` 按需下载 |
 
@@ -359,6 +359,7 @@ Repairing StrayMark in /home/user/my-project
 - 类型特定字段（例如 INC 需要 severity，SEC 需要 threat_model_methodology）
 - 敏感信息检测（API 密钥、密码）
 - 关联文档存在性
+- 声明式工作分类词汇表 *(fw-4.38.0+)*：章程前置元数据（`work_verb` / `design_provenance`）与 follow-up 待办条目（`**Work verb**:` / `**Design provenance**:`）会按受控词汇表校验 — `design | implement | audit | operate` 及 `new | upstream`。**仅建议性**（Baton #332）：字段缺失不产生任何提示 — 未声明是诚实状态，绝非错误 — 词汇表外的值会产生永不阻断的警告。
 
 当 `regional_scope` 包含 `china` 时,启用十二条额外规则(`CROSS-004` 至 `CROSS-011`、`TYPE-003` 至 `TYPE-006`),涵盖 TC260 审核升级、敏感数据文档的 PIPIA 关联、CACFILE / AILABEL 交叉引用、CSL 严重程度-时限一致性、PIPIA 三年留存。未启用 `china` 时,这些规则被跳过 — 不会产生误报。
 
@@ -499,7 +500,9 @@ $ straymark validate --check-pending-reviews --max-pending-days 14
 | `--from-ailog` | — | 来源 AILOG ID（如 `AILOG-2026-04-28-021`）。在前置元数据中预填充 `originating_ailogs`。**与 `--from-spec` 互斥。** |
 | `--from-spec` | — | SpecKit 规范文件路径（如 `specs/001-feature/spec.md`）。在前置元数据中预填充 `originating_spec`。创建时会校验路径存在性。**与 `--from-ailog` 互斥。** |
 
-未传入任何来源标志时，`originating_ailogs` 和 `originating_spec` 在生成的前置元数据中均保持注释状态——章程"无显式来源"地创建，由用户在状态变为 `in-progress` 之前手动填写。
+未传入任何来源标志时，`originating_ailogs` 和 `originating_spec` 在生成的前置元数据中均保持注释状态——章程“无显式来源”地创建，由用户在状态变为 `in-progress` 之前手动填写。
+
+生成的前置元数据还包含两个可选的**声明式工作分类**字段 *(fw-4.38.0+，Baton #332)*：`work_verb: design | implement | audit | operate` 与 `design_provenance: new | upstream`。在撰写时声明它们的成本 ≈ 0，且是成本感知模型路由的权威信号；未声明的章程无法分类，会保守地路由到 frontier 层级。两条判定规则：定义有界的基础契约属于 `implement`，而非 `design`；`implement` + `design_provenance: upstream`（仅落实已有设计）降级为机械性工作。
 
 #### `straymark charter list [--status declared|in-progress|closed|all] [--origin ailog|spec|any] [path]`
 

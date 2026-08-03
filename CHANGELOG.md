@@ -7,6 +7,17 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.39.0 — 2026-08-02
+
+Baton post-calibration wrap-up: closes Track A item A4 (adopter reference documentation for the graduated `work_verb`/`design_provenance` fields) and publishes the Track C forward-validation adopter kit. Documentation-only release — no `dist/` content changed beyond the version itself.
+
+### Added (Framework)
+
+- **`work_verb` / `design_provenance` documented in the adopter CLI reference** (Baton #332, closes Track A item A4). The fields graduated in 4.38.0 — and the advisory vocabulary checks in `straymark validate` — are now documented in `docs/adopters/CLI-REFERENCE.md` (EN/es/zh-CN): controlled vocabulary, placement, the load-bearing determination rules (bounded foundational contract = `implement`; `implement` + `design_provenance: upstream` degrades to mechanical), and the undeclared-is-honest posture.
+- **Track C adopter kit** (`experiment-baton/07-track-c-adopter-kit.md`) — forward-validation handoff for adopters: declaration placement, simplified E1 calibration protocol (agreement ≥ 0.8, downward-error watch), friction questions, done-criterion. Supersedes the pre-graduation E1/E2/E3 trio of `05-adopter-test-plan.md` (E2 obsolete by design after #332; E3 not needed for forward-validation). Track C is gate #3 for graduating Baton to `straymark-core`.
+
+---
+
 ## Framework 4.38.1 — 2026-07-29
 
 ### Fixed (Framework)
