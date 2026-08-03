@@ -1,0 +1,170 @@
+name: Release Baton
+
+# Baton is EXPERIMENTAL: GitHub-release-only (no crates.io publish) while the
+# `baton-0.x` series lasts — see experiment-baton/Cargo.toml (`publish = false`)
+# and 07-track-c-adopter-kit.md. Mirrors release-loom.yml.
+
+on:
+  push:
+    tags:
+      - 'baton-*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., baton-0.2.0)'
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  resolve-version:
+    name: Resolve version
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.resolve.outputs.tag }}
+      version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - name: Resolve tag and version
+        id: resolve
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="${{ github.ref_name }}"
+          fi
+
+          if [[ "$TAG" != baton-* ]]; then
+            echo "ERROR: tag '$TAG' is not a Baton release (must start with baton-)"
+            exit 1
+          fi
+
+          VERSION="${TAG#baton-}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building Baton $VERSION from tag $TAG"
+
+  build-baton:
+    name: Build Baton (${{ matrix.target }})
+    needs: [resolve-version]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            archive: tar.gz
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            archive: tar.gz
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            archive: tar.gz
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            archive: zip
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.resolve-version.outputs.tag }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Verify Cargo.toml version matches tag
+        shell: bash
+        run: |
+          CARGO_VERSION=$(grep '^version' experiment-baton/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          TAG_VERSION="${{ needs.resolve-version.outputs.version }}"
+          if [ "$CARGO_VERSION" != "$TAG_VERSION" ]; then
+            echo "ERROR: experiment-baton/Cargo.toml version ($CARGO_VERSION) does not match tag version ($TAG_VERSION)"
+            exit 1
+          fi
+
+      - name: Build release binary
+        run: cargo build --release --manifest-path experiment-baton/Cargo.toml --target ${{ matrix.target }}
+
+      - name: Package (Unix)
+        if: matrix.archive == 'tar.gz'
+        shell: bash
+        run: |
+          BINARY=target/${{ matrix.target }}/release/straymark-baton
+          ARCHIVE=straymark-baton-v${{ needs.resolve-version.outputs.version }}-${{ matrix.target }}.tar.gz
+          tar czf "$ARCHIVE" -C "$(dirname "$BINARY")" "$(basename "$BINARY")"
+          echo "ARCHIVE=$ARCHIVE" >> "$GITHUB_ENV"
+
+      - name: Package (Windows)
+        if: matrix.archive == 'zip'
+        shell: bash
+        run: |
+          BINARY=target/${{ matrix.target }}/release/straymark-baton.exe
+          ARCHIVE=straymark-baton-v${{ needs.resolve-version.outputs.version }}-${{ matrix.target }}.zip
+          cp "$BINARY" straymark-baton.exe
+          7z a "$ARCHIVE" straymark-baton.exe
+          echo "ARCHIVE=$ARCHIVE" >> "$GITHUB_ENV"
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: baton-${{ matrix.target }}
+          path: ${{ env.ARCHIVE }}
+
+  upload-to-release:
+    name: Upload binaries to release
+    needs: [resolve-version, build-baton]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: release-artifacts
+
+      - name: Collect release files
+        run: |
+          mkdir -p release
+          find release-artifacts -type f \( -name "*.zip" -o -name "*.tar.gz" \) -exec cp {} release/ \;
+          ls -la release/
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          TAG="${{ needs.resolve-version.outputs.tag }}"
+          VERSION="${{ needs.resolve-version.outputs.version }}"
+
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "Release $TAG exists, uploading binaries..."
+            gh release upload "$TAG" release/* --clobber
+          else
+            echo "Creating release $TAG..."
+            # NOT --latest: Baton is experimental; the CLI release stays the
+            # repo's "latest" so update flows are unaffected.
+            gh release create "$TAG" \
+              --title "StrayMark Baton $VERSION (EXPERIMENTAL)" \
+              --generate-notes \
+              --latest=false \
+              release/*
+          fi
+
+      - name: Delete previous Baton releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          CURRENT_TAG="${{ needs.resolve-version.outputs.tag }}"
+          gh release list --json tagName --jq '.[].tagName' | while read -r tag; do
+            if [[ "$tag" == baton-* && "$tag" != "$CURRENT_TAG" ]]; then
+              echo "Deleting old release $tag..."
+              gh release delete "$tag" --yes --cleanup-tag
+            fi
+          done
