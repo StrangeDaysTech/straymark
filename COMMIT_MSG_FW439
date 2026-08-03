@@ -1,0 +1,42 @@
+docs(framework): close Baton Track A item A4 in CLI reference; bump fw 4.38.1 -> 4.39.0
+
+The 4.38.0 graduation shipped the work_verb/design_provenance fields into
+the templates, the charter schema, and straymark validate — but Track A
+item A4 ("Update docs/adopters/CLI-REFERENCE.md with the new fields")
+never landed. The reference adopters consult for the fields their
+templates now carry said nothing about them. This commit closes that gap
+and bumps the Framework to 4.39.0, packaging the Track C adopter kit in
+the same release note.
+
+== CLI-REFERENCE.md x3 locales (EN/es/zh-CN) ==
+
+Two insertions per locale:
+
+straymark validate — the advisory work-classification vocabulary check:
+charter frontmatter and follow-up backlog entries are checked against the
+controlled vocabulary (design/implement/audit/operate; new/upstream).
+Absent fields emit nothing — undeclared is an honest state, never an
+error; out-of-vocabulary values emit a warning that never blocks.
+
+straymark charter new — the two optional declared work-classification
+frontmatter fields, with the load-bearing determination rules: defining a
+bounded foundational contract is implement, NOT design; and implement +
+design_provenance: upstream (only instruments prior design) degrades to
+mechanical work. Undeclared Charters route conservatively to frontier.
+
+== Version bump fw 4.38.1 -> 4.39.0 ==
+
+dist/dist-manifest.yml, version tables in README.md x3 locales and
+CLI-REFERENCE.md x3 locales. CHANGELOG entry is explicit that this is a
+documentation-only release — no dist/ content changed beyond the version
+itself (the repo policy from AILOG-2026-07-25-002, stated so the release
+record stays honest).
+
+== Verification ==
+
+Docs-only change; no code touched. Insertions cross-checked against the
+ratified schema (06-work-verb-schema-ratification.md), the graduated dist
+templates, and the validate checks in cli/src/validation.rs. Repo-wide
+grep: every live fw-4.38.1 reference updated; CHANGELOG history and blog
+release tags untouched, as intended. Tracked in
+experiment-baton/AILOG-2026-08-02-002.

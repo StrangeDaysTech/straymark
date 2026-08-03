@@ -12,7 +12,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-import { stateColor, showDetail } from './plan';
+import { stateColor, showDetail, setIntentData, intentFor, activePlane, intentColor } from './plan';
+import type { IntentEntry } from './plan';
 import { t } from './i18n';
 
 interface ArchComponent {
@@ -32,6 +33,8 @@ interface ArchEdge {
 }
 interface ArchResponse {
   model_present: boolean;
+  speckit_present: boolean;
+  intent: IntentEntry[] | null;
   layers: ArchLayer[];
   components: ArchComponent[];
   edges: ArchEdge[];
@@ -92,6 +95,9 @@ export async function renderAxon(container: HTMLElement, explode = 0.25): Promis
     showMessage(container, t('plan.empty'));
     return;
   }
+  // Feed the shared intent cache so the detail panel + plane toggle stay in
+  // sync whichever renderer fetched last (gate #5).
+  setIntentData(arch.intent);
 
   dispose();
   container.textContent = '';
@@ -241,14 +247,19 @@ function buildFloors(scene: THREE.Scene, arch: ArchResponse): {
     group.add(floorLabel);
 
     for (const comp of comps) {
+      const onIntent = activePlane() === 'intent';
+      const intent = intentFor(comp.id);
       const state = pickState(comp.states);
-      const palette = stateColor(state);
-      const baseEmissive = state === 'active' ? 0.35 : 0;
+      const palette = onIntent ? intentColor(intent?.state ?? '') : stateColor(state);
+      // Attention glow: on the status plane, active work; on the intent
+      // plane, designed-but-not-built components.
+      const glow = onIntent ? intent?.state === 'intended-not-implemented' : state === 'active';
+      const baseEmissive = glow ? 0.35 : 0;
       const box = new THREE.Mesh(
         new THREE.BoxGeometry(BOX_W, BOX_H, BOX_D),
         new THREE.MeshStandardMaterial({
           color: new THREE.Color(palette.fill),
-          emissive: new THREE.Color(state === 'active' ? palette.stroke : '#5b9fc8'),
+          emissive: new THREE.Color(glow ? palette.stroke : '#5b9fc8'),
           emissiveIntensity: baseEmissive,
           roughness: 0.55,
           metalness: 0.1,

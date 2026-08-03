@@ -7,6 +7,21 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Loom 0.7.0 — 2026-08-02
+
+The Architecture panel gains a third overlay plane — **Intent** — powered by Baton (gate #5 of Baton's graduation plan): SpecKit's *intended* components laid over the emergent model, as a toggle beside the 2D|3D projection switch. Visible only in SpecKit projects.
+
+### Added (Loom)
+
+- **Status ⇄ Intent plane toggle** in the Architecture toolbar (2D plan and 3D axonometric alike). The Intent plane colors each component by Baton's overlay verdict: *designed & built* (`intended-and-implemented`), *designed, not built* (`intended-not-implemented`), *built, never designed* (`implemented-not-intended`); components the overlay does not cover paint a muted neutral. The legend and the component-detail badge (with the matched SpecKit slug) switch with the plane.
+- **Intent overlay folded into `GET /api/architecture`.** Loom now path-depends on the `straymark-baton` lib and composes its `speckit::load` + `overlay::compute` with the same model load (`--arch-dir` respected) and source inventory the projection already uses. No new endpoint, no codescan — SpecKit memory plus the file inventory feed the overlay. Projects without `.specify/` memory (or with zero intended components) get `intent: null` and the toggle stays hidden; the existing `plan.empty` message still wins when there is no `model.yml`.
+
+### Changed (Baton — experiment)
+
+- **straymark-baton 0.2.1** — version bump only: the lib is now consumed by Loom (`overlay::compute` + `speckit::load`). No CLI-visible change; no new `baton-*` GitHub release cut.
+
+---
+
 ## Framework 4.39.0 — 2026-08-02
 
 Baton post-calibration wrap-up: closes Track A item A4 (adopter reference documentation for the graduated `work_verb`/`design_provenance` fields) and publishes the Track C forward-validation adopter kit. Documentation-only release — no `dist/` content changed beyond the version itself.

@@ -108,6 +108,12 @@
       #plan-mode button { color:var(--muted); background:none; border:1px solid var(--border); border-radius:5px; padding:3px 9px; font-size:11px; font-weight:600; }
       #plan-mode button:hover { color:var(--text); }
       #plan-mode button.active { color:#14161c; background:var(--accent); border-color:var(--accent); }
+      /* Intent plane toggle (Baton gate #5): hidden until the backend reports intent data */
+      #plane-mode { display:none; gap:2px; margin-left:6px; }
+      body.view-plan.plane-available #plane-mode { display:flex; }
+      #plane-mode button { color:var(--muted); background:none; border:1px solid var(--border); border-radius:5px; padding:3px 9px; font-size:11px; font-weight:600; }
+      #plane-mode button:hover { color:var(--text); }
+      #plane-mode button.active { color:#14161c; background:var(--accent); border-color:var(--accent); }
       #axon-explode { position:absolute; right:14px; bottom:14px; z-index:110; display:none; align-items:center; gap:9px; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:8px 13px; color:var(--muted); font-size:11px; }
       body.view-plan.plan-3d #axon-explode { display:flex; }
       #axon-explode input { width:130px; accent-color:var(--accent); cursor:pointer; }
@@ -169,6 +175,10 @@
       <nav id="plan-mode">
         <button type="button" data-mode="2d" class="active" id="mode-2d">2D</button>
         <button type="button" data-mode="3d" id="mode-3d">3D</button>
+      </nav>
+<nav id="plane-mode">
+        <button type="button" data-plane="status" class="active" id="plane-status">Status</button>
+        <button type="button" data-plane="intent" id="plane-intent">Intent</button>
       </nav>
       <span id="counts" class="kg-only"></span>
       <div class="search-wrap kg-only">

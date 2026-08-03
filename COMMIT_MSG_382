@@ -1,0 +1,45 @@
+feat(audit): harden audit prompt v1.2 + verification quality guidance (#382)
+
+A 4-model external audit cycle missed a feature that was entirely
+unreachable — zero production callers of a new public method. Three
+of four auditors reported "no critical or high findings". The defect
+was mechanically detectable with a single grep; one auditor ran that
+grep and read the result backwards.
+
+This commit implements the three audit prompt rules derived from the
+auditor's post-mortem, plus the verification-quality guidance from the
+second-order finding (the implementer's own verification was broken).
+
+== Audit prompt v1.2 (EN + ES) ==
+
+New mandatory Step 3 — Enumerate callers of new public entry points:
+for each public method, endpoint, or component the Charter ADDS, run
+a call-site search across production code and state the count.
+Zero production callers = High finding, no judgement required.
+Non-zero count: verify callers are the intended ones (an existing
+overload or legacy path may still be winning). Steps 3-5 renumbered
+to 4-6.
+
+Enhanced Step 2.6 — Consolidated test seam check: when a test is
+documented as "consolidated" into another, verify the replacement
+exercises the same seam, not merely the same unit. The Charter's own
+closing notes are a claim by the audited party — treat as hypothesis,
+not evidence.
+
+Enhanced Step 4 (renumbered) — Red gate enumeration: when a
+verification gate is red, enumerate what only that gate could have
+caught. A broken guard test reported as "config defect" without
+asking what it was protecting is a missed finding.
+
+== AILOG + Charter templates (EN/ES/zh-CN) ==
+
+"Tests pass" checkbox now requires declaring the exact command run.
+A verification that cannot produce a negative result is not
+verification — summing pass counts without checking failure output
+is the canonical anti-pattern. Charter template Local checks section
+carries the same warning.
+
+== Verification ==
+
+No code changes — all changes are markdown templates.
+`cargo test` unaffected. #382 references verified in all 7 files.

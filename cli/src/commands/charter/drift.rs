@@ -323,9 +323,13 @@ fn render_drift_report(
             println!("  - {}", p);
         }
         println!();
-        println!("  Action: either complete the work, or document in AILOG under '## Risk'");
-        println!("  as 'R<N+1> (new, not in Charter)' explaining why this file did not need");
-        println!("  changes (Charter was wrong, scope simplified, etc.).");
+        println!("  Action (pick one):");
+        println!("    a) Remove the file from '## Files to modify' in the Charter and explain");
+        println!("       in '## Closing notes' why it no longer needs changes (preferred when");
+        println!("       the Charter scope was simply wrong or over-specified).");
+        println!("    b) Document in AILOG under '## Risk' as 'R<N+1> (new, not in Charter)'");
+        println!("       explaining why this file did not need changes. The path must appear");
+        println!("       verbatim in the Risk section for automatic suppression to work.");
         println!();
     }
 
@@ -383,13 +387,48 @@ fn compute_ailog_suppressions(
 
     for path in omitted {
         for (ailog_id, blob) in &risk_blobs {
-            if blob.contains(path) {
+            if path_matches_in_blob(path, blob) {
                 hits.push((path.clone(), ailog_id.clone()));
                 break;
             }
         }
     }
     Ok(hits)
+}
+
+/// Check whether a declared path appears in a Risk-section blob, tolerating
+/// common formatting differences (#378 friction #1b):
+/// - leading `./` present in one side but not the other
+/// - trailing `/` (directory-style)
+///
+/// The match is still substring-based (the AILOG may embed the path in a
+/// sentence), but both the raw and normalized forms are tried.
+fn path_matches_in_blob(path: &str, blob: &str) -> bool {
+    // Fast path: exact substring.
+    if blob.contains(path) {
+        return true;
+    }
+    // Normalize: strip leading "./" and trailing "/".
+    let norm_path = normalize_path_str(path);
+    // Try the normalized path against the raw blob.
+    if !norm_path.is_empty() && norm_path != path && blob.contains(&norm_path) {
+        return true;
+    }
+    // Also try matching against a normalized version of the blob (handles the
+    // case where the AILOG writes "./foo/bar.rs" but the Charter says "foo/bar.rs").
+    // We check if any line in the blob contains the normalized path.
+    for line in blob.lines() {
+        let norm_line = normalize_path_str(line.trim());
+        if norm_line.contains(&norm_path) {
+            return true;
+        }
+    }
+    false
+}
+
+/// Strip leading `./` and trailing `/` from a path string for comparison.
+fn normalize_path_str(s: &str) -> String {
+    s.trim_start_matches("./").trim_end_matches('/').to_string()
 }
 
 /// Extract the `## Risk` / `## Riesgos` / `## 风险` section body from an AILOG.
@@ -425,6 +464,40 @@ mod tests {
 
     // `glob_match_*` and `compute_drift_*` tests moved to `straymark_core::drift`
     // alongside the functions (Loom A1.0).
+
+    // ── #378 friction #1b: path normalization tests ─────────────────────
+
+    #[test]
+    fn path_matches_exact_substring() {
+        let blob = "- R1: see src/foo/bar.rs for context.\n";
+        assert!(path_matches_in_blob("src/foo/bar.rs", blob));
+    }
+
+    #[test]
+    fn path_matches_strips_dot_slash_from_charter_path() {
+        // Charter declares "./src/foo.rs", AILOG mentions "src/foo.rs".
+        let blob = "- R1: src/foo.rs was unnecessary.\n";
+        assert!(path_matches_in_blob("./src/foo.rs", blob));
+    }
+
+    #[test]
+    fn path_matches_strips_dot_slash_from_blob() {
+        // Charter declares "src/foo.rs", AILOG mentions "./src/foo.rs".
+        let blob = "- R1: ./src/foo.rs was unnecessary.\n";
+        assert!(path_matches_in_blob("src/foo.rs", blob));
+    }
+
+    #[test]
+    fn path_matches_strips_trailing_slash() {
+        let blob = "- R1: docker/ directory not needed.\n";
+        assert!(path_matches_in_blob("docker/", blob));
+    }
+
+    #[test]
+    fn path_matches_rejects_unrelated_path() {
+        let blob = "- R1: src/main.rs was fine.\n";
+        assert!(!path_matches_in_blob("src/lib.rs", blob));
+    }
 
     #[test]
     fn extract_risk_section_finds_english_section() {

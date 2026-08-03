@@ -1,0 +1,46 @@
+ci(baton): land the GitHub-release channel; straymark-baton 0.1.0 -> 0.2.0
+
+Track C asks adopters to run straymark-baton, but the binary had no
+distribution channel: experiment-baton/Cargo.toml declared the intent
+("Experimental: GitHub-release-only (no crates.io publish), mirroring
+Loom"; publish = false) yet no workflow existed, no baton-* release had
+ever been cut, and the adopter kit's only answers were "we hand you the
+binary" or "compile it yourself". This commit lands the channel.
+
+== .github/workflows/release-baton.yml (new) ==
+
+Structural mirror of release-loom.yml (same action versions, same job
+topology) with the Loom-specific Node/frontend steps removed:
+
+- Trigger: baton-* tag push or workflow_dispatch.
+- Guards: tag must start with baton-; experiment-baton/Cargo.toml
+  version must match the tag, so a skew fails loudly instead of
+  shipping a mislabeled release.
+- Build matrix: x86_64-unknown-linux-gnu, x86_64-apple-darwin,
+  aarch64-apple-darwin, x86_64-pc-windows-msvc.
+- Assets: straymark-baton-v{version}-{target}.{tar.gz|zip}.
+- Release titled "StrayMark Baton {version} (EXPERIMENTAL)" with
+  --latest=false, so the CLI release stays the repo's "latest" and
+  update flows are unaffected.
+- Previous baton-* releases deleted — same only-latest posture as Loom
+  (explicit operator decision).
+
+== Version 0.1.0 -> 0.2.0 ==
+
+0.1.0 predates the declared-work-verb turn (#332); the shipped
+classifier is a different mechanism (declared work_verb, no title-scan),
+so the first real release starts at 0.2.0. Cargo.lock moves mechanically
+with the bump. No Rust code changes.
+
+== Adopter kit ==
+
+07-track-c-adopter-kit.md preconditions now point at the baton-* GitHub
+release assets (with the four target names); compile-from-source stays
+as the alternative.
+
+== Verification ==
+
+Workflow diffed structurally against release-loom.yml. Binary name and
+manifest path verified against the crate's [[bin]] section. The release
+itself is cut after merge: git tag baton-0.2.0 && git push origin
+baton-0.2.0. Tracked in experiment-baton/AILOG-2026-08-02-003.

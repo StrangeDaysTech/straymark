@@ -32,8 +32,19 @@ interface ArchLayer {
   order: number;
   counts: Record<string, number>;
 }
+/** One entry of Baton's intent overlay (gate #5) — kebab-case `state`. */
+export interface IntentEntry {
+  component: string;
+  label: string;
+  layer: string | null;
+  state: string;
+  matched_intent: string | null;
+  modeled: boolean;
+}
 interface ArchResponse {
   model_present: boolean;
+  speckit_present: boolean;
+  intent: IntentEntry[] | null;
   layers: ArchLayer[];
   components: ArchComponent[];
 }
@@ -73,6 +84,61 @@ const STATE_STYLE: Record<string, { fill: string; stroke: string }> = {
 // implemented AND in debt paints calm blue and the debt overlay is never seen.
 const PRIORITY = ['active', 'in-progress', 'has-debt', 'wiring-gap', 'implemented', 'uncharted'];
 export const LEGEND_STATES = PRIORITY;
+
+// ── Intent plane (Baton gate #5) ──────────────────────────────────────
+// The third plane: SpecKit *intention* laid over the emergent model. The
+// palette deliberately avoids the status hues so a glance tells the planes
+// apart; components with no intent entry paint a muted neutral.
+const INTENT_STYLE: Record<string, { fill: string; stroke: string }> = {
+  'intended-and-implemented': { fill: '#1d6f6a', stroke: '#57d0c8' },
+  'intended-not-implemented': { fill: '#94501e', stroke: '#e89a4a' },
+  'implemented-not-intended': { fill: '#5b3a7e', stroke: '#b58ae0' },
+};
+const INTENT_NEUTRAL = { fill: '#1b1d24', stroke: '#33363f' };
+export const INTENT_STATES = [
+  'intended-and-implemented',
+  'intended-not-implemented',
+  'implemented-not-intended',
+];
+
+export type Plane = 'status' | 'intent';
+let plane: Plane = 'status';
+/** Active overlay plane — shared with the 3D axonometric view. */
+export function activePlane(): Plane {
+  return plane;
+}
+export function setPlane(p: Plane): void {
+  plane = p;
+}
+export function intentColor(state: string): { fill: string; stroke: string } {
+  return INTENT_STYLE[state] ?? INTENT_NEUTRAL;
+}
+
+// Last fetched intent overlay — populated by whichever renderer fetched
+// `/api/architecture` last (2D plan or 3D axon), so the shared component
+// detail panel can show the intent badge without a second round-trip.
+let intentByComp = new Map<string, IntentEntry>();
+let intentAvailable = false;
+let availabilityHook: (available: boolean) => void = () => {};
+/** main.ts registers here to show/hide the plane toggle. */
+export function setPlaneAvailabilityHook(cb: (available: boolean) => void): void {
+  availabilityHook = cb;
+}
+/** Called by both renderers (2D plan + 3D axon) after their shared fetch. */
+export function setIntentData(entries: IntentEntry[] | null): void {
+  intentByComp = new Map((entries ?? []).map((e) => [e.component, e]));
+  const available = (entries ?? []).length > 0;
+  if (available !== intentAvailable) {
+    intentAvailable = available;
+    availabilityHook(available);
+  }
+  // Intent vanished (or we never had it): the plane can't stay active.
+  if (!available && plane === 'intent') plane = 'status';
+}
+/** The intent entry for a component id, when the overlay covers it. */
+export function intentFor(compId: string): IntentEntry | null {
+  return intentByComp.get(compId) ?? null;
+}
 
 let graph: Graph | null = null;
 let hooks: PlanHooks = { openNode: () => {} };
@@ -115,6 +181,7 @@ export async function renderPlan(container: HTMLElement): Promise<void> {
     showMessage(container, t('plan.error'));
     return;
   }
+  setIntentData(arch.intent);
   const compById = new Map(arch.components.map((c) => [c.id, c]));
 
   container.textContent = '';
@@ -140,8 +207,7 @@ export async function renderPlan(container: HTMLElement): Promise<void> {
       const compId = obj.getAttribute('straymark_component_id') ?? '';
       const geom = obj.querySelector('mxGeometry');
       if (!geom) continue;
-      const state = pickState(compById.get(compId)?.states ?? []);
-      const palette = STATE_STYLE[state] ?? STATE_STYLE.uncharted;
+      const palette = cellPalette(compId, compById.get(compId)?.states ?? []);
       const style: CellStyle = {
         fillColor: palette.fill,
         strokeColor: palette.stroke,
@@ -230,6 +296,17 @@ export async function showDetail(compId: string): Promise<void> {
       return `<span class="pd-badge" style="background:${c.fill};border-color:${c.stroke};color:#e8eaf0">${t('plan.state.' + s)}</span>`;
     })
     .join('');
+  // Intent plane badge (gate #5): the overlay state + the matched SpecKit slug.
+  const ie = intentFor(detail.id);
+  const intentBadge = ie
+    ? (() => {
+        const c = intentColor(ie.state);
+        const matched = ie.matched_intent
+          ? ` · ${t('plan.intent.matched')}: ${esc(ie.matched_intent)}`
+          : '';
+        return `<div class="pd-badges"><span class="pd-badge" style="background:${c.fill};border-color:${c.stroke};color:#e8eaf0">${t('plan.intent.' + ie.state)}${matched}</span></div>`;
+      })()
+    : '';
   const charters = detail.charters.length
     ? `<h3>${t('plan.detail.charters')}</h3><ul>${detail.charters
         .map(
@@ -251,6 +328,7 @@ export async function showDetail(compId: string): Promise<void> {
     `<h2>${esc(detail.label)}</h2>` +
     `<div class="pd-layer">${esc(detail.layer)}</div>` +
     `<div class="pd-badges">${badges || `<span class="pw-k">${t('plan.state.uncharted')}</span>`}</div>` +
+    intentBadge +
     charters +
     files;
   el.classList.add('open');
@@ -331,6 +409,15 @@ function pickState(states: string[]): string {
     if (states.includes(p)) return p;
   }
   return 'uncharted';
+}
+
+/** The fill/stroke for a cell under the active plane (status or intent). */
+function cellPalette(compId: string, states: string[]): { fill: string; stroke: string } {
+  if (plane === 'intent') {
+    const ie = intentByComp.get(compId);
+    return ie ? intentColor(ie.state) : INTENT_NEUTRAL;
+  }
+  return STATE_STYLE[pickState(states)] ?? STATE_STYLE.uncharted;
 }
 
 export function stateColor(state: string): { fill: string; stroke: string } {

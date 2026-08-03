@@ -1,6 +1,6 @@
 [package]
 name = "straymark-loom"
-version = "0.6.2"
+version = "0.7.0"
 edition = "2021"
 description = "Loom — StrayMark's experimental knowledge-graph visualization server (localhost development dashboard)"
 license = "MIT"
@@ -15,6 +15,7 @@ path = "src/main.rs"
 
 [dependencies]
 straymark-core = { version = "0.9.1", path = "../core" }
+straymark-baton = { path = "../experiment-baton" }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "signal", "fs"] }
 axum = { version = "0.8", features = ["ws"] }
 notify-debouncer-full = "0.5"

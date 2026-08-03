@@ -34,6 +34,8 @@ A partir de ese único modelo, StrayMark renderiza **tres proyecciones**, todas 
 
 El **overlay de estado se computa en vivo, nunca se mantiene a mano.** Tú redactas la *estructura* (qué archivos pertenecen a qué componente, cómo se relacionan los componentes); StrayMark lo colorea (`active` / `in-progress` / `implemented` / `has-debt` / `uncharted`) a partir de señales de gobernanza cada vez que lo miras.
 
+**El plano de intención (solo proyectos SpecKit).** Junto al overlay de estado, Loom 0.7.0 añade un segundo plano conmutable — el toggle **Estado | Intención** de la barra de herramientas — que superpone tu *intención de diseño* sobre el mismo mapa, computado por [Baton](./BATON.md) (experimental). Los componentes nombrados en tu memoria SpecKit (`.specify/memory/Arquitectura - X.md` / `Architecture - X.md`) se emparejan contra el modelo y los archivos fuente, y se colorean según el veredicto: **diseñado y construido**, **diseñado, sin construir** (el plan existe pero ningún código lo cumple) o **construido, sin diseño** (hay código y ningún documento de memoria lo nombró jamás); los componentes que el overlay no cubre quedan en un neutro tenue. La leyenda y la insignia del detalle de componente cambian con el plano, tanto en 2D como en 3D. Los proyectos sin memoria SpecKit nunca ven el toggle.
+
 ---
 
 ## El flujo de trabajo recomendado

@@ -10,7 +10,9 @@ import pagerank from 'graphology-metrics/centrality/pagerank';
 import Sigma from 'sigma';
 
 import { setLocale, t } from './i18n';
-import { renderPlan, stateColor, LEGEND_STATES, setPlanHooks } from './plan';
+import { renderPlan, stateColor, LEGEND_STATES, setPlanHooks,
+  activePlane, setPlane, INTENT_STATES, intentColor, setPlaneAvailabilityHook } from './plan';
+import type { Plane } from './plan';
 import { renderAxon, dispose as disposeAxon, setExplode, zoomAxon, resetAxonView } from './axon';
 
 interface ApiNode {
@@ -705,6 +707,8 @@ function applyStaticI18n(): void {
   document.getElementById('badge')!.textContent = t('app.experimental');
   document.getElementById('tab-kg')!.textContent = t('tab.kg');
   document.getElementById('tab-plan')!.textContent = t('tab.plan');
+  document.querySelector<HTMLButtonElement>('#plane-mode [data-plane="status"]')!.textContent = t('plan.plane.status');
+  document.querySelector<HTMLButtonElement>('#plane-mode [data-plane="intent"]')!.textContent = t('plan.plane.intent');
   document.getElementById('axon-explode-label')!.textContent = t('axon.explode');
   document.getElementById('axon-help')!.textContent = t('axon.help');
   document.getElementById('axon-zoom-in')!.setAttribute('title', t('zoom.in'));
@@ -832,6 +836,7 @@ const axonEl = document.getElementById('axon')!;
 const planLegendEl = document.getElementById('plan-legend')!;
 const viewTabs = Array.from(document.querySelectorAll<HTMLButtonElement>('#view-tabs button'));
 const planModeBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('#plan-mode button'));
+const planeModeBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('#plane-mode button'));
 
 /** Render the Architecture view in the active projection (2D plan / 3D axon). */
 function renderArchitecture(): void {
@@ -879,6 +884,28 @@ for (const b of planModeBtns) {
   b.addEventListener('click', () => setPlanMode((b.dataset.mode as PlanMode) ?? '2d'));
 }
 
+// ── Overlay plane: Status ⇄ Intent (Baton gate #5) ──
+// The Intent plane only exists in SpecKit projects; until an
+// `/api/architecture` payload reports intent entries the toggle stays hidden.
+setPlaneAvailabilityHook((available) => {
+  document.body.classList.toggle('plane-available', available);
+  for (const b of planeModeBtns) b.classList.toggle('active', b.dataset.plane === activePlane());
+  buildPlanLegend();
+});
+
+/** Switch the plan's overlay plane and repaint the active projection. */
+function setPlaneMode(mode: Plane): void {
+  if (mode === activePlane()) return;
+  setPlane(mode);
+  for (const b of planeModeBtns) b.classList.toggle('active', b.dataset.plane === mode);
+  buildPlanLegend();
+  if (currentView === 'plan') renderArchitecture();
+}
+
+for (const b of planeModeBtns) {
+  b.addEventListener('click', () => setPlaneMode((b.dataset.plane as Plane) ?? 'status'));
+}
+
 const axonExplode = document.getElementById('axon-explode-range') as HTMLInputElement | null;
 axonExplode?.addEventListener('input', () => setExplode(Number(axonExplode.value) / 100));
 
@@ -887,8 +914,17 @@ document.getElementById('axon-zoom-in')?.addEventListener('click', () => zoomAxo
 document.getElementById('axon-zoom-out')?.addEventListener('click', () => zoomAxon('out'));
 document.getElementById('axon-reset')?.addEventListener('click', () => resetAxonView());
 
-/** The color legend for the plan's status overlay (localized). */
+/** The color legend for the plan's active overlay plane (localized). */
 function buildPlanLegend(): void {
+  if (activePlane() === 'intent') {
+    planLegendEl.innerHTML =
+      `<div class="pl-title">${t('plan.intent.legend')}</div>` +
+      INTENT_STATES.map((s) => {
+        const c = intentColor(s);
+        return `<div class="pl-row"><span class="pl-sw" style="background:${c.fill};border-color:${c.stroke}"></span>${t('plan.intent.' + s)}</div>`;
+      }).join('');
+    return;
+  }
   planLegendEl.innerHTML =
     `<div class="pl-title">${t('plan.legend')}</div>` +
     LEGEND_STATES.map((s) => {
