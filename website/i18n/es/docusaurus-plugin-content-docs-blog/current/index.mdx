@@ -12,6 +12,12 @@ La crónica de StrayMark: cómo emergió el framework, decisión por decisión.
 
 ## 2026
 
+### [El grep que se leyó al revés](./2026-07-29-the-grep-that-was-read-backwards.md)
+
+2026-07-29
+
+Un ciclo de auditoría con cuatro modelos revisó un Charter que añadía un método público nuevo — el único método que hacía funcionar una feature. Tres de cuatro auditores reportaron que no había hallazgos críticos ni altos. La feature tenía cero llamadores en producción, 3.376 tests en verde, y no funcionaba de punta a punta. El defecto era detectable mecánicamente con un solo grep; un auditor corrió exactamente ese grep y leyó el resultado al revés. El post-mortem produjo una regla nueva en el prompt de auditoría — y un hallazgo más incómodo sobre la verificación del propio implementador, que no podía dar rojo.
+
 ### [Lo que el follow-up dio por sentado](./2026-07-18-what-the-follow-up-took-for-granted.md)
 
 2026-07-18
