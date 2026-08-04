@@ -12,6 +12,12 @@ The StrayMark chronicle — how the framework emerged, decision by decision.
 
 ## 2026
 
+### [The grep that was read backwards](./2026-07-29-the-grep-that-was-read-backwards.md)
+
+2026-07-29
+
+A four-model audit cycle reviewed a Charter that added a new public method — the only method that made a feature work. Three of four auditors reported no critical or high findings. The feature had zero production callers, 3,376 passing tests, and did not work end to end. The defect was mechanically detectable with a single grep; one auditor ran that exact grep and read the result backwards. The post-mortem produced a one-rule addition to the audit prompt — and a more uncomfortable finding about the implementer's own verification, which could not produce a red result.
+
 ### [What the follow-up took for granted](./2026-07-18-what-the-follow-up-took-for-granted.md)
 
 2026-07-18
