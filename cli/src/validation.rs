@@ -431,19 +431,41 @@ fn check_followups_work_verb(straymark_dir: &Path, result: &mut ValidationResult
 }
 
 /// GH #392: warn when an AILOG's body mentions a `FU-NNN` / `FU-NNN-NNN` id
-/// outside its own `## Follow-ups` section and that id does not exist in the
-/// registry. The extractor only reads `## Follow-ups` (plus structural risk
+/// outside its own `## Follow-ups` section and *nothing* knows about that id.
+/// The extractor only reads `## Follow-ups` (plus structural risk
 /// declarations), so an id coined anywhere else never enters the backlog —
-/// the registry looks complete while silently missing the item. A mention of
-/// an id that *is* in the registry is a normal cross-reference and stays
-/// quiet. Warn-only: the author may still move the declaration by hand.
+/// the registry looks complete while silently missing the item.
+///
+/// The question the rule asks is "could the extractor ever have seen this?",
+/// so two kinds of mention stay quiet (adopter field report on #392, a repo
+/// with history produced 192 warnings of which 178 were of these shapes):
+///
+/// - **Anything the registry remembers.** Two id spaces coexist: the registry
+///   id `FU-335` that `drift --apply` assigns, and the adopter's author id
+///   `FU-058-022` that survives only as text inside the entry title
+///   (`### FU-335 — FU-058-022 — …`). Citing `FU-058-022` is *better* prose —
+///   it says which Charter the item came from — so matching only on `fu_id`
+///   punished the more traceable citation. Closed entries pruned by triage
+///   are the same shape: the entry is gone, its record lives on in a closure
+///   section. Scanning the whole registry body covers both.
+/// - **Ids this very document declares** in its own `## Follow-ups`. Prose
+///   citing a follow-up the document itself declares is visible to the
+///   extractor by construction, even before `drift --apply` has run.
+///
+/// Warn-only: the author may still move the declaration by hand.
 fn check_followup_mentions(straymark_dir: &Path, paths: &[PathBuf], result: &mut ValidationResult) {
     let backlog = straymark_dir.join("follow-ups-backlog.md");
     let Ok(registry) = crate::followups::parse_registry(&backlog) else {
         return; // No registry yet — nothing to compare against.
     };
-    let known: std::collections::HashSet<String> =
+    // Entry ids *plus* every id the registry body mentions in any form —
+    // author-id aliases inside titles, `Notes` back-references, closure
+    // sections for pruned entries.
+    let mut known: std::collections::HashSet<String> =
         registry.entries().map(|e| e.fu_id.clone()).collect();
+    for line in registry.body.lines() {
+        known.extend(scan_fu_ids(line));
+    }
 
     for path in paths {
         let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
@@ -454,6 +476,12 @@ fn check_followup_mentions(straymark_dir: &Path, paths: &[PathBuf], result: &mut
             continue;
         };
 
+        // One pass collects both sides: ids the document declares where the
+        // extractor can see them, and the candidates outside those sections.
+        // Candidates are judged after the pass so a declaration further down
+        // the document still covers an earlier prose mention.
+        let mut declared: std::collections::HashSet<String> = std::collections::HashSet::new();
+        let mut candidates: Vec<(usize, String)> = Vec::new();
         let mut in_frontmatter = content.starts_with("---");
         let mut in_followups_section = false;
         for (idx, line) in content.lines().enumerate() {
@@ -473,31 +501,35 @@ fn check_followup_mentions(straymark_dir: &Path, paths: &[PathBuf], result: &mut
                 continue;
             }
             if in_followups_section {
+                declared.extend(scan_fu_ids(line));
+            } else {
+                candidates.extend(scan_fu_ids(line).into_iter().map(|id| (idx, id)));
+            }
+        }
+
+        for (idx, fu_id) in candidates {
+            if known.contains(&fu_id) || declared.contains(&fu_id) {
                 continue;
             }
-            for fu_id in scan_fu_ids(line) {
-                if !known.contains(&fu_id) {
-                    result.add(ValidationIssue {
-                        file: path.clone(),
-                        rule: "FOLLOWUP-UNTRACKED-ID".to_string(),
-                        message: format!(
-                            "line {}: mentions `{}` outside this document's `## Follow-ups` \
-                             section, and the id is not in the registry ({})",
-                            idx + 1,
-                            fu_id,
-                            backlog.display()
-                        ),
-                        severity: Severity::Warning,
-                        fix_hint: Some(
-                            "Follow-ups declared outside `## Follow-ups` are never extracted. \
-                             Move the declaration into this document's `## Follow-ups` section \
-                             and run `straymark followups drift --apply` — or, if this is a \
-                             cross-reference, cite an id that exists in the registry."
-                                .to_string(),
-                        ),
-                    });
-                }
-            }
+            result.add(ValidationIssue {
+                file: path.clone(),
+                rule: "FOLLOWUP-UNTRACKED-ID".to_string(),
+                message: format!(
+                    "line {}: mentions `{}` outside this document's `## Follow-ups` \
+                     section, and the id appears nowhere in the registry ({})",
+                    idx + 1,
+                    fu_id,
+                    backlog.display()
+                ),
+                severity: Severity::Warning,
+                fix_hint: Some(
+                    "Follow-ups declared outside `## Follow-ups` are never extracted. \
+                     Move the declaration into this document's `## Follow-ups` section \
+                     and run `straymark followups drift --apply` — or, if this is a \
+                     cross-reference, cite an id the registry knows."
+                        .to_string(),
+                ),
+            });
         }
     }
 }

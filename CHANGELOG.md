@@ -7,6 +7,14 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.41.1 — 2026-08-05
+
+### Fixed (CLI)
+
+- **`FOLLOWUP-UNTRACKED-ID` was unreadable in adopters with history** (#392, field report on the 3.41.0 rule). The rule matched mentions against entry ids only, so it fired on every citation the registry actually remembers by another name — producing 192 warnings across 66 documents in the reference adopter, and a signal that appears 192 times stops being read. Two id spaces coexist: the registry id `FU-335` the CLI assigns, and the adopter's charter-scoped author id `FU-058-022`, which survives only as text inside the entry title (`### FU-335 — FU-058-022 — …`); citing the author id is the *more* traceable prose, since it names the Charter the item came from. `known` now covers every `FU-` id the registry body mentions in any form — title aliases, `Notes` back-references, entries closed and pruned by triage — and ids a document declares in its own `## Follow-ups` no longer warn wherever the prose mention sits. Same adopter: **192 → 14 warnings, all true positives**, including the `FU-057-006` case that opened the issue.
+
+---
+
 ## Framework 4.40.0 / CLI 3.41.0 — 2026-08-05
 
 Adopter-triage release: nine open issues remediated in three batches (PRs #403, #404, #405). Headline: the follow-ups registry stops being a parallel-PR hazard — a structural git merge driver reconciles conflicts by title and preserves closures made on either side (#391) — and `validate` now surfaces follow-up ids the extractor cannot see (#392). Qoder becomes a first-class skills target (#399).
