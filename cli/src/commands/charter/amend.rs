@@ -104,6 +104,7 @@ pub fn run(
         trigger,
         findings_closed,
         previous_ailog_id.as_deref(),
+        &today,
     );
     std::fs::write(&new_ailog_path, &new_ailog_body)
         .with_context(|| format!("Failed to write {}", new_ailog_path.display()))?;
@@ -298,6 +299,7 @@ fn render_new_ailog(
     trigger: &str,
     findings_closed: u32,
     amends: Option<&str>,
+    today: &str,
 ) -> String {
     let amends_line = amends
         .map(|a| format!("amends: {a}\n"))
@@ -307,6 +309,10 @@ fn render_new_ailog(
 id: {new_ailog_id}\n\
 type: ailog\n\
 title: \"{title}\"\n\
+status: draft\n\
+created: {today}\n\
+agent: straymark-cli-amend  # replace with the executing agent's identity (e.g. claude-code-v1.0)\n\
+confidence: medium  # re-assess once the amendment work is underway\n\
 charter_id: {charter_id}\n\
 risk_level: high\n\
 review_required: true\n\
@@ -523,5 +529,59 @@ mod tests {
         assert!(content.contains("AILOG-2026-05-15-050"));
         // Must still be valid YAML after the merge.
         let _: serde_yaml::Value = serde_yaml::from_str(&content).unwrap();
+    }
+
+    // GH #390 — the scaffold must pass the CLI's own `validate` (META-001):
+    // every required field present, with enum-valid status/confidence.
+    #[test]
+    fn render_new_ailog_satisfies_meta_001() {
+        let rendered = render_new_ailog(
+            "AILOG-2026-08-04-001",
+            "post-close remediation",
+            "CHARTER-57-x",
+            "external_audit",
+            3,
+            Some("AILOG-2026-07-30-002"),
+            "2026-08-04",
+        );
+        let yaml = rendered
+            .strip_prefix("---\n")
+            .and_then(|rest| rest.split_once("\n---\n"))
+            .map(|(fm, _)| fm)
+            .expect("frontmatter delimiters");
+        let fm: serde_yaml::Mapping = serde_yaml::from_str(yaml).expect("valid YAML frontmatter");
+        let get = |k: &str| {
+            fm.get(&serde_yaml::Value::String(k.to_string()))
+                .and_then(|v| v.as_str())
+                .unwrap_or_else(|| panic!("missing field `{k}`"))
+                .to_string()
+        };
+        for field in [
+            "id",
+            "title",
+            "status",
+            "created",
+            "agent",
+            "confidence",
+            "risk_level",
+        ] {
+            let _ = get(field);
+        }
+        assert!(
+            fm.get(&serde_yaml::Value::String("review_required".to_string()))
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false),
+            "review_required must be present and true"
+        );
+        assert_eq!(get("created"), "2026-08-04");
+        assert!(
+            ["draft", "review", "accepted"].contains(&get("status").as_str()),
+            "status must be lifecycle-valid"
+        );
+        assert!(
+            ["low", "medium", "high"].contains(&get("confidence").as_str()),
+            "confidence must be enum-valid"
+        );
+        assert_eq!(get("amends"), "AILOG-2026-07-30-002");
     }
 }

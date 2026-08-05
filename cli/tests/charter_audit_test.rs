@@ -535,6 +535,69 @@ findings_by_category:
 }
 
 #[test]
+fn audit_merge_reports_warns_when_audit_quality_missing() {
+    if !bash_available() {
+        return;
+    }
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    write_charter(dir.path());
+    init_repo_with_diff(dir.path());
+
+    cargo_bin_cmd!("straymark")
+        .args(["charter", "audit", "CHARTER-01", "--prepare", "--path"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    let canonical = audit_dir(dir.path(), "CHARTER-01");
+    let report = |model: &str, quality: &str| {
+        format!(
+            r#"---
+audit_role: auditor
+auditor: {model}
+charter_id: CHARTER-01
+git_range: "HEAD~1..HEAD"
+prompt_used: audit-prompt.md
+audited_at: "2026-08-04"
+findings_total: 1
+findings_by_category:
+  hallucination: 0
+  implementation_gap: 1
+  real_debt: 0
+  false_positive: 0
+{quality}
+---
+# Body
+"#,
+        )
+    };
+    std::fs::write(
+        canonical.join("report-kimi-k3.md"),
+        report("kimi-k3", ""), // no audit_quality
+    )
+    .unwrap();
+    std::fs::write(
+        canonical.join("report-gpt-5.md"),
+        report("gpt-5", "audit_quality: high"),
+    )
+    .unwrap();
+
+    cargo_bin_cmd!("straymark")
+        .args(["charter", "audit", "CHARTER-01", "--merge-reports", "--path"])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        // The incomplete report is named, and the operator is told the entry
+        // will omit the field — no more silent omission (GH #402).
+        .stderr(predicate::str::contains("report-kimi-k3.md"))
+        .stderr(predicate::str::contains("audit_quality"))
+        .stderr(predicate::str::contains("kimi-k3"))
+        // The complete report gets no warning.
+        .stderr(predicate::str::contains("report-gpt-5.md").not());
+}
+
+#[test]
 fn audit_deprecated_calibrate_emits_warning_and_exits() {
     if !bash_available() {
         return;

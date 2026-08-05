@@ -3,7 +3,7 @@
   "$id": "https://straymark.dev/schemas/charter-telemetry.schema.v0.json",
   "title": "StrayMark Charter Telemetry (experimental v0)",
   "description": "Schema for the post-execution telemetry recorded at Charter close. See Propuesta/straymark-charter-telemetry.md v0.3 for the questions this instrumentation is designed to answer and the empirical evidence behind each field.",
-  "$comment": "EXPERIMENTAL v0. Derived from 5 PLAN-NN.telemetry.yaml files in Sentinel (one project, Go backend) — same N=1-domain caveat as charter.schema.v0.json. Will not stabilize to v1.0 until validated in a second domain. The 4 fields refined by Sentinel relative to v0.1 of the doc are: external_audit as array (dual-audit calibration), outcome.scope_change_notes with F1...FN encoding, agent_quality.r_n_plus_one_emergent_count, qualitative.format_iteration. v0.2 addendum (fw-4.16.0, 2026-05-15): added optional `pre_declare_refresh` and `post_close_amendment` sub-objects per Issue #156 (Sentinel CHARTER-18 RFC). Both validated in Sentinel only; the N=1-domain caveat still applies — fields are opt-in and absent by default. Adopters: this schema is for the YAML inside the top-level `charter_telemetry:` key in .straymark/charters/CHARTER-NN.telemetry.yaml — not for the file itself.",
+  "$comment": "EXPERIMENTAL v0. Derived from 5 PLAN-NN.telemetry.yaml files in Sentinel (one project, Go backend) — same N=1-domain caveat as charter.schema.v0.json. Will not stabilize to v1.0 until validated in a second domain. The 4 fields refined by Sentinel relative to v0.1 of the doc are: external_audit as array (dual-audit calibration), outcome.scope_change_notes with F1...FN encoding, agent_quality.r_n_plus_one_emergent_count, qualitative.format_iteration. v0.2 addendum (fw-4.16.0, 2026-05-15): added optional `pre_declare_refresh` and `post_close_amendment` sub-objects per Issue #156 (Sentinel CHARTER-18 RFC). Both validated in Sentinel only; the N=1-domain caveat still applies — fields are opt-in and absent by default. Adopters: this schema is for the YAML inside the top-level `charter_telemetry:` key in .straymark/charters/CHARTER-NN.telemetry.yaml — not for the file itself. v0.3 addendum (GH #401): added optional `round` to `external_audit` items so the YAML emitted by `charter audit --merge-reports --round N` validates against the schema the same CLI version ships.",
   "type": "object",
   "required": ["charter_telemetry"],
   "additionalProperties": false,
@@ -161,6 +161,11 @@
             "additionalProperties": false,
             "properties": {
               "auditor": { "type": "string", "minLength": 1 },
+              "round": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Audit round label, emitted by `charter audit --merge-reports --round N` (GH #401). Optional for backward compatibility with single-round telemetry; distinguishes repeated entries of the same auditor across rounds (AUDIT-ROUNDS-PATTERN.md)."
+              },
               "findings_total": { "type": "integer", "minimum": 0 },
               "findings_by_category": {
                 "type": "object",
