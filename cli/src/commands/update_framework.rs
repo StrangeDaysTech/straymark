@@ -82,14 +82,19 @@ pub fn run() -> Result<()> {
     // Save manifest locally for future remove operations
     save_local_manifest(&target, &manifest)?;
 
-    // Save new checksums
-    save_checksums(&target, &release.tag_name)?;
+    // Save new checksums. The distributed-hash overrides are load-bearing
+    // (GH #388): user-kept files must carry the release hash as their
+    // baseline, not the on-disk one.
+    save_checksums(&target, &release.tag_name, &stats.distributed_hashes)?;
 
     // Print summary
     println!();
     utils::success("StrayMark framework updated successfully!");
     println!("  Files updated: {}", stats.updated);
     println!("  Files skipped (user-modified): {}", stats.skipped);
+    for path in &stats.skipped_files {
+        println!("    - {} (kept your version)", path.dimmed());
+    }
     println!("  Files added: {}", stats.added);
 
     Ok(())
@@ -99,6 +104,14 @@ struct UpdateStats {
     updated: usize,
     skipped: usize,
     added: usize,
+    /// Relative paths the operator chose to keep. GH #388: named in the final
+    /// report — a bare count is what let the config.yml overwrite go unnoticed.
+    skipped_files: Vec<String>,
+    /// Distributed (release) hash per relative path, for every file that now
+    /// has a known baseline: copied-over, newly added, or user-kept. GH #388:
+    /// the checksum store must record the *release* hash for user-kept files,
+    /// not the on-disk one, or the next update sees them as unmodified.
+    distributed_hashes: std::collections::HashMap<String, String>,
 }
 
 /// Update files, respecting user modifications
@@ -112,6 +125,8 @@ fn update_files(
         updated: 0,
         skipped: 0,
         added: 0,
+        skipped_files: Vec::new(),
+        distributed_hashes: std::collections::HashMap::new(),
     };
 
     // Walk extracted files
@@ -147,6 +162,10 @@ fn update_files(
             }
             std::fs::copy(&source_path, &target_path)?;
             stats.added += 1;
+            stats.distributed_hashes.insert(
+                relative.clone(),
+                utils::file_hash(&source_path).unwrap_or_default(),
+            );
             continue;
         }
 
@@ -162,11 +181,18 @@ fn update_files(
             // User hasn't modified it (or no previous hash) — safe to overwrite
             std::fs::copy(&source_path, &target_path)?;
             stats.updated += 1;
+            stats.distributed_hashes.insert(
+                relative.clone(),
+                utils::file_hash(&source_path).unwrap_or_default(),
+            );
         } else {
             // User modified it — prompt for action
             let new_hash = utils::file_hash(&source_path).unwrap_or_default();
             if current_hash == new_hash {
                 // Same content, no action needed
+                stats
+                    .distributed_hashes
+                    .insert(relative.clone(), new_hash);
                 continue;
             }
 
@@ -177,9 +203,19 @@ fn update_files(
                 .default(0)
                 .interact()?;
 
+            // GH #388: the baseline for the next update is the release hash in
+            // every case. For "Keep my version" this is the load-bearing part:
+            // the on-disk content stays the user's, so stamping the store with
+            // the disk hash would launder the modification into the baseline
+            // and the next update would overwrite it without prompting.
+            stats
+                .distributed_hashes
+                .insert(relative.clone(), new_hash.clone());
+
             match selection {
                 0 => {
                     stats.skipped += 1;
+                    stats.skipped_files.push(relative.clone());
                 }
                 1 => {
                     std::fs::copy(&source_path, &target_path)?;
@@ -194,6 +230,7 @@ fn update_files(
                 }
                 _ => {
                     stats.skipped += 1;
+                    stats.skipped_files.push(relative.clone());
                 }
             }
         }
@@ -257,7 +294,11 @@ fn save_local_manifest(target: &Path, manifest: &DistManifest) -> Result<()> {
     Ok(())
 }
 
-fn save_checksums(target: &Path, version: &str) -> Result<()> {
+fn save_checksums(
+    target: &Path,
+    version: &str,
+    distributed_hashes: &std::collections::HashMap<String, String>,
+) -> Result<()> {
     let mut checksums = Checksums {
         version: version.to_string(),
         files: std::collections::HashMap::new(),
@@ -279,6 +320,14 @@ fn save_checksums(target: &Path, version: &str) -> Result<()> {
     let straymark_path = target.join("STRAYMARK.md");
     if let Some(hash) = utils::file_hash(&straymark_path) {
         checksums.files.insert("STRAYMARK.md".to_string(), hash);
+    }
+
+    // Override the disk-walk stamps with the release hashes. For files the
+    // operator kept, the disk stamp is the user's content — stamping it as
+    // the baseline would make the next update treat the file as unmodified
+    // and overwrite it silently (GH #388).
+    for (relative, hash) in distributed_hashes {
+        checksums.files.insert(relative.clone(), hash.clone());
     }
 
     checksums.save(target)?;
@@ -370,6 +419,35 @@ mod tests {
             ".agent/workflows/".to_string(),
             ".github/workflows/docs-validation.yml".to_string(),
         ]
+    }
+
+    // GH #388 — a user-kept file must carry the release hash as its baseline,
+    // not the on-disk (user) hash, or the next update sees it as unmodified
+    // and silently overwrites it.
+    #[test]
+    fn save_checksums_prefers_distributed_hashes_over_disk() {
+        let tmp = tempfile::tempdir().unwrap();
+        let target = tmp.path();
+        std::fs::create_dir_all(target.join(".straymark")).unwrap();
+        std::fs::write(target.join(".straymark/config.yml"), "language: es\n").unwrap();
+
+        let mut overrides = std::collections::HashMap::new();
+        overrides.insert(
+            ".straymark/config.yml".to_string(),
+            "release-hash".to_string(),
+        );
+        super::save_checksums(target, "fw-4.38.2", &overrides).unwrap();
+
+        let checksums = crate::config::Checksums::load(target).unwrap();
+        assert_eq!(
+            checksums
+                .files
+                .get(".straymark/config.yml")
+                .map(String::as_str),
+            Some("release-hash"),
+            "the release hash must win over the on-disk (user) hash"
+        );
+        assert_eq!(checksums.version, "fw-4.38.2");
     }
 
     #[test]

@@ -297,9 +297,9 @@ Repairing StrayMark in /home/user/mi-proyecto
 
 ---
 
-### `straymark install-skills --agent <codex|claude|gemini> [--path .] [--dry-run] [--symlink]` *(cli-3.16.0+)*
+### `straymark install-skills --agent <codex|qoder|claude|gemini> [--path .] [--dry-run] [--symlink]` *(cli-3.16.0+)*
 
-Instala skills de StrayMark en el directorio **a nivel de usuario** de skills del agente IA. Actualmente solo `--agent codex` realiza trabajo: copia cada skill `straymark-*` desde `<path>/.codex/skills/` (materializado por `straymark init` o `straymark update`) hacia `$CODEX_HOME/skills/` (o `$HOME/.codex/skills/` si `CODEX_HOME` no está definida).
+Instala skills de StrayMark en el directorio **a nivel de usuario** de skills del agente IA. `--agent codex` copia cada skill `straymark-*` desde `<path>/.codex/skills/` (materializado por `straymark init` o `straymark update`) hacia `$CODEX_HOME/skills/` (o `$HOME/.codex/skills/` si `CODEX_HOME` no está definida). `--agent qoder` hace lo mismo desde `<path>/.qoder/skills/` hacia `$QODER_CONFIG_DIR/skills/` (o `$HOME/.qoder/skills/` si `QODER_CONFIG_DIR` no está definida).
 
 Para `--agent claude` y `--agent gemini` el comando termina con un error explicativo: esos agentes leen los skills directamente del árbol del proyecto (`.claude/skills/`, `.gemini/skills/`), por lo que no requieren instalación a nivel de usuario.
 
@@ -307,8 +307,8 @@ Para `--agent claude` y `--agent gemini` el comando termina con un error explica
 
 | Argumento/Flag | Default | Descripción |
 |---|---|---|
-| `--agent` | requerido | Uno de `codex`, `claude`, `gemini`. Solo `codex` ejecuta trabajo; los demás muestran guía y salen. |
-| `--path` | `.` | Directorio del proyecto cuyo `.codex/skills/` es el origen. |
+| `--agent` | requerido | Uno de `codex`, `qoder`, `claude`, `gemini`. Solo `codex` y `qoder` ejecutan trabajo; los demás muestran guía y salen. |
+| `--path` | `.` | Directorio del proyecto cuyo `.codex/skills/` (o `.qoder/skills/`) es el origen. |
 | `--dry-run` | off | Imprime qué se instalaría sin escribir nada. |
 | `--symlink` | off | Enlaza simbólicamente cada skill en lugar de copiarlo (solo Unix; útil para devs del framework iterando sobre los skills). |
 
@@ -1260,14 +1260,15 @@ loom: serving http://127.0.0.1:7700
 
 ## Skills
 
-StrayMark incluye un conjunto de skills (slash commands) para usar dentro de un asistente IA (Claude Code, Gemini Code, Codex CLI, Cursor, runtimes de agente genérico). Cada skill se instala en 4 formas paralelas durante `straymark init`:
+StrayMark incluye un conjunto de skills (slash commands) para usar dentro de un asistente IA (Claude Code, Gemini Code, Codex CLI, Qoder, Cursor, runtimes de agente genérico). Cada skill se instala en 5 formas paralelas durante `straymark init`:
 
 - `.claude/skills/<skill>/SKILL.md` (Claude — frontmatter con `allowed-tools`)
 - `.gemini/skills/<skill>/SKILL.md` (Gemini — frontmatter sin `allowed-tools`)
 - `.codex/skills/<skill>/SKILL.md` *(fw-4.19.0+)* (Codex — frontmatter mínimo, solo `name`+`description`; generado desde la variante Claude)
+- `.qoder/skills/<skill>/SKILL.md` (Qoder — mismo frontmatter completo que la variante Claude)
 - `.agent/workflows/<skill>.md` (agente genérico — frontmatter solo `description`)
 
-Claude y Gemini descubren los skills directamente del árbol del proyecto. **Codex lee los skills desde `~/.codex/skills/` (a nivel de usuario), no desde el árbol del proyecto** — ejecuta `straymark install-skills --agent codex` una vez después de `straymark init` (o después de cada actualización del framework) para poblar ese directorio desde `.codex/skills/`.
+Claude y Gemini descubren los skills directamente del árbol del proyecto. **Codex lee los skills desde `~/.codex/skills/` y Qoder desde `~/.qoder/skills/` (a nivel de usuario), no desde el árbol del proyecto** — ejecuta `straymark install-skills --agent codex` o `straymark install-skills --agent qoder` una vez después de `straymark init` (o después de cada actualización del framework) para poblar ese directorio desde `.codex/skills/` o `.qoder/skills/`.
 
 | Skill | Propósito | Archivos producidos |
 |---|---|---|

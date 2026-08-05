@@ -316,9 +316,9 @@ Repairing StrayMark in /home/user/my-project
 
 ---
 
-### `straymark install-skills --agent <codex|claude|gemini> [--path .] [--dry-run] [--symlink]` *(cli-3.16.0+)*
+### `straymark install-skills --agent <codex|qoder|claude|gemini> [--path .] [--dry-run] [--symlink]` *(cli-3.16.0+)*
 
-将 StrayMark skills 安装到 AI 代理的**用户级**skills 目录。目前仅 `--agent codex` 执行实际工作：将 `<path>/.codex/skills/` 中的每个 `straymark-*` skill（由 `straymark init` 或 `straymark update` 生成）复制到 `$CODEX_HOME/skills/`（若未设置 `CODEX_HOME` 则使用 `$HOME/.codex/skills/`）。
+将 StrayMark skills 安装到 AI 代理的**用户级**skills 目录。`--agent codex` 将 `<path>/.codex/skills/` 中的每个 `straymark-*` skill（由 `straymark init` 或 `straymark update` 生成）复制到 `$CODEX_HOME/skills/`（若未设置 `CODEX_HOME` 则使用 `$HOME/.codex/skills/`）。`--agent qoder` 同理，从 `<path>/.qoder/skills/` 复制到 `$QODER_CONFIG_DIR/skills/`（若未设置 `QODER_CONFIG_DIR` 则使用 `$HOME/.qoder/skills/`）。
 
 对于 `--agent claude` 和 `--agent gemini`，命令会带说明错误退出：这些代理直接从项目树读取 skills（`.claude/skills/`、`.gemini/skills/`），因此无需用户级安装。
 
@@ -326,8 +326,8 @@ Repairing StrayMark in /home/user/my-project
 
 | 参数/标志 | 默认值 | 描述 |
 |---|---|---|
-| `--agent` | 必填 | `codex`、`claude` 或 `gemini` 之一。仅 `codex` 执行工作；其他选项打印说明后退出。 |
-| `--path` | `.` | 源 `.codex/skills/` 所在的项目目录。 |
+| `--agent` | 必填 | `codex`、`qoder`、`claude` 或 `gemini` 之一。仅 `codex` 和 `qoder` 执行工作；其他选项打印说明后退出。 |
+| `--path` | `.` | 源 `.codex/skills/`（或 `.qoder/skills/`）所在的项目目录。 |
 | `--dry-run` | off | 只打印将要安装的内容，不写入任何文件。 |
 | `--symlink` | off | 对每个 skill 使用符号链接代替复制（仅 Unix；适合迭代 skill 内容的框架开发者）。 |
 
@@ -1393,14 +1393,15 @@ loom: serving http://127.0.0.1:7700
 
 ## Skills
 
-StrayMark 提供一组 skills（slash 命令）供 AI 助手内使用（Claude Code、Gemini Code、Codex CLI、Cursor、通用 Agent 运行时）。每个 skill 在 `straymark init` 时以 4 种平行形式安装：
+StrayMark 提供一组 skills（slash 命令）供 AI 助手内使用（Claude Code、Gemini Code、Codex CLI、Qoder、Cursor、通用 Agent 运行时）。每个 skill 在 `straymark init` 时以 5 种平行形式安装：
 
 - `.claude/skills/<skill>/SKILL.md`（Claude — frontmatter 含 `allowed-tools`）
 - `.gemini/skills/<skill>/SKILL.md`（Gemini — frontmatter 不含 `allowed-tools`）
 - `.codex/skills/<skill>/SKILL.md` *(fw-4.19.0+)*（Codex — 最小 frontmatter，仅 `name`+`description`；由 Claude 变体生成）
+- `.qoder/skills/<skill>/SKILL.md`（Qoder — 与 Claude 变体相同的完整 frontmatter）
 - `.agent/workflows/<skill>.md`（通用 Agent — 仅 `description` frontmatter）
 
-Claude 和 Gemini 直接从项目树发现 skills。**Codex 从 `~/.codex/skills/`（用户级）读取 skills，而不是从项目树读取** —— 在 `straymark init` 之后（以及每次框架更新之后）运行一次 `straymark install-skills --agent codex`，从 `.codex/skills/` 填充该目录。
+Claude 和 Gemini 直接从项目树发现 skills。**Codex 从 `~/.codex/skills/`、Qoder 从 `~/.qoder/skills/`（用户级）读取 skills，而不是从项目树读取** —— 在 `straymark init` 之后（以及每次框架更新之后）运行一次 `straymark install-skills --agent codex` 或 `straymark install-skills --agent qoder`，分别从 `.codex/skills/` 或 `.qoder/skills/` 填充该目录。
 
 | Skill | 用途 | 产生的文件 |
 |---|---|---|

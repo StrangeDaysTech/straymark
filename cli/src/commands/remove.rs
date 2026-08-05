@@ -74,11 +74,15 @@ pub fn run(full: bool) -> Result<()> {
     // Remove agent skills and workflows
     remove_dir_if_exists(&target.join(".claude/skills"))?;
     remove_dir_if_exists(&target.join(".gemini/skills"))?;
+    remove_dir_if_exists(&target.join(".codex/skills"))?;
+    remove_dir_if_exists(&target.join(".qoder/skills"))?;
     remove_dir_if_exists(&target.join(".agent/workflows"))?;
 
     // Clean up empty parent dirs
     remove_empty_dir(&target.join(".claude"))?;
     remove_empty_dir(&target.join(".gemini"))?;
+    remove_empty_dir(&target.join(".codex"))?;
+    remove_empty_dir(&target.join(".qoder"))?;
     remove_empty_dir(&target.join(".agent"))?;
 
     // Clean up .cursor directories (injections already handled by clean_directives)
