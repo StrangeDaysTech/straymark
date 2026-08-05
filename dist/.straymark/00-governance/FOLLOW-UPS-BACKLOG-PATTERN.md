@@ -370,4 +370,4 @@ Contributed via [issue #111](https://github.com/StrangeDaysTech/straymark/issues
 
 ---
 
-*StrayMark fw-4.37.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.40.0 | [Strange Days Tech](https://strangedays.tech)*
