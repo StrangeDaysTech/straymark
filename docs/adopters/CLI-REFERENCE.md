@@ -46,7 +46,7 @@ StrayMark uses **independent version tags** for each component:
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
 | Framework | `fw-` | `fw-4.40.0` | Templates (12 types), governance docs, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.41.0` | The `straymark` binary |
+| CLI | `cli-` | `cli-3.41.1` | The `straymark` binary |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | The `straymark-loom` visualization server, downloaded on demand by `straymark loom serve` |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
@@ -375,7 +375,7 @@ Validate StrayMark documents for compliance and correctness.
 - Sensitive information detection (API keys, passwords)
 - Related document existence
 - Declared work-classification vocabulary *(fw-4.38.0+)*: Charter frontmatter (`work_verb` / `design_provenance`) and follow-up backlog entries (`**Work verb**:` / `**Design provenance**:`) are checked against the controlled vocabulary — `design | implement | audit | operate` and `new | upstream`. **Advisory only** (Baton #332): absent fields emit nothing — undeclared is an honest state, never an error — and out-of-vocabulary values emit a warning that never blocks.
-- Untracked follow-up ids *(cli-3.41.0+, #392)*: an AILOG whose body mentions a `FU-NNN` / `FU-NNN-NNN` id outside its own `## Follow-ups` section — where the extractor cannot see it — and that id is not in the registry, emits a `FOLLOWUP-UNTRACKED-ID` warning. Mentions of registered ids (cross-references) and ids inside the document's own `## Follow-ups` section stay quiet. **Warn-only**, skipped entirely when the project has no registry.
+- Untracked follow-up ids *(cli-3.41.0+, #392)*: an AILOG whose body mentions a `FU-NNN` / `FU-NNN-NNN` id outside its own `## Follow-ups` section — where the extractor cannot see it — and that id appears **nowhere in the registry**, emits a `FOLLOWUP-UNTRACKED-ID` warning. The question is "could the extractor ever have seen this?", so three shapes stay quiet *(cli-3.41.1+)*: ids the registry knows as entries; ids the registry mentions in any other form — an author-id alias inside an entry title (`### FU-335 — FU-058-022 — …`), a `Notes` back-reference, an entry closed and pruned by triage; and ids the document itself declares in its own `## Follow-ups`, wherever the prose mention sits. **Warn-only**, skipped entirely when the project has no registry.
 
 When `regional_scope` includes `china`, twelve additional rules activate (`CROSS-004` to `CROSS-011`, `TYPE-003` to `TYPE-006`) covering TC260 review escalation, PIPIA linkage from sensitive-data documents, CACFILE / AILABEL cross-references, CSL severity-to-deadline coherence, and PIPIA 3-year retention. Without `china` in scope, these rules are skipped — no false positives.
 

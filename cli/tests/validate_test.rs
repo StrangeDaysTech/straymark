@@ -1084,6 +1084,15 @@ fully_extracted_ailogs: []
 ### FU-001 — Known follow-up
 - **Origin**: AILOG-2026-07-01-001 §Follow-ups
 - **Status**: open
+
+### FU-335 — FU-058-022 — rotate the staging credential (R2).
+- **Origin**: AILOG-2026-08-01-004 §Follow-ups
+- **Status**: open
+
+## Closed in this scan
+
+- **FU-062 — TDE-001 resolution complete** → CLOSED (entry pruned by
+  post-merge triage 2026-05-12).
 "#;
 
 #[test]
@@ -1135,6 +1144,113 @@ the one path that has never failed. Cross-reference to FU-001 is legitimate.
         // Exactly one untracked-id warning: FU-001 is registered, FU-009
         // lives in the document's own Follow-ups section.
         .stdout(predicate::str::contains("FOLLOWUP-UNTRACKED-ID").count(1));
+}
+
+/// Write an AILOG under `agent-logs/` with the boilerplate frontmatter the
+/// other follow-up mention tests share. `slug` doubles as the `AILOG-` id.
+fn write_fu_ailog(dir: &std::path::Path, slug: &str, body: &str) {
+    let (id, _) = slug.split_at(20); // `AILOG-YYYY-MM-DD-NNN`
+    std::fs::write(
+        dir.join(".straymark/07-ai-audit/agent-logs")
+            .join(format!("{slug}.md")),
+        format!(
+            "---\nid: {id}\ntitle: Follow-up mention fixture\nstatus: accepted\n\
+             created: 2026-08-05\nagent: test-agent-v1.0\nconfidence: high\n\
+             review_required: false\nrisk_level: low\n---\n\n# AILOG: fixture\n\n{body}"
+        ),
+    )
+    .unwrap();
+}
+
+/// Set up a project whose registry is [`FU_REGISTRY`], plus one AILOG.
+fn fu_project(slug: &str, body: &str) -> TempDir {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    std::fs::write(
+        dir.path().join(".straymark/follow-ups-backlog.md"),
+        FU_REGISTRY,
+    )
+    .unwrap();
+    write_fu_ailog(dir.path(), slug, body);
+    dir
+}
+
+#[test]
+fn fu_author_id_alias_in_entry_title_stays_quiet() {
+    // GH #392 follow-up (adopter field report): two id spaces coexist — the
+    // registry id `FU-335` the CLI assigns, and the author id `FU-058-022`
+    // that survives inside the entry title. Citing the author id is the more
+    // traceable prose (it names the Charter), so it must not warn.
+    let dir = fu_project(
+        "AILOG-2026-08-05-001-alias",
+        "The credential rotation tracked as FU-058-022 landed this batch.\n",
+    );
+
+    cargo_bin_cmd!("straymark")
+        .arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("FOLLOWUP-UNTRACKED-ID").not());
+}
+
+#[test]
+fn fu_id_only_in_registry_closure_section_stays_quiet() {
+    // An entry closed and pruned by triage leaves its record in a closure
+    // section, not as a `### FU-NNN` entry. Referring back to it is a normal
+    // cross-reference — the registry still remembers the id.
+    let dir = fu_project(
+        "AILOG-2026-08-05-002-closed",
+        "Verified post-merge that FU-062 was already resolved by CHARTER-15.\n",
+    );
+
+    cargo_bin_cmd!("straymark")
+        .arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("FOLLOWUP-UNTRACKED-ID").not());
+}
+
+#[test]
+fn fu_id_declared_later_in_own_followups_section_stays_quiet() {
+    // Prose cites an id the document itself declares further down. The
+    // extractor will see that declaration, so the mention is not the defect
+    // the rule hunts — even before `drift --apply` has run.
+    let dir = fu_project(
+        "AILOG-2026-08-05-003-selfref",
+        "Summary: the deferred work is captured below as FU-059-001.\n\n\
+         ## Follow-ups\n\n\
+         - **FU-059-001** — single-source the retry budget.\n",
+    );
+
+    cargo_bin_cmd!("straymark")
+        .arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("FOLLOWUP-UNTRACKED-ID").not());
+}
+
+#[test]
+fn fu_untracked_two_segment_id_still_warns() {
+    // The case that opened #392, verbatim: a follow-up coined in a
+    // "scope declared out" section. Nothing in the registry knows the id and
+    // the document never declares it where the extractor looks.
+    let dir = fu_project(
+        "AILOG-2026-08-05-004-outofscope",
+        "## Scope declared out\n\n\
+         Unifying this is **FU-057-006**: null behavioural change, but it \
+         touches the one RLS path that has never failed.\n",
+    );
+
+    cargo_bin_cmd!("straymark")
+        .arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("FOLLOWUP-UNTRACKED-ID").count(1))
+        .stdout(predicate::str::contains("FU-057-006"));
 }
 
 #[test]

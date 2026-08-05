@@ -46,7 +46,7 @@ StrayMark usa **tags de versión independientes** para cada componente:
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
 | Framework | `fw-` | `fw-4.40.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.41.0` | El binario `straymark` |
+| CLI | `cli-` | `cli-3.41.1` | El binario `straymark` |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | El servidor de visualización `straymark-loom`, descargado bajo demanda por `straymark loom serve` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
@@ -342,7 +342,7 @@ Valida documentos StrayMark verificando cumplimiento y corrección.
 - `SEC-001`: No contiene información sensible
 - `OBS-001`: Tag observabilidad requiere sección de alcance
 - Vocabulario de clasificación declarada de trabajo *(fw-4.38.0+)*: el frontmatter de Charter (`work_verb` / `design_provenance`) y las entradas del backlog de follow-ups (`**Work verb**:` / `**Design provenance**:`) se verifican contra el vocabulario controlado — `design | implement | audit | operate` y `new | upstream`. **Solo advisory** (Baton #332): campos ausentes no emiten nada — no declarado es un estado honesto, nunca un error — y valores fuera del vocabulario emiten un warning que nunca bloquea.
-- Ids de follow-up sin registrar *(cli-3.41.0+, #392)*: un AILOG cuyo cuerpo menciona un id `FU-NNN` / `FU-NNN-NNN` fuera de su propia sección `## Follow-ups` — donde el extractor no puede verlo — y ese id no está en el registro, emite un warning `FOLLOWUP-UNTRACKED-ID`. Menciones de ids registrados (cross-references) e ids dentro de la propia sección `## Follow-ups` del documento no emiten nada. **Solo warning**; se omite por completo si el proyecto no tiene registro.
+- Ids de follow-up sin registrar *(cli-3.41.0+, #392)*: un AILOG cuyo cuerpo menciona un id `FU-NNN` / `FU-NNN-NNN` fuera de su propia sección `## Follow-ups` — donde el extractor no puede verlo — y ese id **no aparece en ninguna parte del registro**, emite un warning `FOLLOWUP-UNTRACKED-ID`. La pregunta es «¿pudo el extractor haberlo visto alguna vez?», así que tres formas no emiten nada *(cli-3.41.1+)*: ids que el registro conoce como entradas; ids que el registro menciona de cualquier otra forma — un alias de id de autor dentro del título de una entrada (`### FU-335 — FU-058-022 — …`), una referencia en `Notes`, una entrada cerrada y podada por triage; e ids que el propio documento declara en su `## Follow-ups`, esté donde esté la mención en prosa. **Solo warning**; se omite por completo si el proyecto no tiene registro.
 
 Cuando `regional_scope` incluye `china`, se activan doce reglas adicionales (`CROSS-004` a `CROSS-011`, `TYPE-003` a `TYPE-006`) que cubren escalado de revisión TC260, vínculo PIPIA desde documentos con datos sensibles, cross-references de CACFILE / AILABEL, coherencia severidad-deadline CSL, y retención de 3 años de PIPIA. Sin `china` en scope, estas reglas se omiten — sin falsos positivos.
 

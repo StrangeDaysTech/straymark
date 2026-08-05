@@ -46,7 +46,7 @@ StrayMark 为每个组件使用**独立的版本标签**：
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
 | Framework | `fw-` | `fw-4.40.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.41.0` | `straymark` 二进制文件 |
+| CLI | `cli-` | `cli-3.41.1` | `straymark` 二进制文件 |
 | Loom（实验性） | `loom-` | `loom-0.4.2` | `straymark-loom` 可视化服务器，由 `straymark loom serve` 按需下载 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
@@ -360,7 +360,7 @@ Repairing StrayMark in /home/user/my-project
 - 敏感信息检测（API 密钥、密码）
 - 关联文档存在性
 - 声明式工作分类词汇表 *(fw-4.38.0+)*：章程前置元数据（`work_verb` / `design_provenance`）与 follow-up 待办条目（`**Work verb**:` / `**Design provenance**:`）会按受控词汇表校验 — `design | implement | audit | operate` 及 `new | upstream`。**仅建议性**（Baton #332）：字段缺失不产生任何提示 — 未声明是诚实状态，绝非错误 — 词汇表外的值会产生永不阻断的警告。
-- 未登记的 follow-up id *(cli-3.41.0+, #392)*：正文在其自身的 `## Follow-ups` 章节之外 —— 即提取器看不见的地方 —— 提及 `FU-NNN` / `FU-NNN-NNN` id、且该 id 不在注册表中的 AILOG，会产生 `FOLLOWUP-UNTRACKED-ID` 警告。提及已登记的 id（交叉引用）以及文档自身 `## Follow-ups` 章节内的 id 保持静默。**仅警告**；项目没有注册表时完全跳过。
+- 未登记的 follow-up id *(cli-3.41.0+, #392)*：正文在其自身的 `## Follow-ups` 章节之外 —— 即提取器看不见的地方 —— 提及 `FU-NNN` / `FU-NNN-NNN` id、且该 id **在注册表中任何位置都未出现**的 AILOG，会产生 `FOLLOWUP-UNTRACKED-ID` 警告。判定标准是「提取器是否有可能看见它」，因此以下三种情形保持静默 *(cli-3.41.1+)*：注册表已登记为条目的 id；注册表以其他任何形式提及的 id —— 条目标题中的作者 id 别名（`### FU-335 — FU-058-022 — …`）、`Notes` 中的回指、经分诊关闭并移除的条目；以及文档在自身 `## Follow-ups` 中声明的 id，无论正文提及出现在何处。**仅警告**；项目没有注册表时完全跳过。
 
 当 `regional_scope` 包含 `china` 时,启用十二条额外规则(`CROSS-004` 至 `CROSS-011`、`TYPE-003` 至 `TYPE-006`),涵盖 TC260 审核升级、敏感数据文档的 PIPIA 关联、CACFILE / AILABEL 交叉引用、CSL 严重程度-时限一致性、PIPIA 三年留存。未启用 `china` 时,这些规则被跳过 — 不会产生误报。
 
