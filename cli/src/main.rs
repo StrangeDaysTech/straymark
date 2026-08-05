@@ -89,17 +89,17 @@ enum Commands {
         path: String,
     },
     /// Install StrayMark skills into an AI agent's user-level skills directory
-    /// (currently only `--agent codex`, which targets `$CODEX_HOME/skills/` or
-    /// `$HOME/.codex/skills/`). Claude and Gemini read skills directly from the
-    /// project tree (`.claude/skills/`, `.gemini/skills/`) and do not require
-    /// this command.
+    /// (`--agent codex` targets `$CODEX_HOME/skills/` or `$HOME/.codex/skills/`;
+    /// `--agent qoder` targets `$QODER_CONFIG_DIR/skills/` or `$HOME/.qoder/skills/`).
+    /// Claude and Gemini read skills directly from the project tree
+    /// (`.claude/skills/`, `.gemini/skills/`) and do not require this command.
     InstallSkills {
         /// AI agent whose user-level skills directory we should populate.
-        #[arg(long, value_parser = ["codex", "claude", "gemini"])]
+        #[arg(long, value_parser = ["codex", "qoder", "claude", "gemini"])]
         agent: String,
         /// Project directory (default: current directory). The source of the
-        /// skills is `<path>/.codex/skills/` (materialized by `straymark init`
-        /// or `straymark update`).
+        /// skills is `<path>/.codex/skills/` (or `<path>/.qoder/skills/` for
+        /// qoder), materialized by `straymark init` or `straymark update`.
         #[arg(long = "path", default_value = ".")]
         path: String,
         /// Print what would be installed without writing anything.

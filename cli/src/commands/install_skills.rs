@@ -7,40 +7,64 @@ use crate::utils;
 
 /// Install StrayMark skills into an AI agent's user-level skills directory.
 ///
-/// Currently supports `--agent codex` (skills land in `$CODEX_HOME/skills/`
-/// or `$HOME/.codex/skills/`). Claude and Gemini consume skills directly
-/// from the project tree (`.claude/skills/`, `.gemini/skills/`); for those
-/// agents this command exits with an explanatory error.
+/// Supports `--agent codex` (skills land in `$CODEX_HOME/skills/` or
+/// `$HOME/.codex/skills/`) and `--agent qoder` (skills land in
+/// `$QODER_CONFIG_DIR/skills/` or `$HOME/.qoder/skills/`, GH #399). Claude
+/// and Gemini consume skills directly from the project tree
+/// (`.claude/skills/`, `.gemini/skills/`); for those agents this command
+/// exits with an explanatory error.
 pub fn run(agent: &str, project_path: &str, dry_run: bool, symlink: bool) -> Result<()> {
     match agent {
-        "codex" => install_codex(project_path, dry_run, symlink),
+        "codex" => install_user_level(
+            "codex",
+            ".codex",
+            resolve_codex_home,
+            project_path,
+            dry_run,
+            symlink,
+        ),
+        "qoder" => install_user_level(
+            "qoder",
+            ".qoder",
+            resolve_qoder_home,
+            project_path,
+            dry_run,
+            symlink,
+        ),
         "claude" | "gemini" => {
             bail!(
                 "Skills for {agent} are read directly from the project tree (.{agent}/skills/). \
                  No user-level install is required. Run `straymark init` or `straymark update` \
                  to refresh them in the project."
-            );
+            )
         }
-        other => bail!("unknown agent: {other} (supported: codex)"),
+        other => bail!("unknown agent: {other} (supported: codex, qoder)"),
     }
 }
 
-fn install_codex(project_path: &str, dry_run: bool, symlink: bool) -> Result<()> {
+fn install_user_level(
+    agent: &str,
+    project_subdir: &str,
+    resolve_home: fn() -> Result<PathBuf>,
+    project_path: &str,
+    dry_run: bool,
+    symlink: bool,
+) -> Result<()> {
     let project = PathBuf::from(project_path)
         .canonicalize()
         .unwrap_or_else(|_| PathBuf::from(project_path));
 
-    let src = project.join(".codex").join("skills");
+    let src = project.join(project_subdir).join("skills");
     if !src.is_dir() {
         bail!(
             "{} not found. Run `straymark init` (or `straymark update`) in this project first \
-             so that the .codex/skills/ tree is materialized.",
+             so that the {project_subdir}/skills/ tree is materialized.",
             src.display()
         );
     }
 
-    let codex_home = resolve_codex_home()?;
-    let dst = codex_home.join("skills");
+    let agent_home = resolve_home()?;
+    let dst = agent_home.join("skills");
     if !dst.exists() {
         if dry_run {
             println!(
@@ -56,7 +80,7 @@ fn install_codex(project_path: &str, dry_run: bool, symlink: bool) -> Result<()>
 
     println!();
     println!("  {}", "StrayMark Install Skills".bold().cyan());
-    println!("  agent: {}", "codex".green());
+    println!("  agent: {}", agent.green());
     println!("  from:  {}", src.display().to_string().dimmed());
     println!("  to:    {}", dst.display().to_string().dimmed());
     if dry_run {
@@ -141,8 +165,9 @@ fn install_codex(project_path: &str, dry_run: bool, symlink: bool) -> Result<()>
             replaced
         );
         println!(
-            "  {} Codex will discover them on next session.",
-            "→".blue().bold()
+            "  {} {} will discover them on next session.",
+            "→".blue().bold(),
+            agent
         );
     }
     println!();
@@ -157,6 +182,16 @@ fn resolve_codex_home() -> Result<PathBuf> {
     }
     let home = std::env::var("HOME").context("$HOME is not set")?;
     Ok(PathBuf::from(home).join(".codex"))
+}
+
+fn resolve_qoder_home() -> Result<PathBuf> {
+    if let Ok(v) = std::env::var("QODER_CONFIG_DIR") {
+        if !v.is_empty() {
+            return Ok(PathBuf::from(v));
+        }
+    }
+    let home = std::env::var("HOME").context("$HOME is not set")?;
+    Ok(PathBuf::from(home).join(".qoder"))
 }
 
 fn remove_entry(p: &Path) -> Result<()> {

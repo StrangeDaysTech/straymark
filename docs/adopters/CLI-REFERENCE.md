@@ -314,9 +314,9 @@ Repairing StrayMark in /home/user/my-project
 
 ---
 
-### `straymark install-skills --agent <codex|claude|gemini> [--path .] [--dry-run] [--symlink]` *(cli-3.16.0+)*
+### `straymark install-skills --agent <codex|qoder|claude|gemini> [--path .] [--dry-run] [--symlink]` *(cli-3.16.0+)*
 
-Install StrayMark skills into an AI agent's **user-level** skills directory. Currently only `--agent codex` is supported: it copies each `straymark-*` skill from `<path>/.codex/skills/` (materialized by `straymark init` or `straymark update`) into `$CODEX_HOME/skills/` (or `$HOME/.codex/skills/` if `CODEX_HOME` is unset).
+Install StrayMark skills into an AI agent's **user-level** skills directory. `--agent codex` copies each `straymark-*` skill from `<path>/.codex/skills/` (materialized by `straymark init` or `straymark update`) into `$CODEX_HOME/skills/` (or `$HOME/.codex/skills/` if `CODEX_HOME` is unset). `--agent qoder` does the same from `<path>/.qoder/skills/` into `$QODER_CONFIG_DIR/skills/` (or `$HOME/.qoder/skills/` if `QODER_CONFIG_DIR` is unset).
 
 For `--agent claude` and `--agent gemini`, the command exits with an explanatory error: those agents read skills directly from the project tree (`.claude/skills/`, `.gemini/skills/`), so no user-level install is needed.
 
@@ -324,8 +324,8 @@ For `--agent claude` and `--agent gemini`, the command exits with an explanatory
 
 | Argument/Flag | Default | Description |
 |---|---|---|
-| `--agent` | required | One of `codex`, `claude`, `gemini`. Only `codex` performs work; the others exit with guidance. |
-| `--path` | `.` | Project directory whose `.codex/skills/` is the source. |
+| `--agent` | required | One of `codex`, `qoder`, `claude`, `gemini`. Only `codex` and `qoder` perform work; the others exit with guidance. |
+| `--path` | `.` | Project directory whose `.codex/skills/` (or `.qoder/skills/`) is the source. |
 | `--dry-run` | off | Print what would be installed without writing anything. |
 | `--symlink` | off | Symlink each skill instead of copying it (Unix-only; convenient for framework developers iterating on skill content). |
 
@@ -1600,14 +1600,15 @@ loom: serving http://127.0.0.1:7700
 
 ## Skills
 
-StrayMark ships a set of skills (slash commands) for use inside an AI assistant (Claude Code, Gemini Code, Codex CLI, Cursor, generic agent runtimes). Each skill is installed in 4 parallel forms during `straymark init`:
+StrayMark ships a set of skills (slash commands) for use inside an AI assistant (Claude Code, Gemini Code, Codex CLI, Qoder, Cursor, generic agent runtimes). Each skill is installed in 5 parallel forms during `straymark init`:
 
 - `.claude/skills/<skill>/SKILL.md` (Claude — frontmatter with `allowed-tools`)
 - `.gemini/skills/<skill>/SKILL.md` (Gemini — frontmatter without `allowed-tools`)
 - `.codex/skills/<skill>/SKILL.md` *(fw-4.19.0+)* (Codex — minimal frontmatter, only `name`+`description`; generated from the Claude variant)
+- `.qoder/skills/<skill>/SKILL.md` (Qoder — same full frontmatter as the Claude variant)
 - `.agent/workflows/<skill>.md` (generic agent — `description`-only frontmatter)
 
-Claude and Gemini discover skills directly from the project tree. **Codex reads skills from `~/.codex/skills/` (user-level), not from the project tree** — run `straymark install-skills --agent codex` once after `straymark init` (or after every framework update) to populate that directory from `.codex/skills/`.
+Claude and Gemini discover skills directly from the project tree. **Codex reads skills from `~/.codex/skills/` and Qoder from `~/.qoder/skills/` (user-level), not from the project tree** — run `straymark install-skills --agent codex` or `straymark install-skills --agent qoder` once after `straymark init` (or after every framework update) to populate that directory from `.codex/skills/` or `.qoder/skills/`.
 
 | Skill | Purpose | Files produced |
 |---|---|---|

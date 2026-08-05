@@ -139,6 +139,7 @@ experiment-loom/web/dist/
 /.claude/skills/
 /.gemini/skills/
 /.codex/skills/
+/.qoder/skills/
 /.agent/workflows/
 /STRAYMARK.md
 /.straymark/00-governance/

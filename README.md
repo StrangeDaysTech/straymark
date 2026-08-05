@@ -563,7 +563,10 @@ your-project/
 ├── .claude/skills/         # 🟣 Claude Code (Anthropic)
 │   ├── straymark-new/SKILL.md
 │   └── ...
-└── .codex/skills/          # 🟢 Codex CLI (OpenAI) — installed to ~/.codex/skills/
+├── .codex/skills/          # 🟢 Codex CLI (OpenAI) — installed to ~/.codex/skills/
+│   ├── straymark-new/SKILL.md
+│   └── ...
+└── .qoder/skills/          # 🔴 Qoder CLI — installed to ~/.qoder/skills/
     ├── straymark-new/SKILL.md
     └── ...
 ```
@@ -574,6 +577,7 @@ your-project/
 | `.gemini/skills/` | Gemini CLI | Google's terminal CLI | `skill-name/SKILL.md` |
 | `.claude/skills/` | Claude Code | Anthropic's coding agent | `skill-name/SKILL.md` |
 | `.codex/skills/` *(fw-4.19.0+)* | Codex CLI | OpenAI's coding agent | `skill-name/SKILL.md` (minimal frontmatter) — installed to `~/.codex/skills/` via `straymark install-skills --agent codex` |
+| `.qoder/skills/` | Qoder CLI | Qoder's terminal coding agent | `skill-name/SKILL.md` (full frontmatter, same as Claude) — installed to `~/.qoder/skills/` via `straymark install-skills --agent qoder` |
 
 > **Note**: `.agent/` is the **vendor-agnostic** standard. Agent-specific directories (`.gemini/`, `.claude/`) provide compatibility for those platforms while following their native conventions.
 
@@ -593,6 +597,7 @@ All skill implementations are **functionally identical**—only the format diffe
 | GitHub Copilot CLI | `.github/copilot-instructions.md` | ✅ Full support |
 | Gemini CLI | `GEMINI.md` | ✅ Full support |
 | Codex CLI (OpenAI) *(fw-4.19.0+)* | `AGENTS.md` + `~/.codex/skills/` | ✅ Full support (run `straymark install-skills --agent codex`) |
+| Qoder CLI | `AGENTS.md` + `~/.qoder/skills/` | ✅ Full support (run `straymark install-skills --agent qoder`) |
 
 ### Operating Systems
 
