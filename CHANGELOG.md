@@ -7,6 +7,43 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.40.0 / CLI 3.41.0 — 2026-08-05
+
+Adopter-triage release: nine open issues remediated in three batches (PRs #403, #404, #405). Headline: the follow-ups registry stops being a parallel-PR hazard — a structural git merge driver reconciles conflicts by title and preserves closures made on either side (#391) — and `validate` now surfaces follow-up ids the extractor cannot see (#392). Qoder becomes a first-class skills target (#399).
+
+### Added (CLI)
+
+- **`straymark followups merge-driver <base> <ours> <theirs>`** (#391): git merge driver for `.straymark/follow-ups-backlog.md`. Entries match by title (ids are positional); the higher-rank status wins so a closure made on either side survives; theirs-only entries appended (renumbered on collision); deletions respected unless `ours` changed the status; `Notes` unions append-only extensions; frontmatter recomputed. Exit code follows git's driver contract.
+- **`FOLLOWUP-UNTRACKED-ID` validation warning** (#392): an AILOG mentioning a `FU-NNN` / `FU-NNN-NNN` id outside its own `## Follow-ups` section — where the extractor cannot see it — and absent from the registry now warns. Registered ids (cross-references) stay quiet; warn-only; skipped when the project has no registry.
+- **Qoder skills** (#399): `straymark install-skills --agent qoder` installs from `<path>/.qoder/skills/` into `$QODER_CONFIG_DIR/skills/` (fallback `~/.qoder/skills/`).
+
+### Added (Framework)
+
+- **`dist/.qoder/skills/`** (#399): 15 skills, byte-for-byte mirror of the Claude variants (Qoder consumes the full Claude frontmatter), materialized by `init` / `update-framework` via the dist manifest.
+
+### Changed (CLI)
+
+- **`followups drift --apply`** skips candidates whose normalized title already exists in the registry (#391) — a declaration that moved section can no longer spawn a duplicate `open` entry shadowing the operator's status.
+- **`update-framework`** (#388): kept files now store the *release* hash in `.checksums.json` (they stored the on-disk hash, so the next update treated them as unmodified and re-overwrote them); the final report names each kept file.
+
+### Changed (Framework)
+
+- **FOLLOW-UPS-BACKLOG-PATTERN.md**: new "Parallel PRs — structural merge (cli-3.41.0+)" subsection plus the title-dedup note on `--apply`.
+
+### Fixed (CLI)
+
+- **`charter drift`** uses a three-dot range (`origin/main...HEAD`) so drift detection sees the branch's own changes, not the symmetric difference (#397).
+- **`charter batch-complete`** recognizes translated section headings (es/zh-CN) when locating the batch table (#389).
+- **`charter amend`** scaffolds a valid AILOG (the generated frontmatter failed `validate`) (#390).
+- **Charter telemetry schema** accepts the `round` field emitted by multi-round audits (#401).
+- **`charter audit --merge-reports`** no longer drops signals when a report's frontmatter is incomplete (#402).
+
+### Fixed (Framework)
+
+- **Charter telemetry schema** widened for `round` (matches the CLI fix above, #401); Charter templates (en/es/zh-CN) corrected for the batch-complete heading fix (#389).
+
+---
+
 ## Loom 0.7.0 — 2026-08-02
 
 The Architecture panel gains a third overlay plane — **Intent** — powered by Baton (gate #5 of Baton's graduation plan): SpecKit's *intended* components laid over the emergent model, as a toggle beside the 2D|3D projection switch. Visible only in SpecKit projects.
