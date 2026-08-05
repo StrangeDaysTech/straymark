@@ -184,7 +184,7 @@ When closing this Charter:
    mode that this step prevents).
 
 2. **Post-merge drift check**:
-   - Run `straymark charter drift CHARTER-NN --range origin/main..HEAD`, and
+   - Run `straymark charter drift CHARTER-NN --range origin/main...HEAD`, and
      validate the output is clean or that all drifts are documented in the AILOG.
    - This catches the rare case where drift is introduced post-merge (squash
      mangling, admin amendments, etc.) and the atomic step in #1 could not apply.

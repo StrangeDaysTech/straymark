@@ -179,7 +179,7 @@ Al cerrar este Charter:
    lectores futuros (PLAN-07 de Sentinel demostró el failure mode que este step previene).
 
 2. **Post-merge drift check**:
-   - Correr `straymark charter drift CHARTER-NN --range origin/main..HEAD`, y validar
+   - Correr `straymark charter drift CHARTER-NN --range origin/main...HEAD`, y validar
      que el output esté limpio o que todos los drifts estén documentados en el AILOG.
    - Esto atrapa el caso raro donde drift se introduce post-merge (squash mangling,
      amendments admin, etc.) y el step atomic en #1 no pudo aplicar.

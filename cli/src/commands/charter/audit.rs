@@ -494,6 +494,18 @@ fn run_merge_reports(
             relative_path(project_root, path).display(),
             summary.findings_total
         );
+        if summary.audit_quality.is_none() {
+            // GH #402: the field is optional in the report schema, but its
+            // silent absence leaves a lame telemetry entry — surface it.
+            eprintln!(
+                "  {} {} has no `audit_quality` in its frontmatter — the external_audit \
+                 entry for `{}` will omit it. Add `audit_quality: high|medium|low` to the \
+                 report and re-run if the telemetry should carry it.",
+                "warn:".yellow().bold(),
+                relative_path(project_root, path).display(),
+                summary.auditor
+            );
+        }
         auditor_summaries.push(summary);
     }
 
@@ -1559,6 +1571,40 @@ prompt_used: prompts/auditor-primary.prompt.md
         assert!(with.contains("round: \"fase-1\""), "got:\n{with}");
         let without = render_external_audit_yaml(&summary("gpt-5"), "CHARTER-01", None);
         assert!(!without.contains("round:"), "got:\n{without}");
+    }
+
+    // GH #401 — the CLI must not emit YAML its own shipped schema refuses:
+    // the rendered `--merge-reports [--round]` entries must validate against
+    // the external_audit item schema in dist/.
+    #[test]
+    fn rendered_external_audit_yaml_validates_against_shipped_schema() {
+        const SCHEMA: &str = include_str!(
+            "../../../../dist/.straymark/schemas/charter-telemetry.schema.v0.json"
+        );
+        let schema: serde_json::Value = serde_json::from_str(SCHEMA).unwrap();
+        let item_schema = schema["properties"]["charter_telemetry"]["properties"]
+            ["external_audit"]["items"]
+            .clone();
+        let compiled = jsonschema::JSONSchema::options()
+            .compile(&item_schema)
+            .expect("shipped item schema must compile");
+
+        for round in [Some("fase-1"), None] {
+            let rendered = render_external_audit_yaml(&summary("kimi-k3"), "CHARTER-30", round);
+            let doc: serde_yaml::Value =
+                serde_yaml::from_str(&format!("external_audit:\n{rendered}"))
+                    .expect("rendered block must be valid YAML");
+            let entries = doc["external_audit"].as_sequence().expect("entries");
+            assert!(!entries.is_empty());
+            for entry in entries {
+                let json = crate::charter_schema::yaml_to_json_value(entry)
+                    .expect("entry must convert to JSON");
+                assert!(
+                    compiled.is_valid(&json),
+                    "entry must validate against the shipped schema (round={round:?}): {json}"
+                );
+            }
+        }
     }
 
     #[test]

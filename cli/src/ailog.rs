@@ -53,8 +53,10 @@ pub struct BatchEntry {
 /// is absent (signal to callers that the AILOG opted out of the ledger
 /// pattern).
 pub fn parse_batch_ledger(content: &str) -> Option<Vec<BatchEntry>> {
-    // Locate `## Batch Ledger` start.
-    let header_idx = find_section_offset(content, "## Batch Ledger")?;
+    // Locate the ledger heading. The i18n templates translate it —
+    // `## Bitácora por Lote (Batch Ledger)` (es), `## 批次台账 (Batch Ledger)`
+    // (zh-CN) — so the ASCII `(Batch Ledger)` marker is the join key (GH #389).
+    let header_idx = find_batch_ledger_offset(content)?;
 
     // Locate end of the ledger section = next `## ` at column 0, or EOF.
     let after_header = &content[header_idx..];
@@ -204,12 +206,14 @@ fn truncate(s: &str, max: usize) -> String {
     }
 }
 
-fn find_section_offset(content: &str, heading: &str) -> Option<usize> {
+fn find_batch_ledger_offset(content: &str) -> Option<usize> {
     let mut offset = 0;
     for line in content.split_inclusive('\n') {
         let trimmed_newline = line.trim_end_matches('\n').trim_end_matches('\r');
-        if trimmed_newline == heading {
-            return Some(offset);
+        if let Some(title) = trimmed_newline.strip_prefix("## ") {
+            if title == "Batch Ledger" || title.contains("(Batch Ledger)") {
+                return Some(offset);
+            }
         }
         offset += line.len();
     }
@@ -347,5 +351,45 @@ Done on 2026-05-10. Files touched: a.rs, b.rs. Tests passing.
             is_pending: false,
         };
         assert!(ensure_pending(&entry).is_err());
+    }
+
+    // GH #389 — the i18n templates translate the ledger heading but keep the
+    // ASCII marker: `## Bitácora por Lote (Batch Ledger)` (es) and
+    // `## 批次台账 (Batch Ledger)` (zh-CN).
+    #[test]
+    fn parse_accepts_translated_ledger_headings() {
+        for heading in [
+            "## Bitácora por Lote (Batch Ledger)",
+            "## 批次台账 (Batch Ledger)",
+        ] {
+            let content = format!(
+                "# AILOG\n\n{heading}\n\n### Batch 1 — setup\n\n(pending)\n\n### Batch 2 — impl\n\nDone.\n"
+            );
+            let entries = parse_batch_ledger(&content)
+                .unwrap_or_else(|| panic!("ledger under `{heading}` must parse"));
+            assert_eq!(entries.len(), 2, "heading: {heading}");
+            assert!(entries[0].is_pending);
+            assert!(!entries[1].is_pending);
+        }
+    }
+
+    #[test]
+    fn write_batch_section_works_under_translated_heading() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let path = tmp.path().join("AILOG-2026-08-04-001-es.md");
+        std::fs::write(
+            &path,
+            "# AILOG\n\n## Bitácora por Lote (Batch Ledger)\n\n### Batch 1 — setup\n\n(pending)\n",
+        )
+        .unwrap();
+
+        let prev = write_batch_section(&path, 1, "Hecho. Files: a.rs.").unwrap();
+        assert!(prev.is_pending);
+
+        let updated = std::fs::read_to_string(&path).unwrap();
+        let entries = parse_batch_ledger(&updated).unwrap();
+        assert!(!entries[0].is_pending);
+        assert!(entries[0].body.contains("Hecho."));
+        assert!(updated.contains("## Bitácora por Lote (Batch Ledger)"));
     }
 }

@@ -7,12 +7,17 @@
 # Behavior:
 #   - For each Charter in .straymark/charters/*.md whose frontmatter has
 #     `status: in-progress`, run `straymark charter drift <id> --range
-#     <upstream>..HEAD`. AILOG-suppression in the CLI silences alerts on
+#     <upstream>...HEAD`. AILOG-suppression in the CLI silences alerts on
 #     paths already documented as risks in the Charter's originating AILOGs.
 #   - Exits 0 when there's nothing in-progress, or when all in-progress
 #     Charters report clean (or AILOG-suppressed) drift.
 #   - Exits 1 when at least one Charter reports unaccounted drift, with a
 #     human-readable summary pointing to remediation paths.
+#
+# The range is three-dot on purpose (GH #397): `git diff A...B` diffs from
+# the merge-base — "what this branch changed" — whereas `A..B` compares the
+# two trees and would report changes the base branch gained while the branch
+# lived as if the branch had touched (or failed to touch) them.
 #
 # Configuration (environment):
 #   STRAYMARK_UPSTREAM   git ref to compare HEAD against (default: origin/main)
@@ -41,7 +46,7 @@ if [ -z "$charters" ]; then
   exit 0  # nothing in-progress; nothing to check
 fi
 
-echo "[straymark pre-pr] Checking drift on in-progress Charters (range: $UPSTREAM..HEAD)..."
+echo "[straymark pre-pr] Checking drift on in-progress Charters (range: $UPSTREAM...HEAD)..."
 echo ""
 
 exit_code=0
@@ -52,7 +57,7 @@ for charter_file in $charters; do
     continue
   fi
   echo "  -- $charter_id ($charter_file) --"
-  if ! straymark charter drift "$charter_id" --range "$UPSTREAM..HEAD"; then
+  if ! straymark charter drift "$charter_id" --range "$UPSTREAM...HEAD"; then
     exit_code=1
   fi
   echo ""

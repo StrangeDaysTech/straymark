@@ -168,7 +168,7 @@ curl -X PUT "https://${SERVICE_HOST}/api/v1/.../..." \
    演示了此步骤所防止的失败模式）。
 
 2. **合并后漂移检查**：
-   - 运行 `straymark charter drift CHARTER-NN --range origin/main..HEAD`，并验证
+   - 运行 `straymark charter drift CHARTER-NN --range origin/main...HEAD`，并验证
      输出是干净的，或所有漂移都已在 AILOG 中记录。
    - 这捕获了在合并后引入漂移的罕见情况（squash 改写、管理员修订等），
      而 #1 中的原子步骤无法应用。
