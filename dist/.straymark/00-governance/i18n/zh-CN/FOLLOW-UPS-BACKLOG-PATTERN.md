@@ -356,4 +356,4 @@ straymark followups new --title "..." --origin "CHARTER-NN Â§Scope" [--bucket â€
 
 ---
 
-*StrayMark fw-4.37.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.40.0 | [Strange Days Tech](https://strangedays.tech)*
