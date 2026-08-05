@@ -430,6 +430,121 @@ fn check_followups_work_verb(straymark_dir: &Path, result: &mut ValidationResult
     }
 }
 
+/// GH #392: warn when an AILOG's body mentions a `FU-NNN` / `FU-NNN-NNN` id
+/// outside its own `## Follow-ups` section and that id does not exist in the
+/// registry. The extractor only reads `## Follow-ups` (plus structural risk
+/// declarations), so an id coined anywhere else never enters the backlog —
+/// the registry looks complete while silently missing the item. A mention of
+/// an id that *is* in the registry is a normal cross-reference and stays
+/// quiet. Warn-only: the author may still move the declaration by hand.
+fn check_followup_mentions(straymark_dir: &Path, paths: &[PathBuf], result: &mut ValidationResult) {
+    let backlog = straymark_dir.join("follow-ups-backlog.md");
+    let Ok(registry) = crate::followups::parse_registry(&backlog) else {
+        return; // No registry yet — nothing to compare against.
+    };
+    let known: std::collections::HashSet<String> =
+        registry.entries().map(|e| e.fu_id.clone()).collect();
+
+    for path in paths {
+        let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+        if !name.starts_with("AILOG-") {
+            continue;
+        }
+        let Ok(content) = std::fs::read_to_string(path) else {
+            continue;
+        };
+
+        let mut in_frontmatter = content.starts_with("---");
+        let mut in_followups_section = false;
+        for (idx, line) in content.lines().enumerate() {
+            if in_frontmatter {
+                if idx > 0 && line.trim() == "---" {
+                    in_frontmatter = false;
+                }
+                continue;
+            }
+            let trimmed = line.trim_start();
+            if trimmed.starts_with("# ") {
+                in_followups_section = false;
+                continue;
+            }
+            if let Some(heading) = trimmed.strip_prefix("## ") {
+                in_followups_section = crate::followups::is_followup_heading(heading);
+                continue;
+            }
+            if in_followups_section {
+                continue;
+            }
+            for fu_id in scan_fu_ids(line) {
+                if !known.contains(&fu_id) {
+                    result.add(ValidationIssue {
+                        file: path.clone(),
+                        rule: "FOLLOWUP-UNTRACKED-ID".to_string(),
+                        message: format!(
+                            "line {}: mentions `{}` outside this document's `## Follow-ups` \
+                             section, and the id is not in the registry ({})",
+                            idx + 1,
+                            fu_id,
+                            backlog.display()
+                        ),
+                        severity: Severity::Warning,
+                        fix_hint: Some(
+                            "Follow-ups declared outside `## Follow-ups` are never extracted. \
+                             Move the declaration into this document's `## Follow-ups` section \
+                             and run `straymark followups drift --apply` — or, if this is a \
+                             cross-reference, cite an id that exists in the registry."
+                                .to_string(),
+                        ),
+                    });
+                }
+            }
+        }
+    }
+}
+
+/// Extract `FU-<digits>` / `FU-<digits>-<digits>` ids from one line. A
+/// boundary before the `F` keeps prose like `XFU-1` out; digit runs of fewer
+/// than two digits stay out too (the registry numbers entries `FU-{:03}`).
+fn scan_fu_ids(line: &str) -> Vec<String> {
+    let bytes: Vec<char> = line.chars().collect();
+    let mut ids = Vec::new();
+    let mut i = 0;
+    while i + 3 <= bytes.len() {
+        if bytes[i] == 'F' && bytes[i + 1] == 'U' && bytes[i + 2] == '-' {
+            let preceded_ok = i == 0 || {
+                let prev = bytes[i - 1];
+                !prev.is_alphanumeric() && prev != '-'
+            };
+            if preceded_ok {
+                let mut j = i + 3;
+                let start_digits = j;
+                while j < bytes.len() && bytes[j].is_ascii_digit() {
+                    j += 1;
+                }
+                if j - start_digits >= 2 {
+                    let mut end = j;
+                    // Optional second segment: `-<digits>`.
+                    if j + 1 < bytes.len() && bytes[j] == '-' && bytes[j + 1].is_ascii_digit() {
+                        let seg_start = j + 1;
+                        let mut k = seg_start;
+                        while k < bytes.len() && bytes[k].is_ascii_digit() {
+                            k += 1;
+                        }
+                        if k - seg_start >= 2 {
+                            end = k;
+                        }
+                    }
+                    ids.push(bytes[i..end].iter().collect());
+                    i = end;
+                    continue;
+                }
+            }
+        }
+        i += 1;
+    }
+    ids
+}
+
 /// True if an AILOG file matching the given ID exists under
 /// `.straymark/07-ai-audit/agent-logs/`. The match is by filename prefix:
 /// `AILOG-2026-04-28-021` matches `AILOG-2026-04-28-021-anything.md` but not
@@ -488,6 +603,9 @@ pub fn validate_all(straymark_dir: &Path) -> (ValidationResult, usize) {
 
     // Follow-ups backlog: advisory work_verb vocabulary check (Baton #332).
     check_followups_work_verb(straymark_dir, &mut result);
+
+    // GH #392: FU ids mentioned outside `## Follow-ups` never reach the registry.
+    check_followup_mentions(straymark_dir, &paths, &mut result);
 
     // REF-002: Detect orphan documents (no traceability links)
     check_orphan_documents(&mut result, &paths, straymark_dir);

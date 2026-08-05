@@ -1070,3 +1070,103 @@ fn test_validate_catches_unparseable_telemetry() {
         .failure()
         .stdout(predicate::str::contains("TELEMETRY-PARSE"));
 }
+
+const FU_REGISTRY: &str = r#"---
+schema_version: v1
+last_scan: 2026-08-04
+buckets:
+  - ready
+fully_extracted_ailogs: []
+---
+
+## Bucket: ready
+
+### FU-001 — Known follow-up
+- **Origin**: AILOG-2026-07-01-001 §Follow-ups
+- **Status**: open
+"#;
+
+#[test]
+fn fu_id_mentioned_outside_followups_section_warns_when_unregistered() {
+    // GH #392: an id coined in prose never reaches the registry; validate
+    // must surface it. Registered ids and ids inside the document's own
+    // `## Follow-ups` section stay quiet.
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    std::fs::write(
+        dir.path().join(".straymark/follow-ups-backlog.md"),
+        FU_REGISTRY,
+    )
+    .unwrap();
+    std::fs::write(
+        dir
+            .path()
+            .join(".straymark/07-ai-audit/agent-logs/AILOG-2026-07-29-005-scope.md"),
+        r#"---
+id: AILOG-2026-07-29-005
+title: Scope amendment
+status: accepted
+created: 2026-07-29
+agent: test-agent-v1.0
+confidence: high
+review_required: false
+risk_level: low
+---
+
+# AILOG: Scope amendment
+
+Deferred unification is **FU-002**: null behavioural change, but it touches
+the one path that has never failed. Cross-reference to FU-001 is legitimate.
+
+## Follow-ups
+
+- Close FU-009 once the registry catches up (mentions here are declarations).
+"#,
+    )
+    .unwrap();
+
+    cargo_bin_cmd!("straymark")
+        .arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("FOLLOWUP-UNTRACKED-ID"))
+        .stdout(predicate::str::contains("FU-002"))
+        // Exactly one untracked-id warning: FU-001 is registered, FU-009
+        // lives in the document's own Follow-ups section.
+        .stdout(predicate::str::contains("FOLLOWUP-UNTRACKED-ID").count(1));
+}
+
+#[test]
+fn fu_mention_check_stays_quiet_without_registry() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    std::fs::write(
+        dir
+            .path()
+            .join(".straymark/07-ai-audit/agent-logs/AILOG-2026-07-29-006-x.md"),
+        r#"---
+id: AILOG-2026-07-29-006
+title: No registry yet
+status: accepted
+created: 2026-07-29
+agent: test-agent-v1.0
+confidence: high
+review_required: false
+risk_level: low
+---
+
+# AILOG: No registry yet
+
+This mentions FU-012 but there is no registry to compare against.
+"#,
+    )
+    .unwrap();
+
+    cargo_bin_cmd!("straymark")
+        .arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("FOLLOWUP-UNTRACKED-ID").not());
+}

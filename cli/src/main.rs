@@ -416,6 +416,22 @@ enum FollowupsCommands {
         #[arg(long = "path", default_value = ".")]
         path: String,
     },
+    /// Git merge driver for the follow-ups registry (#391). Resolves a
+    /// `.straymark/follow-ups-backlog.md` conflict structurally instead of
+    /// textually: entries are matched across sides by title, a non-open
+    /// status beats open (closures survive), entries only on one side are
+    /// unioned, and the CLI-owned counters are recomputed from the result.
+    /// Setup: `git config merge.straymark-followups.driver
+    /// 'straymark followups merge-driver %O %A %B'` plus a `.gitattributes`
+    /// line `.straymark/follow-ups-backlog.md merge=straymark-followups`.
+    MergeDriver {
+        /// Common ancestor version of the file (git's %O)
+        base: String,
+        /// Current branch's version; the merged result is written here (%A)
+        ours: String,
+        /// Incoming branch's version (git's %B)
+        theirs: String,
+    },
     /// Recompute the CLI-owned frontmatter counters from actual entry
     /// statuses, without scanning AILOGs. The §13-compliant way to reconcile
     /// counters after a manual-triage session (statuses flipped by hand,
@@ -1046,6 +1062,9 @@ fn main() {
                 range,
                 path,
             } => commands::followups::drift::run(&path, apply, scan_all, range.as_deref()),
+            FollowupsCommands::MergeDriver { base, ours, theirs } => {
+                commands::followups::merge_driver::run(&base, &ours, &theirs)
+            }
             FollowupsCommands::Recount { path } => commands::followups::recount::run(&path),
             FollowupsCommands::Promote {
                 fu_id,

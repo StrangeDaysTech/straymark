@@ -201,6 +201,14 @@ pub fn detect_drift_candidates(
     let candidates = candidate_ailogs(project_root, scan_all, range);
 
     let seen_hashes = followups::registry_extracted_hashes(registry);
+    // GH #391: ids are positional and a re-extraction renumbers them, but the
+    // title survives. A follow-up whose declaration moved section (changing
+    // its content hash) must not re-enter as a fresh `open` duplicate that
+    // shadows the existing entry and its operator-set status.
+    let existing_titles: std::collections::HashSet<String> = registry
+        .entries()
+        .map(|e| followups::normalize_title(&e.description))
+        .collect();
 
     let mut drifted: Vec<(String, PathBuf, Vec<ExtractedFu>)> = Vec::new();
     for path in candidates {
@@ -217,7 +225,7 @@ pub fn detect_drift_candidates(
                     &id,
                     &fu.origin_section,
                     &fu.description,
-                ))
+                )) && !existing_titles.contains(&followups::normalize_title(&fu.description))
             })
             .collect();
         if !new.is_empty() {

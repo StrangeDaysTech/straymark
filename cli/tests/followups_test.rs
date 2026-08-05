@@ -994,3 +994,169 @@ fn new_then_drift_does_not_re_extract_or_duplicate(/* CHARTER-01 R4 */) {
     let updated = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
     assert_eq!(updated.matches("### FU-012").count(), 1, "no duplicate: {updated}");
 }
+
+// ───────────────────────── GH #391: registry merging ─────────────────────────
+
+#[test]
+fn drift_apply_does_not_duplicate_entry_declared_from_moved_section() {
+    // GH #391: when a follow-up declaration moves section, its content hash
+    // changes — the title match must keep it out of the registry instead of
+    // re-adding it as a fresh `open` duplicate that shadows the operator's
+    // status.
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    let registry = V1_REGISTRY
+        .replace("Harden staging probe", "Harden staging probe.")
+        .replace(
+            "### FU-010 — Harden staging probe.\n- **Origin**: AILOG-2026-06-01-002 §Follow-ups\n- **Origin-class**: staging\n- **Status**: open",
+            "### FU-010 — Harden staging probe.\n- **Origin**: AILOG-2026-06-01-002 §Follow-ups\n- **Origin-class**: staging\n- **Status**: in-progress",
+        );
+    write_registry(&straymark, &registry);
+    // Same description, different heading variant → different origin
+    // section → different content hash.
+    write_ailog(
+        &straymark,
+        "AILOG-2026-06-01-002-x.md",
+        "# AILOG\n\n## Follow-ups (auditoría)\n\n- Harden staging probe.\n",
+    );
+
+    cmd()
+        .args(["followups", "drift", "--scan-all", "--apply", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("registry in sync"));
+
+    let updated = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    assert_eq!(
+        updated.matches("Harden staging probe.").count(),
+        1,
+        "no duplicate entry: {updated}"
+    );
+    let idx = updated.find("Harden staging probe.").unwrap();
+    assert!(
+        updated[idx..idx + 400].contains("- **Status**: in-progress"),
+        "operator status preserved: {updated}"
+    );
+}
+
+const MERGE_BASE: &str = r#"---
+schema_version: v1
+last_scan: 2026-07-01
+total_open: 2
+buckets:
+  - ready
+fully_extracted_ailogs: []
+---
+
+## Bucket: ready
+
+### FU-010 — Harden staging probe
+- **Origin**: AILOG-2026-06-01-002 §Follow-ups
+- **Status**: open
+
+### FU-011 — Document the rollout runbook
+- **Origin**: AILOG-2026-06-01-002 §Follow-ups
+- **Status**: open
+"#;
+
+#[test]
+fn merge_driver_preserves_closures_and_unions_entries() {
+    // GH #391: the adopter scenario — the branch closed FU-010 and added a
+    // new entry; ours added a different entry reusing FU-012's number. The
+    // structural merge must keep the closure and union both additions.
+    let tmp = TempDir::new().unwrap();
+    let base_path = tmp.path().join("base.md");
+    let ours_path = tmp.path().join("ours.md");
+    let theirs_path = tmp.path().join("theirs.md");
+
+    std::fs::write(&base_path, MERGE_BASE).unwrap();
+    std::fs::write(
+        &ours_path,
+        format!(
+            "{MERGE_BASE}\n### FU-012 — Add metrics for the sync loop\n- **Origin**: AILOG-2026-07-02-001 §Follow-ups\n- **Status**: open\n"
+        ),
+    )
+    .unwrap();
+    std::fs::write(
+        &theirs_path,
+        format!(
+            "{}\n### FU-012 — Fix probe flake\n- **Origin**: AILOG-2026-07-03-001 §Follow-ups\n- **Status**: open\n",
+            MERGE_BASE.replace(
+                "### FU-010 — Harden staging probe\n- **Origin**: AILOG-2026-06-01-002 §Follow-ups\n- **Status**: open",
+                "### FU-010 — Harden staging probe\n- **Origin**: AILOG-2026-06-01-002 §Follow-ups\n- **Status**: closed",
+            )
+        ),
+    )
+    .unwrap();
+
+    cmd()
+        .args([
+            "followups", "merge-driver",
+            base_path.to_str().unwrap(),
+            ours_path.to_str().unwrap(),
+            theirs_path.to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("1 status(es) preserved from theirs"))
+        .stdout(predicate::str::contains("1 entry appended from theirs"));
+
+    let merged = std::fs::read_to_string(&ours_path).unwrap();
+    // Closure from theirs survived (the regression this issue is about).
+    let idx = merged.find("Harden staging probe").unwrap();
+    assert!(merged[idx..idx + 300].contains("- **Status**: closed"), "{merged}");
+    // Both additions present; theirs' colliding FU-012 was renumbered.
+    assert!(merged.contains("Add metrics for the sync loop"), "{merged}");
+    assert!(merged.contains("### FU-013 — Fix probe flake"), "{merged}");
+    // Counters recomputed from the merged body: FU-011 + FU-012 + FU-013 open.
+    assert!(merged.contains("total_open: 3"), "{merged}");
+}
+
+#[test]
+fn merge_driver_respects_deletion_and_keeps_conflicts_visible() {
+    let tmp = TempDir::new().unwrap();
+    let base_path = tmp.path().join("base.md");
+    let ours_path = tmp.path().join("ours.md");
+    let theirs_path = tmp.path().join("theirs.md");
+
+    std::fs::write(&base_path, MERGE_BASE).unwrap();
+    // Ours unchanged vs base; theirs deletes FU-011 and sets FU-010 to
+    // superseded while ours set it to closed — same rank, real conflict.
+    std::fs::write(
+        &ours_path,
+        MERGE_BASE.replace(
+            "### FU-010 — Harden staging probe\n- **Origin**: AILOG-2026-06-01-002 §Follow-ups\n- **Status**: open",
+            "### FU-010 — Harden staging probe\n- **Origin**: AILOG-2026-06-01-002 §Follow-ups\n- **Status**: closed",
+        ),
+    )
+    .unwrap();
+    std::fs::write(
+        &theirs_path,
+        MERGE_BASE
+            .replace(
+                "### FU-010 — Harden staging probe\n- **Origin**: AILOG-2026-06-01-002 §Follow-ups\n- **Status**: open",
+                "### FU-010 — Harden staging probe\n- **Origin**: AILOG-2026-06-01-002 §Follow-ups\n- **Status**: superseded",
+            )
+            .replace(
+                "\n### FU-011 — Document the rollout runbook\n- **Origin**: AILOG-2026-06-01-002 §Follow-ups\n- **Status**: open\n",
+                "\n",
+            ),
+    )
+    .unwrap();
+
+    cmd()
+        .args([
+            "followups", "merge-driver",
+            base_path.to_str().unwrap(),
+            ours_path.to_str().unwrap(),
+            theirs_path.to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("closed (ours) vs superseded (theirs)"));
+
+    let merged = std::fs::read_to_string(&ours_path).unwrap();
+    assert!(!merged.contains("rollout runbook"), "theirs' deletion respected: {merged}");
+    let idx = merged.find("Harden staging probe").unwrap();
+    assert!(merged[idx..].contains("- **Status**: closed"), "ours kept on same-rank conflict: {merged}");
+}

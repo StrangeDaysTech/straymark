@@ -360,6 +360,7 @@ Repairing StrayMark in /home/user/my-project
 - 敏感信息检测（API 密钥、密码）
 - 关联文档存在性
 - 声明式工作分类词汇表 *(fw-4.38.0+)*：章程前置元数据（`work_verb` / `design_provenance`）与 follow-up 待办条目（`**Work verb**:` / `**Design provenance**:`）会按受控词汇表校验 — `design | implement | audit | operate` 及 `new | upstream`。**仅建议性**（Baton #332）：字段缺失不产生任何提示 — 未声明是诚实状态，绝非错误 — 词汇表外的值会产生永不阻断的警告。
+- 未登记的 follow-up id *(cli-3.41.0+, #392)*：正文在其自身的 `## Follow-ups` 章节之外 —— 即提取器看不见的地方 —— 提及 `FU-NNN` / `FU-NNN-NNN` id、且该 id 不在注册表中的 AILOG，会产生 `FOLLOWUP-UNTRACKED-ID` 警告。提及已登记的 id（交叉引用）以及文档自身 `## Follow-ups` 章节内的 id 保持静默。**仅警告**；项目没有注册表时完全跳过。
 
 当 `regional_scope` 包含 `china` 时,启用十二条额外规则(`CROSS-004` 至 `CROSS-011`、`TYPE-003` 至 `TYPE-006`),涵盖 TC260 审核升级、敏感数据文档的 PIPIA 关联、CACFILE / AILABEL 交叉引用、CSL 严重程度-时限一致性、PIPIA 三年留存。未启用 `china` 时,这些规则被跳过 — 不会产生误报。
 
@@ -808,6 +809,7 @@ $ straymark charter audit CHARTER-05 --finalize
 - `straymark followups recount` — 手动分诊会话后重新计算 CLI 拥有的计数器 *(cli-3.20.0+)*
 - `straymark followups promote` — 将条目提升为 TDE 文档 *(cli-3.19.0+)*
 - `straymark followups verify` — 在执行时重新验证一个有日期假设的前提 *(cli-3.37.0+)*
+- `straymark followups merge-driver` — 以结构化方式解决注册表冲突的 git merge driver（#391）*(cli-3.41.0+)*
 
 #### `straymark followups list [--bucket <name>] [--status <s>] [--severity <s>] [--label <tag>] [path]`
 
@@ -837,7 +839,7 @@ $ straymark followups list --severity blocking
 | Flag | Default | Description |
 |------|---------|-------------|
 | *(default)* | — | 扫描在 `origin/main..HEAD` 中变更的 AILOG（回退到 `origin/master..HEAD`，再回退到带告警的 `HEAD~1..HEAD`）。有漂移时告警并 **exit 1**。 |
-| `--apply` | off | 将缺失的条目提取到 `## Bucket: ready`，使用自动编号的 `FU-NNN` id，把 AILOG id 追加到 `fully_extracted_ailogs`，**重新计算计数器**，并就地把 v0 注册表升级为 v1。注册表不存在时从框架模板播种。自 cli-3.20.0 起,**即使没有可提取的内容也会重新计算计数器**(#222 Finding 1)。 |
+| `--apply` | off | 将缺失的条目提取到 `## Bucket: ready`，使用自动编号的 `FU-NNN` id，把 AILOG id 追加到 `fully_extracted_ailogs`，**重新计算计数器**，并就地把 v0 注册表升级为 v1。注册表不存在时从框架模板播种。自 cli-3.20.0 起,**即使没有可提取的内容也会重新计算计数器**(#222 Finding 1)。**标题**已存在于注册表中的条目会被跳过（#391）—— id 是位置性的，重新生成时会重新编号，因此标题才是稳定身份；这使得一个移动过章节的声明不会衍生出遮蔽操作员 status 的重复 `open` 条目。 |
 | `--scan-all` | off | 扫描项目中的每一个 AILOG，而非 git 范围。 |
 | `--range <REV..REV>` | — | 默认扫描的显式 git 范围。 |
 
@@ -905,6 +907,29 @@ $ straymark followups verify FU-016 --premise "yrs 有一个独立的参照物(Y
 修改条目状态**并**在同一步骤重算 CLI 拥有的计数器。这关闭了 `recount` 本来用于事后清理的失同步窗口(#355):它所取代的两步流程 —— 手工编辑 `Status` bullet,再记得运行 `recount` —— 一旦忘了后半步就会失同步,让计数器悄悄谎报 backlog。
 
 有效状态:`open` · `in-progress` · `suspected-closed` · `closed` · `superseded`。词表之外的取值会被**拒绝**而非写入 —— 解析器是宽容的,所以拼写错误不会失败:它会悄悄把该条目从所有计数器中剔除。`promoted` 会重定向到 `followups promote`,后者还会写出让该状态有所指的 TDE。
+
+#### `straymark followups merge-driver <base> <ours> <theirs>` *(cli-3.41.0+)*
+
+`.straymark/follow-ups-backlog.md` 的 git merge driver（#391）。注册表是 CLI 拥有的，因此每一个触碰 follow-ups 的并行 PR 都会在它上面产生冲突 —— 而取其中一边再重跑 `drift --apply` 来解决冲突，会**悄悄回退另一边的关闭**（status 只存在于文件中，而重新提取会重新编号 id，所以即便比较 id 也无法检测到丢失）。接成 merge driver 后，冲突消失：git 把三个文件版本交给 CLI，结果被写回 `ours`。
+
+该 merge 是**结构性的，而非文本性的**：条目跨两侧**按标题**匹配（id 是位置性的，无法在重新生成中存活；标题可以），并按如下规则调和：
+
+| 情形 | 解决方式 |
+|---|---|
+| 同一条目，不同 status | 更高排名的 status 获胜（`open` < `in-progress` < `suspected-closed` < `closed`/`superseded`/`promoted`）—— 任一侧做出的关闭都得以存活。同排名分歧保留 `ours` 并报告到 stderr。 |
+| 仅存在于 `theirs` 的条目 | 追加（若其 id 与 `ours` 中的条目冲突则重新编号）。 |
+| 被 `theirs` 删除的条目 | 从 `ours` 中移除，除非 `ours` 更改了其 status（修改/删除 → 保留 + 报告）。 |
+| `Notes` | 当 `theirs` 是 `ours` 的仅追加扩展时（`followups note` 的形态），`theirs` 获胜。 |
+| Frontmatter | `fully_extracted_ailogs` 取并集，`last_scan` 取最新，计数器从合并后的正文重新计算。 |
+
+退出码遵循 git 的 merge-driver 契约：`0` = 已合并（软冲突报告到 stderr），非零 = 未解决（git 回退为将该文件标记为冲突）。
+
+**安装（每个克隆一次）：**
+
+```bash
+echo '.straymark/follow-ups-backlog.md merge=straymark-followups' >> .gitattributes
+git config merge.straymark-followups.driver 'straymark followups merge-driver %O %A %B'
+```
 
 #### `straymark followups new --title <标题> --origin <来源> [--bucket <name>] [--status <s>] [--trigger <t>] [--destination <d>] [--cost <c>] [--premise <p>] [--path <dir>]` *(cli-3.39.0+)*
 

@@ -17,6 +17,7 @@
 
 pub mod drift;
 pub mod list;
+pub mod merge_driver;
 pub mod new;
 pub mod note;
 pub mod promote;
