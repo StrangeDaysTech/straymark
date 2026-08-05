@@ -375,6 +375,7 @@ Validate StrayMark documents for compliance and correctness.
 - Sensitive information detection (API keys, passwords)
 - Related document existence
 - Declared work-classification vocabulary *(fw-4.38.0+)*: Charter frontmatter (`work_verb` / `design_provenance`) and follow-up backlog entries (`**Work verb**:` / `**Design provenance**:`) are checked against the controlled vocabulary — `design | implement | audit | operate` and `new | upstream`. **Advisory only** (Baton #332): absent fields emit nothing — undeclared is an honest state, never an error — and out-of-vocabulary values emit a warning that never blocks.
+- Untracked follow-up ids *(cli-3.41.0+, #392)*: an AILOG whose body mentions a `FU-NNN` / `FU-NNN-NNN` id outside its own `## Follow-ups` section — where the extractor cannot see it — and that id is not in the registry, emits a `FOLLOWUP-UNTRACKED-ID` warning. Mentions of registered ids (cross-references) and ids inside the document's own `## Follow-ups` section stay quiet. **Warn-only**, skipped entirely when the project has no registry.
 
 When `regional_scope` includes `china`, twelve additional rules activate (`CROSS-004` to `CROSS-011`, `TYPE-003` to `TYPE-006`) covering TC260 review escalation, PIPIA linkage from sensitive-data documents, CACFILE / AILABEL cross-references, CSL severity-to-deadline coherence, and PIPIA 3-year retention. Without `china` in scope, these rules are skipped — no false positives.
 
@@ -964,6 +965,7 @@ Parsing is **lenient**: v0 registries (pre-fw-4.21.0) are read without errors; t
 - `straymark followups note` — append a dated annotation to an entry's `Notes` *(cli-3.39.0+)*
 - `straymark followups set-status` — change an entry's status and recompute the counters in one step *(cli-3.39.0+)*
 - `straymark followups new` — create an entry declared **ex-ante**, at Charter-declaration time *(cli-3.39.0+)*
+- `straymark followups merge-driver` — git merge driver that resolves registry conflicts structurally (#391) *(cli-3.41.0+)*
 
 #### `straymark followups list [--bucket <name>] [--status <s>] [--severity <s>] [--label <tag>] [path]`
 
@@ -993,7 +995,7 @@ Detect AILOGs whose follow-up content is not yet extracted into the registry. Gr
 | Flag | Default | Description |
 |------|---------|-------------|
 | *(default)* | — | Scan AILOGs changed in `origin/main..HEAD` (fallback `origin/master..HEAD`, then `HEAD~1..HEAD` with a warning). Warn + **exit 1** on drift. |
-| `--apply` | off | Extract the missing entries into `## Bucket: ready` with auto-numbered `FU-NNN` ids, append the AILOG ids to `fully_extracted_ailogs`, **recompute the counters**, and upgrade v0 registries to v1 in place. Seeds the registry from the framework template when absent. Since cli-3.20.0 the counters are recomputed **even when there is nothing to extract** (#222 Finding 1). |
+| `--apply` | off | Extract the missing entries into `## Bucket: ready` with auto-numbered `FU-NNN` ids, append the AILOG ids to `fully_extracted_ailogs`, **recompute the counters**, and upgrade v0 registries to v1 in place. Seeds the registry from the framework template when absent. Since cli-3.20.0 the counters are recomputed **even when there is nothing to extract** (#222 Finding 1). Entries whose **title** already exists in the registry are skipped (#391) — ids are positional and renumber on regeneration, so the title is the stable identity; this keeps a declaration that moved section from spawning a duplicate `open` entry that shadows the operator's status. |
 | `--scan-all` | off | Sweep every AILOG in the project instead of the git range. |
 | `--range <REV..REV>` | — | Explicit git range for the default scan. |
 
@@ -1072,6 +1074,29 @@ Valid statuses: `open` · `in-progress` · `suspected-closed` · `closed` · `su
 $ straymark followups set-status FU-002 closed
 ✓ FU-002: open → closed
   Counters: 2 open / 0 in-progress / 0 suspected-closed / 1 closed (was 3 / 0 / 0 / 0).
+```
+
+#### `straymark followups merge-driver <base> <ours> <theirs>` *(cli-3.41.0+)*
+
+Git merge driver for `.straymark/follow-ups-backlog.md` (#391). The registry is CLI-owned, so every parallel PR that touches follow-ups conflicts on it — and resolving by taking one side and re-running `drift --apply` **silently reverted the other side's closures** (statuses live only in the file, and a re-extraction renumbers ids, so even comparing ids cannot detect the loss). Wired as a merge driver, the conflict disappears: git hands the three file versions to the CLI and the result is written back into `ours`.
+
+The merge is **structural, not textual**: entries are matched across sides **by title** (ids are positional and do not survive regeneration; titles do), and reconciled as follows:
+
+| Situation | Resolution |
+|---|---|
+| Same entry, different status | The higher-rank status wins (`open` < `in-progress` < `suspected-closed` < `closed`/`superseded`/`promoted`) — a closure made on either side survives. Equal-rank disagreements keep `ours` and are reported on stderr. |
+| Entry only in `theirs` | Appended (renumbered if its id collides with an entry in `ours`). |
+| Entry deleted by `theirs` | Dropped from `ours` unless `ours` changed its status (modify/delete → kept + reported). |
+| `Notes` | `theirs` wins when it is an append-only extension of `ours` (the `followups note` shape). |
+| Frontmatter | `fully_extracted_ailogs` unioned, newest `last_scan`, counters recomputed from the merged body. |
+
+Exit code follows git's merge-driver contract: `0` = merged (soft conflicts reported on stderr), nonzero = unresolved (git falls back to marking the file conflicted).
+
+**Setup (once per clone):**
+
+```bash
+echo '.straymark/follow-ups-backlog.md merge=straymark-followups' >> .gitattributes
+git config merge.straymark-followups.driver 'straymark followups merge-driver %O %A %B'
 ```
 
 #### `straymark followups new --title <title> --origin <origin> [--bucket <name>] [--status <s>] [--trigger <t>] [--destination <d>] [--cost <c>] [--premise <p>] [--path <dir>]` *(cli-3.39.0+)*

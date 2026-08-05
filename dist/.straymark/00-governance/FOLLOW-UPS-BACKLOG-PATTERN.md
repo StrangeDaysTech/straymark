@@ -227,6 +227,8 @@ Since cli-3.21.0 the default scan unions the committed git range with the workin
 
 Since cli-3.20.0, `--apply` recomputes the counters **even when there is nothing to extract** — so a pre-commit `drift --apply` also reconciles counters left stale by a manual-triage session (first external adopter feedback, issue #222 Finding 1).
 
+Since cli-3.41.0, `--apply` additionally skips any candidate whose **title** already exists in the registry (issue #391). Ids are positional (`max + 1` at extraction) and renumber on regeneration, so the title is the stable identity of an entry; this keeps a declaration that moved section — or a re-extraction after a conflict resolution — from spawning a duplicate `open` entry that shadows the operator's status.
+
 ### Canonical closure-marker idioms
 
 The anti-noise refinement recognizes a fixed vocabulary, case-insensitively. AILOG authors should converge on these phrasings at write time so born-resolved entries land as `suspected-closed` instead of TBD noise:
@@ -270,6 +272,7 @@ straymark followups verify FU-NNN [--premise "..."] [--verified] [--at DATE]   #
 straymark followups note FU-NNN "<text>" [--source CHARTER-NN|AILOG-…]   # append a dated annotation to Notes (cli-3.39.0+)
 straymark followups set-status FU-NNN <status>   # change status AND recompute the counters in one step (cli-3.39.0+)
 straymark followups new --title "..." --origin "CHARTER-NN §Scope" [--bucket …] [--cost …] [--trigger …] [--premise …]   # create an entry declared ex-ante (cli-3.39.0+)
+straymark followups merge-driver <base> <ours> <theirs>   # git merge driver: structural registry merge (cli-3.41.0+)
 ```
 
 `verify` and `promote --premise-verified` are the execution-time affordances of the "Epistemic status" discipline: they put the premise in front of the operator at the moment of spending and record that the re-check happened. Human judgment stays out of the CLI — it surfaces and stamps, it never decides truth.
@@ -285,6 +288,17 @@ straymark followups new --title "..." --origin "CHARTER-NN §Scope" [--bucket �
 All three refuse to write when the registry has parse warnings: a surgical edit against a structure the parser mis-read can corrupt neighbouring entries. `recount` remains the escape hatch for a bulk manual-triage session — and the idempotent check that these verbs got the arithmetic right.
 
 The registry also appears as a synthetic **Follow-ups** group in the `straymark explore` TUI (sub-nodes per bucket) and as a counts block in `straymark status`.
+
+### Parallel PRs — structural merge (cli-3.41.0+)
+
+The registry is a single CLI-owned file, so every parallel PR that touches follow-ups conflicts on it — and the textual resolution of taking one side and re-running `drift --apply` **silently reverted the other side's closures**: statuses live only in the file, and a re-extraction renumbers ids, so even comparing ids cannot detect the loss (issue #391). `straymark followups merge-driver <base> <ours> <theirs>` resolves the conflict **structurally**: entries are matched across sides by title, the higher-rank status wins (so a closure made on either side survives; equal-rank disagreements keep `ours` and are reported on stderr), entries only in `theirs` are appended (renumbered on id collision), deletions by `theirs` are respected unless `ours` changed the entry's status, `Notes` unions append-only extensions, and the frontmatter is recomputed from the merged body.
+
+Setup is once per clone:
+
+```bash
+echo '.straymark/follow-ups-backlog.md merge=straymark-followups' >> .gitattributes
+git config merge.straymark-followups.driver 'straymark followups merge-driver %O %A %B'
+```
 
 ---
 

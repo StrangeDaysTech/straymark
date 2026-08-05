@@ -952,7 +952,7 @@ fn split_hash_sections(content: &str) -> Vec<(Option<String>, String)> {
 /// heading that starts with a follow-ups token followed by a non-alphanumeric
 /// boundary — so `## Follow-ups (auditoría externa)` and `## Seguimientos:
 /// deuda` are recognized, not just the bare heading (#346 under-capture).
-fn is_followup_heading(heading: &str) -> bool {
+pub fn is_followup_heading(heading: &str) -> bool {
     let h = heading.trim();
     let hl = h.to_lowercase();
     FOLLOWUP_HEADINGS.iter().any(|x| {
@@ -1398,6 +1398,239 @@ pub fn render_declared_entry(
     }
     block.push_str(&format!("- **Notes**: {}\n", notes.trim()));
     block
+}
+
+// ── Registry merging (GH #391) ─────────────────────────────────────────────
+//
+// The registry is CLI-owned, so a textual three-way merge of it during a git
+// conflict resolution is always wrong — and the sanctioned fallback (take
+// `main`'s file, re-run `drift --apply`) silently reverted the closures the
+// branch had made, because statuses live only in the file.
+//
+// This module powers `straymark followups merge-driver`, a git merge driver
+// that resolves the registry structurally: entries are matched across sides
+// by title (ids are positional and get renumbered, titles survive), and a
+// non-open status wins over open so closures made on either side are kept.
+
+/// Resolution rank of a status — higher means "closer to resolved". Used by
+/// the merge driver to decide which side's status survives when both sides
+/// touched the same entry.
+pub fn status_rank(s: FuStatus) -> u8 {
+    match s {
+        FuStatus::Open | FuStatus::Unknown => 0,
+        FuStatus::InProgress => 1,
+        FuStatus::SuspectedClosed => 2,
+        FuStatus::Closed | FuStatus::Superseded | FuStatus::Promoted => 3,
+    }
+}
+
+/// Canonical identity of an entry for cross-side matching. Ids are positional
+/// (a regeneration renumbers them), so the title is the only stable key.
+pub fn normalize_title(description: &str) -> String {
+    description
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_lowercase()
+}
+
+/// Outcome of [`merge_registries`].
+#[derive(Debug, Default)]
+pub struct MergeReport {
+    /// Entries where theirs' more-advanced status was applied onto ours.
+    pub statuses_preserved: usize,
+    /// Entries present only in theirs, appended to the result.
+    pub appended: usize,
+    /// Entries theirs deleted (present in base, absent in theirs) that ours
+    /// had not modified — respected as deletions.
+    pub deletions_respected: usize,
+    /// Same-rank status disagreements (e.g. closed vs superseded) — ours is
+    /// kept; the operator should eyeball these.
+    pub conflicts: Vec<String>,
+}
+
+/// Three-way merge of parsed registries. Returns the merged file content
+/// (frontmatter + body) and a report. `ours` is the textual base of the
+/// result (its ids, ordering, and unknown fields survive verbatim); entries
+/// are matched across sides by [`normalize_title`].
+///
+/// Rules:
+/// - status: the higher-rank one wins; equal-rank disagreements keep ours
+///   and are reported as conflicts;
+/// - notes: theirs wins when ours is empty or a prefix of theirs (the
+///   append-only `followups note` shape), else ours is kept;
+/// - entries only in theirs: appended (renumbered on id collision);
+///   an entry present in base but absent from ours was deleted by ours and
+///   is only re-added when theirs advanced its status past base's;
+/// - entries deleted by theirs (in base, gone in theirs) are dropped from
+///   ours unless ours changed their status (modify/delete → kept + conflict).
+pub fn merge_registries(
+    base: &Registry,
+    ours: &Registry,
+    theirs: &Registry,
+) -> Result<(String, MergeReport)> {
+    let mut report = MergeReport::default();
+
+    let base_by_key: std::collections::HashMap<String, &Entry> = base
+        .entries()
+        .map(|e| (normalize_title(&e.description), e))
+        .collect();
+    let ours_by_key: std::collections::HashMap<String, &Entry> = ours
+        .entries()
+        .map(|e| (normalize_title(&e.description), e))
+        .collect();
+    let theirs_by_key: std::collections::HashMap<String, &Entry> = theirs
+        .entries()
+        .map(|e| (normalize_title(&e.description), e))
+        .collect();
+
+    // 1. Deletions made by theirs: present in base and ours, absent in
+    //    theirs. Respect them unless ours modified the status (kept + conflict).
+    let mut removed_spans: Vec<(usize, usize, String)> = Vec::new();
+    for o in ours.entries() {
+        let key = normalize_title(&o.description);
+        if theirs_by_key.contains_key(&key) || !base_by_key.contains_key(&key) {
+            continue;
+        }
+        let modified = base_by_key[&key].status != o.status;
+        if modified {
+            report.conflicts.push(format!(
+                "{}: deleted on theirs but status changed on ours ({})",
+                o.fu_id,
+                o.status.as_str()
+            ));
+            continue;
+        }
+        removed_spans.push((o.span_start, o.span_end, o.fu_id.clone()));
+    }
+    let mut body = ours.body.clone();
+    removed_spans.sort_by(|a, b| b.0.cmp(&a.0)); // remove from the end
+    for (start, end, _id) in &removed_spans {
+        body.replace_range(*start..*end, "");
+        report.deletions_respected += 1;
+    }
+
+    // 2. Field reconciliation for entries present on both sides. Re-parse
+    //    after each surgical edit so spans stay valid.
+    for t in theirs.entries() {
+        let key = normalize_title(&t.description);
+        let Some(o) = ours_by_key.get(&key) else { continue };
+        if removed_spans.iter().any(|(_, _, id)| id == &o.fu_id) {
+            continue;
+        }
+        {
+            let current =
+                parse_registry_str(&ours.path, &assemble(&ours.frontmatter_raw, &body))?;
+            let found = current.entries().find(|e| e.fu_id == o.fu_id);
+            if let Some(current_entry) = found {
+                if t.status != current_entry.status {
+                    if status_rank(t.status) > status_rank(current_entry.status) {
+                        let value = t
+                            .status_raw
+                            .clone()
+                            .unwrap_or_else(|| t.status.as_str().to_string());
+                        body = set_entry_field(&body, current_entry, "Status", &value);
+                        report.statuses_preserved += 1;
+                    } else if status_rank(t.status) == status_rank(current_entry.status) {
+                        report.conflicts.push(format!(
+                            "{}: status {} (ours) vs {} (theirs) — kept ours",
+                            o.fu_id,
+                            current_entry.status.as_str(),
+                            t.status.as_str()
+                        ));
+                    }
+                }
+            }
+        }
+
+        // Notes: theirs wins when it is an extension of ours (append-only notes).
+        let current = parse_registry_str(&ours.path, &assemble(&ours.frontmatter_raw, &body))?;
+        let found = current.entries().find(|e| e.fu_id == o.fu_id);
+        if let Some(current_entry) = found {
+            match (&current_entry.notes, &t.notes) {
+                (Some(o_notes), Some(t_notes)) if t_notes != o_notes && t_notes.starts_with(o_notes) => {
+                    body = set_entry_field(&body, current_entry, "Notes", t_notes);
+                }
+                (None, Some(t_notes)) => {
+                    body = set_entry_field(&body, current_entry, "Notes", t_notes);
+                }
+                _ => {}
+            }
+        }
+    }
+
+    // 3. Entries only in theirs: append (or re-add a deletion only when
+    //    theirs advanced the status past base's).
+    let mut taken_numbers: std::collections::HashSet<u32> =
+        ours.entries().map(|e| e.fu_number).collect();
+    let mut next_n = next_fu_number(ours);
+    for t in theirs.entries() {
+        let key = normalize_title(&t.description);
+        if ours_by_key.contains_key(&key) {
+            continue;
+        }
+        if let Some(b) = base_by_key.get(&key) {
+            // Ours deleted it. Re-add only when theirs advanced its status.
+            if status_rank(t.status) <= status_rank(b.status) {
+                continue;
+            }
+        }
+        let mut block = theirs.body[t.span_start..t.span_end].to_string();
+        let number = if taken_numbers.contains(&t.fu_number) {
+            while taken_numbers.contains(&next_n) {
+                next_n += 1;
+            }
+            let n = next_n;
+            next_n += 1;
+            block = block.replacen(
+                &format!("### {} ", t.fu_id),
+                &format!("### FU-{:03} ", n),
+                1,
+            );
+            n
+        } else {
+            t.fu_number
+        };
+        taken_numbers.insert(number);
+
+        let current = parse_registry_str(&ours.path, &assemble(&ours.frontmatter_raw, &body))?;
+        let bucket = if current.sections.iter().any(|s| s.is_bucket && s.name == t.bucket) {
+            t.bucket.clone()
+        } else {
+            "ready".to_string()
+        };
+        body = insert_into_bucket(&current, &bucket, &block);
+        report.appended += 1;
+    }
+
+    // 4. Frontmatter: union fully_extracted_ailogs, take the newest
+    //    last_scan, then recompute the CLI-owned counters from the merged body.
+    let already: std::collections::HashSet<&str> = ours
+        .frontmatter
+        .fully_extracted_ailogs
+        .iter()
+        .map(|s| s.as_str())
+        .collect();
+    let new_ids: Vec<String> = theirs
+        .frontmatter
+        .fully_extracted_ailogs
+        .iter()
+        .filter(|id| !already.contains(id.as_str()))
+        .cloned()
+        .collect();
+    let mut fm = fm_append_list_items(&ours.frontmatter_raw, "fully_extracted_ailogs", &new_ids);
+    let newest_scan = match (&ours.frontmatter.last_scan, &theirs.frontmatter.last_scan) {
+        (Some(a), Some(b)) => std::cmp::max(a.as_str(), b.as_str()).to_string(),
+        (Some(a), None) => a.clone(),
+        (None, Some(b)) => b.clone(),
+        (None, None) => String::new(),
+    };
+    if !newest_scan.is_empty() {
+        fm = fm_set_scalar(&fm, "last_scan", &newest_scan);
+    }
+    let (fm, _counters) = recounted_frontmatter(&ours.path, &fm, &body)?;
+
+    Ok((assemble(&fm, &body), report))
 }
 
 #[cfg(test)]
