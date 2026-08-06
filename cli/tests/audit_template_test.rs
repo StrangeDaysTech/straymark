@@ -18,6 +18,10 @@ const UNIFIED_TEMPLATE: &str = include_str!(
     "../../dist/.straymark/audit-prompts/audit-prompt.md"
 );
 
+const ES_TEMPLATE: &str = include_str!(
+    "../../dist/.straymark/audit-prompts/i18n/es/audit-prompt.md"
+);
+
 const AUDIT_OUTPUT_SCHEMA: &str = include_str!(
     "../../dist/.straymark/schemas/audit-output.schema.v0.json"
 );
@@ -54,17 +58,25 @@ fn unified_template_has_seven_universal_sections() {
     // markdown rendering in any viewer the operator uses. fw-4.13.3 moved
     // the canonical content from ES to EN; the ES version still ships at
     // `i18n/es/audit-prompt.md`. These assertions pin the EN canonical.
+    //
+    // Step anchors deliberately omit the step *number*: what the section
+    // guarantees is its content, and the ordinal shifts whenever a step is
+    // inserted. v1.2 (#382) added "Enumerate callers" as Step 3, pushing
+    // severity calibration from Step 5 to Step 6 — the template was right
+    // and this test was wrong, staying red across two releases. Pin the
+    // stable half of the heading; `template_steps_are_numbered_without_gaps`
+    // covers the numbering itself.
     let sections = [
         ("ABSOLUTE RULE", "## ⛔ ABSOLUTE RULE — READ-ONLY"),
         ("Your role", "## Your role"),
         ("Scope rules", "### Scope rules"),
         (
-            "Step 2 mandatory verification",
-            "### Step 2 — Verify each task (MANDATORY)",
+            "mandatory per-task verification",
+            "— Verify each task (MANDATORY)",
         ),
         (
-            "Step 5 severity calibration",
-            "### Step 5 — Calibrate severity against the project's REAL configuration",
+            "severity calibration",
+            "— Calibrate severity against the project's REAL configuration",
         ),
         ("Output format", "## Output format"),
         ("What you must NOT do", "## What you must NOT do"),
@@ -75,6 +87,57 @@ fn unified_template_has_seven_universal_sections() {
             "missing universal section '{label}': anchor '{anchor}' not found"
         );
     }
+}
+
+/// Collect the ordinals of `### <word> N — …` step headings, in file order.
+/// `word` is the locale's step noun (`Step` in EN, `Paso` in ES).
+fn step_ordinals(template: &str, word: &str) -> Vec<u32> {
+    let prefix = format!("### {word} ");
+    template
+        .lines()
+        .filter_map(|l| l.strip_prefix(&prefix))
+        .filter_map(|rest| {
+            rest.split_whitespace()
+                .next()
+                .and_then(|n| n.parse::<u32>().ok())
+        })
+        .collect()
+}
+
+#[test]
+fn template_steps_are_numbered_without_gaps() {
+    // The defect this guards: inserting a step and forgetting to renumber
+    // the ones after it. Cheap to do (v1.2 added one mid-sequence), and
+    // invisible to a reader who only skims headings.
+    for (locale, word, template) in [
+        ("en", "Step", UNIFIED_TEMPLATE),
+        ("es", "Paso", ES_TEMPLATE),
+    ] {
+        let ordinals = step_ordinals(template, word);
+        assert!(
+            ordinals.len() >= 5,
+            "{locale}: expected the audit procedure to have at least 5 steps, found {}",
+            ordinals.len()
+        );
+        let expected: Vec<u32> = (1..=ordinals.len() as u32).collect();
+        assert_eq!(
+            ordinals, expected,
+            "{locale}: step headings must run 1..N in order with no gaps or repeats"
+        );
+    }
+}
+
+#[test]
+fn es_template_tracks_the_en_procedure() {
+    // fw-4.38.1 shipped because v1.2's changes landed only in the
+    // governance-in-force copy and the EN dist template, leaving Spanish
+    // adopters on v1.1 with no signal. Step count is the cheapest invariant
+    // that would have caught it.
+    assert_eq!(
+        step_ordinals(ES_TEMPLATE, "Paso").len(),
+        step_ordinals(UNIFIED_TEMPLATE, "Step").len(),
+        "the ES template must carry the same number of procedure steps as the EN canonical"
+    );
 }
 
 #[test]
@@ -112,8 +175,10 @@ fn unified_template_declares_expected_placeholders() {
 
 #[test]
 fn unified_template_carries_anti_inflation_didactic_example() {
-    // Step 5 must illustrate the anti-inflation discipline with a concrete
-    // example. fw-4.13.3 generalized the previous Sentinel-specific case
+    // The severity-calibration step must illustrate the anti-inflation
+    // discipline with a concrete example (it was Step 5 through v1.1, Step 6
+    // since v1.2 — the ordinal is not the contract, the example is).
+    // fw-4.13.3 generalized the previous Sentinel-specific case
     // ("Etapa 12 Pub/Sub stub vs gochannel") to a vendor-neutral one
     // ("declared deferral, not a defect") so the prompt does not tie new
     // adopters to Sentinel's stack. The shape is preserved: the example
