@@ -143,7 +143,7 @@ ID format: `SEC-YYYY-MM-DD-NNN`
 2. Replace placeholders:
    - `YYYY-MM-DD` -> Current date
    - `NNN` -> Sequence number (001, 002, etc.)
-   - `[agent-name]` -> your runtime's canonical agent identity (see AGENT-RULES.md §1 — e.g. `claude-code-v1.0`, `gemini-cli-v1.0`, `codex-cli-v1.0`, `cursor-v1.0`; do not assume Claude)
+   - `[agent-name]` -> your runtime's canonical agent identity (see AGENT-RULES.md §1 — e.g. `claude-code-v1.0`, `antigravity-v1.0`, `codex-cli-v1.0`, `cursor-v1.0`; do not assume Claude)
    - `[System/Component]` -> The component name from step 1
    - `threat_model_methodology: STRIDE` -> The methodology chosen in step 2
    - `owasp_asvs_level: 1` -> The ASVS level chosen in step 3

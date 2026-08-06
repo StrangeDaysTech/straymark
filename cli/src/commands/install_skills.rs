@@ -18,8 +18,8 @@ use crate::utils;
 /// convenience: it makes the StrayMark skills available in every project,
 /// not just the ones where the framework is installed.
 ///
-/// Claude and Gemini consume skills exclusively from the project tree
-/// (`.claude/skills/`, `.gemini/skills/`); for those agents this command
+/// Claude and Antigravity (`agy`) consume skills exclusively from the project
+/// tree (`.claude/skills/`, `.agent/skills/`); for those agents this command
 /// exits with an explanatory error.
 pub fn run(agent: &str, project_path: &str, dry_run: bool, symlink: bool) -> Result<()> {
     match agent {
@@ -47,9 +47,13 @@ pub fn run(agent: &str, project_path: &str, dry_run: bool, symlink: bool) -> Res
             dry_run,
             symlink,
         ),
-        "claude" | "gemini" => {
+        // Project-tree-only agents. The source directory is not derivable from
+        // the agent name — Antigravity reads `.agent/skills/`, not `.agy/` —
+        // so each one names its own path.
+        "claude" | "agy" => {
+            let dir = if agent == "claude" { ".claude/skills/" } else { ".agent/skills/" };
             bail!(
-                "Skills for {agent} are read directly from the project tree (.{agent}/skills/). \
+                "Skills for {agent} are read directly from the project tree ({dir}). \
                  No user-level install is required. Run `straymark init` or `straymark update` \
                  to refresh them in the project."
             )

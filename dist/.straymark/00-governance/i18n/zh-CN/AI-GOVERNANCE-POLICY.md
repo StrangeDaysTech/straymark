@@ -127,7 +127,7 @@
 |------|------|------|
 | StrayMark 框架 | 文档治理系统 | [已安装/版本] |
 | StrayMark CLI | 自动化和验证工具 | [版本] |
-| AI 代理平台 | [Claude、Gemini、Copilot、Cursor] | [已配置] |
+| AI 代理平台 | [Claude、Antigravity、Copilot、Cursor] | [已配置] |
 | 培训 | 团队 AI 治理培训 | [状态] |
 
 ### 4.2 能力要求

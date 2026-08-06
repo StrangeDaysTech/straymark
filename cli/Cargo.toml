@@ -1,6 +1,6 @@
 [package]
 name = "straymark-cli"
-version = "3.42.0"
+version = "3.43.0"
 edition = "2021"
 description = "CLI for StrayMark — the cognitive discipline your AI-assisted projects need"
 license = "MIT"
@@ -20,8 +20,8 @@ path = "src/main.rs"
 # Gated behind the non-default `dev-tools` feature so `cargo install straymark-cli`
 # does NOT install it — only the `straymark` binary ships to users.
 [[bin]]
-name = "gen_codex_skills"
-path = "src/bin/gen_codex_skills.rs"
+name = "gen_minimal_skills"
+path = "src/bin/gen_minimal_skills.rs"
 required-features = ["dev-tools"]
 
 [dependencies]

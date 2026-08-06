@@ -1,6 +1,6 @@
 ---
 name: straymark-audit-prompt
-description: Generate the unified audit prompt for a Charter at the canonical filesystem location. The operator then opens N auditor-side CLIs (gemini-cli, claude-cli, copilot-cli, etc.) and invokes /straymark-audit-execute in each — no copy/paste. Counterpart of /straymark-audit-review.
+description: Generate the unified audit prompt for a Charter at the canonical filesystem location. The operator then opens N auditor-side CLIs (agy, claude-cli, copilot-cli, etc.) and invokes /straymark-audit-execute in each — no copy/paste. Counterpart of /straymark-audit-review.
 allowed-tools: Read, Bash(straymark charter audit *, straymark charter status *, ls *)
 ---
 
@@ -60,7 +60,7 @@ Audit prompt prepared for <CHARTER-ID>.
 
 Next steps:
 
-  1. Open one or more auditor-side CLIs (gemini-cli, claude-cli,
+  1. Open one or more auditor-side CLIs (agy, claude-cli,
      copilot-cli, codex-cli — whatever you have) in this repo. Each
      CLI session uses its own model; recommendation is at least 2
      auditors of DIFFERENT model families, so cross-family blind

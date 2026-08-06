@@ -21,7 +21,7 @@
 
 你已运行 `straymark init .` 并提交了结果。接下来呢？
 
-1. **用你的 AI 编码助手打开项目**（Claude Code、Cursor、Gemini CLI 等）
+1. **用你的 AI 编码助手打开项目**（Claude Code、Cursor、Antigravity CLI 等）
 2. 助手会**自动读取** StrayMark 指令（`CLAUDE.md`、`GEMINI.md` 等）
 3. 从此刻起，助手会在正常工作流中**在 `.straymark/` 中创建文档**
 4. **无需额外配置** — StrayMark 通过指令文件被动运行
@@ -93,7 +93,7 @@ straymark status
 /straymark-status
 ```
 
-`/straymark-status` Skill（在 Claude Code 和 Gemini CLI 中可用）分析：
+`/straymark-status` Skill（在 Claude Code 和 Antigravity CLI 中可用）分析：
 
 - 哪些近期代码变更缺少对应的文档
 - 文档与治理规则的合规情况
@@ -142,7 +142,7 @@ StrayMark 有两个文档系统：
 | `/straymark-aidec` | 快速创建 AIDEC |
 | `/straymark-adr` | 快速创建 ADR |
 | `/straymark-audit-prompt CHARTER-XX` *(fw-4.8.0+，在 fw-4.9.0 中重构)* | 在规范路径 `.straymark/audits/<id>/audit-prompt.md` 处生成统一的审计 prompt。封装 `straymark charter audit --prepare`。操作员随后打开 N 个审计员 CLI 并在每个中运行 `/straymark-audit-execute` — 无需复制/粘贴。 |
-| `/straymark-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | **在审计员 CLI 中运行**（gemini-cli、claude-cli、copilot-cli、codex-cli）。从磁盘读取 prompt，使用 tool use 进行审计并引用 `path:line`，写入以审计员模型 ID 为键的 report。参数可选 — 自动发现此模型待处理的 prompts。 |
+| `/straymark-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | **在审计员 CLI 中运行**（agy、claude-cli、copilot-cli、codex-cli）。从磁盘读取 prompt，使用 tool use 进行审计并引用 `path:line`，写入以审计员模型 ID 为键的 report。参数可选 — 自动发现此模型待处理的 prompts。 |
 | `/straymark-audit-review CHARTER-XX` *(fw-4.8.0+，在 fw-4.9.0 中扩展)* | `audit-prompt` 的对应。读取 N 个 reports，对 findings 与实际代码交叉验证，生成 `review.md` 六节合并分析（执行摘要 / 范围 / 按审计员评估 / 修复计划 P0-P4 / 丢弃 / 审计员评分），并将 `external_audit:` YAML 合并到遥测。 |
 | `/straymark-architecture` *(fw-4.29.0+，实验性)* | 在一次引导式流程中驱动架构模型的 `generate → refine → validate` 弧线：生成种子、将组件重新分配到真实的层、连接依赖 `links`、同步 DrawIO 使 2D 显示箭头，并迭代 `validate` 至通过。手工 DrawIO 精炼的 agent 原生对应。 |
 | `/straymark-architecture-sync` *(fw-4.29.0+，实验性)* | 封装 `straymark architecture sync`（仅追加），随代码增长保持已策展模型最新——dry-run、展示新目录/组件、确认、应用、重新 validate。绝不从零重新精炼。 |

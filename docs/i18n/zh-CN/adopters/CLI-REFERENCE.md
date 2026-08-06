@@ -45,8 +45,8 @@ StrayMark 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.41.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.42.0` | `straymark` 二进制文件 |
+| Framework | `fw-` | `fw-4.42.0` | 模板（12 种类型）、治理文档、指令 |
+| CLI | `cli-` | `cli-3.43.0` | `straymark` 二进制文件 |
 | Loom（实验性） | `loom-` | `loom-0.4.2` | `straymark-loom` 可视化服务器，由 `straymark loom serve` 按需下载 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
@@ -316,19 +316,19 @@ Repairing StrayMark in /home/user/my-project
 
 ---
 
-### `straymark install-skills --agent <codex|qoder|qwen|claude|gemini> [--path .] [--dry-run] [--symlink]` *(cli-3.16.0+)*
+### `straymark install-skills --agent <codex|qoder|qwen|claude|agy> [--path .] [--dry-run] [--symlink]` *(cli-3.16.0+)*
 
 将 StrayMark skills 安装到 AI 代理的**用户级**skills 目录。`--agent codex` 将 `<path>/.codex/skills/` 中的每个 `straymark-*` skill（由 `straymark init` 或 `straymark update` 生成）复制到 `$CODEX_HOME/skills/`（若未设置 `CODEX_HOME` 则使用 `$HOME/.codex/skills/`）。`--agent qoder` 同理，从 `<path>/.qoder/skills/` 复制到 `$QODER_CONFIG_DIR/skills/`（若未设置 `QODER_CONFIG_DIR` 则使用 `$HOME/.qoder/skills/`）。`--agent qwen` *(cli-3.42.0+)* 同理，从 `<path>/.qwen/skills/` 复制到 `$QWEN_HOME/skills/`（若未设置 `QWEN_HOME` 则使用 `$HOME/.qwen/skills/`）—— 即 Qwen Code 自身 `Storage.getGlobalQwenDir()` 解析出的目录。
 
 **仅 Codex 必须执行此步骤。** Qoder 和 Qwen Code 同样会解析项目级 skills 目录（`<项目>/.qoder/skills/`、`<项目>/.qwen/skills/`），因此对这两者而言用户级安装只是便利：它让 StrayMark skills 在所有项目中可用，而不限于安装了框架的项目。
 
-对于 `--agent claude` 和 `--agent gemini`，命令会带说明错误退出：这些代理仅从项目树读取 skills（`.claude/skills/`、`.gemini/skills/`），因此不支持用户级安装。
+对于 `--agent claude` 和 `--agent agy`，命令会带说明错误退出：这些代理仅从项目树读取 skills（`.claude/skills/`、`.agent/skills/`），因此不支持用户级安装。
 
 **参数和标志：**
 
 | 参数/标志 | 默认值 | 描述 |
 |---|---|---|
-| `--agent` | 必填 | `codex`、`qoder`、`qwen`、`claude` 或 `gemini` 之一。仅 `codex`、`qoder` 和 `qwen` 执行工作；其他选项打印说明后退出。 |
+| `--agent` | 必填 | `codex`、`qoder`、`qwen`、`claude` 或 `agy` 之一。仅 `codex`、`qoder` 和 `qwen` 执行工作；其他选项打印说明后退出。 |
 | `--path` | `.` | 源 `.codex/skills/`（或 `.qoder/skills/`、`.qwen/skills/`）所在的项目目录。 |
 | `--dry-run` | off | 只打印将要安装的内容，不写入任何文件。 |
 | `--symlink` | off | 对每个 skill 使用符号链接代替复制（仅 Unix；适合迭代 skill 内容的框架开发者）。 |
@@ -677,7 +677,7 @@ OK `### Batch 5` written.
 
 *自 **cli-3.8.0** + **fw-4.7.0** 起可用。v1 统一流程在 **cli-3.10.0** + **fw-4.9.0** 中发布 — 用两步（PREPARE/MERGE-REPORTS）替换 v0 的三步（PREPARE/CALIBRATE/FINALIZE），统一审计员模板，并将规范路径迁移到 `.straymark/audits/`。*
 
-编排章程执行的多模型外部审计。**仅编排** — CLI 准备 prompts、根据 schema 验证 outputs，并打印可粘贴到章程遥测中的 findings。**它不调用 LLM API。** 操作员在自己选择的审计器（Copilot、Gemini、Claude 等）中运行 prompts，并将响应保存到规范路径。
+编排章程执行的多模型外部审计。**仅编排** — CLI 准备 prompts、根据 schema 验证 outputs，并打印可粘贴到章程遥测中的 findings。**它不调用 LLM API。** 操作员在自己选择的审计器（Copilot、Antigravity、Claude 等）中运行 prompts，并将响应保存到规范路径。
 
 三步，每步可独立调用：
 
@@ -751,7 +751,7 @@ $ straymark charter audit CHARTER-05
          audit/charters/CHARTER-05/auditor-secondary.md
     3. Run: straymark charter audit CHARTER-05 --calibrate
 
-# (操作员在 Copilot 中运行 auditor 1，保存响应。在 Gemini 中运行 auditor 2，保存响应。)
+# (操作员在 Copilot 中运行 auditor 1，保存响应。在 Antigravity 中运行 auditor 2，保存响应。)
 
 $ straymark charter audit CHARTER-05 --calibrate
   Step 2/3: CALIBRATE (CHARTER-05)
@@ -785,7 +785,7 @@ $ straymark charter audit CHARTER-05 --finalize
         false_positive: 1
       audit_quality: "high"
       audit_notes: "see audit/charters/<charter-id>/auditor-primary.md"
-    - auditor: "gemini-cli-v1.5"
+    - auditor: "gemini-3-pro"
       findings_total: 4
       findings_by_category: ...
 
@@ -795,7 +795,7 @@ $ straymark charter audit CHARTER-05 --finalize
 
 > **为什么仅编排？** 实现 3 个 HTTP 客户端（OpenAI / Google / Anthropic）需要 1-2 周 + 当 API 变化时的永久维护。Phase 3 v0 是实验性的 — CLI 的价值是 canon（prompt 形状 + output schema + 与遥测的集成），而非 API 调用本身。当 adopter 报告真实需求时，v1 可能加入 HTTP 客户端；在此之前，人在环模式与激发 Phase 3 的 Sentinel 实证 `/plan-audit` 模式相符。
 
-> **Skill 替代方案 *(fw-4.9.0+)*。** 当与 AI 助手在循环中协作时（Claude Code、Gemini Code、Cursor 等），skills `/straymark-audit-prompt CHARTER-ID` 和 `/straymark-audit-review CHARTER-ID` 封装此命令并在对话中内联展示 prompts。Skills 还处理校准器步骤（驱动对话的 Agent 运行校准器）并触发 `--finalize --merge-into`，使得 `external_audit:` 数组直接追加到遥测中无需手动复制粘贴。详见下方的 [Skills](#skills) 章节。CLI 仍是唯一真相来源 — skills 仅添加 UX-inline。
+> **Skill 替代方案 *(fw-4.9.0+)*。** 当与 AI 助手在循环中协作时（Claude Code、Antigravity CLI、Cursor 等），skills `/straymark-audit-prompt CHARTER-ID` 和 `/straymark-audit-review CHARTER-ID` 封装此命令并在对话中内联展示 prompts。Skills 还处理校准器步骤（驱动对话的 Agent 运行校准器）并触发 `--finalize --merge-into`，使得 `external_audit:` 数组直接追加到遥测中无需手动复制粘贴。详见下方的 [Skills](#skills) 章节。CLI 仍是唯一真相来源 — skills 仅添加 UX-inline。
 
 ---
 
@@ -1081,7 +1081,7 @@ $ straymark metrics --period last-30-days
 
   Agent Activity
     claude-code 10
-    gemini-cli 4
+    antigravity 4
 
   Trends
     ↑ Total documents 14 (was 9)
@@ -1420,16 +1420,15 @@ loom: serving http://127.0.0.1:7700
 
 ## Skills
 
-StrayMark 提供一组 skills（slash 命令）供 AI 助手内使用（Claude Code、Gemini Code、Codex CLI、Qoder、Qwen Code、Cursor、通用 Agent 运行时）。每个 skill 在 `straymark init` 时以 6 种平行形式安装：
+StrayMark 提供一组 skills（slash 命令）供 AI 助手内使用（Claude Code、Antigravity CLI、Codex CLI、Qoder、Qwen Code、Cursor、通用 Agent 运行时）。每个 skill 在 `straymark init` 时以 5 种平行形式安装：
 
 - `.claude/skills/<skill>/SKILL.md`（Claude — frontmatter 含 `allowed-tools`）
-- `.gemini/skills/<skill>/SKILL.md`（Gemini — frontmatter 不含 `allowed-tools`）
 - `.codex/skills/<skill>/SKILL.md` *(fw-4.19.0+)*（Codex — 最小 frontmatter，仅 `name`+`description`；由 Claude 变体生成）
 - `.qoder/skills/<skill>/SKILL.md`（Qoder — 与 Claude 变体相同的完整 frontmatter）
 - `.qwen/skills/<skill>/SKILL.md` *(fw-4.41.0+)*（Qwen Code — 与 Claude 变体相同的完整 frontmatter）
-- `.agent/workflows/<skill>.md`（通用 Agent — 仅 `description` frontmatter）
+- `.agent/skills/<skill>/SKILL.md` *(fw-4.42.0+)*（Antigravity CLI `agy` — 最小 frontmatter，由 Claude 变体生成；`.agent/` 是 Antigravity 的工作区定制化根目录之一）
 
-Claude、Gemini、Qoder 和 Qwen Code 都直接从项目树发现 skills。**Codex 是例外：它仅从 `~/.codex/skills/`（用户级）读取 skills** —— 在 `straymark init` 之后（以及每次框架更新之后）运行一次 `straymark install-skills --agent codex`，从 `.codex/skills/` 填充该目录。对 Qoder 和 Qwen Code 而言，对应命令（`--agent qoder`、`--agent qwen`）是可选的：它把 skills 复制到 `~/.qoder/skills/` 或 `~/.qwen/skills/`，以便在本项目之外也能使用。
+Claude、Antigravity、Qoder 和 Qwen Code 都直接从项目树发现 skills。**Codex 是例外：它仅从 `~/.codex/skills/`（用户级）读取 skills** —— 在 `straymark init` 之后（以及每次框架更新之后）运行一次 `straymark install-skills --agent codex`，从 `.codex/skills/` 填充该目录。对 Qoder 和 Qwen Code 而言，对应命令（`--agent qoder`、`--agent qwen`）是可选的：它把 skills 复制到 `~/.qoder/skills/` 或 `~/.qwen/skills/`，以便在本项目之外也能使用。
 
 | Skill | 用途 | 产生的文件 |
 |---|---|---|
@@ -1443,7 +1442,7 @@ Claude、Gemini、Qoder 和 Qwen Code 都直接从项目树发现 skills。**Cod
 | `/straymark-charter-new` *(fw-4.12.0+)* | 搭建 Charter —— 声明式事前工作单元。封装 `straymark charter new`（slug 派生、顺序编号、模板替换）；skill 负责来源/工作量选择以及声明前侦察纪律。 | `.straymark/charters/NN-slug.md` |
 | `/straymark-followups` *(fw-4.22.0+)* | 维护 follow-ups backlog 注册表（`AGENT-RULES.md §13`）：会话开始时从规范注册表回答“有什么待办？”，提交前运行 `followups drift --apply` 使注册表与 AILOG 同一提交，Charter 关闭后分诊以及操作员审批的 `promote`。`straymark followups` 之上的薄封装 —— 绝不手动编辑 CLI 拥有的计数器。 | 无直接产物（写入经由 `straymark followups drift --apply` / `promote` → `.straymark/follow-ups-backlog.md`，promote 时生成 TDE） |
 | `/straymark-audit-prompt CHARTER-ID` *(fw-4.9.0+，在 fw-4.9.0 中重构)* | 在规范路径处生成章程的统一审计 prompt。封装 `straymark charter audit --prepare`。操作员随后在同一仓库中打开 N 个审计员 CLI，在每个中调用 `/straymark-audit-execute` — 无需复制/粘贴。 | `.straymark/audits/<CHARTER-ID>/audit-prompt.md` |
-| `/straymark-audit-execute [CHARTER-ID]` *(fw-4.9.0+)* | **在审计员 CLI 中运行**（gemini-cli、claude-cli、copilot-cli、codex-cli 等）。从磁盘读取已准备的 prompt，使用 tool use 进行审计并引用 `path:line`，写入以审计员模型 ID 为键的 report。CHARTER-ID 参数可选 — 自动发现尚未由此模型生成 report 的 prompts。 | `.straymark/audits/<CHARTER-ID>/report-<sluggified-model-id>.md` |
+| `/straymark-audit-execute [CHARTER-ID]` *(fw-4.9.0+)* | **在审计员 CLI 中运行**（agy、claude-cli、copilot-cli、codex-cli 等）。从磁盘读取已准备的 prompt，使用 tool use 进行审计并引用 `path:line`，写入以审计员模型 ID 为键的 report。CHARTER-ID 参数可选 — 自动发现尚未由此模型生成 report 的 prompts。 | `.straymark/audits/<CHARTER-ID>/report-<sluggified-model-id>.md` |
 | `/straymark-audit-review CHARTER-ID` *(fw-4.9.0+，在 fw-4.9.0 中扩展)* | `/straymark-audit-prompt` 的对应。读取 `.straymark/audits/<CHARTER-ID>/` 下的 N 个 reports，对每个 finding 与实际代码进行交叉验证（并行 Explore agents），生成六节合并的 `review.md`（执行摘要、范围、按审计员评估、修复计划 P0-P4、丢弃的 findings、审计员评分），并运行 `straymark charter audit --merge-reports --merge-into` 将 `external_audit:` 追加到章程遥测中。如果遥测尚不存在（章程未关闭），写入 `external-audit-pending.yaml` 供 close 时合并。 | `.straymark/audits/<CHARTER-ID>/review.md`，`external_audit:` 数组合并入遥测（或 pending YAML） |
 
 ### Skill vs CLI

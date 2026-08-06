@@ -82,7 +82,7 @@ StrayMark proporciona archivos de configuración para:
 | **Claude Code** (Anthropic) | `CLAUDE.md` | Soportado |
 | **Cursor** | `.cursorrules` | Soportado |
 | **GitHub Copilot CLI** | `.github/copilot-instructions.md` | Soportado |
-| **Gemini CLI** (Google) | `GEMINI.md` | Soportado |
+| **Antigravity CLI** (`agy`, Google) | `GEMINI.md` + `.agent/skills/` | Soportado |
 | **Qwen Code** (Alibaba) *(fw-4.41.0+)* | `QWEN.md` + `.qwen/skills/` | Soportado |
 | **Codex CLI** (OpenAI) *(fw-4.19.0+)* | `AGENTS.md` + `~/.codex/skills/` | Soportado (ejecuta `straymark install-skills --agent codex`) |
 | **Qoder CLI** | `AGENTS.md` + `.qoder/skills/` | Soportado |
@@ -495,10 +495,10 @@ straymark validate
 
 ## Auditoría Externa (Opcional)
 
-A partir de `fw-4.9.0`, cuando co-implementas Charters con un asistente IA en el loop (Claude Code, Gemini Code, Cursor), puedes opcionalmente correr una auditoría externa multi-modelo al cierre del Charter. Dos skills envuelven la orquestación subyacente del CLI:
+A partir de `fw-4.9.0`, cuando co-implementas Charters con un asistente IA en el loop (Claude Code, Antigravity CLI, Cursor), puedes opcionalmente correr una auditoría externa multi-modelo al cierre del Charter. Dos skills envuelven la orquestación subyacente del CLI:
 
 - **`/straymark-audit-prompt CHARTER-XX`** — escribe el audit prompt unificado en el path canónico `.straymark/audits/<id>/audit-prompt.md`. El operador abre N CLIs auditoras y corre `/straymark-audit-execute` en cada una. Sin copy/paste.
-- **`/straymark-audit-execute [CHARTER-XX]`** *(fw-4.9.0+)* — corre dentro de una CLI auditora (gemini-cli, claude-cli, copilot-cli, codex-cli). Lee el prompt, audita con tool use citando `path:línea`, escribe un report con el id del modelo en el nombre.
+- **`/straymark-audit-execute [CHARTER-XX]`** *(fw-4.9.0+)* — corre dentro de una CLI auditora (agy, claude-cli, copilot-cli, codex-cli). Lee el prompt, audita con tool use citando `path:línea`, escribe un report con el id del modelo en el nombre.
 - **`/straymark-audit-review CHARTER-XX`** — consolida N reports en un `review.md` de seis secciones (Resumen ejecutivo / Alcance / Evaluación por auditor / Plan de remediación P0-P4 / Descartados / Calificación de auditores) y mergea el YAML `external_audit:` en la telemetría del Charter.
 
 El agente **proactivamente ofrecerá** la auditoría en un momento específico del workflow — cuando la implementación está lista, el drift check está limpio, y `charter close` no se ha invocado. La recomendación es SÍ/NO basada en la superficie de riesgo y complejidad del Charter (heurísticas en `.straymark/00-governance/AGENT-RULES.md` §12).

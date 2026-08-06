@@ -4,7 +4,7 @@ description: Tres CLIs auditoras independientes revisan el mismo Charter en la p
 ---
 # Auditoría externa multi-modelo
 
-Cuando la implementación de un Charter está lista y el drift check está limpio — pero **antes** de invocar `charter close` — StrayMark puede comisionar opcionalmente una auditoría externa. No de un agente, sino de varios, en paralelo. Tres CLIs auditoras independientes (por ejemplo: Claude, Copilot, Gemini) leen el mismo prompt y auditan el Charter de forma independiente. Un **calibrador** consolida después los hallazgos en un único bloque de evidencia firmada dentro de la telemetría del Charter, que viaja con él cuando se cierra. La auditoría **nunca es obligatoria** — declínala con libertad cuando el costo (2-3 auditores LLM) no se ajuste al valor de tu caso.
+Cuando la implementación de un Charter está lista y el drift check está limpio — pero **antes** de invocar `charter close` — StrayMark puede comisionar opcionalmente una auditoría externa. No de un agente, sino de varios, en paralelo. Tres CLIs auditoras independientes (por ejemplo: Claude, Copilot, Antigravity) leen el mismo prompt y auditan el Charter de forma independiente. Un **calibrador** consolida después los hallazgos en un único bloque de evidencia firmada dentro de la telemetría del Charter, que viaja con él cuando se cierra. La auditoría **nunca es obligatoria** — declínala con libertad cuando el costo (2-3 auditores LLM) no se ajuste al valor de tu caso.
 
 ## Por qué importa
 
@@ -21,7 +21,7 @@ Cuando la implementación de un Charter está lista y el drift check está limpi
 Escribe un prompt unificado en `.straymark/audits/CHARTER-12/audit-prompt.md` que embebe el alcance del Charter, los AILOGs, el git diff y las reglas de disciplina (citación de evidencia, calibración de severidad, scope gates).
 
 ### Fase 2 — Correr N auditores en paralelo
-El operador abre CLIs auditoras (gemini-cli, claude-cli, copilot-cli, codex-cli) y corre `/straymark-audit-execute` en cada una. Cada auditor lee el mismo prompt, audita con tool use (citando `path:línea`) y escribe `report-<modelo>.md` junto al prompt.
+El operador abre CLIs auditoras (agy, claude-cli, copilot-cli, codex-cli) y corre `/straymark-audit-execute` en cada una. Cada auditor lee el mismo prompt, audita con tool use (citando `path:línea`) y escribe `report-<modelo>.md` junto al prompt.
 
 ### Fase 3 — Calibrar y mergear
 ```bash

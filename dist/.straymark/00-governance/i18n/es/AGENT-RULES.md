@@ -11,7 +11,7 @@
 ### Al Iniciar una Sesión
 
 Cada agente debe identificarse con:
-- Nombre del agente (ej.: `claude-code-v1.0`, `cursor-v1.0`, `gemini-cli-v1.0`, `codex-cli-v1.0`, `qwen-code-v1.0`, `qoder-v1.0`)
+- Nombre del agente (ej.: `claude-code-v1.0`, `cursor-v1.0`, `antigravity-v1.0`, `codex-cli-v1.0`, `qwen-code-v1.0`, `qoder-v1.0`)
 - Versión del agente si está disponible
 
 ### En Cada Documento
@@ -333,7 +333,7 @@ Mi recomendación: [SÍ / NO], porque:
 Si decides auditar:
   Ejecuta /straymark-audit-prompt <CHARTER-ID> y yo escribo el prompt
   unificado de auditoría en .straymark/audits/<CHARTER-ID>/audit-prompt.md.
-  Después abre una o más CLIs auditoras (gemini-cli, claude-cli,
+  Después abre una o más CLIs auditoras (agy, claude-cli,
   copilot-cli, codex-cli) en este repo e invoca
   /straymark-audit-execute <CHARTER-ID> en cada una — recomendación: al
   menos 2 auditores de familias de modelo distintas. Cuando y solo
@@ -418,4 +418,4 @@ Cuando un proyecto acumula un volumen alto de AILOGs a lo largo de múltiples Ch
 
 ---
 
-*StrayMark fw-4.41.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.42.0 | [Strange Days Tech](https://strangedays.tech)*

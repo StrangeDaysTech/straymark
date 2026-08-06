@@ -117,11 +117,11 @@ Doce tipos de documentos que cubren el ciclo de vida completo del desarrollo:
 
 Pre-configurado para asistentes de codificación con IA populares:
 
-- **Universal (estándar AGENTS.md)** → `AGENTS.md` — leído por Claude Code, OpenAI Codex CLI, Cursor, Aider, Devin, Sourcegraph Amp, Google Jules, Zed AI, Continue, Roo Code, Factory Droids, GitHub Copilot, Gemini CLI, Windsurf, Amazon Q y otros
+- **Universal (estándar AGENTS.md)** → `AGENTS.md` — leído por Claude Code, OpenAI Codex CLI, Cursor, Aider, Devin, Sourcegraph Amp, Google Jules, Zed AI, Continue, Roo Code, Factory Droids, GitHub Copilot, Antigravity CLI, Windsurf, Amazon Q y otros
 - **Claude Code** (Anthropic) → `CLAUDE.md`
 - **Cursor** → `.cursorrules`
 - **GitHub Copilot CLI** → `.github/copilot-instructions.md`
-- **Gemini CLI** (Google) → `GEMINI.md`
+- **Antigravity CLI** (`agy`, Google) → `GEMINI.md`
 - **Qwen Code** (Alibaba) → `QWEN.md`
 
 Cada configuración instruye a la IA a:
@@ -241,8 +241,8 @@ StrayMark usa tags de versión independientes para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Incluye |
 |------------|---------------|---------|---------|
-| Framework | `fw-` | `fw-4.41.0` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
-| CLI | `cli-` | `cli-3.42.0` | El binario `straymark` |
+| Framework | `fw-` | `fw-4.42.0` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
+| CLI | `cli-` | `cli-3.43.0` | El binario `straymark` |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | El servidor de visualización `straymark-loom`, descargado bajo demanda por `straymark loom serve` |
 
 Verifica las versiones instaladas con `straymark status` o `straymark about`.
@@ -449,7 +449,7 @@ StrayMark incluye skills para agentes IA que habilitan la **creación activa de 
 
 ### Skills Disponibles
 
-| Skill | Propósito | Claude | Gemini | Codex |
+| Skill | Propósito | Claude | Antigravity | Codex |
 |-------|-----------|--------|--------|-------|
 | `/straymark-status` | Verificar cumplimiento de documentación | ✅ | ✅ | ✅ |
 | `/straymark-new` | Crear cualquier tipo de documento (unificado) | ✅ | ✅ | ✅ |
@@ -511,11 +511,7 @@ StrayMark proporciona soporte nativo de skills para múltiples agentes IA a trav
 
 ```
 tu-proyecto/
-├── .agent/workflows/       # 🌐 Agnóstico (Antigravity, futuros agentes)
-│   ├── straymark-new.md
-│   ├── straymark-status.md
-│   └── ...
-├── .gemini/skills/         # 🔵 Gemini CLI (Google)
+├── .agent/skills/          # 🔵 Antigravity CLI (`agy`) — raíz de customización
 │   ├── straymark-new/SKILL.md
 │   └── ...
 ├── .claude/skills/         # 🟣 Claude Code (Anthropic)
@@ -534,14 +530,13 @@ tu-proyecto/
 
 | Directorio | Agente | Producto | Formato |
 |------------|--------|----------|---------|
-| `.agent/workflows/` | Antigravity, genérico | Extensiones VS Code/Cursor | `skill-name.md` con frontmatter YAML |
-| `.gemini/skills/` | Gemini CLI | CLI terminal de Google | `skill-name/SKILL.md` |
+| `.agent/skills/` *(fw-4.42.0+)* | Antigravity CLI (`agy`) | Agente de codificación de terminal de Google | `skill-name/SKILL.md` (frontmatter mínimo) — se lee del árbol del proyecto; `.agent/` es una de las raíces de customización de Antigravity |
 | `.claude/skills/` | Claude Code | Agente de codificación de Anthropic | `skill-name/SKILL.md` |
 | `.codex/skills/` *(fw-4.19.0+)* | Codex CLI | Agente de codificación de OpenAI | `skill-name/SKILL.md` (frontmatter mínimo) — **debe** instalarse en `~/.codex/skills/` vía `straymark install-skills --agent codex` |
 | `.qoder/skills/` | Qoder CLI | Agente de codificación de terminal de Qoder | `skill-name/SKILL.md` (frontmatter completo, igual que Claude) — se lee del árbol del proyecto; `straymark install-skills --agent qoder` opcionalmente también puebla `~/.qoder/skills/` |
 | `.qwen/skills/` *(fw-4.41.0+)* | Qwen Code | Agente de codificación de terminal de Alibaba | `skill-name/SKILL.md` (frontmatter completo, igual que Claude) — se lee del árbol del proyecto; `straymark install-skills --agent qwen` opcionalmente también puebla `~/.qwen/skills/` |
 
-> **Nota**: `.agent/` es el estándar **agnóstico de proveedor**. Los directorios específicos de agentes (`.gemini/`, `.claude/`) proporcionan compatibilidad para esas plataformas siguiendo sus convenciones nativas.
+> **Nota**: `.agent/` es una **raíz de customización** que Antigravity descubre por convención; los demás directorios siguen la disposición propia de cada proveedor.
 
 Todas las implementaciones de skills son **funcionalmente idénticas**—solo difiere el formato para coincidir con los requisitos de cada agente.
 
@@ -557,7 +552,7 @@ Todas las implementaciones de skills son **funcionalmente idénticas**—solo di
 | Claude Code | `CLAUDE.md` | Soporte completo |
 | Cursor | `.cursorrules` | Soporte completo |
 | GitHub Copilot CLI | `.github/copilot-instructions.md` | Soporte completo |
-| Gemini CLI | `GEMINI.md` | Soporte completo |
+| Antigravity CLI (`agy`) *(fw-4.42.0+)* | `GEMINI.md` + `.agent/skills/` | Soporte completo |
 | Codex CLI (OpenAI) *(fw-4.19.0+)* | `AGENTS.md` + `~/.codex/skills/` | Soporte completo (ejecuta `straymark install-skills --agent codex`) |
 | Qoder CLI | `AGENTS.md` + `.qoder/skills/` | Soporte completo |
 | Qwen Code (Alibaba) *(fw-4.41.0+)* | `QWEN.md` + `.qwen/skills/` | Soporte completo |

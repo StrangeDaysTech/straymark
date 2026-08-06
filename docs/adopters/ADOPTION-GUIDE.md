@@ -82,7 +82,7 @@ StrayMark provides configuration files for:
 | **Claude Code** (Anthropic) | `CLAUDE.md` | ✅ Supported |
 | **Cursor** | `.cursorrules` | ✅ Supported |
 | **GitHub Copilot CLI** | `.github/copilot-instructions.md` | ✅ Supported |
-| **Gemini CLI** (Google) | `GEMINI.md` | ✅ Supported |
+| **Antigravity CLI** (`agy`, Google) | `GEMINI.md` + `.agent/skills/` | ✅ Supported |
 | **Qwen Code** (Alibaba) *(fw-4.41.0+)* | `QWEN.md` + `.qwen/skills/` | ✅ Supported |
 | **Codex CLI** (OpenAI) *(fw-4.19.0+)* | `AGENTS.md` + `~/.codex/skills/` | ✅ Supported (run `straymark install-skills --agent codex`) |
 | **Qoder CLI** | `AGENTS.md` + `.qoder/skills/` | ✅ Supported |
@@ -501,10 +501,10 @@ straymark validate
 
 ## External Audit (Optional)
 
-From `fw-4.9.0`, when you co-implement Charters with an AI assistant in the loop (Claude Code, Gemini Code, Cursor), you can optionally run an external multi-model audit at Charter close. Two skills wrap the underlying CLI orchestration:
+From `fw-4.9.0`, when you co-implement Charters with an AI assistant in the loop (Claude Code, Antigravity CLI, Cursor), you can optionally run an external multi-model audit at Charter close. Two skills wrap the underlying CLI orchestration:
 
 - **`/straymark-audit-prompt CHARTER-XX`** — writes the unified audit prompt at the canonical path `.straymark/audits/<id>/audit-prompt.md`. Operator opens N auditor-side CLIs and runs `/straymark-audit-execute` in each. No copy/paste.
-- **`/straymark-audit-execute [CHARTER-XX]`** *(fw-4.9.0+)* — runs inside an auditor-side CLI (gemini-cli, claude-cli, copilot-cli, codex-cli). Reads the prompt, audits with tool use citing `path:line`, writes a report keyed on the auditor's model id.
+- **`/straymark-audit-execute [CHARTER-XX]`** *(fw-4.9.0+)* — runs inside an auditor-side CLI (agy, claude-cli, copilot-cli, codex-cli). Reads the prompt, audits with tool use citing `path:line`, writes a report keyed on the auditor's model id.
 - **`/straymark-audit-review CHARTER-XX`** — consolidates N reports into a six-section `review.md` (Executive summary / Scope / Per-auditor evaluation / Remediation plan P0-P4 / Discarded / Auditor ratings) and merges the `external_audit:` YAML into Charter telemetry.
 
 The agent will **proactively offer** the audit at one specific moment in the workflow — when implementation is done, drift check is clean, and `charter close` has not been invoked. Recommendation is YES/NO based on the Charter's risk surface and complexity (heuristics in `.straymark/00-governance/AGENT-RULES.md` §12).

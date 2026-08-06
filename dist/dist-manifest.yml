@@ -1,4 +1,4 @@
-version: "4.41.0"
+version: "4.42.0"
 description: "StrayMark distribution manifest"
 repository: "https://github.com/StrangeDaysTech/straymark"
 
@@ -12,11 +12,10 @@ files:
 
   # Agent skills
   - .claude/skills/
-  - .gemini/skills/
   - .codex/skills/
   - .qoder/skills/
   - .qwen/skills/
-  - .agent/workflows/
+  - .agent/skills/
 
   # CI/CD
   - .github/workflows/docs-validation.yml
@@ -40,3 +39,16 @@ injections:
   - target: .cursor/rules/straymark.md
     template: dist-templates/directives/cursor-rules-straymark.md
     embed: STRAYMARK.md
+
+# Paths this release no longer distributes. `update-framework` and `repair`
+# delete them from an existing installation when the file on disk still matches
+# the hash StrayMark recorded — i.e. we put it there and nobody edited it since.
+# Operator-modified and operator-authored files are kept and named in the
+# report. `init` ignores this key: a fresh tree has nothing to retire.
+retired:
+  # Gemini CLI was retired by Google; its successor, Antigravity CLI (`agy`),
+  # does not treat `<project>/.gemini/skills/` as a discovery location.
+  - .gemini/skills/
+  # `.agent/` is a valid Antigravity customization root, but the subdirectory
+  # it reads is `skills/<name>/SKILL.md` — never `workflows/<name>.md`.
+  - .agent/workflows/

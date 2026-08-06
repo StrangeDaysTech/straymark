@@ -127,7 +127,7 @@ Cuando cambios significativos afectan al sistema de gestión de IA:
 |---------|-------------|--------|
 | StrayMark Framework | Sistema de gobernanza de documentación | [Instalado/Versión] |
 | StrayMark CLI | Herramientas de automatización y validación | [Versión] |
-| Plataformas de Agentes IA | [Claude, Gemini, Copilot, Cursor] | [Configurado] |
+| Plataformas de Agentes IA | [Claude, Antigravity, Copilot, Cursor] | [Configurado] |
 | Formación | Formación en gobernanza de IA para el equipo | [Estado] |
 
 ### 4.2 Competencias

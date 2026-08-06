@@ -123,7 +123,7 @@ curl -X PUT "https://${SERVICE_HOST}/api/v1/.../..." \
 
 [R1, R2, ... 风险列表，实现承诺要缓解。每项都附有缓解措施文档。约定：
 如果在执行过程中出现 Charter 中未预见的新风险，则在 AILOG 的 `## Risk`
-下记录为 `R<N+1> (new, not in Charter)` — Gemini 和其他外部审计员
+下记录为 `R<N+1> (new, not in Charter)` — 外部审计员
 进行跨文档验证。
 
 每项缓解措施都应说明：(a) 具体的触发条件或阈值（不要"最终"），

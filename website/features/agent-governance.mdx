@@ -10,7 +10,7 @@ Runtime guardrails come too late. By the time the agent has typed a destructive 
 
 - **Runtime ≠ workflow.** Most LLM guardrails are prompt-injection defenses or output filters — important, but they don't decide whether the agent should write that DB migration in the first place. Workflow-level governance does.
 - **Versioned rules are reviewable rules.** `STRAYMARK.md` is a file with PR diffs. Tightening or loosening a rule shows up in `git log` with an author, a date, and a discussion thread. That's auditable in a way runtime configs aren't.
-- **Same contract across CLIs.** The same `STRAYMARK.md` directs Claude Code, Gemini CLI, Copilot CLI, Codex CLI. One source of truth, N agents. Switching models doesn't mean rewriting the operating contract.
+- **Same contract across CLIs.** The same `STRAYMARK.md` directs Claude Code, Antigravity CLI, Copilot CLI, Codex CLI. One source of truth, N agents. Switching models doesn't mean rewriting the operating contract.
 
 ## The contract layers
 

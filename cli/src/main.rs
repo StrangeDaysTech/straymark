@@ -94,12 +94,12 @@ enum Commands {
     /// `--agent qwen` targets `$QWEN_HOME/skills/` or `$HOME/.qwen/skills/`).
     /// Required only for Codex: Qoder and Qwen Code also read the project-scoped
     /// `.qoder/skills/` / `.qwen/skills/`, so there the user-level install just
-    /// makes the skills available outside this project. Claude and Gemini read
-    /// skills exclusively from the project tree (`.claude/skills/`,
-    /// `.gemini/skills/`) and do not accept this command.
+    /// makes the skills available outside this project. Claude and Antigravity
+    /// (`agy`) read skills exclusively from the project tree (`.claude/skills/`,
+    /// `.agent/skills/`) and do not accept this command.
     InstallSkills {
         /// AI agent whose user-level skills directory we should populate.
-        #[arg(long, value_parser = ["codex", "qoder", "qwen", "claude", "gemini"])]
+        #[arg(long, value_parser = ["codex", "qoder", "qwen", "claude", "agy"])]
         agent: String,
         /// Project directory (default: current directory). The source of the
         /// skills is `<path>/.codex/skills/` (or `<path>/.qoder/skills/`,
@@ -688,7 +688,7 @@ enum CharterCommands {
     /// calibrate, finalize). Phase 3 v0 is orchestration-only — the CLI
     /// resolves prompts, validates auditor outputs, and prints findings
     /// for telemetry. It does NOT invoke LLM APIs; the operator runs the
-    /// prompts in their auditor of choice (Copilot, Gemini, Claude, etc.)
+    /// prompts in their auditor of choice (Copilot, Antigravity, Claude, etc.)
     /// and saves responses to canonical paths.
     Audit {
         /// Charter identifier (CHARTER-NN, CHARTER-NN-slug, or just NN)

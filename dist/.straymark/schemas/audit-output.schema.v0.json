@@ -32,7 +32,7 @@
         "auditor": {
           "type": "string",
           "minLength": 1,
-          "description": "Model identifier and version of the auditor that produced this output (e.g., `copilot-v1.0.37`, `gemini-cli-v1.5`, `claude-opus-4`). Free-form so adopters can use any model identifier."
+          "description": "Model identifier and version of the auditor that produced this output (e.g., `copilot-v1.0.37`, `gemini-3-pro`, `claude-opus-4`). Free-form so adopters can use any model identifier."
         },
         "charter_id": {
           "type": "string",

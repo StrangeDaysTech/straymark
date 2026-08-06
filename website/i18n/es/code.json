@@ -184,7 +184,7 @@
     "description": "Feature: multi-model external audit (title)"
   },
   "features.audit.body": {
-    "message": "Tres CLIs auditores (ej. claude, copilot, gemini) leen el mismo prompt y auditan un Charter cerrado de forma independiente. Un calibrador deduplica, reclasifica severidad y fusiona evidencia firmada en la telemetría.",
+    "message": "Tres CLIs auditores (ej. claude, copilot, agy) leen el mismo prompt y auditan un Charter cerrado de forma independiente. Un calibrador deduplica, reclasifica severidad y fusiona evidencia firmada en la telemetría.",
     "description": "Feature: multi-model external audit (body)"
   },
   "features.eod.title": {
@@ -344,7 +344,7 @@
     "message": "Audit trail — verificación multi-modelo"
   },
   "workflow.audit.caption": {
-    "message": "Varios CLIs auditores (gemini, claude, copilot...) leen el mismo prompt y auditan un Charter cerrado. Los hallazgos se deduplican, se verifican contra el código, se reclasifican y se fusionan en la telemetría como un bloque de evidencia firmado."
+    "message": "Varios CLIs auditores (agy, claude, copilot...) leen el mismo prompt y auditan un Charter cerrado. Los hallazgos se deduplican, se verifican contra el código, se reclasifican y se fusionan en la telemetría como un bloque de evidencia firmado."
   },
   "workflow.audit.node.resolve": {
     "message": "Resolver charter"

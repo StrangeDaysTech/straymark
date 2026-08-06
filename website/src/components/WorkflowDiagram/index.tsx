@@ -93,7 +93,7 @@ function workflows(): Workflow[] {
       ),
       caption: (
         <Translate id="workflow.audit.caption">
-          Several auditor CLIs (gemini, claude, copilot...) read the same prompt and audit a closed
+          Several auditor CLIs (agy, claude, copilot...) read the same prompt and audit a closed
           Charter. Findings are deduplicated, verified against code, reclassified and merged into
           telemetry as a signed evidence block.
         </Translate>

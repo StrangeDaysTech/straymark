@@ -1,4 +1,4 @@
-# StrayMark - Gemini CLI Configuration
+# StrayMark - Antigravity CLI Configuration
 
 <!-- straymark:begin -->
 > **Read and follow the rules in [STRAYMARK.md](STRAYMARK.md).**
@@ -7,10 +7,16 @@
 
 ---
 
+> **Why is this file named `GEMINI.md`?** Google retired Gemini CLI; its successor is
+> **Antigravity CLI** (`agy`). The on-disk contract was kept: Antigravity reads
+> `GEMINI.md` and `AGENTS.md` as first-class Rules files, and its global
+> configuration lives in `~/.gemini/`. This file is not a leftover — deleting it
+> removes a rules source Antigravity actively loads.
+
 ## Autonomous Rules (minimum viable — works without STRAYMARK.md)
 
 ### Identity
-- Always identify yourself as `gemini-cli-v{version}` in the `agent:` field
+- Always identify yourself as `antigravity-v{version}` in the `agent:` field
 - Declare confidence: `high | medium | low`
 
 ### Review Requirements

@@ -45,8 +45,8 @@ StrayMark uses **independent version tags** for each component:
 
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
-| Framework | `fw-` | `fw-4.41.0` | Templates (12 types), governance docs, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.42.0` | The `straymark` binary |
+| Framework | `fw-` | `fw-4.42.0` | Templates (12 types), governance docs, directives, Charter template + schema |
+| CLI | `cli-` | `cli-3.43.0` | The `straymark` binary |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | The `straymark-loom` visualization server, downloaded on demand by `straymark loom serve` |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
@@ -314,19 +314,19 @@ Repairing StrayMark in /home/user/my-project
 
 ---
 
-### `straymark install-skills --agent <codex|qoder|qwen|claude|gemini> [--path .] [--dry-run] [--symlink]` *(cli-3.16.0+)*
+### `straymark install-skills --agent <codex|qoder|qwen|claude|agy> [--path .] [--dry-run] [--symlink]` *(cli-3.16.0+)*
 
 Install StrayMark skills into an AI agent's **user-level** skills directory. `--agent codex` copies each `straymark-*` skill from `<path>/.codex/skills/` (materialized by `straymark init` or `straymark update`) into `$CODEX_HOME/skills/` (or `$HOME/.codex/skills/` if `CODEX_HOME` is unset). `--agent qoder` does the same from `<path>/.qoder/skills/` into `$QODER_CONFIG_DIR/skills/` (or `$HOME/.qoder/skills/` if `QODER_CONFIG_DIR` is unset). `--agent qwen` *(cli-3.42.0+)* does the same from `<path>/.qwen/skills/` into `$QWEN_HOME/skills/` (or `$HOME/.qwen/skills/` if `QWEN_HOME` is unset) — the directory Qwen Code's own `Storage.getGlobalQwenDir()` resolves.
 
 **Only Codex requires this step.** Qoder and Qwen Code also resolve a project-scoped skills directory (`<project>/.qoder/skills/`, `<project>/.qwen/skills/`), so for those two the user-level install is a convenience: it makes the StrayMark skills available in every project, not just the ones where the framework is installed.
 
-For `--agent claude` and `--agent gemini`, the command exits with an explanatory error: those agents read skills exclusively from the project tree (`.claude/skills/`, `.gemini/skills/`), so no user-level install is possible.
+For `--agent claude` and `--agent agy`, the command exits with an explanatory error: those agents read skills exclusively from the project tree (`.claude/skills/`, `.agent/skills/`), so no user-level install is possible.
 
 **Arguments and flags:**
 
 | Argument/Flag | Default | Description |
 |---|---|---|
-| `--agent` | required | One of `codex`, `qoder`, `qwen`, `claude`, `gemini`. Only `codex`, `qoder` and `qwen` perform work; the others exit with guidance. |
+| `--agent` | required | One of `codex`, `qoder`, `qwen`, `claude`, `agy`. Only `codex`, `qoder` and `qwen` perform work; the others exit with guidance. |
 | `--path` | `.` | Project directory whose `.codex/skills/` (or `.qoder/skills/`, `.qwen/skills/`) is the source. |
 | `--dry-run` | off | Print what would be installed without writing anything. |
 | `--symlink` | off | Symlink each skill instead of copying it (Unix-only; convenient for framework developers iterating on skill content). |
@@ -746,7 +746,7 @@ OK `### Batch 5` written.
 
 *Available since **cli-3.8.0** + **fw-4.7.0**. v1 unified flow shipped in **cli-3.10.0** + **fw-4.9.0** — replaces the v0 three-step (PREPARE/CALIBRATE/FINALIZE) with a two-step (PREPARE/MERGE-REPORTS), unifies the auditor template, and moves canonical paths to `.straymark/audits/`.*
 
-Orchestrate a multi-model external review of a Charter's execution. **Orchestration-only** — the CLI prepares the unified audit prompt, validates auditor reports against the schema, and emits/merges the `external_audit` YAML block. **It does NOT invoke LLM APIs.** The operator runs N auditor-side CLIs (gemini-cli, claude-cli, copilot-cli, codex-cli — whatever they have) configured with read-only filesystem access; each invokes the `/straymark-audit-execute` skill to read the prompt, audit with tool use citing `path:line`, and write the report.
+Orchestrate a multi-model external review of a Charter's execution. **Orchestration-only** — the CLI prepares the unified audit prompt, validates auditor reports against the schema, and emits/merges the `external_audit` YAML block. **It does NOT invoke LLM APIs.** The operator runs N auditor-side CLIs (agy, claude-cli, copilot-cli, codex-cli — whatever they have) configured with read-only filesystem access; each invokes the `/straymark-audit-execute` skill to read the prompt, audit with tool use citing `path:line`, and write the report.
 
 Two steps, each invokable independently:
 
@@ -800,7 +800,7 @@ The calibrator role moves from a paste-based template (v0) to the in-conversatio
 .straymark/audits/CHARTER-NN/
 ├── audit-prompt.md                          # resolved by --prepare (single unified prompt)
 ├── report-claude-sonnet-4-6.md              # written by /straymark-audit-execute in claude-cli
-├── report-gemini-2-5-pro.md                 # written by /straymark-audit-execute in gemini-cli
+├── report-gemini-2-5-pro.md                 # written by /straymark-audit-execute in agy
 ├── report-gpt-5-3-codex.md                  # optional 3rd auditor
 ├── review.md                                # written by /straymark-audit-review (consolidated 6-section analysis)
 └── external-audit-pending.yaml              # written by /straymark-audit-review when telemetry doesn't yet exist (Branch B)
@@ -813,7 +813,7 @@ Adopters can `git add` the entire `.straymark/audits/` directory for a fully ver
 **Example (v1, with the audit-skills wrappers — recommended for IDE-driven workflows):**
 
 ```bash
-# In the main IDE (Claude Code, Gemini Code, Cursor, ...):
+# In the main IDE (Claude Code, Antigravity, Cursor, ...):
 > /straymark-audit-prompt CHARTER-05
   → runs `straymark charter audit CHARTER-05 --prepare`
   → writes .straymark/audits/CHARTER-05/audit-prompt.md
@@ -826,7 +826,7 @@ Adopters can `git add` the entire `.straymark/audits/` directory for a fully ver
   → writes .straymark/audits/CHARTER-05/report-claude-sonnet-4-6.md
   → reminds operator to wait for ALL audits before review
 
-# In gemini-cli:
+# In agy:
 > /straymark-audit-execute CHARTER-05
   → writes .straymark/audits/CHARTER-05/report-gemini-2-5-pro.md
 
@@ -1273,7 +1273,7 @@ $ straymark metrics --period last-30-days
 
   Agent Activity
     claude-code 10
-    gemini-cli 4
+    antigravity 4
 
   Trends
     ↑ Total documents 14 (was 9)
@@ -1627,16 +1627,15 @@ loom: serving http://127.0.0.1:7700
 
 ## Skills
 
-StrayMark ships a set of skills (slash commands) for use inside an AI assistant (Claude Code, Gemini Code, Codex CLI, Qoder, Qwen Code, Cursor, generic agent runtimes). Each skill is installed in 6 parallel forms during `straymark init`:
+StrayMark ships a set of skills (slash commands) for use inside an AI assistant (Claude Code, Antigravity CLI, Codex CLI, Qoder, Qwen Code, Cursor, generic agent runtimes). Each skill is installed in 5 parallel forms during `straymark init`:
 
 - `.claude/skills/<skill>/SKILL.md` (Claude — frontmatter with `allowed-tools`)
-- `.gemini/skills/<skill>/SKILL.md` (Gemini — frontmatter without `allowed-tools`)
 - `.codex/skills/<skill>/SKILL.md` *(fw-4.19.0+)* (Codex — minimal frontmatter, only `name`+`description`; generated from the Claude variant)
 - `.qoder/skills/<skill>/SKILL.md` (Qoder — same full frontmatter as the Claude variant)
 - `.qwen/skills/<skill>/SKILL.md` *(fw-4.41.0+)* (Qwen Code — same full frontmatter as the Claude variant)
-- `.agent/workflows/<skill>.md` (generic agent — `description`-only frontmatter)
+- `.agent/skills/<skill>/SKILL.md` *(fw-4.42.0+)* (Antigravity CLI `agy` — minimal frontmatter, generated from the Claude variant; `.agent/` is one of Antigravity's workspace customization roots)
 
-Claude, Gemini, Qoder and Qwen Code all discover skills directly from the project tree. **Codex is the exception: it reads skills only from `~/.codex/skills/` (user-level)** — run `straymark install-skills --agent codex` once after `straymark init` (and after every framework update) to populate that directory from `.codex/skills/`. For Qoder and Qwen Code the equivalent command (`--agent qoder`, `--agent qwen`) is optional: it copies the skills to `~/.qoder/skills/` or `~/.qwen/skills/` so they are available outside this project too.
+Claude, Antigravity, Qoder and Qwen Code all discover skills directly from the project tree. **Codex is the exception: it reads skills only from `~/.codex/skills/` (user-level)** — run `straymark install-skills --agent codex` once after `straymark init` (and after every framework update) to populate that directory from `.codex/skills/`. For Qoder and Qwen Code the equivalent command (`--agent qoder`, `--agent qwen`) is optional: it copies the skills to `~/.qoder/skills/` or `~/.qwen/skills/` so they are available outside this project too.
 
 | Skill | Purpose | Files produced |
 |---|---|---|
@@ -1650,7 +1649,7 @@ Claude, Gemini, Qoder and Qwen Code all discover skills directly from the projec
 | `/straymark-charter-new` *(fw-4.12.0+)* | Scaffold a Charter — declarative ex-ante work unit. Wraps `straymark charter new` (slug derivation, sequential numbering, template substitution); the skill drives origin/effort selection and the reconnaissance-before-declaration discipline. | `.straymark/charters/NN-slug.md` |
 | `/straymark-followups` *(fw-4.22.0+)* | Maintain the follow-ups backlog registry (`AGENT-RULES.md §13`): session-start "what's pending?" answered from the canonical registry, pre-commit `followups drift --apply` riding the same commit as the AILOG, post-Charter-close triage and operator-gated `promote`. Thin wrapper over `straymark followups` — never edits CLI-owned counters. | none directly (writes go through `straymark followups drift --apply` / `promote` → `.straymark/follow-ups-backlog.md`, TDE on promote) |
 | `/straymark-audit-prompt CHARTER-ID` *(fw-4.9.0+, refactored in fw-4.9.0)* | Generate the unified audit prompt for a Charter at the canonical path. Wraps `straymark charter audit --prepare`. The operator then opens N auditor CLIs in the same repo and invokes `/straymark-audit-execute` in each — no copy/paste. | `.straymark/audits/<CHARTER-ID>/audit-prompt.md` |
-| `/straymark-audit-execute [CHARTER-ID]` *(fw-4.9.0+)* | **Run inside an auditor-side CLI** (gemini-cli, claude-cli, copilot-cli, codex-cli, ...). Reads the prepared prompt from disk, audits with tool use citing `path:line`, writes a report keyed on the auditor's model id. CHARTER-ID argument is optional — auto-discovers prompts that don't yet have a report from this model. | `.straymark/audits/<CHARTER-ID>/report-<sluggified-model-id>.md` |
+| `/straymark-audit-execute [CHARTER-ID]` *(fw-4.9.0+)* | **Run inside an auditor-side CLI** (agy, claude-cli, copilot-cli, codex-cli, ...). Reads the prepared prompt from disk, audits with tool use citing `path:line`, writes a report keyed on the auditor's model id. CHARTER-ID argument is optional — auto-discovers prompts that don't yet have a report from this model. | `.straymark/audits/<CHARTER-ID>/report-<sluggified-model-id>.md` |
 | `/straymark-audit-review CHARTER-ID` *(fw-4.9.0+, expanded in fw-4.9.0)* | Counterpart to `/straymark-audit-prompt`. Reads N reports under `.straymark/audits/<CHARTER-ID>/`, verifies each finding against actual code (Explore agents in parallel), produces a six-section consolidated `review.md` (Executive summary, Scope, Per-auditor evaluation, Remediation plan P0-P4, Discarded findings, Auditor ratings), and runs `straymark charter audit --merge-reports --merge-into` to append `external_audit:` into the Charter telemetry. If the telemetry doesn't yet exist (Charter not yet closed), writes `external-audit-pending.yaml` for later merge at close time. | `.straymark/audits/<CHARTER-ID>/review.md`, `external_audit:` array merged into telemetry (or pending YAML) |
 
 ### Skill vs CLI

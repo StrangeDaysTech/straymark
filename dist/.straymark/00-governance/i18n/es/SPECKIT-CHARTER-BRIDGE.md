@@ -234,7 +234,7 @@ Si tu trabajo encaja en alguno de los anteriores, *no declares Charter*. El cost
 - `.straymark/templates/charter/charter-telemetry-template.yaml` — template de telemetría
 - `.straymark/schemas/charter.schema.v0.json` — JSON Schema del frontmatter declarativo
 - `.straymark/schemas/charter-telemetry.schema.v0.json` — JSON Schema de telemetría
-- `.claude/skills/straymark-charter-new/SKILL.md` (y equivalentes Gemini / agnóstico)
+- `.claude/skills/straymark-charter-new/SKILL.md` (y los equivalentes Codex / Qoder / Qwen / Antigravity)
 
 > **Contexto empírico citado** (issue #113): Suite Rust CLI/TUI greenfield, onboarding de Claude Opus 4.7 vía los puntos de entrada canónicos (`STRAYMARK.md`, constitución del proyecto, checklist de `CLAUDE.md`, skills `/straymark-*` disponibles, `/straymark-status`). Los Charters fueron *eventualmente* adoptados (2 Charters: foundation + MVP) sólo tras prompt explícito del usuario — confirmando que el gap era sistémico, no específico de la sesión. Este documento elimina ese gap.
 

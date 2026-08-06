@@ -4,7 +4,7 @@
 //! the operator's auditor responses, validates outputs against the schema,
 //! and prints the consolidated findings ready to paste into the Charter
 //! telemetry. The CLI does NOT invoke any LLM API directly — the operator
-//! runs the prompts in their auditor of choice (Copilot, Gemini, Claude, etc.)
+//! runs the prompts in their auditor of choice (Copilot, Antigravity, Claude, etc.)
 //! and saves the responses to canonical paths.
 //!
 //! Three steps, each invokable independently:
@@ -367,7 +367,7 @@ fn run_prepare(args: PrepareArgs<'_>) -> Result<()> {
     println!();
     println!("  {}", "Next:".bold());
     println!(
-        "    1. Open one or more auditor CLIs (gemini-cli, claude-cli, copilot-cli, etc.)"
+        "    1. Open one or more auditor CLIs (agy, claude-cli, copilot-cli, etc.)"
     );
     let round_arg = round.map(|r| format!(" --round {r}")).unwrap_or_default();
     println!("       in this repo and invoke {} in each.",
