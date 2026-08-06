@@ -83,9 +83,14 @@ exists. It would be a file nothing reads. Rejected on evidence.
 ### Alternative 4 (channel): `.agents/skills/` (canonical) vs `.agent/skills/` (alias)
 
 Google's shipped doc names both: *"Path: `.agents/` (or `.agent/`, `_agents/`,
-`_agent/`)"*. The binary's error templates hardcode `.agents/`. `.agent/` keeps
-the root StrayMark already advertises. **This one is not yet closed** — see
-§Risks R1.
+`_agent/`)"*. The binary's error templates hardcode `.agents/` only, which left
+open whether the alias was implemented or aspirational.
+
+**Settled empirically (2026-08-06).** A probe project carrying one skill under
+each root was opened in an interactive `agy` session: it listed *both*
+`straymark-probe-alias` (`.agent/`) and `straymark-probe-canonical` (`.agents/`)
+among its available skills. `.agent/` is a real alias, so the channel keeps the
+root StrayMark already ships and no migration is needed.
 
 ### Alternative 5 (retirement): document `straymark repair` instead of building a mechanism
 
@@ -140,15 +145,14 @@ under the existing CI gate. A `git mv` would have imported the stale files.
   described was read by nothing — but the README loses a tidy story.
 
 ### Risks
-- **R1 — the `.agent/` vs `.agents/` question is not empirically closed.**
-  Google's shipped doc lists `.agent/` as an accepted alias; the binary's path
-  templates only ever build `.agents/`. Three headless `agy -p` probes failed to
-  settle it: workspace customizations did not surface in print mode at all,
-  in a trusted directory with a git root, so the probe could not distinguish the
-  two roots rather than showing one failing. **Mitigation**: the operator
-  verifies interactively in `/tmp/straymark-agy-probe`, which holds one probe
-  skill under each root. If `.agent/` is not discovered, the fix is a `git mv`
-  plus two manifest lines — the rest of this release is root-independent.
+- **R1 — RESOLVED (2026-08-06).** The `.agent/` vs `.agents/` root was the one
+  assumption the code could not settle. Three headless `agy -p` probes failed:
+  workspace customizations did not surface in print mode at all, even in a
+  trusted directory with a git root, so the probe could not distinguish the two
+  roots rather than showing one failing. The operator ran it interactively
+  instead and `agy` listed **both** probe skills, confirming `.agent/` as a real
+  alias. No change required. *Durable lesson: `agy -p` is not a substitute for
+  an interactive session when the question is customization discovery.*
 - **R2 — pruning deletes files.** Gated on hash provenance and reported in full,
   but it is the first code path in StrayMark that removes adopter files outside
   `straymark remove`. The conservative default is deliberate: when in doubt, keep.

@@ -1,9 +1,9 @@
 ---
 last_scan: 2026-08-05
 schema_version: v1
-total_open: 4
+total_open: 3
 total_promoted: 0
-total_closed_in_session: 0
+total_closed_in_session: 1
 total_phase_blocked: 0
 total_suspected_closed: 0
 buckets:
@@ -63,11 +63,11 @@ Entry shape (v1 — optional fields marked):
 ### FU-003 — Confirm which customization root Antigravity discovers (`.agent/` vs `.agents/`) before tagging `fw-4.42.0`, and flip…
 - **Origin**: AILOG-2026-08-05-004 §Follow-ups
 - **Source-hash**: 9055de213adb
-- **Status**: open
+- **Status**: closed
 - **Trigger**: TBD
 - **Destination**: TBD
 - **Cost**: TBD
-- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-05.
+- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-05. · [2026-08-06 · AILOG-2026-08-05-004] Resolved 2026-08-06: operator ran an interactive agy session against the probe project; agy listed BOTH straymark-probe-alias (.agent/) and straymark-probe-canonical (.agents/). .agent/ is a real alias — shipped channel unchanged. Headless 'agy -p' does not exercise workspace customization discovery.
 
 ### FU-004 — After the tag: verify on a real `straymark update` from fw-4.41.0 that both retired directories disappear and the…
 - **Origin**: AILOG-2026-08-05-004 §Follow-ups

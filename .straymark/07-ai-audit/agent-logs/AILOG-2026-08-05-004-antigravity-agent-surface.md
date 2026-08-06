@@ -145,15 +145,13 @@ skill subdirectories behind.
 
 | Id | Risk | Handling |
 |----|------|----------|
-| R1 | The `.agent/` vs `.agents/` root is **not empirically confirmed**. Google's shipped doc lists `.agent/` as an accepted alias; the binary's path templates only ever build `.agents/`. | Three headless `agy -p` probes could not settle it — workspace customizations did not surface in print mode at all, even in a trusted directory with a git root, so the probe could not distinguish the roots rather than showing one failing. Operator verifies interactively in `/tmp/straymark-agy-probe` (one probe skill under each root). If `.agent/` loses, the fix is a `git mv` plus two manifest lines; everything else here is root-independent. **This release must not be tagged before that check.** |
+| R1 | ~~The `.agent/` vs `.agents/` root is not empirically confirmed.~~ **Closed 2026-08-06.** | Three headless `agy -p` probes could not settle it — workspace customizations did not surface in print mode at all, even in a trusted directory with a git root, so the probe could not distinguish the roots rather than showing one failing. The operator ran an interactive `agy` session against a probe project carrying one skill under each root: it listed **both** `straymark-probe-alias` and `straymark-probe-canonical`. `.agent/` is a real alias; the shipped channel needs no change. Durable lesson: `agy -p` does not exercise workspace customization discovery — use an interactive session for that class of question. |
 | R2 | `prune_retired` is the first code path that deletes adopter files outside `straymark remove`. | Provenance-gated on the checksum store, conservative by default (when in doubt, keep), and every kept file is named in the report. |
 | R3 (new, not in Charter) | `.gemini/skills/` had drifted behind `.claude/skills/` in 7 of 15 skills, undetected, because nothing regenerated or gated it — while the generated `.codex/` channel was byte-perfect. | Fixed by construction: the replacement channel is generated, not hand-mirrored, and CI gates it. The general lesson — a hand-maintained mirror without a gate *will* drift — is why `.qoder/` and `.qwen/` got their own CI job last release. |
 | R4 (new, not in Charter) | Attempting the probe required touching `~/.gemini/trustedFolders.json`; the write was blocked and I asked instead of forcing it. | Correct outcome, noted because it will recur: verifying agent-runtime behavior often needs config the agent should not silently grant itself. |
 
 ## Follow-ups
 
-- Confirm which customization root Antigravity discovers (`.agent/` vs
-  `.agents/`) before tagging `fw-4.42.0`, and flip the channel if needed.
 - After the tag: verify on a real `straymark update` from fw-4.41.0 that both
   retired directories disappear and the summary names anything kept — chained
   with the `QWEN.md` init/update verification still pending from
