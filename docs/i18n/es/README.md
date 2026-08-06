@@ -122,6 +122,7 @@ Pre-configurado para asistentes de codificación con IA populares:
 - **Cursor** → `.cursorrules`
 - **GitHub Copilot CLI** → `.github/copilot-instructions.md`
 - **Gemini CLI** (Google) → `GEMINI.md`
+- **Qwen Code** (Alibaba) → `QWEN.md`
 
 Cada configuración instruye a la IA a:
 - Identificarse en cada documento
@@ -240,8 +241,8 @@ StrayMark usa tags de versión independientes para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Incluye |
 |------------|---------------|---------|---------|
-| Framework | `fw-` | `fw-4.40.0` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
-| CLI | `cli-` | `cli-3.41.1` | El binario `straymark` |
+| Framework | `fw-` | `fw-4.41.0` | Plantillas (12 tipos), gobernanza, directivas, plantilla + schema de Charter |
+| CLI | `cli-` | `cli-3.42.0` | El binario `straymark` |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | El servidor de visualización `straymark-loom`, descargado bajo demanda por `straymark loom serve` |
 
 Verifica las versiones instaladas con `straymark status` o `straymark about`.
@@ -520,7 +521,13 @@ tu-proyecto/
 ├── .claude/skills/         # 🟣 Claude Code (Anthropic)
 │   ├── straymark-new/SKILL.md
 │   └── ...
-└── .codex/skills/          # 🟢 Codex CLI (OpenAI) — se instala en ~/.codex/skills/
+├── .codex/skills/          # 🟢 Codex CLI (OpenAI) — se instala en ~/.codex/skills/
+│   ├── straymark-new/SKILL.md
+│   └── ...
+├── .qoder/skills/          # 🔴 Qoder CLI — se lee del árbol del proyecto
+│   ├── straymark-new/SKILL.md
+│   └── ...
+└── .qwen/skills/           # 🟠 Qwen Code (Alibaba) — se lee del árbol del proyecto
     ├── straymark-new/SKILL.md
     └── ...
 ```
@@ -530,7 +537,9 @@ tu-proyecto/
 | `.agent/workflows/` | Antigravity, genérico | Extensiones VS Code/Cursor | `skill-name.md` con frontmatter YAML |
 | `.gemini/skills/` | Gemini CLI | CLI terminal de Google | `skill-name/SKILL.md` |
 | `.claude/skills/` | Claude Code | Agente de codificación de Anthropic | `skill-name/SKILL.md` |
-| `.codex/skills/` *(fw-4.19.0+)* | Codex CLI | Agente de codificación de OpenAI | `skill-name/SKILL.md` (frontmatter mínimo) — se instala en `~/.codex/skills/` vía `straymark install-skills --agent codex` |
+| `.codex/skills/` *(fw-4.19.0+)* | Codex CLI | Agente de codificación de OpenAI | `skill-name/SKILL.md` (frontmatter mínimo) — **debe** instalarse en `~/.codex/skills/` vía `straymark install-skills --agent codex` |
+| `.qoder/skills/` | Qoder CLI | Agente de codificación de terminal de Qoder | `skill-name/SKILL.md` (frontmatter completo, igual que Claude) — se lee del árbol del proyecto; `straymark install-skills --agent qoder` opcionalmente también puebla `~/.qoder/skills/` |
+| `.qwen/skills/` *(fw-4.41.0+)* | Qwen Code | Agente de codificación de terminal de Alibaba | `skill-name/SKILL.md` (frontmatter completo, igual que Claude) — se lee del árbol del proyecto; `straymark install-skills --agent qwen` opcionalmente también puebla `~/.qwen/skills/` |
 
 > **Nota**: `.agent/` es el estándar **agnóstico de proveedor**. Los directorios específicos de agentes (`.gemini/`, `.claude/`) proporcionan compatibilidad para esas plataformas siguiendo sus convenciones nativas.
 
@@ -550,6 +559,8 @@ Todas las implementaciones de skills son **funcionalmente idénticas**—solo di
 | GitHub Copilot CLI | `.github/copilot-instructions.md` | Soporte completo |
 | Gemini CLI | `GEMINI.md` | Soporte completo |
 | Codex CLI (OpenAI) *(fw-4.19.0+)* | `AGENTS.md` + `~/.codex/skills/` | Soporte completo (ejecuta `straymark install-skills --agent codex`) |
+| Qoder CLI | `AGENTS.md` + `.qoder/skills/` | Soporte completo |
+| Qwen Code (Alibaba) *(fw-4.41.0+)* | `QWEN.md` + `.qwen/skills/` | Soporte completo |
 
 ### Sistemas Operativos
 

@@ -128,6 +128,7 @@ Pre-configured for popular AI coding assistants:
 - **Cursor** → `.cursorrules`
 - **GitHub Copilot CLI** → `.github/copilot-instructions.md`
 - **Gemini CLI** (Google) → `GEMINI.md`
+- **Qwen Code** (Alibaba) → `QWEN.md`
 
 Each configuration instructs the AI to:
 - Identify itself in every document
@@ -277,8 +278,8 @@ StrayMark uses independent version tags for each component:
 
 | Component | Tag prefix | Example | Includes |
 | --- | --- | --- | --- |
-| Framework | `fw-` | `fw-4.40.0` | Templates (12 types), governance, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.41.1` | The `straymark` binary |
+| Framework | `fw-` | `fw-4.41.0` | Templates (12 types), governance, directives, Charter template + schema |
+| CLI | `cli-` | `cli-3.42.0` | The `straymark` binary |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | The `straymark-loom` visualization server, downloaded on demand by `straymark loom serve` |
 
 Check installed versions with `straymark status` or `straymark about`.
@@ -566,7 +567,10 @@ your-project/
 ├── .codex/skills/          # 🟢 Codex CLI (OpenAI) — installed to ~/.codex/skills/
 │   ├── straymark-new/SKILL.md
 │   └── ...
-└── .qoder/skills/          # 🔴 Qoder CLI — installed to ~/.qoder/skills/
+├── .qoder/skills/          # 🔴 Qoder CLI — read from the project tree
+│   ├── straymark-new/SKILL.md
+│   └── ...
+└── .qwen/skills/           # 🟠 Qwen Code (Alibaba) — read from the project tree
     ├── straymark-new/SKILL.md
     └── ...
 ```
@@ -576,10 +580,13 @@ your-project/
 | `.agent/workflows/` | Antigravity, generic | VS Code/Cursor extensions | `skill-name.md` with YAML frontmatter |
 | `.gemini/skills/` | Gemini CLI | Google's terminal CLI | `skill-name/SKILL.md` |
 | `.claude/skills/` | Claude Code | Anthropic's coding agent | `skill-name/SKILL.md` |
-| `.codex/skills/` *(fw-4.19.0+)* | Codex CLI | OpenAI's coding agent | `skill-name/SKILL.md` (minimal frontmatter) — installed to `~/.codex/skills/` via `straymark install-skills --agent codex` |
-| `.qoder/skills/` | Qoder CLI | Qoder's terminal coding agent | `skill-name/SKILL.md` (full frontmatter, same as Claude) — installed to `~/.qoder/skills/` via `straymark install-skills --agent qoder` |
+| `.codex/skills/` *(fw-4.19.0+)* | Codex CLI | OpenAI's coding agent | `skill-name/SKILL.md` (minimal frontmatter) — **must** be installed to `~/.codex/skills/` via `straymark install-skills --agent codex` |
+| `.qoder/skills/` | Qoder CLI | Qoder's terminal coding agent | `skill-name/SKILL.md` (full frontmatter, same as Claude) — read from the project tree; `straymark install-skills --agent qoder` optionally also populates `~/.qoder/skills/` |
+| `.qwen/skills/` *(fw-4.41.0+)* | Qwen Code | Alibaba's terminal coding agent | `skill-name/SKILL.md` (full frontmatter, same as Claude) — read from the project tree; `straymark install-skills --agent qwen` optionally also populates `~/.qwen/skills/` |
 
 > **Note**: `.agent/` is the **vendor-agnostic** standard. Agent-specific directories (`.gemini/`, `.claude/`) provide compatibility for those platforms while following their native conventions.
+>
+> **User-level vs project-level.** Only Codex *requires* `install-skills`: it resolves skills exclusively from `$CODEX_HOME/skills/`. Claude, Gemini, Qoder and Qwen Code all discover a project-scoped skills directory, so for Qoder and Qwen the user-level install is a convenience — it makes the StrayMark skills available in every project, not just the ones where the framework is installed.
 
 All skill implementations are **functionally identical**—only the format differs to match each agent's requirements.
 
@@ -597,7 +604,8 @@ All skill implementations are **functionally identical**—only the format diffe
 | GitHub Copilot CLI | `.github/copilot-instructions.md` | ✅ Full support |
 | Gemini CLI | `GEMINI.md` | ✅ Full support |
 | Codex CLI (OpenAI) *(fw-4.19.0+)* | `AGENTS.md` + `~/.codex/skills/` | ✅ Full support (run `straymark install-skills --agent codex`) |
-| Qoder CLI | `AGENTS.md` + `~/.qoder/skills/` | ✅ Full support (run `straymark install-skills --agent qoder`) |
+| Qoder CLI | `AGENTS.md` + `.qoder/skills/` | ✅ Full support |
+| Qwen Code (Alibaba) *(fw-4.41.0+)* | `QWEN.md` + `.qwen/skills/` | ✅ Full support |
 
 ### Operating Systems
 

@@ -11,7 +11,7 @@
 ### Al Iniciar una Sesión
 
 Cada agente debe identificarse con:
-- Nombre del agente (ej.: `claude-code-v1.0`, `cursor-v1.0`, `gemini-cli-v1.0`, `codex-cli-v1.0`)
+- Nombre del agente (ej.: `claude-code-v1.0`, `cursor-v1.0`, `gemini-cli-v1.0`, `codex-cli-v1.0`, `qwen-code-v1.0`, `qoder-v1.0`)
 - Versión del agente si está disponible
 
 ### En Cada Documento
@@ -418,4 +418,4 @@ Cuando un proyecto acumula un volumen alto de AILOGs a lo largo de múltiples Ch
 
 ---
 
-*StrayMark fw-4.40.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.41.0 | [Strange Days Tech](https://strangedays.tech)*

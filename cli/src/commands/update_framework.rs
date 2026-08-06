@@ -244,11 +244,12 @@ fn inject_directives(target: &Path, source_root: &Path, manifest: &DistManifest)
     for injection in &manifest.injections {
         let target_path = target.join(&injection.target);
 
-        // In update mode, only update targets that already exist
-        if !target_path.exists() {
-            continue;
-        }
-
+        // Missing targets are created, not skipped. A release that adds a new
+        // agent surface (e.g. QWEN.md in fw-4.41.0) has to reach existing
+        // installations through `update`, not only through `repair` — which is
+        // what STRAYMARK.md § "Directive Injection Markers" already promises.
+        // `inject::inject_directive` writes the full template when the file is
+        // absent and manages only the marker block when it is not.
         let template_path = source_root.join(&injection.template);
         let template_content = match std::fs::read_to_string(&template_path) {
             Ok(content) => content,
@@ -477,5 +478,59 @@ mod tests {
         assert!(!matches_manifest("README.md", &files));
         assert!(!matches_manifest(".github/workflows/release-cli.yml", &files));
         assert!(!matches_manifest(".claude/agents/foo.md", &files));
+    }
+
+    /// A release that introduces a new agent surface must reach *existing*
+    /// installations through `update`, not only through `repair`. Until
+    /// fw-4.41.0 / cli-3.42.0 this loop skipped every target that was absent
+    /// on disk, so `QWEN.md` would only ever have landed on fresh `init`s.
+    #[test]
+    fn update_creates_injection_targets_that_are_missing_on_disk() {
+        let tmp = tempfile::tempdir().unwrap();
+        let target = tmp.path().join("project");
+        let source_root = tmp.path().join("release");
+        std::fs::create_dir_all(&target).unwrap();
+        std::fs::create_dir_all(source_root.join("dist-templates/directives")).unwrap();
+        std::fs::write(
+            source_root.join("dist-templates/directives/QWEN.md"),
+            "# StrayMark - Qwen Code Configuration\n\n\
+             <!-- straymark:begin -->\n> rules\n<!-- straymark:end -->\n",
+        )
+        .unwrap();
+
+        // An existing target is refreshed in place; a missing one is created.
+        std::fs::write(target.join("CLAUDE.md"), "# My own notes\n").unwrap();
+        std::fs::write(
+            source_root.join("dist-templates/directives/CLAUDE.md"),
+            "# StrayMark - Claude Code Configuration\n\n\
+             <!-- straymark:begin -->\n> rules\n<!-- straymark:end -->\n",
+        )
+        .unwrap();
+
+        let manifest = crate::manifest::DistManifest::from_str(
+            "version: \"4.41.0\"\ndescription: \"test\"\nrepository: \"x\"\nfiles: []\n\
+             injections:\n\
+             \x20 - target: CLAUDE.md\n    template: dist-templates/directives/CLAUDE.md\n\
+             \x20 - target: QWEN.md\n    template: dist-templates/directives/QWEN.md\n",
+        )
+        .unwrap();
+
+        super::inject_directives(&target, &source_root, &manifest).unwrap();
+
+        let qwen = target.join("QWEN.md");
+        assert!(
+            qwen.exists(),
+            "update must create the newly-declared QWEN.md target"
+        );
+        let qwen_content = std::fs::read_to_string(&qwen).unwrap();
+        assert!(qwen_content.contains("<!-- straymark:begin -->"));
+        assert!(qwen_content.contains("Qwen Code Configuration"));
+
+        let claude_content = std::fs::read_to_string(target.join("CLAUDE.md")).unwrap();
+        assert!(
+            claude_content.contains("# My own notes"),
+            "a pre-existing target keeps the operator's content"
+        );
+        assert!(claude_content.contains("<!-- straymark:begin -->"));
     }
 }

@@ -90,16 +90,21 @@ enum Commands {
     },
     /// Install StrayMark skills into an AI agent's user-level skills directory
     /// (`--agent codex` targets `$CODEX_HOME/skills/` or `$HOME/.codex/skills/`;
-    /// `--agent qoder` targets `$QODER_CONFIG_DIR/skills/` or `$HOME/.qoder/skills/`).
-    /// Claude and Gemini read skills directly from the project tree
-    /// (`.claude/skills/`, `.gemini/skills/`) and do not require this command.
+    /// `--agent qoder` targets `$QODER_CONFIG_DIR/skills/` or `$HOME/.qoder/skills/`;
+    /// `--agent qwen` targets `$QWEN_HOME/skills/` or `$HOME/.qwen/skills/`).
+    /// Required only for Codex: Qoder and Qwen Code also read the project-scoped
+    /// `.qoder/skills/` / `.qwen/skills/`, so there the user-level install just
+    /// makes the skills available outside this project. Claude and Gemini read
+    /// skills exclusively from the project tree (`.claude/skills/`,
+    /// `.gemini/skills/`) and do not accept this command.
     InstallSkills {
         /// AI agent whose user-level skills directory we should populate.
-        #[arg(long, value_parser = ["codex", "qoder", "claude", "gemini"])]
+        #[arg(long, value_parser = ["codex", "qoder", "qwen", "claude", "gemini"])]
         agent: String,
         /// Project directory (default: current directory). The source of the
-        /// skills is `<path>/.codex/skills/` (or `<path>/.qoder/skills/` for
-        /// qoder), materialized by `straymark init` or `straymark update`.
+        /// skills is `<path>/.codex/skills/` (or `<path>/.qoder/skills/`,
+        /// `<path>/.qwen/skills/`), materialized by `straymark init` or
+        /// `straymark update`.
         #[arg(long = "path", default_value = ".")]
         path: String,
         /// Print what would be installed without writing anything.
@@ -122,10 +127,13 @@ enum Commands {
         #[arg(long)]
         staged: bool,
         /// Inspect an AI agent's user-level skills installation instead of
-        /// validating documents. Currently supports `codex` — checks
-        /// `~/.codex/skills/straymark-*` for presence, parseable frontmatter,
-        /// required `name`/`description`, and absence of Claude-only keys.
-        #[arg(long, value_parser = ["codex"])]
+        /// validating documents. Supports `codex`, `qoder` and `qwen` — checks
+        /// `~/.codex/skills/straymark-*` (resp. `~/.qoder/`, `~/.qwen/`) for
+        /// presence, parseable frontmatter and required `name`/`description`.
+        /// For `codex` it also flags Claude-only keys like `allowed-tools`;
+        /// Qoder and Qwen Code parse the full Claude frontmatter, so there
+        /// those keys are expected.
+        #[arg(long, value_parser = ["codex", "qoder", "qwen"])]
         agent: Option<String>,
         /// Also validate Charters in .straymark/charters/ against the Charter schema
         /// and referential integrity (originating_ailogs IDs exist;

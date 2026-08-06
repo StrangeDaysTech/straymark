@@ -7,6 +7,37 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.41.0 / CLI 3.42.0 — 2026-08-05
+
+Qwen Code becomes a first-class agent surface, and the "does a later `update` reach me?" gap that would have silently kept it away from existing installations is closed. Also corrects a documented claim about Qoder that the runtime contradicts.
+
+### Added (Framework)
+
+- **`QWEN.md` directive injection**: Qwen Code's default context filename is `QWEN.md` — it does **not** read `AGENTS.md` unless the adopter configures `contextFileName` by hand — so until now a Qwen Code user received no StrayMark governance at all. The manifest now declares the target, with a template carrying the `qwen-code-v{version}` identity.
+- **`dist/.qwen/skills/`**: 15 skills, byte-for-byte mirror of the Claude variants (Qwen Code parses the full Claude frontmatter, `allowed-tools` included), materialized by `init` / `update-framework` via the dist manifest.
+- **`qwen-code-v1.0` and `qoder-v1.0`** added to the agent identity examples in `AGENT-RULES.md` (EN/es/zh-CN) and the `AGENTS.md` directive template.
+
+### Added (CLI)
+
+- **`straymark install-skills --agent qwen`**: installs from `<path>/.qwen/skills/` into `$QWEN_HOME/skills/` (fallback `~/.qwen/skills/`) — the directory Qwen Code's own `Storage.getGlobalQwenDir()` resolves.
+- **`straymark validate --agent qoder|qwen`**: the agent-targeted validator was hardcoded to Codex. It is now per-agent, and skips the "Claude-only key" check for Qoder and Qwen Code, which legitimately carry `allowed-tools`.
+
+### Fixed (CLI)
+
+- **`update-framework` never created newly-declared directive targets.** It skipped every injection target absent from disk, so an agent surface added to the manifest after installation only reached fresh `init`s (or an explicit `straymark repair`) — while `STRAYMARK.md` § "Directive Injection Markers" documented the opposite. Missing targets are now created, which is what makes `QWEN.md` land on existing installations via `straymark update`.
+- **`straymark remove`** now cleans `.qwen/skills/` and drops `QWEN.md` via the legacy target list, matching the other agent surfaces.
+
+### Changed (Framework)
+
+- **Qoder is documented accurately** (README + CLI-REFERENCE, EN/es/zh-CN): the docs claimed Qoder reads skills from `~/.qoder/skills/` "not from the project tree". The runtime resolves a project scope too (`<project>/.qoder/skills/`, watched for changes), so `install-skills --agent qoder` is a convenience, not a requirement. Codex remains the only agent for which the user-level install is mandatory.
+- **`ADOPTION-GUIDE.md` compatible-environments table** (EN/es/zh-CN) was two releases behind the README: Codex CLI, Qoder and Qwen Code added.
+
+### Changed (CI)
+
+- New `skill-mirror-parity` job keeps `dist/.qoder/skills/` and `dist/.qwen/skills/` byte-identical to the Claude source. Only `.codex` had a gate; the Qoder mirror was guarded by a test the pipeline never ran.
+
+---
+
 ## CLI 3.41.1 — 2026-08-05
 
 ### Fixed (CLI)

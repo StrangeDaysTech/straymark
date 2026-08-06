@@ -21,8 +21,8 @@ pub fn run(
     // external skills directory (e.g. ~/.codex/skills/), not StrayMark docs.
     if let Some(agent) = agent {
         return match agent {
-            "codex" => validate_codex_skills(),
-            other => bail!("unknown --agent: {other} (supported: codex)"),
+            "codex" | "qoder" | "qwen" => validate_agent_skills(agent),
+            other => bail!("unknown --agent: {other} (supported: codex, qoder, qwen)"),
         };
     }
 
@@ -279,37 +279,73 @@ fn exit_with_code(result: &validation::ValidationResult) -> Result<()> {
     }
 }
 
-/// Validate the user-level Codex skills installation at `$CODEX_HOME/skills/`
-/// (or `$HOME/.codex/skills/`). Checks every `straymark-*` skill for:
-/// presence of `SKILL.md`, parseable YAML frontmatter, required `name` and
-/// `description`, and absence of Claude-only keys like `allowed-tools` (whose
-/// presence indicates someone copied skills from `.claude/` by mistake).
-fn validate_codex_skills() -> Result<()> {
-    let codex_home = if let Ok(v) = std::env::var("CODEX_HOME") {
-        if v.is_empty() {
-            std::path::PathBuf::from(std::env::var("HOME").unwrap_or_default()).join(".codex")
-        } else {
-            std::path::PathBuf::from(v)
-        }
-    } else {
-        std::path::PathBuf::from(std::env::var("HOME").unwrap_or_default()).join(".codex")
+/// Per-agent shape of a user-level skills installation.
+///
+/// `env_var`/`default_dir` mirror the agent's own home resolution (see
+/// `install_skills.rs`). `minimal_frontmatter` says whether the agent expects
+/// the reduced Codex-style frontmatter (`name` + `description` only) or the
+/// full Claude-style one: Qoder and Qwen Code both parse `allowed-tools`, so
+/// for them its presence is correct rather than a copy-paste mistake.
+struct AgentSkillsSpec {
+    env_var: &'static str,
+    default_dir: &'static str,
+    minimal_frontmatter: bool,
+}
+
+fn agent_skills_spec(agent: &str) -> AgentSkillsSpec {
+    match agent {
+        "qoder" => AgentSkillsSpec {
+            env_var: "QODER_CONFIG_DIR",
+            default_dir: ".qoder",
+            minimal_frontmatter: false,
+        },
+        "qwen" => AgentSkillsSpec {
+            env_var: "QWEN_HOME",
+            default_dir: ".qwen",
+            minimal_frontmatter: false,
+        },
+        // codex
+        _ => AgentSkillsSpec {
+            env_var: "CODEX_HOME",
+            default_dir: ".codex",
+            minimal_frontmatter: true,
+        },
+    }
+}
+
+/// Validate an agent's user-level skills installation (e.g.
+/// `$CODEX_HOME/skills/`, `$QODER_CONFIG_DIR/skills/`, `$QWEN_HOME/skills/`).
+/// Checks every `straymark-*` skill for: presence of `SKILL.md`, parseable YAML
+/// frontmatter, required `name` and `description`, and — for agents that expect
+/// the minimal frontmatter — absence of Claude-only keys like `allowed-tools`
+/// (whose presence indicates someone copied skills from `.claude/` by mistake).
+fn validate_agent_skills(agent: &str) -> Result<()> {
+    let spec = agent_skills_spec(agent);
+    let home_fallback = || {
+        std::path::PathBuf::from(std::env::var("HOME").unwrap_or_default()).join(spec.default_dir)
     };
-    let skills_dir = codex_home.join("skills");
+    let agent_home = match std::env::var(spec.env_var) {
+        Ok(v) if !v.is_empty() => std::path::PathBuf::from(v),
+        _ => home_fallback(),
+    };
+    let skills_dir = agent_home.join("skills");
+    let install_hint = format!("straymark install-skills --agent {agent}");
 
     println!();
-    println!("  {}", "StrayMark Validate (codex)".bold().cyan());
+    println!("  {}", format!("StrayMark Validate ({agent})").bold().cyan());
     println!("  {}", skills_dir.display().to_string().dimmed());
     println!();
 
     if !skills_dir.is_dir() {
         utils::warn(&format!(
-            "Codex skills directory not found: {}",
+            "{} skills directory not found: {}",
+            agent,
             skills_dir.display()
         ));
         println!(
             "  {} Run {} to populate it.",
             "→".blue().bold(),
-            "straymark install-skills --agent codex".cyan()
+            install_hint.cyan()
         );
         println!();
         std::process::exit(1);
@@ -335,7 +371,7 @@ fn validate_codex_skills() -> Result<()> {
         println!(
             "  {} Run {} to install them.",
             "→".blue().bold(),
-            "straymark install-skills --agent codex".cyan()
+            install_hint.cyan()
         );
         println!();
         std::process::exit(1);
@@ -379,16 +415,18 @@ fn validate_codex_skills() -> Result<()> {
                     "frontmatter missing `description`".into(),
                 ));
             }
-            if let Some(map) = &fm {
-                for forbidden in &["allowed-tools", "argument-hint", "model"] {
-                    if map.contains_key(*forbidden) {
-                        file_issues.push((
-                            false,
-                            "claude-only-key".into(),
-                            format!(
-                                "frontmatter contains `{forbidden}` — Codex skills should keep only `name` and `description`"
-                            ),
-                        ));
+            if spec.minimal_frontmatter {
+                if let Some(map) = &fm {
+                    for forbidden in &["allowed-tools", "argument-hint", "model"] {
+                        if map.contains_key(*forbidden) {
+                            file_issues.push((
+                                false,
+                                "claude-only-key".into(),
+                                format!(
+                                    "frontmatter contains `{forbidden}` — {agent} skills should keep only `name` and `description`"
+                                ),
+                            ));
+                        }
                     }
                 }
             }
@@ -415,9 +453,10 @@ fn validate_codex_skills() -> Result<()> {
 
     if errors == 0 && warnings == 0 {
         println!(
-            "  {} All {} Codex skill(s) passed validation",
+            "  {} All {} {} skill(s) passed validation",
             "✓".green().bold(),
-            entries.len()
+            entries.len(),
+            agent
         );
         println!();
         return Ok(());

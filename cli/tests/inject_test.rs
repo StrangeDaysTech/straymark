@@ -74,17 +74,51 @@ fn test_agents_md_template_has_markers() {
 }
 
 #[test]
-fn test_manifest_declares_agents_md_injection() {
-    // The dist-manifest.yml must list AGENTS.md among injection targets so init/update/remove
-    // pick it up via the data-driven path (not just the legacy fallback in remove.rs).
-    let manifest_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+fn test_manifest_declares_every_directive_injection() {
+    // The dist-manifest.yml is the single source of truth for the agent
+    // surfaces: init/update/repair/remove all walk `injections:`. A target
+    // missing here silently drops an entire CLI's governance — which is what
+    // happened to Qwen Code until fw-4.41.0. Every declared target must also
+    // have its template on disk, or `init` warns and skips it at runtime.
+    let dist_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .unwrap()
-        .join("dist/dist-manifest.yml");
-    let manifest = fs::read_to_string(&manifest_path).expect("dist-manifest.yml must exist");
+        .join("dist");
+    let manifest =
+        fs::read_to_string(dist_root.join("dist-manifest.yml")).expect("dist-manifest.yml must exist");
 
-    assert!(manifest.contains("target: AGENTS.md"));
-    assert!(manifest.contains("template: dist-templates/directives/AGENTS.md"));
+    let expected: &[(&str, &str)] = &[
+        ("AGENTS.md", "dist-templates/directives/AGENTS.md"),
+        ("CLAUDE.md", "dist-templates/directives/CLAUDE.md"),
+        ("GEMINI.md", "dist-templates/directives/GEMINI.md"),
+        ("QWEN.md", "dist-templates/directives/QWEN.md"),
+        (
+            ".github/copilot-instructions.md",
+            "dist-templates/directives/copilot-instructions.md",
+        ),
+        (".cursorrules", "dist-templates/directives/cursorrules"),
+        (
+            ".cursor/rules/straymark.md",
+            "dist-templates/directives/cursor-rules-straymark.md",
+        ),
+    ];
+
+    for (target, template) in expected {
+        assert!(
+            manifest.contains(&format!("target: {target}")),
+            "dist-manifest.yml must declare the {target} injection"
+        );
+        assert!(
+            manifest.contains(&format!("template: {template}")),
+            "the {target} injection must point at {template}"
+        );
+        let template_path = dist_root.join(template);
+        assert!(
+            template_path.is_file(),
+            "missing template on disk: {}",
+            template_path.display()
+        );
+    }
 }
 
 #[test]

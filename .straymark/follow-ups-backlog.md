@@ -1,7 +1,7 @@
 ---
-last_scan: 2026-08-04
+last_scan: 2026-08-05
 schema_version: v1
-total_open: 1
+total_open: 2
 total_promoted: 0
 total_closed_in_session: 0
 total_phase_blocked: 0
@@ -14,6 +14,7 @@ buckets:
   - operational
 fully_extracted_ailogs:
   - AILOG-2026-08-04-003
+  - AILOG-2026-08-05-003
 ---
 
 # Follow-ups Backlog
@@ -48,6 +49,15 @@ Entry shape (v1 — optional fields marked):
 - **Destination**: TBD
 - **Cost**: TBD
 - **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-04.
+
+### FU-002 — Verify `QWEN.md` and `.qwen/skills/` land through a real `straymark init` and a real `straymark update` once…
+- **Origin**: AILOG-2026-08-05-003 §Follow-ups
+- **Source-hash**: db86ed449fc7
+- **Status**: open
+- **Trigger**: TBD
+- **Destination**: TBD
+- **Cost**: TBD
+- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-05.
 
 ## Bucket: time-triggered
 

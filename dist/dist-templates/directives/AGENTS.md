@@ -17,7 +17,8 @@
 
 ### Identity
 - Identify yourself with your platform and version in the `agent:` field
-  (e.g. `claude-code-v1.0`, `gemini-cli-v1.0`, `copilot-v1.0`, `cursor-v1.0`, `codex-cli-v1.0`)
+  (e.g. `claude-code-v1.0`, `gemini-cli-v1.0`, `copilot-v1.0`, `cursor-v1.0`, `codex-cli-v1.0`,
+  `qwen-code-v1.0`, `qoder-v1.0`)
 - Declare confidence in decisions: `high | medium | low`
 
 ### Review Requirements

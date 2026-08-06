@@ -122,6 +122,7 @@ StrayMark 的产品决策基于十二条明确的原则。它们按层级排序�
 - **Cursor** → `.cursorrules`
 - **GitHub Copilot CLI** → `.github/copilot-instructions.md`
 - **Gemini CLI** (Google) → `GEMINI.md`
+- **Qwen Code** (Alibaba) → `QWEN.md`
 
 每个配置指导 AI：
 - 在每个文档中标识自身
@@ -258,8 +259,8 @@ StrayMark 为每个组件使用独立的版本标签：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.40.0` | 模板（12 种类型）、治理文档、指令、Charter 模板 + schema |
-| CLI | `cli-` | `cli-3.41.1` | `straymark` 二进制文件 |
+| Framework | `fw-` | `fw-4.41.0` | 模板（12 种类型）、治理文档、指令、Charter 模板 + schema |
+| CLI | `cli-` | `cli-3.42.0` | `straymark` 二进制文件 |
 | Loom（实验性） | `loom-` | `loom-0.4.2` | `straymark-loom` 可视化服务器，由 `straymark loom serve` 按需下载 |
 
 使用 `straymark status` 或 `straymark about` 查看已安装的版本。
@@ -539,7 +540,13 @@ your-project/
 ├── .claude/skills/         # 🟣 Claude Code (Anthropic)
 │   ├── straymark-new/SKILL.md
 │   └── ...
-└── .codex/skills/          # 🟢 Codex CLI (OpenAI) — 安装到 ~/.codex/skills/
+├── .codex/skills/          # 🟢 Codex CLI (OpenAI) — 安装到 ~/.codex/skills/
+│   ├── straymark-new/SKILL.md
+│   └── ...
+├── .qoder/skills/          # 🔴 Qoder CLI — 从项目树读取
+│   ├── straymark-new/SKILL.md
+│   └── ...
+└── .qwen/skills/           # 🟠 Qwen Code (Alibaba) — 从项目树读取
     ├── straymark-new/SKILL.md
     └── ...
 ```
@@ -549,7 +556,9 @@ your-project/
 | `.agent/workflows/` | Antigravity, 通用 | VS Code/Cursor 扩展 | 带 YAML frontmatter 的 `skill-name.md` |
 | `.gemini/skills/` | Gemini CLI | Google 终端 CLI | `skill-name/SKILL.md` |
 | `.claude/skills/` | Claude Code | Anthropic 编码 Agent | `skill-name/SKILL.md` |
-| `.codex/skills/` *(fw-4.19.0+)* | Codex CLI | OpenAI 编码 Agent | `skill-name/SKILL.md`（最小 frontmatter）— 通过 `straymark install-skills --agent codex` 安装到 `~/.codex/skills/` |
+| `.codex/skills/` *(fw-4.19.0+)* | Codex CLI | OpenAI 编码 Agent | `skill-name/SKILL.md`（最小 frontmatter）— **必须**通过 `straymark install-skills --agent codex` 安装到 `~/.codex/skills/` |
+| `.qoder/skills/` | Qoder CLI | Qoder 终端编码 Agent | `skill-name/SKILL.md`（完整 frontmatter，与 Claude 相同）— 从项目树读取；`straymark install-skills --agent qoder` 可选地同时填充 `~/.qoder/skills/` |
+| `.qwen/skills/` *(fw-4.41.0+)* | Qwen Code | Alibaba 终端编码 Agent | `skill-name/SKILL.md`（完整 frontmatter，与 Claude 相同）— 从项目树读取；`straymark install-skills --agent qwen` 可选地同时填充 `~/.qwen/skills/` |
 
 > **注意**：`.agent/` 是**厂商中立**的标准。Agent 特定目录（`.gemini/`、`.claude/`）为这些平台提供兼容性，同时遵循其原生规范。
 
@@ -569,6 +578,8 @@ your-project/
 | GitHub Copilot CLI | `.github/copilot-instructions.md` | ✅ 完整支持 |
 | Gemini CLI | `GEMINI.md` | ✅ 完整支持 |
 | Codex CLI (OpenAI) *(fw-4.19.0+)* | `AGENTS.md` + `~/.codex/skills/` | ✅ 完整支持（运行 `straymark install-skills --agent codex`） |
+| Qoder CLI | `AGENTS.md` + `.qoder/skills/` | ✅ 完整支持 |
+| Qwen Code (Alibaba) *(fw-4.41.0+)* | `QWEN.md` + `.qwen/skills/` | ✅ 完整支持 |
 
 ### 操作系统
 
