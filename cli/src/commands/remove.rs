@@ -13,6 +13,7 @@ const LEGACY_DIRECTIVE_TARGETS: &[&str] = &[
     "AGENTS.md",
     "CLAUDE.md",
     "GEMINI.md",
+    "QWEN.md",
     ".github/copilot-instructions.md",
     ".cursorrules",
     ".cursor/rules/straymark.md",
@@ -76,6 +77,7 @@ pub fn run(full: bool) -> Result<()> {
     remove_dir_if_exists(&target.join(".gemini/skills"))?;
     remove_dir_if_exists(&target.join(".codex/skills"))?;
     remove_dir_if_exists(&target.join(".qoder/skills"))?;
+    remove_dir_if_exists(&target.join(".qwen/skills"))?;
     remove_dir_if_exists(&target.join(".agent/workflows"))?;
 
     // Clean up empty parent dirs
@@ -83,6 +85,7 @@ pub fn run(full: bool) -> Result<()> {
     remove_empty_dir(&target.join(".gemini"))?;
     remove_empty_dir(&target.join(".codex"))?;
     remove_empty_dir(&target.join(".qoder"))?;
+    remove_empty_dir(&target.join(".qwen"))?;
     remove_empty_dir(&target.join(".agent"))?;
 
     // Clean up .cursor directories (injections already handled by clean_directives)

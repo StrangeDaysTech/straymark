@@ -500,7 +500,7 @@ straymark followups promote FU-NNN        # automate FU → TDE promotion
 
 ## Directive Injection Markers
 
-StrayMark uses HTML comment markers to manage injected content in agent configuration files (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursorrules`, `.cursor/rules/straymark.md`):
+StrayMark uses HTML comment markers to manage injected content in agent configuration files (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `QWEN.md`, `.github/copilot-instructions.md`, `.cursorrules`, `.cursor/rules/straymark.md`):
 
 ```html
 <!-- straymark:begin -->

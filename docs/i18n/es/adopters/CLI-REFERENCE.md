@@ -45,8 +45,8 @@ StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.40.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.41.1` | El binario `straymark` |
+| Framework | `fw-` | `fw-4.41.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| CLI | `cli-` | `cli-3.42.0` | El binario `straymark` |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | El servidor de visualización `straymark-loom`, descargado bajo demanda por `straymark loom serve` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
@@ -78,7 +78,7 @@ Inicializa StrayMark en un directorio de proyecto.
 1. Descarga el último release del framework (`fw-*`) desde GitHub
 2. Crea la estructura de directorios `.straymark/`
 3. Crea `STRAYMARK.md` con las reglas de gobernanza
-4. Configura archivos de directivas de agentes IA (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`, etc.)
+4. Configura archivos de directivas de agentes IA (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `QWEN.md`, `.cursorrules`, etc.)
 5. Copia workflows de CI/CD
 6. *(`--hooks`)* instala el hook pre-PR
 
@@ -297,18 +297,20 @@ Repairing StrayMark in /home/user/mi-proyecto
 
 ---
 
-### `straymark install-skills --agent <codex|qoder|claude|gemini> [--path .] [--dry-run] [--symlink]` *(cli-3.16.0+)*
+### `straymark install-skills --agent <codex|qoder|qwen|claude|gemini> [--path .] [--dry-run] [--symlink]` *(cli-3.16.0+)*
 
-Instala skills de StrayMark en el directorio **a nivel de usuario** de skills del agente IA. `--agent codex` copia cada skill `straymark-*` desde `<path>/.codex/skills/` (materializado por `straymark init` o `straymark update`) hacia `$CODEX_HOME/skills/` (o `$HOME/.codex/skills/` si `CODEX_HOME` no está definida). `--agent qoder` hace lo mismo desde `<path>/.qoder/skills/` hacia `$QODER_CONFIG_DIR/skills/` (o `$HOME/.qoder/skills/` si `QODER_CONFIG_DIR` no está definida).
+Instala skills de StrayMark en el directorio **a nivel de usuario** de skills del agente IA. `--agent codex` copia cada skill `straymark-*` desde `<path>/.codex/skills/` (materializado por `straymark init` o `straymark update`) hacia `$CODEX_HOME/skills/` (o `$HOME/.codex/skills/` si `CODEX_HOME` no está definida). `--agent qoder` hace lo mismo desde `<path>/.qoder/skills/` hacia `$QODER_CONFIG_DIR/skills/` (o `$HOME/.qoder/skills/` si `QODER_CONFIG_DIR` no está definida). `--agent qwen` *(cli-3.42.0+)* hace lo mismo desde `<path>/.qwen/skills/` hacia `$QWEN_HOME/skills/` (o `$HOME/.qwen/skills/` si `QWEN_HOME` no está definida) — el directorio que resuelve el propio `Storage.getGlobalQwenDir()` de Qwen Code.
 
-Para `--agent claude` y `--agent gemini` el comando termina con un error explicativo: esos agentes leen los skills directamente del árbol del proyecto (`.claude/skills/`, `.gemini/skills/`), por lo que no requieren instalación a nivel de usuario.
+**Solo Codex requiere este paso.** Qoder y Qwen Code también resuelven un directorio de skills a nivel de proyecto (`<proyecto>/.qoder/skills/`, `<proyecto>/.qwen/skills/`), así que para esos dos la instalación a nivel de usuario es una conveniencia: deja los skills de StrayMark disponibles en cualquier proyecto, no solo en los que tienen el framework instalado.
+
+Para `--agent claude` y `--agent gemini` el comando termina con un error explicativo: esos agentes leen los skills exclusivamente del árbol del proyecto (`.claude/skills/`, `.gemini/skills/`), por lo que no admiten instalación a nivel de usuario.
 
 **Argumentos y flags:**
 
 | Argumento/Flag | Default | Descripción |
 |---|---|---|
-| `--agent` | requerido | Uno de `codex`, `qoder`, `claude`, `gemini`. Solo `codex` y `qoder` ejecutan trabajo; los demás muestran guía y salen. |
-| `--path` | `.` | Directorio del proyecto cuyo `.codex/skills/` (o `.qoder/skills/`) es el origen. |
+| `--agent` | requerido | Uno de `codex`, `qoder`, `qwen`, `claude`, `gemini`. Solo `codex`, `qoder` y `qwen` ejecutan trabajo; los demás muestran guía y salen. |
+| `--path` | `.` | Directorio del proyecto cuyo `.codex/skills/` (o `.qoder/skills/`, `.qwen/skills/`) es el origen. |
 | `--dry-run` | off | Imprime qué se instalaría sin escribir nada. |
 | `--symlink` | off | Enlaza simbólicamente cada skill en lugar de copiarlo (solo Unix; útil para devs del framework iterando sobre los skills). |
 
@@ -327,7 +329,7 @@ Valida documentos StrayMark verificando cumplimiento y corrección.
 | `path` | `.` (directorio actual) | Directorio del proyecto |
 | `--fix` | — | Corregir automáticamente problemas simples |
 | `--staged` | — | Validar solo archivos staged en Git (ideal para hooks pre-commit) |
-| `--agent` *(cli-3.16.0+)* | — | Cambia a modo agente y revisa una instalación a nivel de usuario de skills en lugar de documentos del proyecto. Actualmente solo `codex` — verifica `~/.codex/skills/straymark-*` para presencia, frontmatter YAML parseable, `name`/`description` requeridos, y ausencia de claves Claude-only como `allowed-tools` (cuya presencia indica que alguien copió skills desde `.claude/` por error). |
+| `--agent` *(cli-3.16.0+)* | — | Cambia a modo agente y revisa una instalación a nivel de usuario de skills en lugar de documentos del proyecto. Uno de `codex`, `qoder`, `qwen` *(estos dos últimos desde cli-3.42.0)* — verifica `~/.codex/skills/straymark-*`, `~/.qoder/skills/straymark-*` o `~/.qwen/skills/straymark-*` para presencia, frontmatter YAML parseable y `name`/`description` requeridos. Para `codex` además señala claves Claude-only como `allowed-tools` (cuya presencia indica que alguien copió skills desde `.claude/` por error); Qoder y Qwen Code parsean el frontmatter completo de Claude, así que ahí `allowed-tools` es lo esperado. |
 | `--include-charters` | — | Validar también los Charters en `.straymark/charters/` contra el JSON Schema y la integridad referencial (los IDs en `originating_ailogs` resuelven; el path en `originating_spec` existe). Incluye **`CHARTER-FILES-EXIST`** *(cli-3.17.0+)*: avisa cuando una fila de `## Archivos a modificar` nombra una ruta que no existe en disco y no está marcada como "Nuevo" — atrapa Charters redactados contra código asumido, no leído (hallazgo #210). Solo-aviso; distinto de `charter drift` (que compara lo declarado contra los archivos modificados en git). Opt-in, default `false` para no afectar a proyectos que no usan el patrón. Por ahora solo se honra fuera de `--staged`; la validación de Charters en modo staged llega en cli-3.10.0. |
 | `--check-pending-reviews` *(cli-3.7.0+)* | off | Lista documentos con `review_required: true` y sin `review_outcome` cuya antigüedad supere `--max-pending-days`. **Solo warn** — nunca falla el exit code de validate; útil para dashboards de CI sobre el backlog de aprobaciones. |
 | `--max-pending-days` *(cli-3.7.0+)* | `14` | Umbral en días para `--check-pending-reviews`. |
@@ -1285,15 +1287,16 @@ loom: serving http://127.0.0.1:7700
 
 ## Skills
 
-StrayMark incluye un conjunto de skills (slash commands) para usar dentro de un asistente IA (Claude Code, Gemini Code, Codex CLI, Qoder, Cursor, runtimes de agente genérico). Cada skill se instala en 5 formas paralelas durante `straymark init`:
+StrayMark incluye un conjunto de skills (slash commands) para usar dentro de un asistente IA (Claude Code, Gemini Code, Codex CLI, Qoder, Qwen Code, Cursor, runtimes de agente genérico). Cada skill se instala en 6 formas paralelas durante `straymark init`:
 
 - `.claude/skills/<skill>/SKILL.md` (Claude — frontmatter con `allowed-tools`)
 - `.gemini/skills/<skill>/SKILL.md` (Gemini — frontmatter sin `allowed-tools`)
 - `.codex/skills/<skill>/SKILL.md` *(fw-4.19.0+)* (Codex — frontmatter mínimo, solo `name`+`description`; generado desde la variante Claude)
 - `.qoder/skills/<skill>/SKILL.md` (Qoder — mismo frontmatter completo que la variante Claude)
+- `.qwen/skills/<skill>/SKILL.md` *(fw-4.41.0+)* (Qwen Code — mismo frontmatter completo que la variante Claude)
 - `.agent/workflows/<skill>.md` (agente genérico — frontmatter solo `description`)
 
-Claude y Gemini descubren los skills directamente del árbol del proyecto. **Codex lee los skills desde `~/.codex/skills/` y Qoder desde `~/.qoder/skills/` (a nivel de usuario), no desde el árbol del proyecto** — ejecuta `straymark install-skills --agent codex` o `straymark install-skills --agent qoder` una vez después de `straymark init` (o después de cada actualización del framework) para poblar ese directorio desde `.codex/skills/` o `.qoder/skills/`.
+Claude, Gemini, Qoder y Qwen Code descubren los skills directamente del árbol del proyecto. **Codex es la excepción: lee los skills solo desde `~/.codex/skills/` (a nivel de usuario)** — ejecuta `straymark install-skills --agent codex` una vez después de `straymark init` (y después de cada actualización del framework) para poblar ese directorio desde `.codex/skills/`. Para Qoder y Qwen Code el comando equivalente (`--agent qoder`, `--agent qwen`) es opcional: copia los skills a `~/.qoder/skills/` o `~/.qwen/skills/` para tenerlos también fuera de este proyecto.
 
 | Skill | Propósito | Archivos producidos |
 |---|---|---|

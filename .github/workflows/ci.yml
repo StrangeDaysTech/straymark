@@ -5,14 +5,22 @@ on:
     paths:
       - 'dist/.claude/skills/**'
       - 'dist/.codex/skills/**'
+      - 'dist/.qoder/skills/**'
+      - 'dist/.qwen/skills/**'
       - 'cli/src/bin/gen_codex_skills.rs'
+      - 'cli/tests/qoder_skills_test.rs'
+      - 'cli/tests/qwen_skills_test.rs'
       - '.github/workflows/ci.yml'
   push:
     branches: [main]
     paths:
       - 'dist/.claude/skills/**'
       - 'dist/.codex/skills/**'
+      - 'dist/.qoder/skills/**'
+      - 'dist/.qwen/skills/**'
       - 'cli/src/bin/gen_codex_skills.rs'
+      - 'cli/tests/qoder_skills_test.rs'
+      - 'cli/tests/qwen_skills_test.rs'
       - '.github/workflows/ci.yml'
 
 permissions:
@@ -41,3 +49,25 @@ jobs:
           # produce from dist/.claude/skills/. Fix locally with:
           #   cd cli && cargo run --bin gen_codex_skills --features dev-tools
           cargo run --quiet --bin gen_codex_skills --features dev-tools -- --check
+
+  skill-mirror-parity:
+    name: Qoder/Qwen skills mirror the Claude source
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install OpenSSL (Linux)
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config
+
+      - name: Verify .qoder/skills and .qwen/skills mirror .claude/skills
+        run: |
+          # Qoder and Qwen Code both parse the full Claude-format frontmatter,
+          # so their trees are byte-for-byte copies rather than generated
+          # variants. Fix locally with:
+          #   rm -rf dist/.qoder/skills dist/.qwen/skills
+          #   cp -a dist/.claude/skills dist/.qoder/skills
+          #   cp -a dist/.claude/skills dist/.qwen/skills
+          cargo test -p straymark-cli --test qoder_skills_test --test qwen_skills_test

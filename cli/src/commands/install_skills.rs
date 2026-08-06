@@ -8,9 +8,17 @@ use crate::utils;
 /// Install StrayMark skills into an AI agent's user-level skills directory.
 ///
 /// Supports `--agent codex` (skills land in `$CODEX_HOME/skills/` or
-/// `$HOME/.codex/skills/`) and `--agent qoder` (skills land in
-/// `$QODER_CONFIG_DIR/skills/` or `$HOME/.qoder/skills/`, GH #399). Claude
-/// and Gemini consume skills directly from the project tree
+/// `$HOME/.codex/skills/`), `--agent qoder` (`$QODER_CONFIG_DIR/skills/` or
+/// `$HOME/.qoder/skills/`, GH #399) and `--agent qwen` (`$QWEN_HOME/skills/`
+/// or `$HOME/.qwen/skills/`).
+///
+/// Only Codex *requires* this step. Qoder and Qwen Code also resolve a
+/// project-scoped skills directory (`<project>/.qoder/skills/`,
+/// `<project>/.qwen/skills/`), so for those two a user-level install is a
+/// convenience: it makes the StrayMark skills available in every project,
+/// not just the ones where the framework is installed.
+///
+/// Claude and Gemini consume skills exclusively from the project tree
 /// (`.claude/skills/`, `.gemini/skills/`); for those agents this command
 /// exits with an explanatory error.
 pub fn run(agent: &str, project_path: &str, dry_run: bool, symlink: bool) -> Result<()> {
@@ -31,6 +39,14 @@ pub fn run(agent: &str, project_path: &str, dry_run: bool, symlink: bool) -> Res
             dry_run,
             symlink,
         ),
+        "qwen" => install_user_level(
+            "qwen",
+            ".qwen",
+            resolve_qwen_home,
+            project_path,
+            dry_run,
+            symlink,
+        ),
         "claude" | "gemini" => {
             bail!(
                 "Skills for {agent} are read directly from the project tree (.{agent}/skills/). \
@@ -38,7 +54,7 @@ pub fn run(agent: &str, project_path: &str, dry_run: bool, symlink: bool) -> Res
                  to refresh them in the project."
             )
         }
-        other => bail!("unknown agent: {other} (supported: codex, qoder)"),
+        other => bail!("unknown agent: {other} (supported: codex, qoder, qwen)"),
     }
 }
 
@@ -192,6 +208,18 @@ fn resolve_qoder_home() -> Result<PathBuf> {
     }
     let home = std::env::var("HOME").context("$HOME is not set")?;
     Ok(PathBuf::from(home).join(".qoder"))
+}
+
+/// Mirrors Qwen Code's own `Storage.getGlobalQwenDir()`: `$QWEN_HOME` when
+/// set, `$HOME/.qwen` otherwise. User-level skills live under `<dir>/skills/`.
+fn resolve_qwen_home() -> Result<PathBuf> {
+    if let Ok(v) = std::env::var("QWEN_HOME") {
+        if !v.is_empty() {
+            return Ok(PathBuf::from(v));
+        }
+    }
+    let home = std::env::var("HOME").context("$HOME is not set")?;
+    Ok(PathBuf::from(home).join(".qwen"))
 }
 
 fn remove_entry(p: &Path) -> Result<()> {

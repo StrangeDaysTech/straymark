@@ -83,6 +83,9 @@ StrayMark provides configuration files for:
 | **Cursor** | `.cursorrules` | ✅ Supported |
 | **GitHub Copilot CLI** | `.github/copilot-instructions.md` | ✅ Supported |
 | **Gemini CLI** (Google) | `GEMINI.md` | ✅ Supported |
+| **Qwen Code** (Alibaba) *(fw-4.41.0+)* | `QWEN.md` + `.qwen/skills/` | ✅ Supported |
+| **Codex CLI** (OpenAI) *(fw-4.19.0+)* | `AGENTS.md` + `~/.codex/skills/` | ✅ Supported (run `straymark install-skills --agent codex`) |
+| **Qoder CLI** | `AGENTS.md` + `.qoder/skills/` | ✅ Supported |
 | **Other AI Tools** | Copy rules from any config file | ✅ Adaptable |
 
 ### Compatible Methodologies
@@ -230,7 +233,7 @@ The CLI automatically:
 - Downloads the latest StrayMark release from GitHub
 - Sets up the `.straymark/` directory structure
 - Creates `STRAYMARK.md` with governance rules
-- Configures AI agent directives (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`, etc.)
+- Configures AI agent directives (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `QWEN.md`, `.cursorrules`, etc.)
 - Copies CI/CD workflows
 
 ### Option 2: Manual Setup

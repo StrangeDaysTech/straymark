@@ -1,9 +1,10 @@
 //! Sanity tests for the architecture / Loom skills shipped under `dist/`.
 //!
 //! These verify that each skill file exists with the expected frontmatter
-//! shape (Claude has `allowed-tools`, Gemini has `name` but no `allowed-tools`,
-//! agent workflow has only `description`) and that all three platforms carry
-//! the load-bearing guidance. They run against the source tree, not against an
+//! shape (Claude/Qoder/Qwen have `allowed-tools`, Gemini and Codex have `name`
+//! but no `allowed-tools`, agent workflow has only `description`) and that all
+//! six surfaces carry the load-bearing guidance. They run against the source
+//! tree, not against an
 //! `init`-ed project, because the manifest already includes the parent
 //! directories recursively — if the files exist in `dist/`, `init` copies them.
 
@@ -32,12 +33,22 @@ fn codex(skill: &str) -> String {
     read(dist_root().join(".codex").join("skills").join(skill).join("SKILL.md"))
 }
 
+fn qoder(skill: &str) -> String {
+    read(dist_root().join(".qoder").join("skills").join(skill).join("SKILL.md"))
+}
+
+fn qwen(skill: &str) -> String {
+    read(dist_root().join(".qwen").join("skills").join(skill).join("SKILL.md"))
+}
+
 fn agent(skill: &str) -> String {
     read(dist_root().join(".agent").join("workflows").join(format!("{skill}.md")))
 }
 
-/// The four-variant frontmatter contract every shipped skill must honor.
-fn assert_four_variant_shape(skill: &str) {
+/// The six-variant frontmatter contract every shipped skill must honor.
+/// Qoder and Qwen Code parse the full Claude-format frontmatter, so their
+/// variants are byte-for-byte mirrors of the Claude one.
+fn assert_six_variant_shape(skill: &str) {
     let c = claude(skill);
     assert!(c.starts_with("---\n"), "{skill}: claude missing YAML frontmatter");
     assert!(c.contains(&format!("name: {skill}")), "{skill}: claude missing name field");
@@ -59,6 +70,13 @@ fn assert_four_variant_shape(skill: &str) {
         "{skill}: codex must not declare allowed-tools"
     );
 
+    for (surface, body) in [("qoder", qoder(skill)), ("qwen", qwen(skill))] {
+        assert_eq!(
+            body, c,
+            "{skill}: {surface} must mirror the Claude variant byte-for-byte"
+        );
+    }
+
     let a = agent(skill);
     assert!(a.starts_with("---\n"), "{skill}: agent workflow missing YAML frontmatter");
     assert!(
@@ -75,8 +93,8 @@ fn assert_four_variant_shape(skill: &str) {
 // ── straymark-architecture ──────────────────────────────────────────────────
 
 #[test]
-fn architecture_skill_has_four_variant_shape() {
-    assert_four_variant_shape("straymark-architecture");
+fn architecture_skill_has_six_variant_shape() {
+    assert_six_variant_shape("straymark-architecture");
 }
 
 #[test]
@@ -125,8 +143,8 @@ fn architecture_skill_shares_core_guidance() {
 // ── straymark-loom ──────────────────────────────────────────────────────────
 
 #[test]
-fn loom_skill_has_four_variant_shape() {
-    assert_four_variant_shape("straymark-loom");
+fn loom_skill_has_six_variant_shape() {
+    assert_six_variant_shape("straymark-loom");
 }
 
 #[test]
@@ -166,8 +184,8 @@ fn loom_skill_shares_core_guidance() {
 // ── straymark-architecture-sync ─────────────────────────────────────────────
 
 #[test]
-fn architecture_sync_skill_has_four_variant_shape() {
-    assert_four_variant_shape("straymark-architecture-sync");
+fn architecture_sync_skill_has_six_variant_shape() {
+    assert_six_variant_shape("straymark-architecture-sync");
 }
 
 #[test]

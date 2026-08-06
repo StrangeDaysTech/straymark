@@ -83,6 +83,9 @@ StrayMark 提供以下平台的配置文件：
 | **Cursor** | `.cursorrules` | ✅ 已支持 |
 | **GitHub Copilot CLI** | `.github/copilot-instructions.md` | ✅ 已支持 |
 | **Gemini CLI** (Google) | `GEMINI.md` | ✅ 已支持 |
+| **Qwen Code** (Alibaba) *(fw-4.41.0+)* | `QWEN.md` + `.qwen/skills/` | ✅ 已支持 |
+| **Codex CLI** (OpenAI) *(fw-4.19.0+)* | `AGENTS.md` + `~/.codex/skills/` | ✅ 已支持（运行 `straymark install-skills --agent codex`） |
+| **Qoder CLI** | `AGENTS.md` + `.qoder/skills/` | ✅ 已支持 |
 | **其他 AI 工具** | 从任意配置文件复制规则 | ✅ 可适配 |
 
 ### 兼容的方法论
@@ -230,7 +233,7 @@ CLI 自动完成：
 - 从 GitHub 下载最新的 StrayMark 版本
 - 设置 `.straymark/` 目录结构
 - 创建包含治理规则的 `STRAYMARK.md`
-- 配置 AI Agent 指令（`AGENTS.md`、`CLAUDE.md`、`GEMINI.md`、`.cursorrules` 等）
+- 配置 AI Agent 指令（`AGENTS.md`、`CLAUDE.md`、`GEMINI.md`、`QWEN.md`、`.cursorrules` 等）
 - 复制 CI/CD 工作流
 
 ### 选项 2：手动设置
