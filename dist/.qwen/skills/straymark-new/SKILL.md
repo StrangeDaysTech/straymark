@@ -124,7 +124,7 @@ Use the type→directory table in step 7 to resolve where `[TYPE]` documents liv
 2. Replace placeholders:
    - `YYYY-MM-DD` → Current date
    - `NNN` → Sequence number (001, 002, etc.)
-   - `[agent-name-v1.0]` → your runtime's canonical agent identity (see AGENT-RULES.md §1 — e.g. `claude-code-v1.0`, `gemini-cli-v1.0`, `codex-cli-v1.0`, `cursor-v1.0`; do not assume Claude)
+   - `[agent-name-v1.0]` → your runtime's canonical agent identity (see AGENT-RULES.md §1 — e.g. `claude-code-v1.0`, `antigravity-v1.0`, `codex-cli-v1.0`, `cursor-v1.0`; do not assume Claude)
 3. Fill in context from git analysis
 4. Save to correct location:
 

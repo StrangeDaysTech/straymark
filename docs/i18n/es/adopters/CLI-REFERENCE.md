@@ -45,8 +45,8 @@ StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.41.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.42.0` | El binario `straymark` |
+| Framework | `fw-` | `fw-4.42.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| CLI | `cli-` | `cli-3.43.0` | El binario `straymark` |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | El servidor de visualización `straymark-loom`, descargado bajo demanda por `straymark loom serve` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
@@ -297,19 +297,19 @@ Repairing StrayMark in /home/user/mi-proyecto
 
 ---
 
-### `straymark install-skills --agent <codex|qoder|qwen|claude|gemini> [--path .] [--dry-run] [--symlink]` *(cli-3.16.0+)*
+### `straymark install-skills --agent <codex|qoder|qwen|claude|agy> [--path .] [--dry-run] [--symlink]` *(cli-3.16.0+)*
 
 Instala skills de StrayMark en el directorio **a nivel de usuario** de skills del agente IA. `--agent codex` copia cada skill `straymark-*` desde `<path>/.codex/skills/` (materializado por `straymark init` o `straymark update`) hacia `$CODEX_HOME/skills/` (o `$HOME/.codex/skills/` si `CODEX_HOME` no está definida). `--agent qoder` hace lo mismo desde `<path>/.qoder/skills/` hacia `$QODER_CONFIG_DIR/skills/` (o `$HOME/.qoder/skills/` si `QODER_CONFIG_DIR` no está definida). `--agent qwen` *(cli-3.42.0+)* hace lo mismo desde `<path>/.qwen/skills/` hacia `$QWEN_HOME/skills/` (o `$HOME/.qwen/skills/` si `QWEN_HOME` no está definida) — el directorio que resuelve el propio `Storage.getGlobalQwenDir()` de Qwen Code.
 
 **Solo Codex requiere este paso.** Qoder y Qwen Code también resuelven un directorio de skills a nivel de proyecto (`<proyecto>/.qoder/skills/`, `<proyecto>/.qwen/skills/`), así que para esos dos la instalación a nivel de usuario es una conveniencia: deja los skills de StrayMark disponibles en cualquier proyecto, no solo en los que tienen el framework instalado.
 
-Para `--agent claude` y `--agent gemini` el comando termina con un error explicativo: esos agentes leen los skills exclusivamente del árbol del proyecto (`.claude/skills/`, `.gemini/skills/`), por lo que no admiten instalación a nivel de usuario.
+Para `--agent claude` y `--agent agy` el comando termina con un error explicativo: esos agentes leen los skills exclusivamente del árbol del proyecto (`.claude/skills/`, `.agent/skills/`), por lo que no admiten instalación a nivel de usuario.
 
 **Argumentos y flags:**
 
 | Argumento/Flag | Default | Descripción |
 |---|---|---|
-| `--agent` | requerido | Uno de `codex`, `qoder`, `qwen`, `claude`, `gemini`. Solo `codex`, `qoder` y `qwen` ejecutan trabajo; los demás muestran guía y salen. |
+| `--agent` | requerido | Uno de `codex`, `qoder`, `qwen`, `claude`, `agy`. Solo `codex`, `qoder` y `qwen` ejecutan trabajo; los demás muestran guía y salen. |
 | `--path` | `.` | Directorio del proyecto cuyo `.codex/skills/` (o `.qoder/skills/`, `.qwen/skills/`) es el origen. |
 | `--dry-run` | off | Imprime qué se instalaría sin escribir nada. |
 | `--symlink` | off | Enlaza simbólicamente cada skill en lugar de copiarlo (solo Unix; útil para devs del framework iterando sobre los skills). |
@@ -660,7 +660,7 @@ OK `### Batch 5` written.
 
 *Disponible desde **cli-3.8.0** + **fw-4.7.0**. Flujo unificado v1 shippeado en **cli-3.10.0** + **fw-4.9.0** — reemplaza los 3 pasos v0 (PREPARE/CALIBRATE/FINALIZE) por 2 (PREPARE/MERGE-REPORTS), unifica la plantilla del auditor, y mueve los paths canónicos a `.straymark/audits/`.*
 
-Orquesta una revisión externa multi-modelo de la ejecución de un Charter. **Orchestration-only** — el CLI prepara la plantilla unificada del audit, valida los reports de auditores contra el schema, y emite/mergea el bloque YAML `external_audit`. **NO invoca APIs de LLM.** El operador corre N CLIs auditoras (gemini-cli, claude-cli, copilot-cli, codex-cli — la que tenga) configuradas con acceso read-only al filesystem; cada una invoca el skill `/straymark-audit-execute` para leer el prompt, auditar con tool use citando `path:line`, y escribir el report.
+Orquesta una revisión externa multi-modelo de la ejecución de un Charter. **Orchestration-only** — el CLI prepara la plantilla unificada del audit, valida los reports de auditores contra el schema, y emite/mergea el bloque YAML `external_audit`. **NO invoca APIs de LLM.** El operador corre N CLIs auditoras (agy, claude-cli, copilot-cli, codex-cli — la que tenga) configuradas con acceso read-only al filesystem; cada una invoca el skill `/straymark-audit-execute` para leer el prompt, auditar con tool use citando `path:line`, y escribir el report.
 
 Dos pasos, cada uno invocable independientemente:
 
@@ -714,7 +714,7 @@ El rol calibrador se mueve de una plantilla paste-based (v0) al agente principal
 .straymark/audits/CHARTER-NN/
 ├── audit-prompt.md                          # resuelto por --prepare (single unified prompt)
 ├── report-claude-sonnet-4-6.md              # escrito por /straymark-audit-execute en claude-cli
-├── report-gemini-2-5-pro.md                 # escrito por /straymark-audit-execute en gemini-cli
+├── report-gemini-2-5-pro.md                 # escrito por /straymark-audit-execute en agy
 ├── report-gpt-5-3-codex.md                  # 3er auditor opcional
 ├── review.md                                # escrito por /straymark-audit-review (análisis consolidado de 6 secciones)
 └── external-audit-pending.yaml              # escrito por /straymark-audit-review cuando la telemetría aún no existe (Branch B)
@@ -727,7 +727,7 @@ Los adopters pueden `git add` el directorio entero `.straymark/audits/` para un 
 **Ejemplo (v1, con los wrappers de skills — recomendado para flujos IDE-driven):**
 
 ```bash
-# En el IDE principal (Claude Code, Gemini Code, Cursor, ...):
+# En el IDE principal (Claude Code, Antigravity CLI, Cursor, ...):
 > /straymark-audit-prompt CHARTER-05
   → corre `straymark charter audit CHARTER-05 --prepare`
   → escribe .straymark/audits/CHARTER-05/audit-prompt.md
@@ -738,7 +738,7 @@ Los adopters pueden `git add` el directorio entero `.straymark/audits/` para un 
   → escribe .straymark/audits/CHARTER-05/report-claude-sonnet-4-6.md
   → recuerda al operador esperar a TODAS las auditorías antes de review
 
-# En gemini-cli:
+# En agy:
 > /straymark-audit-execute CHARTER-05
   → escribe .straymark/audits/CHARTER-05/report-gemini-2-5-pro.md
 
@@ -1287,16 +1287,15 @@ loom: serving http://127.0.0.1:7700
 
 ## Skills
 
-StrayMark incluye un conjunto de skills (slash commands) para usar dentro de un asistente IA (Claude Code, Gemini Code, Codex CLI, Qoder, Qwen Code, Cursor, runtimes de agente genérico). Cada skill se instala en 6 formas paralelas durante `straymark init`:
+StrayMark incluye un conjunto de skills (slash commands) para usar dentro de un asistente IA (Claude Code, Antigravity CLI, Codex CLI, Qoder, Qwen Code, Cursor, runtimes de agente genérico). Cada skill se instala en 5 formas paralelas durante `straymark init`:
 
 - `.claude/skills/<skill>/SKILL.md` (Claude — frontmatter con `allowed-tools`)
-- `.gemini/skills/<skill>/SKILL.md` (Gemini — frontmatter sin `allowed-tools`)
 - `.codex/skills/<skill>/SKILL.md` *(fw-4.19.0+)* (Codex — frontmatter mínimo, solo `name`+`description`; generado desde la variante Claude)
 - `.qoder/skills/<skill>/SKILL.md` (Qoder — mismo frontmatter completo que la variante Claude)
 - `.qwen/skills/<skill>/SKILL.md` *(fw-4.41.0+)* (Qwen Code — mismo frontmatter completo que la variante Claude)
-- `.agent/workflows/<skill>.md` (agente genérico — frontmatter solo `description`)
+- `.agent/skills/<skill>/SKILL.md` *(fw-4.42.0+)* (Antigravity CLI `agy` — frontmatter mínimo, generado desde la variante Claude; `.agent/` es una de las raíces de customización de Antigravity)
 
-Claude, Gemini, Qoder y Qwen Code descubren los skills directamente del árbol del proyecto. **Codex es la excepción: lee los skills solo desde `~/.codex/skills/` (a nivel de usuario)** — ejecuta `straymark install-skills --agent codex` una vez después de `straymark init` (y después de cada actualización del framework) para poblar ese directorio desde `.codex/skills/`. Para Qoder y Qwen Code el comando equivalente (`--agent qoder`, `--agent qwen`) es opcional: copia los skills a `~/.qoder/skills/` o `~/.qwen/skills/` para tenerlos también fuera de este proyecto.
+Claude, Antigravity, Qoder y Qwen Code descubren los skills directamente del árbol del proyecto. **Codex es la excepción: lee los skills solo desde `~/.codex/skills/` (a nivel de usuario)** — ejecuta `straymark install-skills --agent codex` una vez después de `straymark init` (y después de cada actualización del framework) para poblar ese directorio desde `.codex/skills/`. Para Qoder y Qwen Code el comando equivalente (`--agent qoder`, `--agent qwen`) es opcional: copia los skills a `~/.qoder/skills/` o `~/.qwen/skills/` para tenerlos también fuera de este proyecto.
 
 | Skill | Propósito | Archivos producidos |
 |---|---|---|
@@ -1310,7 +1309,7 @@ Claude, Gemini, Qoder y Qwen Code descubren los skills directamente del árbol d
 | `/straymark-charter-new` *(fw-4.12.0+)* | Andamiar un Charter — unidad de trabajo declarativa ex-ante. Envuelve `straymark charter new` (derivación de slug, numeración secuencial, sustitución de plantilla); el skill conduce la selección de origen/esfuerzo y la disciplina de reconocimiento-antes-de-declarar. | `.straymark/charters/NN-slug.md` |
 | `/straymark-followups` *(fw-4.22.0+)* | Mantener el registry de follow-ups (`AGENT-RULES.md §13`): al inicio de sesión responder "¿qué está pendiente?" desde el registry canónico, `followups drift --apply` pre-commit viajando en el mismo commit que el AILOG, triage post-cierre de Charter y `promote` aprobado por el operador. Wrapper delgado sobre `straymark followups` — nunca edita los counters CLI-owned. | ninguno directamente (las escrituras pasan por `straymark followups drift --apply` / `promote` → `.straymark/follow-ups-backlog.md`, TDE al promover) |
 | `/straymark-audit-prompt CHARTER-ID` *(fw-4.9.0+, refactorizada en fw-4.9.0)* | Genera la plantilla unificada del audit prompt para un Charter en el path canónico. Envuelve `straymark charter audit --prepare`. El operador entonces abre N CLIs auditoras en el mismo repo e invoca `/straymark-audit-execute` en cada una — sin copy/paste. | `.straymark/audits/<CHARTER-ID>/audit-prompt.md` |
-| `/straymark-audit-execute [CHARTER-ID]` *(fw-4.9.0+)* | **Corre dentro de una CLI auditora** (gemini-cli, claude-cli, copilot-cli, codex-cli, ...). Lee el prompt preparado del disco, audita con tool use citando `path:línea`, escribe un report con el id del modelo en el nombre. El argumento CHARTER-ID es opcional — auto-descubre prompts que aún no tienen report de este modelo. | `.straymark/audits/<CHARTER-ID>/report-<sluggified-model-id>.md` |
+| `/straymark-audit-execute [CHARTER-ID]` *(fw-4.9.0+)* | **Corre dentro de una CLI auditora** (agy, claude-cli, copilot-cli, codex-cli, ...). Lee el prompt preparado del disco, audita con tool use citando `path:línea`, escribe un report con el id del modelo en el nombre. El argumento CHARTER-ID es opcional — auto-descubre prompts que aún no tienen report de este modelo. | `.straymark/audits/<CHARTER-ID>/report-<sluggified-model-id>.md` |
 | `/straymark-audit-review CHARTER-ID` *(fw-4.9.0+, expandida en fw-4.9.0)* | Contraparte de `/straymark-audit-prompt`. Lee N reports en `.straymark/audits/<CHARTER-ID>/`, verifica cada finding contra el código real (Explore agents en paralelo), produce un `review.md` consolidado de seis secciones (Resumen ejecutivo, Alcance, Evaluación por auditor, Plan de remediación P0-P4, Hallazgos descartados, Calificación de auditores), y corre `straymark charter audit --merge-reports --merge-into` para anexar `external_audit:` en la telemetría del Charter. Si la telemetría aún no existe (Charter no cerrado), escribe `external-audit-pending.yaml` para merge posterior al close. | `.straymark/audits/<CHARTER-ID>/review.md`, array `external_audit:` mergeado en telemetría (o pending YAML) |
 
 ### Skill vs CLI

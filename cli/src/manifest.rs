@@ -10,6 +10,15 @@ pub struct DistManifest {
     pub files: Vec<String>,
     #[serde(default)]
     pub injections: Vec<Injection>,
+    /// Paths this release no longer distributes. `update-framework` and
+    /// `repair` delete them from an existing installation; `init` ignores the
+    /// key entirely (nothing to retire in a fresh tree).
+    ///
+    /// `#[serde(default)]` is load-bearing: every `.straymark/dist-manifest.yml`
+    /// written by a release before fw-4.42.0 lacks the key, and those copies are
+    /// re-read by `repair` and `remove`.
+    #[serde(default)]
+    pub retired: Vec<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]

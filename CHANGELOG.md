@@ -7,6 +7,44 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.42.0 / CLI 3.43.0 — 2026-08-05
+
+Google retired Gemini CLI; its successor is **Antigravity CLI** (`agy`). StrayMark's Gemini-era surfaces are retired with it — and the framework gains the mechanism that makes retiring a distributed path possible at all.
+
+**`GEMINI.md` is deliberately *not* retired.** Verified against `agy` 1.1.10 and the `agy-customizations` skill Google ships inside the binary: Antigravity reads `GEMINI.md` and `AGENTS.md` as first-class Rules files, and its global configuration lives in `~/.gemini/`. The product was retired; the on-disk contract was kept. Deleting the file would have removed a rules source Antigravity actively loads.
+
+### Added (Framework)
+
+- **`dist/.agent/skills/`**: 15 skills at `skills/<name>/SKILL.md` with the minimal frontmatter Antigravity expects. `.agent/` is one of its workspace customization roots (`.agents/`, `.agent/`, `_agents/`, `_agent/`), so the channel is discovered from the project tree with no install step.
+- **`retired:` key in `dist-manifest.yml`**: declares paths a release no longer distributes. `update-framework` and `repair` delete them from existing installations; `init` ignores the key.
+
+### Changed (Framework)
+
+- **`GEMINI.md` directive re-framed to the Antigravity lineage**: title, `antigravity-v{version}` identity, and a note explaining why the file keeps the `GEMINI.md` name so nobody deletes it as a leftover. `gemini-cli-v1.0` is replaced by `antigravity-v1.0` across `AGENT-RULES.md` (EN/es/zh-CN), the `AGENTS.md` template and `STRAYMARK.md`.
+- **Auditor-CLI prose points at `agy`** across the audit skills, governance docs, CLI output and website. **Gemini *model* ids are untouched** — the CLI was retired, the models were not, and the audit skills already require `auditor:` to name the backend model rather than the CLI. Historical records (Sentinel telemetry, the Charter-template rule justified by an observed Gemini-auditor behavior across 2 cycles) are left as written.
+
+### Removed (Framework)
+
+- **`dist/.gemini/skills/`** — `<project>/.gemini/skills/` is not a discovery location for `agy`; it only ever served the retired product. Content lives on in `.agent/skills/`.
+- **`dist/.agent/workflows/`** — `.agent/` was the right root but `workflows/<name>.md` was never a shape Antigravity reads (the binary contains no `agent/workflows` string). It had been advertised as the Antigravity channel while being read by nothing.
+
+Both are declared under `retired:`, so `straymark update` removes them from existing installations instead of leaving them behind forever.
+
+### Fixed (CLI)
+
+- **Retiring a distributed path was previously impossible to complete.** `update_files` only ever copies, so a directory dropped from `files:` survived in every existing installation until someone ran `straymark remove`. Deletion is provenance-gated: a file goes only when its hash still matches the one `.checksums.json` recorded. Operator-edited files and files StrayMark never installed are kept and reported — and reported *distinctly*, because telling someone they "modified" a file they wrote themselves is simply wrong.
+- **`repair` returned early on a healthy installation**, so the retirement sweep would never have run where it mattered. Leftover retired paths now count as repairable work.
+- **`.gemini/skills/` had drifted behind `.claude/skills/` in 7 of 15 skills** — nothing regenerated or gated it. The replacement channel is generated, not hand-mirrored.
+
+### Changed (CLI)
+
+- `straymark install-skills --agent gemini` → `--agent agy`. The per-agent guidance no longer derives the source directory from the agent name (Antigravity reads `.agent/skills/`, not `.agy/skills/`).
+- `gen_codex_skills` → **`gen_minimal_skills`**, now emitting both `.codex/skills/` and `.agent/skills/` from the Claude source. The existing CI job gates both.
+
+### Changed (Docs)
+
+- README, CLI-REFERENCE, ADOPTION-GUIDE, WORKFLOWS and TRANSLATION-GUIDE (EN/es/zh-CN) announce Antigravity CLI in place of Gemini CLI; "6 parallel forms" → 5. The zh-CN CLI-REFERENCE, which still documented `--agent <codex|claude|gemini>` and "4 parallel forms", is resynced.
+
 ## Framework 4.41.0 / CLI 3.42.0 — 2026-08-05
 
 Qwen Code becomes a first-class agent surface, and the "does a later `update` reach me?" gap that would have silently kept it away from existing installations is closed. Also corrects a documented claim about Qoder that the runtime contradicts.

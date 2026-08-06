@@ -4,7 +4,7 @@ description: Three independent auditor CLIs review the same Charter at the closu
 ---
 # Multi-model external audit
 
-When a Charter's implementation is done and the drift check is clean — but **before** `charter close` is invoked — StrayMark can optionally commission an external audit. Not from one agent, but from several, in parallel. Three independent auditor CLIs (for example: Claude, Copilot, Gemini) read the same prompt and audit the Charter independently. A **calibrator** then consolidates findings into a single signed evidence block in the Charter's telemetry, which travels with the Charter when it's closed. The audit is **never enforced** — decline freely when the cost (2-3 LLM auditors) doesn't match the value for your case.
+When a Charter's implementation is done and the drift check is clean — but **before** `charter close` is invoked — StrayMark can optionally commission an external audit. Not from one agent, but from several, in parallel. Three independent auditor CLIs (for example: Claude, Copilot, Antigravity) read the same prompt and audit the Charter independently. A **calibrator** then consolidates findings into a single signed evidence block in the Charter's telemetry, which travels with the Charter when it's closed. The audit is **never enforced** — decline freely when the cost (2-3 LLM auditors) doesn't match the value for your case.
 
 ## Why this matters
 
@@ -21,7 +21,7 @@ When a Charter's implementation is done and the drift check is clean — but **b
 Writes a unified prompt at `.straymark/audits/CHARTER-12/audit-prompt.md` that embeds the Charter scope, the AILOGs, the git diff, and the discipline rules (evidence citation, severity calibration, scope gates).
 
 ### Phase 2 — Run N auditors in parallel
-The operator opens auditor-side CLIs (gemini-cli, claude-cli, copilot-cli, codex-cli) and runs `/straymark-audit-execute` in each. Each auditor reads the same prompt, audits with tool use (citing `path:line`), and writes `report-<model>.md` next to the prompt.
+The operator opens auditor-side CLIs (agy, claude-cli, copilot-cli, codex-cli) and runs `/straymark-audit-execute` in each. Each auditor reads the same prompt, audits with tool use (citing `path:line`), and writes `report-<model>.md` next to the prompt.
 
 ### Phase 3 — Calibrate & merge
 ```bash

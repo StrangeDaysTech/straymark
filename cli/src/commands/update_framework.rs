@@ -79,6 +79,11 @@ pub fn run() -> Result<()> {
     utils::info("Updating AI agent directives...");
     inject_directives(&target, &source_root, &manifest)?;
 
+    // Drop paths this release no longer distributes. Without this, retiring an
+    // agent surface would leave it in every existing installation forever —
+    // update_files() only ever copies, and only `straymark remove` deletes.
+    let prune = prune_retired(&target, &manifest, &current_checksums)?;
+
     // Save manifest locally for future remove operations
     save_local_manifest(&target, &manifest)?;
 
@@ -96,6 +101,15 @@ pub fn run() -> Result<()> {
         println!("    - {} (kept your version)", path.dimmed());
     }
     println!("  Files added: {}", stats.added);
+    if !prune.removed.is_empty() {
+        println!("  Files retired: {}", prune.removed.len());
+    }
+    for path in &prune.kept_modified {
+        println!("    - {} (retired upstream, kept — you modified it)", path.dimmed());
+    }
+    for path in &prune.kept_foreign {
+        println!("    - {} (retired upstream, kept — not installed by StrayMark)", path.dimmed());
+    }
 
     Ok(())
 }
@@ -237,6 +251,133 @@ fn update_files(
     }
 
     Ok(stats)
+}
+
+/// Outcome of a retired-path sweep.
+pub struct PruneStats {
+    /// Relative paths deleted — files StrayMark installed and the operator
+    /// never touched.
+    pub removed: Vec<String>,
+    /// Paths StrayMark installed but the operator has since edited.
+    pub kept_modified: Vec<String>,
+    /// Paths absent from the checksum store: operator-authored, or put there by
+    /// something other than StrayMark. Reported separately because telling
+    /// someone they "modified" a file they wrote themselves is just wrong.
+    pub kept_foreign: Vec<String>,
+}
+
+/// Delete the paths a release declares under `retired:`.
+///
+/// Deletion is gated on provenance, not on the path pattern: a file goes only
+/// when its current hash equals the one `.checksums.json` recorded for it —
+/// i.e. StrayMark put it there and nobody has edited it since. Operator-edited
+/// files and files absent from the store (operator-authored, or dropped in by
+/// something else) are kept and named in the report, because a retirement
+/// notice from upstream is not a licence to delete someone's work.
+pub fn prune_retired(
+    target: &Path,
+    manifest: &DistManifest,
+    checksums: &Checksums,
+) -> Result<PruneStats> {
+    let mut stats = PruneStats {
+        removed: Vec::new(),
+        kept_modified: Vec::new(),
+        kept_foreign: Vec::new(),
+    };
+
+    for entry in &manifest.retired {
+        let entry_path = target.join(entry.trim_end_matches('/'));
+        if !entry_path.exists() {
+            continue;
+        }
+
+        let files = if entry_path.is_dir() {
+            walkdir(entry_path.clone())?
+        } else {
+            vec![entry_path.clone()]
+        };
+
+        for file in files {
+            let relative = file
+                .strip_prefix(target)
+                .unwrap_or(&file)
+                .display()
+                .to_string()
+                .replace('\\', "/");
+
+            let current = utils::file_hash(&file);
+            match checksums.files.get(&relative) {
+                Some(stored) if current.as_deref() == Some(stored.as_str()) => {
+                    std::fs::remove_file(&file)
+                        .with_context(|| format!("Failed to remove {}", file.display()))?;
+                    stats.removed.push(relative);
+                }
+                Some(_) => stats.kept_modified.push(relative),
+                None => stats.kept_foreign.push(relative),
+            }
+        }
+
+        // Sweep bottom-up: a skill directory whose only file was pruned is now
+        // empty even when its parent still holds files the operator kept.
+        prune_empty_subtree(&entry_path);
+        remove_empty_dirs(&entry_path, target);
+    }
+
+    Ok(stats)
+}
+
+/// Remove every empty directory inside `root` (and `root` itself if it ends up
+/// empty), deepest first. Best-effort: anything still holding a file stays.
+fn prune_empty_subtree(root: &Path) {
+    if !root.is_dir() {
+        return;
+    }
+    let mut dirs = Vec::new();
+    let mut stack = vec![root.to_path_buf()];
+    while let Some(dir) = stack.pop() {
+        let entries = match std::fs::read_dir(&dir) {
+            Ok(e) => e,
+            Err(_) => continue,
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                stack.push(path.clone());
+                dirs.push(path);
+            }
+        }
+    }
+    // Deepest first, so a parent is only considered once its children are gone.
+    dirs.sort_by_key(|p| std::cmp::Reverse(p.components().count()));
+    for dir in dirs {
+        if std::fs::read_dir(&dir).map(|mut e| e.next().is_none()).unwrap_or(false) {
+            let _ = std::fs::remove_dir(&dir);
+        }
+    }
+}
+
+/// Remove `dir` and any parent left empty, stopping at `stop_at` (exclusive).
+/// Best-effort: a non-empty directory simply ends the walk.
+fn remove_empty_dirs(dir: &Path, stop_at: &Path) {
+    let mut current = dir.to_path_buf();
+    while current.starts_with(stop_at) && current != stop_at {
+        if !current.is_dir() {
+            // Not a directory (or already gone) — climb to the parent anyway,
+            // which is the case where `retired:` named a single file.
+        } else {
+            let empty = match std::fs::read_dir(&current) {
+                Ok(mut entries) => entries.next().is_none(),
+                Err(_) => return,
+            };
+            if !empty || std::fs::remove_dir(&current).is_err() {
+                return;
+            }
+        }
+        match current.parent() {
+            Some(parent) => current = parent.to_path_buf(),
+            None => return,
+        }
+    }
 }
 
 /// Inject directives based on manifest and templates from the release
@@ -409,6 +550,129 @@ fn walkdir(dir: PathBuf) -> Result<Vec<PathBuf>> {
 #[cfg(test)]
 mod tests {
     use super::matches_manifest;
+    use crate::config::Checksums;
+    use crate::manifest::DistManifest;
+
+    fn manifest_with_retired(retired: &str) -> DistManifest {
+        DistManifest::from_str(&format!(
+            "version: \"4.42.0\"\ndescription: \"test\"\nrepository: \"x\"\n\
+             files: []\ninjections: []\nretired:\n  - {retired}\n"
+        ))
+        .unwrap()
+    }
+
+    fn seed(root: &std::path::Path, rel: &str, body: &str) -> String {
+        let path = root.join(rel);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(&path, body).unwrap();
+        crate::utils::file_hash(&path).unwrap()
+    }
+
+    // Retiring a distributed path used to be impossible to finish: update_files
+    // only ever copies, so a directory dropped from `files:` survived in every
+    // existing installation until someone ran `straymark remove`. Deletion is
+    // provenance-gated — a retirement notice upstream is not a licence to
+    // delete work the operator did inside the path.
+    #[test]
+    fn retired_directory_is_pruned_but_operator_work_survives() {
+        let tmp = tempfile::tempdir().unwrap();
+        let target = tmp.path();
+
+        // Three files under the retired path, three different provenances.
+        let pristine = seed(target, ".gemini/skills/straymark-new/SKILL.md", "shipped\n");
+        let edited = seed(target, ".gemini/skills/straymark-adr/SKILL.md", "shipped\n");
+        seed(target, ".gemini/skills/my-own/SKILL.md", "the operator's own\n");
+
+        let mut checksums = Checksums::default();
+        checksums
+            .files
+            .insert(".gemini/skills/straymark-new/SKILL.md".into(), pristine);
+        checksums
+            .files
+            .insert(".gemini/skills/straymark-adr/SKILL.md".into(), edited);
+        // `my-own` is deliberately absent from the store: never ours.
+
+        // The operator edits one of the shipped files after installation.
+        std::fs::write(
+            target.join(".gemini/skills/straymark-adr/SKILL.md"),
+            "shipped, then edited by me\n",
+        )
+        .unwrap();
+
+        let manifest = manifest_with_retired(".gemini/skills/");
+        let stats = super::prune_retired(target, &manifest, &checksums).unwrap();
+
+        assert_eq!(
+            stats.removed,
+            vec![".gemini/skills/straymark-new/SKILL.md".to_string()],
+            "only the untouched shipped file may be deleted"
+        );
+        assert!(
+            !target.join(".gemini/skills/straymark-new").exists(),
+            "the emptied skill directory should be cleaned up too"
+        );
+
+        assert_eq!(
+            stats.kept_modified,
+            vec![".gemini/skills/straymark-adr/SKILL.md".to_string()],
+            "a file we shipped and the operator edited is kept as *modified*"
+        );
+        assert_eq!(
+            stats.kept_foreign,
+            vec![".gemini/skills/my-own/SKILL.md".to_string()],
+            "a file we never installed is kept, but must not be reported as \"you modified it\""
+        );
+        assert!(target.join(".gemini/skills/straymark-adr/SKILL.md").exists());
+        assert!(target.join(".gemini/skills/my-own/SKILL.md").exists());
+    }
+
+    #[test]
+    fn fully_pruned_directory_disappears_including_its_parents() {
+        let tmp = tempfile::tempdir().unwrap();
+        let target = tmp.path();
+
+        let mut checksums = Checksums::default();
+        for rel in [
+            ".agent/workflows/straymark-new.md",
+            ".agent/workflows/straymark-adr.md",
+        ] {
+            checksums.files.insert(rel.into(), seed(target, rel, "x\n"));
+        }
+
+        let manifest = manifest_with_retired(".agent/workflows/");
+        let stats = super::prune_retired(target, &manifest, &checksums).unwrap();
+
+        assert_eq!(stats.removed.len(), 2);
+        assert!(stats.kept_modified.is_empty() && stats.kept_foreign.is_empty());
+        assert!(
+            !target.join(".agent").exists(),
+            "an emptied parent must go too, or the adopter keeps a bare .agent/"
+        );
+    }
+
+    #[test]
+    fn retiring_a_path_that_is_already_gone_is_a_no_op() {
+        let tmp = tempfile::tempdir().unwrap();
+        let manifest = manifest_with_retired(".gemini/skills/");
+        let stats =
+            super::prune_retired(tmp.path(), &manifest, &Checksums::default()).unwrap();
+        assert!(stats.removed.is_empty() && stats.kept_modified.is_empty());
+    }
+
+    /// Every `.straymark/dist-manifest.yml` written before fw-4.42.0 lacks the
+    /// key, and `repair` / `remove` re-read those copies. Without
+    /// `#[serde(default)]` this turns every pre-4.42.0 installation into a
+    /// parse error.
+    #[test]
+    fn manifest_without_the_retired_key_still_parses() {
+        let manifest = DistManifest::from_str(
+            "version: \"4.41.0\"\ndescription: \"test\"\nrepository: \"x\"\n\
+             files:\n  - STRAYMARK.md\ninjections: []\n",
+        )
+        .unwrap();
+        assert!(manifest.retired.is_empty());
+        assert_eq!(manifest.version, "4.41.0");
+    }
 
     fn manifest_files() -> Vec<String> {
         // Matches `dist/dist-manifest.yml` (fw-4.3.0).

@@ -11,7 +11,7 @@
 ### When Starting a Session
 
 Every agent must identify themselves with:
-- Agent name (e.g.: `claude-code-v1.0`, `cursor-v1.0`, `gemini-cli-v1.0`, `codex-cli-v1.0`, `qwen-code-v1.0`, `qoder-v1.0`)
+- Agent name (e.g.: `claude-code-v1.0`, `cursor-v1.0`, `antigravity-v1.0`, `codex-cli-v1.0`, `qwen-code-v1.0`, `qoder-v1.0`)
 - Agent version if available
 
 ### In Every Document
@@ -333,7 +333,7 @@ My recommendation: [YES / NO], because:
 If you decide to audit:
   Run /straymark-audit-prompt <CHARTER-ID> and I will write the unified
   audit prompt to .straymark/audits/<CHARTER-ID>/audit-prompt.md.
-  Then open one or more auditor-side CLIs (gemini-cli, claude-cli,
+  Then open one or more auditor-side CLIs (agy, claude-cli,
   copilot-cli, codex-cli) in this repo and invoke
   /straymark-audit-execute <CHARTER-ID> in each — recommendation: at
   least 2 auditors of different model families. When and only when
@@ -418,4 +418,4 @@ When a project accumulates a high volume of AILOGs across multiple Charters and 
 
 ---
 
-*StrayMark fw-4.41.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.42.0 | [Strange Days Tech](https://strangedays.tech)*

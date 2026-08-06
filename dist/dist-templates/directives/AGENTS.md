@@ -10,14 +10,14 @@
 > **About this file.** `AGENTS.md` is the open standard for guiding AI coding agents,
 > donated to the Agentic AI Foundation (Linux Foundation, 2025) and read by Claude Code,
 > OpenAI Codex CLI, Cursor, Aider, Devin, Sourcegraph Amp, Google Jules, Zed AI, Continue,
-> Roo Code, Factory Droids, GitHub Copilot, Gemini CLI, Windsurf, Amazon Q and others.
+> Roo Code, Factory Droids, GitHub Copilot, Antigravity CLI, Windsurf, Amazon Q and others.
 > StrayMark keeps this file in sync with `STRAYMARK.md` via `straymark update`.
 
 ## Autonomous Rules (minimum viable — works without STRAYMARK.md)
 
 ### Identity
 - Identify yourself with your platform and version in the `agent:` field
-  (e.g. `claude-code-v1.0`, `gemini-cli-v1.0`, `copilot-v1.0`, `cursor-v1.0`, `codex-cli-v1.0`,
+  (e.g. `claude-code-v1.0`, `antigravity-v1.0`, `copilot-v1.0`, `cursor-v1.0`, `codex-cli-v1.0`,
   `qwen-code-v1.0`, `qoder-v1.0`)
 - Declare confidence in decisions: `high | medium | low`
 

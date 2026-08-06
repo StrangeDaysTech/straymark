@@ -11,7 +11,7 @@
 ### 会话开始时
 
 每个代理必须以以下信息进行自我识别：
-- 代理名称（例如：`claude-code-v1.0`、`cursor-v1.0`、`gemini-cli-v1.0`、`codex-cli-v1.0`、`qwen-code-v1.0`、`qoder-v1.0`）
+- 代理名称（例如：`claude-code-v1.0`、`cursor-v1.0`、`antigravity-v1.0`、`codex-cli-v1.0`、`qwen-code-v1.0`、`qoder-v1.0`）
 - 代理版本（如可用）
 
 ### 在每份文档中
@@ -332,7 +332,7 @@ confidence: high | medium | low
 如果决定审计：
   运行 /straymark-audit-prompt <CHARTER-ID>，我会将统一审计 prompt
   写入 .straymark/audits/<CHARTER-ID>/audit-prompt.md。然后在此仓库中
-  打开一个或多个审计员 CLI（gemini-cli、claude-cli、copilot-cli、
+  打开一个或多个审计员 CLI（agy、claude-cli、copilot-cli、
   codex-cli），并在每个中调用 /straymark-audit-execute <CHARTER-ID> —
   建议：至少 2 个不同模型族的审计员。当且仅当你委托的所有审计员
   都已完成时，返回此处并运行 /straymark-audit-review <CHARTER-ID>。
@@ -413,4 +413,4 @@ confidence: high | medium | low
 
 ---
 
-*StrayMark fw-4.41.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.42.0 | [Strange Days Tech](https://strangedays.tech)*

@@ -85,7 +85,7 @@ This transparency helps users verify compliance with StrayMark rules.
 
 When working on this project:
 
-- **Identify yourself** with your platform and version (e.g., `claude-code-v1.0`, `gemini-cli-v1.0`, `copilot-cli-v1.0`)
+- **Identify yourself** with your platform and version (e.g., `claude-code-v1.0`, `antigravity-v1.0`, `copilot-cli-v1.0`)
 - **Declare** your confidence level in decisions: `high | medium | low`
 - **Record** your identification in the `agent:` field of the metadata
 
@@ -512,7 +512,7 @@ StrayMark uses HTML comment markers to manage injected content in agent configur
 - Do not remove or modify these markers manually — they are required for safe updates
 - If markers are missing from a target file, StrayMark appends the content block at the end
 - **Missing-target behavior** *(refined in fw-4.16.2 / cli-3.14.1)*: `straymark init`, `straymark update-framework`, and `straymark repair` all walk `dist-manifest.yml::injections:` and **create any missing target file** (with the marker block) per individual target — a single deleted directive file like `AGENTS.md` is restored without needing to re-run init or remove anything else. There is no opt-out per target short of editing the manifest. *(Historical note: through `cli-3.14.0` / `fw-4.16.1`, `straymark repair` was gated on `STRAYMARK.md` being absent and would silently skip a per-target restore; that gate was removed in `cli-3.14.1`.)*
-- `AGENTS.md` is the open standard donated to the Agentic AI Foundation (Linux Foundation, 2025) and is read by Claude Code, OpenAI Codex CLI, Cursor, Aider, Devin, Sourcegraph Amp, Google Jules, Zed AI, Continue, Roo Code, Factory Droids, GitHub Copilot, Gemini CLI, Windsurf, Amazon Q and others. CLI-specific files (`CLAUDE.md`, `GEMINI.md`, etc.) coexist with `AGENTS.md` and provide platform-specific identity strings.
+- `AGENTS.md` is the open standard donated to the Agentic AI Foundation (Linux Foundation, 2025) and is read by Claude Code, OpenAI Codex CLI, Cursor, Aider, Devin, Sourcegraph Amp, Google Jules, Zed AI, Continue, Roo Code, Factory Droids, GitHub Copilot, Antigravity CLI, Windsurf, Amazon Q and others. CLI-specific files (`CLAUDE.md`, `GEMINI.md`, `QWEN.md`, etc.) coexist with `AGENTS.md` and provide platform-specific identity strings.
 
 ---
 

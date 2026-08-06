@@ -76,7 +76,7 @@ Fill template with:
 - `status`: **draft** (always for AI-created ADRs)
 - `created`: Current date
 - `updated`: Current date
-- `agent`: your runtime's canonical agent identity (see AGENT-RULES.md §1 — e.g. `claude-code-v1.0`, `gemini-cli-v1.0`, `codex-cli-v1.0`; do not assume Claude)
+- `agent`: your runtime's canonical agent identity (see AGENT-RULES.md §1 — e.g. `claude-code-v1.0`, `antigravity-v1.0`, `codex-cli-v1.0`; do not assume Claude)
 - `confidence`: based on research done
 - `review_required`: **true** (always for ADRs)
 - `risk_level`: minimum `medium` for architectural decisions

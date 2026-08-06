@@ -56,7 +56,7 @@ The full subcommand reference (`init`, `update`, `remove`, `status`, `repair`, `
 ## What StrayMark does
 
 - **Versioned governance artifacts** — 12 base document types (`AILOG`, `AIDEC`, `ETH`, `ADR`, `REQ`, `TES`, `INC`, `TDE`, `SEC`, `MCARD`, `SBOM`, `DPIA`) + 4 China-scope types + the `Charter` unit of work, each with schemas and lifecycle.
-- **Multi-CLI agent directives injected** — keeps `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursorrules` and `.cursor/rules/straymark.md` in sync from a single `STRAYMARK.md` source of truth.
+- **Multi-CLI agent directives injected** — keeps `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `QWEN.md`, `.github/copilot-instructions.md`, `.cursorrules` and `.cursor/rules/straymark.md` in sync from a single `STRAYMARK.md` source of truth.
 - **Charter drift check** — verifies declared files against `git diff` so the implementation cannot silently diverge from the ex-ante scope.
 - **External multi-CLI audit orchestration** — generates unified audit prompts and consolidates reports from multiple auditor CLIs into Charter telemetry.
 - **Multi-regulatory mapping** — output artifacts satisfy ISO/IEC 42001, EU AI Act, NIST AI RMF, ISO/IEC 25010, ISO/IEC/IEEE 29148, ISO/IEC/IEEE 29119-3, GDPR.
@@ -66,8 +66,8 @@ The full subcommand reference (`init`, `update`, `remove`, `status`, `repair`, `
 
 The CLI reads (and writes injection markers into) the dominant standards for AI coding agents:
 
-- **`AGENTS.md`** — the open standard donated to the Agentic AI Foundation (Linux Foundation, December 2025), read by Claude Code, OpenAI Codex CLI, Cursor, Aider, Devin, Sourcegraph Amp, Google Jules, Zed AI, Continue, Roo Code, Factory Droids, GitHub Copilot, Gemini CLI, Windsurf, Amazon Q and others.
-- **CLI-specific files** — `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursorrules`, `.cursor/rules/straymark.md` for platform-specific identity strings.
+- **`AGENTS.md`** — the open standard donated to the Agentic AI Foundation (Linux Foundation, December 2025), read by Claude Code, OpenAI Codex CLI, Cursor, Aider, Devin, Sourcegraph Amp, Google Jules, Zed AI, Continue, Roo Code, Factory Droids, GitHub Copilot, Antigravity CLI, Windsurf, Amazon Q and others.
+- **CLI-specific files** — `CLAUDE.md`, `GEMINI.md` (read by Antigravity CLI), `QWEN.md`, `.github/copilot-instructions.md`, `.cursorrules`, `.cursor/rules/straymark.md` for platform-specific identity strings.
 
 All targets stay synchronized from a single `STRAYMARK.md` file maintained by `straymark update`.
 

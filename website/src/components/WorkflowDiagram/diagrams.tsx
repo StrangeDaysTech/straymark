@@ -368,7 +368,7 @@ export function AuditDiagram() {
 
       {/* Parallel fan-out hint at "Run N auditors" */}
       <text x={run.x + R.w / 2} y={run.y - 14} className={styles.edgeLabel} textAnchor="middle">
-        gemini · claude · copilot
+        agy · claude · copilot
       </text>
     </Canvas>
   );

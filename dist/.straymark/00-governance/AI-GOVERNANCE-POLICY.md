@@ -133,7 +133,7 @@ When significant changes affect the AI management system:
 |----------|-------------|--------|
 | StrayMark Framework | Documentation governance system | [Installed/Version] |
 | StrayMark CLI | Automation and validation tools | [Version] |
-| AI Agent Platforms | [Claude, Gemini, Copilot, Cursor] | [Configured] |
+| AI Agent Platforms | [Claude, Antigravity, Copilot, Cursor] | [Configured] |
 | Training | AI governance training for team | [Status] |
 
 ### 4.2 Competencies

@@ -63,7 +63,7 @@ Fill template with:
 - `id`: AIDEC-YYYY-MM-DD-NNN
 - `title`: Decision title from user
 - `created`: Current date
-- `agent`: your runtime's canonical agent identity (see AGENT-RULES.md §1 — e.g. `claude-code-v1.0`, `gemini-cli-v1.0`, `codex-cli-v1.0`; do not assume Claude)
+- `agent`: your runtime's canonical agent identity (see AGENT-RULES.md §1 — e.g. `claude-code-v1.0`, `antigravity-v1.0`, `codex-cli-v1.0`; do not assume Claude)
 - `confidence`: based on decision clarity
 - `risk_level`: based on decision impact
 

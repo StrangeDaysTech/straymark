@@ -1,6 +1,6 @@
 ---
 name: straymark-audit-execute
-description: Execute an external audit of a Charter inside an auditor-side CLI (gemini-cli, claude-cli, copilot-cli, codex-cli). Reads the resolved audit prompt from the canonical location, audits with tool use, writes the report. Operator invokes one instance per CLI.
+description: Execute an external audit of a Charter inside an auditor-side CLI (agy, claude-cli, copilot-cli, codex-cli). Reads the resolved audit prompt from the canonical location, audits with tool use, writes the report. Operator invokes one instance per CLI.
 allowed-tools: Read, Write, Glob, Grep, Bash(go vet *, go build *, go test *, cargo check *, cargo clippy *, cargo test --no-run, npm run lint, npm run typecheck, npm test --, pytest --co, mypy *, ruff check *, ls *, find *, wc *, git log *, git diff *, git status *)
 argument-hint: "CHARTER-NN [AUDITOR-SLUG] (auditor id is operator-provided, never self-detected)"
 ---
@@ -11,7 +11,7 @@ Execute an external audit of a Charter inside this CLI session. Read the resolve
 
 ## When to invoke
 
-This skill runs **inside an auditor-side CLI** (gemini-cli, claude-cli, copilot-cli, codex-cli, or any agent runtime configured with read-only access to the adopter's repo). The operator opens the CLI in the repo, then invokes `/straymark-audit-execute <CHARTER-ID>`.
+This skill runs **inside an auditor-side CLI** (agy, claude-cli, copilot-cli, codex-cli, or any agent runtime configured with read-only access to the adopter's repo). The operator opens the CLI in the repo, then invokes `/straymark-audit-execute <CHARTER-ID>`.
 
 The skill is the second step of the v1 audit cycle:
 
@@ -47,9 +47,9 @@ For each found `.straymark/audits/<CHARTER-ID>/audit-prompt.md`, check whether a
 **The `auditor:` identity is authoritative input from the operator, not something you infer about yourself.** Resolve it, in priority order:
 
 1. **Second argument** — `/straymark-audit-execute <CHARTER-ID> <AUDITOR-SLUG>` (e.g. `/straymark-audit-execute CHARTER-06 deepseek-v4-pro`).
-2. **What the operator states in chat** — "I selected model X", "seleccioné el modelo X", "identify as X", "use X". The CLI you run inside (Qwen Code, Claude Code, Gemini CLI, Copilot CLI, …) is a **router, not the model**: it routes prompts to a backend LLM the operator picks via `/model` and confirms in the status bar. The `auditor:` field must name that **backend model** (e.g. `glm-5-2`, `qwen3-7-max`, `deepseek-v4-pro`), which routinely differs from the CLI's product name.
+2. **What the operator states in chat** — "I selected model X", "seleccioné el modelo X", "identify as X", "use X". The CLI you run inside (Qwen Code, Claude Code, Antigravity CLI, Copilot CLI, …) is a **router, not the model**: it routes prompts to a backend LLM the operator picks via `/model` and confirms in the status bar. The `auditor:` field must name that **backend model** (e.g. `glm-5-2`, `qwen3-7-max`, `deepseek-v4-pro`), which routinely differs from the CLI's product name.
 
-Use whatever the operator provides **verbatim** (after slugging). You are **forbidden** to introspect, guess, or substitute the CLI/runtime product name. Writing any identifier other than the operator-provided one — **including the name of the CLI you are running in (`qwen-code`, `gemini-cli`, `claude-code`, `copilot`, …)** — is a **defect** that silently corrupts the review step (wrong attribution, false cross-family agreement). Do not refuse a legitimate operator-specified identifier: the operator is the sole authority on which backend model they selected.
+Use whatever the operator provides **verbatim** (after slugging). You are **forbidden** to introspect, guess, or substitute the CLI/runtime product name. Writing any identifier other than the operator-provided one — **including the name of the CLI you are running in (`qwen-code`, `agy`, `claude-code`, `copilot`, …)** — is a **defect** that silently corrupts the review step (wrong attribution, false cross-family agreement). Do not refuse a legitimate operator-specified identifier: the operator is the sole authority on which backend model they selected.
 
 Slug rules (applied to the provided string):
 
@@ -103,7 +103,7 @@ The report frontmatter MUST conform to `audit-output.schema.v0.json`:
 ```yaml
 ---
 audit_role: auditor
-auditor: <auditor-slug>           # operator-provided model id — NEVER the CLI product name (qwen-code, gemini-cli, …)
+auditor: <auditor-slug>           # operator-provided model id — NEVER the CLI product name (qwen-code, agy, …)
 charter_id: <CHARTER-ID>
 git_range: "<range from prompt>"
 prompt_used: audit-prompt.md
@@ -121,7 +121,7 @@ audit_quality: high | medium | low
 # (body following the format declared in the prompt's "Formato de salida" section)
 ```
 
-**Guard — verify the identity before you finish (mandatory).** Re-open the file you just wrote and confirm that BOTH the frontmatter `auditor:` field AND the report's `# Auditoría: <CHARTER-ID> por <X>` header equal the operator-provided slug exactly. If either shows anything else — especially the CLI product name you are running in (`qwen-code`, `gemini-cli`, …) — rewrite them. The filename `report-<slug>.md`, the `auditor:` field, and the header must all carry the same operator-provided slug.
+**Guard — verify the identity before you finish (mandatory).** Re-open the file you just wrote and confirm that BOTH the frontmatter `auditor:` field AND the report's `# Auditoría: <CHARTER-ID> por <X>` header equal the operator-provided slug exactly. If either shows anything else — especially the CLI product name you are running in (`qwen-code`, `agy`, …) — rewrite them. The filename `report-<slug>.md`, the `auditor:` field, and the header must all carry the same operator-provided slug.
 
 ### 6. Notify the operator — with the wait warning
 
@@ -136,7 +136,7 @@ Audit complete for <CHARTER-ID> (this auditor: <auditor-slug>).
 IMPORTANT: do NOT return to the main agent for /straymark-audit-review yet
 unless ALL audits you commissioned have completed.
 
-If you opened other auditor CLIs (gemini-cli, copilot-cli, codex-cli, ...)
+If you opened other auditor CLIs (agy, copilot-cli, codex-cli, ...)
 and have not yet seen their /straymark-audit-execute finish, wait for them.
 Invoking /straymark-audit-review with incomplete reports produces a partial
 consolidated analysis that you will have to discard or re-run — costing

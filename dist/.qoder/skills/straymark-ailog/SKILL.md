@@ -69,7 +69,7 @@ Fill template with:
 - `id`: AILOG-YYYY-MM-DD-NNN
 - `title`: User-provided description
 - `created`: Current date
-- `agent`: your runtime's canonical agent identity (see AGENT-RULES.md §1 — e.g. `claude-code-v1.0`, `gemini-cli-v1.0`, `codex-cli-v1.0`; do not assume Claude)
+- `agent`: your runtime's canonical agent identity (see AGENT-RULES.md §1 — e.g. `claude-code-v1.0`, `antigravity-v1.0`, `codex-cli-v1.0`; do not assume Claude)
 - `confidence`: based on change complexity
 - `risk_level`: based on files modified
 

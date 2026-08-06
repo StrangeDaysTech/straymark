@@ -112,7 +112,7 @@
     "description": "Feature: multi-model external audit (title)"
   },
   "features.audit.body": {
-    "message": "三个审计方 CLI（如 claude、copilot、gemini）读取同一份提示，独立审计一个已关闭的 Charter。校准器去重、重新分级，并将签名后的证据合并入遥测数据。",
+    "message": "三个审计方 CLI（如 claude、copilot、agy）读取同一份提示，独立审计一个已关闭的 Charter。校准器去重、重新分级，并将签名后的证据合并入遥测数据。",
     "description": "Feature: multi-model external audit (body)"
   },
   "features.eod.title": {
@@ -671,7 +671,7 @@
     "message": "Audit trail —— 多模型验证"
   },
   "workflow.audit.caption": {
-    "message": "多个审计方 CLI（gemini、claude、copilot……）读取同一份提示，对一个已关闭的 Charter 进行审计。发现项会被去重、对照代码核实、重新分级，并以签名的证据块形式合并入遥测数据。"
+    "message": "多个审计方 CLI（agy、claude、copilot……）读取同一份提示，对一个已关闭的 Charter 进行审计。发现项会被去重、对照代码核实、重新分级，并以签名的证据块形式合并入遥测数据。"
   },
   "workflow.audit.node.resolve": {
     "message": "解析 charter"

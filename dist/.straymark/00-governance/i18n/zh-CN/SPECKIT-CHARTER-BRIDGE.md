@@ -234,7 +234,7 @@ SpecKit 的 Constitution Check 通常在 `/speckit-plan` 时只运行一次。�
 - `.straymark/templates/charter/charter-telemetry-template.yaml` — 遥测模板
 - `.straymark/schemas/charter.schema.v0.json` — 声明式 frontmatter 的 JSON Schema
 - `.straymark/schemas/charter-telemetry.schema.v0.json` — 遥测的 JSON Schema
-- `.claude/skills/straymark-charter-new/SKILL.md`（以及 Gemini / 通用等价物）
+- `.claude/skills/straymark-charter-new/SKILL.md`（以及 Codex / Qoder / Qwen / Antigravity 等价物）
 
 > **被引用的经验性背景**（issue #113）：一个全新的 Rust CLI/TUI 套件，Claude Opus 4.7 通过权威入口点（`STRAYMARK.md`、项目宪章、`CLAUDE.md` 检查清单、可用的 `/straymark-*` skills、`/straymark-status`）入门。Charter *最终*被采用（2 个 Charter：foundation + MVP），但只在用户明确提示之后——这证实了缺口是系统性的，而非会话特有的。本文档消除了该缺口。
 

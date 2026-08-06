@@ -4,7 +4,7 @@ description: 三个独立的审计方 CLI 在关闭门处审同一个 Charter �
 ---
 # 多模型外部审计
 
-当一个 Charter 的实现完成、drift 检查干净时 —— 但**在** `charter close` 被调用**之前** —— StrayMark 可以可选地委托一次外部审计。不是由单个 Agent，而是由数个 Agent 并行进行。三个独立的审计方 CLI（例如：Claude、Copilot、Gemini）读取同一份 prompt，各自独立审计 Charter。一个**校准器**随后把所有发现整合为一个签名的证据块，写入 Charter 的遥测中，并在 Charter 关闭时一同流转。审计**永不强制** —— 当成本（2-3 个 LLM 审计员）与你的情形不匹配时，可自由拒绝。
+当一个 Charter 的实现完成、drift 检查干净时 —— 但**在** `charter close` 被调用**之前** —— StrayMark 可以可选地委托一次外部审计。不是由单个 Agent，而是由数个 Agent 并行进行。三个独立的审计方 CLI（例如：Claude、Copilot、Antigravity）读取同一份 prompt，各自独立审计 Charter。一个**校准器**随后把所有发现整合为一个签名的证据块，写入 Charter 的遥测中，并在 Charter 关闭时一同流转。审计**永不强制** —— 当成本（2-3 个 LLM 审计员）与你的情形不匹配时，可自由拒绝。
 
 ## 为什么这很重要
 
@@ -21,7 +21,7 @@ description: 三个独立的审计方 CLI 在关闭门处审同一个 Charter �
 在 `.straymark/audits/CHARTER-12/audit-prompt.md` 写一份统一 prompt，内嵌 Charter 范围、AILOGs、git diff，以及纪律规则（证据引用、严重度校准、scope gate）。
 
 ### 阶段 2 —— 并行运行 N 个审计员
-操作员打开审计方 CLI（gemini-cli、claude-cli、copilot-cli、codex-cli），在每个里运行 `/straymark-audit-execute`。每个审计员读取同一份 prompt，用 tool use（引用 `path:行号`）审计，并在 prompt 旁边写 `report-<model>.md`。
+操作员打开审计方 CLI（agy、claude-cli、copilot-cli、codex-cli），在每个里运行 `/straymark-audit-execute`。每个审计员读取同一份 prompt，用 tool use（引用 `path:行号`）审计，并在 prompt 旁边写 `report-<model>.md`。
 
 ### 阶段 3 —— 校准并合并
 ```bash

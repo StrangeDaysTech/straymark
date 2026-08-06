@@ -198,7 +198,7 @@ The pattern itself and examples should keep the format, though `description` can
 ```yaml
 agent: claude-code-v1.0    # ✓ Never translate
 agent: cursor-v1.0         # ✓ Never translate
-agent: gemini-cli-v1.0     # ✓ Never translate
+agent: antigravity-v1.0    # ✓ Never translate
 ```
 
 ### 7. Technical Terms in Code Blocks
@@ -230,7 +230,7 @@ StrayMark
 Claude Code
 Cursor
 GitHub Copilot
-Gemini CLI
+Antigravity CLI
 ```
 
 ---

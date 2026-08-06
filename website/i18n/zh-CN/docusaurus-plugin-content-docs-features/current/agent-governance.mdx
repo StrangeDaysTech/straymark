@@ -10,7 +10,7 @@ Runtime 的护栏来得太晚。等到 Agent 已经敲下破坏性命令时，pr
 
 - **Runtime ≠ workflow。** 大多数 LLM 护栏是 prompt-injection 防御或输出过滤 —— 重要，但它们决定不了 Agent *是否*应该首先去写那个数据库迁移。工作流层面的治理才能。
 - **版本化的规则是可评审的规则。** `STRAYMARK.md` 是一个有 PR diff 的文件。收紧或放宽一条规则会出现在 `git log` 中，带作者、日期与讨论线索。这是 runtime 配置无法做到的可审计性。
-- **跨 CLI 的同一份契约。** 同一份 `STRAYMARK.md` 指导 Claude Code、Gemini CLI、Copilot CLI、Codex CLI。一个真相来源，N 个 Agent。切换模型并不意味着重写运营契约。
+- **跨 CLI 的同一份契约。** 同一份 `STRAYMARK.md` 指导 Claude Code、Antigravity CLI、Copilot CLI、Codex CLI。一个真相来源，N 个 Agent。切换模型并不意味着重写运营契约。
 
 ## 契约的各个层级
 

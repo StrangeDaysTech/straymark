@@ -7,6 +7,7 @@ use crate::config::Checksums;
 use crate::download;
 use crate::inject;
 use crate::manifest::{DistManifest, Injection};
+use crate::commands::update_framework;
 use crate::utils;
 
 /// Expected directories inside .straymark/ (same as init.rs)
@@ -63,8 +64,23 @@ pub fn run(path: &str) -> Result<()> {
     // Check for missing framework files that require download
     let needs_download = check_needs_download(&target);
 
+    // Paths the installed release retired but that are still on disk. An
+    // otherwise-healthy installation has nothing *missing*, so without counting
+    // these the early return below would skip the sweep entirely.
+    let local_manifest = DistManifest::load(&target.join(".straymark/dist-manifest.yml")).ok();
+    let has_retired_leftovers = local_manifest
+        .as_ref()
+        .map(|m| {
+            m.retired
+                .iter()
+                .any(|p| target.join(p.trim_end_matches('/')).exists())
+        })
+        .unwrap_or(false);
+
     let missing_dir_count = missing_dirs.len();
-    let total_issues = missing_dir_count + if needs_download { 1 } else { 0 };
+    let total_issues = missing_dir_count
+        + if needs_download { 1 } else { 0 }
+        + if has_retired_leftovers { 1 } else { 0 };
 
     if total_issues == 0 {
         utils::success("StrayMark structure is healthy, nothing to repair.");
@@ -111,6 +127,29 @@ pub fn run(path: &str) -> Result<()> {
         download::download_zip(&release.zip_url, &zip_path)?;
 
         restore_missing_files(&zip_path, &target)?;
+    }
+
+    // Phase 3b: drop paths the installed release no longer distributes. Reads
+    // the local manifest, so a project that never updated past the retirement
+    // simply finds no `retired:` key and this is a no-op.
+    if has_retired_leftovers {
+        if let Some(manifest) = &local_manifest {
+            let checksums = Checksums::load(&target).unwrap_or_default();
+            let prune = update_framework::prune_retired(&target, manifest, &checksums)?;
+            if !prune.removed.is_empty() {
+                utils::info(&format!("Removed {} retired file(s)", prune.removed.len()));
+            }
+            for path in &prune.kept_modified {
+                utils::warn(&format!(
+                    "{path} is retired upstream but you modified it — kept"
+                ));
+            }
+            for path in &prune.kept_foreign {
+                utils::info(&format!(
+                    "{path} is under a retired path but StrayMark did not install it — kept"
+                ));
+            }
+        }
     }
 
     // Phase 4: Recalculate checksums

@@ -134,7 +134,7 @@ curl -X PUT "https://${SERVICE_HOST}/api/v1/.../..." \
 [List of risks R1, R2, ... that the implementation commits to mitigate. Each with its
 mitigation documented. Convention: if a NEW risk emerges during execution that was not
 anticipated, document it in the AILOG under `## Risk` as `R<N+1> (new, not in Charter)`
-— Gemini and other external auditors validate these cross-document.
+— external auditors validate these cross-document.
 
 Each mitigation should specify: (a) concrete trigger or threshold (no "eventually"),
 (b) action committed, (c) what happens if the mitigation itself fails, (d) where

@@ -21,7 +21,7 @@
 
 You ran `straymark init .` and committed the result. Now what?
 
-1. **Open your project** with your AI coding assistant (Claude Code, Cursor, Gemini CLI, etc.)
+1. **Open your project** with your AI coding assistant (Claude Code, Cursor, Antigravity CLI, etc.)
 2. The assistant will **automatically read** the StrayMark directives (`CLAUDE.md`, `GEMINI.md`, etc.)
 3. From this point on, the assistant **creates documentation** in `.straymark/` as part of its normal workflow
 4. **No extra configuration needed** — StrayMark works passively through the directive files
@@ -93,7 +93,7 @@ Shows: framework version, CLI version, directory structure integrity, and docume
 /straymark-status
 ```
 
-The `/straymark-status` skill (available in Claude Code and Gemini CLI) analyzes:
+The `/straymark-status` skill (available in Claude Code and Antigravity CLI) analyzes:
 
 - Which recent code changes lack corresponding documentation
 - Document compliance against governance rules
@@ -142,7 +142,7 @@ StrayMark has two documentation systems:
 | `/straymark-aidec` | Quick AIDEC creation |
 | `/straymark-adr` | Quick ADR creation |
 | `/straymark-audit-prompt CHARTER-XX` *(fw-4.8.0+, refactored in fw-4.9.0)* | Generate the unified audit prompt at the canonical path `.straymark/audits/<id>/audit-prompt.md`. Wraps `straymark charter audit --prepare`. Operator then opens N auditor CLIs and runs `/straymark-audit-execute` in each — no copy/paste. |
-| `/straymark-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | **Run inside an auditor-side CLI** (gemini-cli, claude-cli, copilot-cli, codex-cli). Reads the prompt from disk, audits with tool use citing `path:line`, writes a report keyed on the auditor's model id. Argument optional — auto-discovers prompts pending from this model. |
+| `/straymark-audit-execute [CHARTER-XX]` *(fw-4.9.0+)* | **Run inside an auditor-side CLI** (agy, claude-cli, copilot-cli, codex-cli). Reads the prompt from disk, audits with tool use citing `path:line`, writes a report keyed on the auditor's model id. Argument optional — auto-discovers prompts pending from this model. |
 | `/straymark-audit-review CHARTER-XX` *(fw-4.8.0+, expanded in fw-4.9.0)* | Counterpart to `audit-prompt`. Reads N reports, verifies findings against actual code, produces `review.md` consolidated 6-section analysis (Executive summary / Scope / Per-auditor evaluation / Remediation plan P0-P4 / Discarded / Auditor ratings), and merges `external_audit:` YAML into telemetry. |
 | `/straymark-architecture` *(fw-4.29.0+, EXPERIMENTAL)* | Drives the `generate → refine → validate` arc of the architecture model in one guided pass: seeds it, reassigns components into real layers, wires dependency `links`, syncs the DrawIO so 2D shows arrows, and iterates `validate` to green. The agent-native counterpart to manual DrawIO refinement. |
 | `/straymark-architecture-sync` *(fw-4.29.0+, EXPERIMENTAL)* | Wraps `straymark architecture sync` (append-only) to keep a curated model current as the code grows — dry-run, surface new dirs/components, confirm, apply, re-validate. Never re-refines from scratch. |
