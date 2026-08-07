@@ -1,9 +1,9 @@
 ---
 last_scan: 2026-08-07
 schema_version: v1
-total_open: 4
+total_open: 3
 total_promoted: 0
-total_closed_in_session: 2
+total_closed_in_session: 3
 total_phase_blocked: 0
 total_suspected_closed: 0
 buckets:
@@ -87,16 +87,16 @@ Entry shape (v1 — optional fields marked):
 - **Trigger**: TBD
 - **Destination**: TBD
 - **Cost**: TBD
-- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-06.
+- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-06. · [2026-08-07 · AILOG-2026-08-07-001] Restated independently from AILOG-2026-08-07-001 while fixing #415 — consolidated here as FU-006 (superseded). The restatement carried new signal worth keeping: #415 is the first CONFIRMED case of the parallel-branch collision path causing damage in production (a note written to the wrong entry, a set-status reporting false success). So this is no longer a precaution — the mitigation is unexercised in the exact repo that already suffered the failure it prevents. One 'straymark followups install-merge-driver' per clone.
 
 ### FU-006 — Wire the merge driver in Sentinel and LNXDrive.
 - **Origin**: AILOG-2026-08-07-001 §Follow-ups
 - **Source-hash**: 937ac2c96b96
-- **Status**: open
+- **Status**: superseded
 - **Trigger**: TBD
 - **Destination**: TBD
 - **Cost**: TBD
-- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-07.
+- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-07. · [2026-08-07 · AILOG-2026-08-07-001] Duplicate of FU-005 (same work, earlier origin: AILOG-2026-08-06-001). Consolidated into FU-005 at triage 2026-08-07; its added signal — that #415 confirmed the collision path in production — was folded into that entry's Notes.
 
 ## Bucket: time-triggered
 
