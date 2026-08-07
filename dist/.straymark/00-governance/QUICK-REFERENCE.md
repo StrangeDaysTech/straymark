@@ -72,7 +72,7 @@ Charters are **not** doc types — they wrap a multi-session implementation bloc
 
 | Concept | Folder | Agent Autonomy |
 |---------|--------|---------------|
-| `Charter` | `.straymark/charters/` (declarative `NN-slug.md` + telemetry `NN-slug.telemetry.yaml`) | Scaffold via `charter new`; operator owns trigger and lifecycle transitions |
+| `Charter` | `.straymark/charters/` (declarative `NN-slug.md` + telemetry `CHARTER-NN.telemetry.yaml`) | Scaffold via `charter new`; operator owns trigger and lifecycle transitions |
 
 > See section 15 of `STRAYMARK.md` and `.straymark/00-governance/SPECKIT-CHARTER-BRIDGE.md` for granularity heuristics, lifecycle, and the SpecKit ↔ Charter bridge.
 
@@ -167,7 +167,7 @@ Mark `review_required: true` when:
 ├── 08-security/                 ← SEC
 ├── 09-ai-models/                ← MCARD
 │   └── labeling/                ← AILABEL*
-├── charters/                    ← Charter (NN-slug.md + NN-slug.telemetry.yaml)
+├── charters/                    ← Charter (NN-slug.md + CHARTER-NN.telemetry.yaml)
 ├── follow-ups-backlog.md        ← Follow-ups registry (FU-NNN entries, first-class since fw-4.21.0)
 └── templates/                   ← Templates (incl. charter/ subdir + follow-ups-backlog.md)
 
@@ -263,4 +263,4 @@ Mark `review_required: true` when:
 
 ---
 
-*StrayMark fw-4.42.0 | [Strange Days Tech](https://strangedays.tech)*
+*StrayMark fw-4.43.0 | [Strange Days Tech](https://strangedays.tech)*

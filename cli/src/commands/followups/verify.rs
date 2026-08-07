@@ -47,14 +47,7 @@ pub fn run(
         );
     }
     let registry = followups::parse_registry(&registry_path)?;
-    let entry = followups::find_entry(&registry, fu_id)
-        .ok_or_else(|| {
-            anyhow!(
-                "Entry {} not found in the registry.\n  hint: run `straymark followups list` to see entries.",
-                fu_id
-            )
-        })?
-        .clone();
+    let entry = followups::find_entry_unique(&registry, fu_id)?.clone();
 
     // ── Surface the premise (the assumption to re-check) ──
     let effective_premise = premise

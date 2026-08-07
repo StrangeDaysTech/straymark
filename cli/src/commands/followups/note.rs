@@ -42,14 +42,7 @@ pub fn run(path: &str, fu_id: &str, text: &str, source: Option<&str>) -> Result<
     // artifact gets half-corrupted.
     guard_parse_warnings(&registry)?;
 
-    let entry = followups::find_entry(&registry, fu_id)
-        .ok_or_else(|| {
-            anyhow!(
-                "Entry {} not found in the registry.\n  hint: run `straymark followups list` to see entries.",
-                fu_id
-            )
-        })?
-        .clone();
+    let entry = followups::find_entry_unique(&registry, fu_id)?.clone();
 
     let date = Local::now().format("%Y-%m-%d").to_string();
     let notes = followups::append_note(entry.notes.as_deref(), text, &date, source);
