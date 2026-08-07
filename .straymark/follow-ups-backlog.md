@@ -1,9 +1,9 @@
 ---
-last_scan: 2026-08-05
+last_scan: 2026-08-06
 schema_version: v1
 total_open: 3
 total_promoted: 0
-total_closed_in_session: 1
+total_closed_in_session: 2
 total_phase_blocked: 0
 total_suspected_closed: 0
 buckets:
@@ -16,6 +16,7 @@ fully_extracted_ailogs:
   - AILOG-2026-08-04-003
   - AILOG-2026-08-05-003
   - AILOG-2026-08-05-004
+  - AILOG-2026-08-06-001
 ---
 
 # Follow-ups Backlog
@@ -45,11 +46,11 @@ Entry shape (v1 — optional fields marked):
 ### FU-001 — (new) Consider wiring the merge-driver setup into `straymark init` behind a prompt (see R2).
 - **Origin**: AILOG-2026-08-04-003 §Follow-ups
 - **Source-hash**: b455feec70c6
-- **Status**: open
+- **Status**: closed
 - **Trigger**: TBD
 - **Destination**: TBD
 - **Cost**: TBD
-- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-04.
+- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-04. · [2026-08-06 · AILOG-2026-08-06-001] Implemented 2026-08-06 (cli-3.44.0): 'straymark followups install-merge-driver' + 'init --merge-driver/--no-merge-driver' with a TTY-gated prompt. NOTE ON THE PREMISE: it was never verified — the driver was 16h old and non-adoption proved nothing. Built on operator decision over a recommendation to dogfood first. What the data DID show: the #391 fix was inert in all 3 installations including Sentinel, which is why a standalone command (not just an init flag) was required — init cannot run on an existing installation.
 
 ### FU-002 — Verify `QWEN.md` and `.qwen/skills/` land through a real `straymark init` and a real `straymark update` once…
 - **Origin**: AILOG-2026-08-05-003 §Follow-ups
@@ -77,6 +78,15 @@ Entry shape (v1 — optional fields marked):
 - **Destination**: TBD
 - **Cost**: TBD
 - **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-05. · [2026-08-06 · AILOG-2026-08-05-004] Partially verified 2026-08-06. The prune was exercised end-to-end against the REAL published manifest via 'straymark repair' on an fw-4.42.0 install seeded with retired-channel leftovers: 2 pristine files removed, 1 operator-edited kept and labelled 'you modified it', 1 operator-authored kept and labelled 'not installed by StrayMark'. What remains unverified is the same sweep on the update-framework path specifically, which needs an older published release to update FROM — impossible now, possible from the next release since fw-4.42.0 survives the new KEEP=5 retention (PR #412).
+
+### FU-005 — Wire the driver in Sentinel and LNXDrive — Sentinel is the adopter that filed #391 and the only installation with…
+- **Origin**: AILOG-2026-08-06-001 §Follow-ups
+- **Source-hash**: f2a482dbcc0e
+- **Status**: open
+- **Trigger**: TBD
+- **Destination**: TBD
+- **Cost**: TBD
+- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-06.
 
 ## Bucket: time-triggered
 

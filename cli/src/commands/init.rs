@@ -11,7 +11,12 @@ use crate::inject;
 use crate::manifest::DistManifest;
 use crate::utils;
 
-pub fn run(path: &str, install_hooks: bool) -> Result<()> {
+pub fn run(
+    path: &str,
+    install_hooks: bool,
+    install_merge_driver: bool,
+    skip_merge_driver: bool,
+) -> Result<()> {
     let target = PathBuf::from(path)
         .canonicalize()
         .unwrap_or_else(|_| PathBuf::from(path));
@@ -86,6 +91,36 @@ pub fn run(path: &str, install_hooks: bool) -> Result<()> {
                 utils::warn(&format!(
                     "Failed to install pre-PR hook: {}. Continuing without it.",
                     e
+                ));
+            }
+        }
+    }
+
+    // Wire the follow-ups registry merge driver (GH #391). Explicit flag wins;
+    // otherwise offer it, but only when someone is there to answer — `init` runs
+    // in CI and provisioning scripts, where a blocking prompt is a hang.
+    let wants_driver = if skip_merge_driver {
+        false
+    } else if install_merge_driver {
+        true
+    } else {
+        prompt_for_merge_driver(&target)
+    };
+    if wants_driver {
+        match crate::commands::followups::install_merge_driver::install(&target) {
+            Ok(outcome) => {
+                if outcome.attributes_added || outcome.config_added {
+                    println!(
+                        "  {} follow-ups merge driver wired ({} + {})",
+                        "✓".green().bold(),
+                        ".gitattributes".dimmed(),
+                        "git config".dimmed()
+                    );
+                }
+            }
+            Err(e) => {
+                utils::warn(&format!(
+                    "Could not wire the merge driver: {e}. Continuing without it;                      run `straymark followups install-merge-driver` later."
                 ));
             }
         }
@@ -286,6 +321,35 @@ fn inject_directives(
     }
 
     Ok(())
+}
+
+/// Ask whether to wire the merge driver, when a human is present to answer.
+///
+/// Returns false without prompting when stdin is not a TTY or the project is
+/// not a git repo — `init` is routinely scripted, and a prompt that blocks a
+/// provisioning run is worse than the friction it saves.
+fn prompt_for_merge_driver(target: &Path) -> bool {
+    use std::io::IsTerminal;
+
+    if !std::io::stdin().is_terminal() || !target.join(".git").exists() {
+        return false;
+    }
+
+    println!();
+    println!(
+        "  {} The follow-ups registry is a guaranteed conflict between parallel PRs,",
+        "?".yellow().bold()
+    );
+    println!("    and resolving it by hand silently reverts closures (GH #391).");
+    println!(
+        "    StrayMark ships a git merge driver that resolves it structurally."
+    );
+
+    dialoguer::Confirm::with_theme(&dialoguer::theme::ColorfulTheme::default())
+        .with_prompt("Wire it into this clone now?")
+        .default(true)
+        .interact()
+        .unwrap_or(false)
 }
 
 /// Save the manifest locally for future remove operations

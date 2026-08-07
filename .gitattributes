@@ -1,0 +1,7 @@
+
+# StrayMark: structural three-way merge for the CLI-owned follow-ups
+# registry (GH #391). This line alone is not enough: without the matching
+# `git config merge.straymark-followups.driver`, git ABORTS any merge that
+# touches the registry. Every clone must run, once:
+#     straymark followups install-merge-driver
+.straymark/follow-ups-backlog.md merge=straymark-followups
