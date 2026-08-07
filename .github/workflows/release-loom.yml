@@ -170,15 +170,38 @@ jobs:
               release/*
           fi
 
-      - name: Delete previous Loom releases
+      - name: Prune Loom releases beyond the retention window
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
+          # Keep the newest KEEP releases; prune the rest. Retention exists so
+          # adopters can roll back and so a migration can be verified against
+          # the release it actually shipped in — neither is possible when only
+          # the latest release survives.
+          KEEP=5
           CURRENT_TAG="${{ needs.resolve-version.outputs.tag }}"
-          gh release list --json tagName --jq '.[].tagName' | while read -r tag; do
-            if [[ "$tag" == loom-* && "$tag" != "$CURRENT_TAG" ]]; then
-              echo "Deleting old release $tag..."
-              gh release delete "$tag" --yes --cleanup-tag
+          # The current tag is in this list, so it counts toward KEEP naturally.
+          # `sort -rV` orders newest-first; `tail -n +$((KEEP+1))` is everything
+          # past the window.
+          mapfile -t doomed < <(
+            gh release list --limit 200 --json tagName --jq '.[].tagName' \
+              | grep '^loom-' \
+              | sort -rV \
+              | tail -n +$((KEEP + 1))
+          )
+          if [ ${#doomed[@]} -eq 0 ]; then
+            echo "Nothing to prune: loom-* releases are within the retention window of $KEEP."
+            exit 0
+          fi
+          for tag in "${doomed[@]}"; do
+            if [ "$tag" = "$CURRENT_TAG" ]; then
+              echo "Refusing to prune the release just published ($tag)." >&2
+              exit 1
             fi
+            # No --cleanup-tag: the tag is the historical record and costs
+            # nothing to keep. Only the release (and its assets) is pruned, so
+            # `git checkout <tag>` keeps working for every version ever shipped.
+            echo "Pruning release $tag (outside the newest $KEEP); tag kept..."
+            gh release delete "$tag" --yes
           done
