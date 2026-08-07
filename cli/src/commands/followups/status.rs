@@ -197,12 +197,10 @@ fn print_pulse(registry: &Registry) {
 }
 
 fn print_entry_detail(registry: &Registry, id: &str) -> Result<()> {
-    let entry = followups::find_entry(registry, id).ok_or_else(|| {
-        anyhow!(
-            "Entry {} not found in the registry.\n  hint: run `straymark followups list` to see entries.",
-            id
-        )
-    })?;
+    // Read-only, but it still refuses an ambiguous id: showing one of two
+    // entries that share a number is how an operator concludes the wrong one is
+    // the one they are about to write to (GH #415).
+    let entry = followups::find_entry_unique(registry, id)?;
 
     println!();
     println!("  {} — {}", entry.fu_id.bold().cyan(), entry.description.bold());

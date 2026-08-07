@@ -127,13 +127,18 @@ fn load_charter_row(project_root: &Path, charter: &Charter) -> Result<CharterRow
     })
 }
 
-/// Locate the telemetry sidecar for a Charter. Charters live at
-/// `.straymark/charters/<NN-slug>.md`; telemetry sits next to them as
-/// `<NN-slug>.telemetry.yaml` per the convention in charter.rs.
+/// Locate the telemetry sidecar for a Charter.
+///
+/// Canonical name first (`CHARTER-NN.telemetry.yaml`, what `close` writes),
+/// then the legacy `<NN-slug>.telemetry.yaml` for telemetry written by older
+/// CLIs. Until cli-3.45.0 this built only the legacy name, from the Charter's
+/// own file stem — so it never found anything and the heuristic reported
+/// `(missing)` for every Charter in every repo (GH #416).
 fn telemetry_path_for(_project_root: &Path, charter: &Charter) -> Option<PathBuf> {
-    let stem = charter.path.file_stem()?.to_str()?;
-    let parent = charter.path.parent()?;
-    Some(parent.join(format!("{stem}.telemetry.yaml")))
+    Some(super::resolve_telemetry_path(
+        &charter.path,
+        &charter.frontmatter.charter_id,
+    ))
 }
 
 fn parse_telemetry(path: &Path) -> Result<(Option<String>, Option<u32>)> {
@@ -229,12 +234,20 @@ fn print_recommendation(
     window: &[&CharterRow],
     rolling_mean: Option<f64>,
 ) {
+    // Two distinct gates, and printing both as bare numbers read as a
+    // contradiction (GH #416): `3` is the sample size the mean needs to mean
+    // anything, `6` is the value that mean must beat. Each line now names what
+    // it gates.
     println!("  {}", "Heuristic".bold());
     println!(
-        "    Chain length (closed Charters in window): {}",
-        window.len()
+        "    Sample size — closed Charters with telemetry: {} (need {} to evaluate)",
+        window.len(),
+        ROLLING_WINDOW
     );
-    println!("    Threshold for rolling mean:               > {}", threshold);
+    println!(
+        "    Refresh trigger — rolling mean must exceed:   {}",
+        threshold
+    );
     match rolling_mean {
         Some(m) => println!(
             "    Rolling mean of agent_quality.r_n_plus_one_emergent_count: {:.2}",

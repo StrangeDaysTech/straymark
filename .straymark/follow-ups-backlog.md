@@ -1,7 +1,7 @@
 ---
-last_scan: 2026-08-06
+last_scan: 2026-08-07
 schema_version: v1
-total_open: 3
+total_open: 4
 total_promoted: 0
 total_closed_in_session: 2
 total_phase_blocked: 0
@@ -17,6 +17,7 @@ fully_extracted_ailogs:
   - AILOG-2026-08-05-003
   - AILOG-2026-08-05-004
   - AILOG-2026-08-06-001
+  - AILOG-2026-08-07-001
 ---
 
 # Follow-ups Backlog
@@ -87,6 +88,15 @@ Entry shape (v1 — optional fields marked):
 - **Destination**: TBD
 - **Cost**: TBD
 - **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-06.
+
+### FU-006 — Wire the merge driver in Sentinel and LNXDrive.
+- **Origin**: AILOG-2026-08-07-001 §Follow-ups
+- **Source-hash**: 937ac2c96b96
+- **Status**: open
+- **Trigger**: TBD
+- **Destination**: TBD
+- **Cost**: TBD
+- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-07.
 
 ## Bucket: time-triggered
 

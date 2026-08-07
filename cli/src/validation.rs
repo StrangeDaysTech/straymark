@@ -430,6 +430,73 @@ fn check_followups_work_verb(straymark_dir: &Path, result: &mut ValidationResult
     }
 }
 
+/// GH #415: two entries carrying the same `### FU-NNN` heading.
+///
+/// Ids are positional, and two paths hand out a number that is already taken:
+/// parallel branches each computing `max + 1` against their own copy of the
+/// registry, and (before cli-3.45.0) triage pruning a closed entry's heading,
+/// which released its number for reuse.
+///
+/// The state itself is recoverable — renumber one of them — but it is
+/// **invisible until something writes to the wrong entry**, which is how #415
+/// was found: a `note` landed on the wrong follow-up and the follow-up
+/// `set-status` reported as "already closed" was a different item entirely.
+/// The mutating commands now refuse an ambiguous id; this rule surfaces the
+/// duplicate before anyone reaches for one.
+///
+/// Error, not warning: unlike most registry findings this one silently
+/// misdirects writes, and there is no reading of a duplicate id that is
+/// intentional.
+fn check_followup_duplicate_ids(straymark_dir: &Path, result: &mut ValidationResult) {
+    let backlog = straymark_dir.join("follow-ups-backlog.md");
+    let Ok(content) = std::fs::read_to_string(&backlog) else {
+        return; // No registry — nothing to check.
+    };
+
+    // Heading lines only. A bare `FU-NNN` in prose or a Notes back-reference is
+    // a citation, not a second entry.
+    let mut seen: std::collections::BTreeMap<String, Vec<usize>> = Default::default();
+    for (line_no, line) in content.lines().enumerate() {
+        let Some(rest) = line.strip_prefix("### ") else {
+            continue;
+        };
+        let Some(after) = rest.strip_prefix("FU-") else {
+            continue;
+        };
+        let digits: String = after.chars().take_while(|c| c.is_ascii_digit()).collect();
+        if digits.is_empty() {
+            continue;
+        }
+        seen.entry(format!("FU-{digits}"))
+            .or_default()
+            .push(line_no + 1);
+    }
+
+    for (fu_id, lines) in seen.iter().filter(|(_, l)| l.len() > 1) {
+        let where_ = lines
+            .iter()
+            .map(|l| l.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        result.add(ValidationIssue {
+            file: backlog.clone(),
+            rule: "FOLLOWUP-DUPLICATE-ID".to_string(),
+            message: format!(
+                "{} is the heading of {} different entries (lines {}). Commands that resolve by \
+                 id cannot tell them apart.",
+                fu_id,
+                lines.len(),
+                where_
+            ),
+            severity: Severity::Error,
+            fix_hint: Some(format!(
+                "Renumber all but one {fu_id} to a free id, then run `straymark followups recount`. \
+                 `straymark followups status` shows the highest id in use."
+            )),
+        });
+    }
+}
+
 /// GH #392: warn when an AILOG's body mentions a `FU-NNN` / `FU-NNN-NNN` id
 /// outside its own `## Follow-ups` section and *nothing* knows about that id.
 /// The extractor only reads `## Follow-ups` (plus structural risk
@@ -637,6 +704,7 @@ pub fn validate_all(straymark_dir: &Path) -> (ValidationResult, usize) {
     check_followups_work_verb(straymark_dir, &mut result);
 
     // GH #392: FU ids mentioned outside `## Follow-ups` never reach the registry.
+    check_followup_duplicate_ids(straymark_dir, &mut result);
     check_followup_mentions(straymark_dir, &paths, &mut result);
 
     // REF-002: Detect orphan documents (no traceability links)

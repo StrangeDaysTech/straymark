@@ -352,7 +352,7 @@ findings_closed: {findings_closed}\n\
 \n\
 ## Telemetry\n\
 \n\
-This amendment populates `charter_telemetry.post_close_amendment:` in the Charter's `.telemetry.yaml`. Run `straymark charter amend {charter_id} --trigger {trigger} --merge-into .straymark/charters/<NN-slug>.telemetry.yaml` (this command) with the appropriate path to auto-merge, or paste the YAML block printed by the CLI.\n\
+This amendment populates `charter_telemetry.post_close_amendment:` in the Charter's `.telemetry.yaml`. Run `straymark charter amend {charter_id} --trigger {trigger} --merge-into .straymark/charters/CHARTER-NN.telemetry.yaml` (this command) with the appropriate path to auto-merge, or paste the YAML block printed by the CLI.\n\
 ",
         amends
             .map(|a| format!("- **Amends**: [{a}]({a}.md) (forward pointer; the original gets a `## Historical correction` subsection)\n"))

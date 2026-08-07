@@ -7,6 +7,34 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.43.0 / CLI 3.45.0 — 2026-08-06
+
+Two adopter reports, both silent-failure shaped: a heuristic that had been inert in every repo while reporting a reassuring message, and a registry that let writes land on the wrong entry.
+
+### Fixed (CLI)
+
+- **`charter refresh-suggest` never found telemetry** (#416). `close` writes `CHARTER-NN.telemetry.yaml` (slug stripped, so the name survives a Charter rename); `refresh-suggest` built `<NN-slug>.telemetry.yaml` from the Charter's own filename. The reader never found what the writer wrote, so the refresh heuristic — the mechanism that detects accumulated spec drift across a Charter chain — has been inert in **every repo with closed Charters** since the names diverged. Both sides now derive the name from one helper, with a fallback to the legacy name for telemetry written by older CLIs. Confirmed on a second repo: 27 telemetry files, every Charter reported `(missing)`, chain length `0`.
+
+  The failure mode is why this matters more than its size: `Chain shorter than 3 closed Charters with telemetry — heuristic not yet meaningful` is indistinguishable from the normal early state, so a seven-Charter chain ran past it without anyone suspecting a defect.
+
+- **Duplicate FU ids silently misdirected writes** (#415). Commands resolving by id took the **first** match, so with two entries sharing a number `note` annotated the wrong follow-up and `set-status` answered `already closed — nothing to change` — which reads as success while the intended entry stayed open. `note` / `set-status` / `verify` / `promote` / `status` now refuse an ambiguous id and name both entries.
+
+- **Triage pruning released ids for reuse** (#415, reported from Sentinel 2026-06-04). `next_fu_number` was `max(parsed entries) + 1`, so an id stopped being reserved the moment its entry lost its `### FU-NNN` heading — which is exactly what triage does when it prunes a closed entry to a provenance bullet. The high-water mark now comes from every `FU-NNN` mentioned anywhere in the registry body.
+
+  The other collision path — parallel branches each computing `max + 1` against their own copy — is handled by the #391 merge driver, which renumbers on merge. Reproduced both.
+
+### Added (CLI)
+
+- **`FOLLOWUP-DUPLICATE-ID`** validation rule (#415): two entries sharing a `### FU-NNN` heading are reported as an **error**. Unlike most registry findings this one silently misdirects writes, and no reading of a duplicate id is intentional.
+
+### Changed (CLI)
+
+- **`refresh-suggest` labels its two thresholds** (#416). `3` (sample size needed to evaluate) and `6` (value the rolling mean must beat) were both printed as bare numbers and read as contradictory. Each line now names what it gates.
+
+### Fixed (Framework)
+
+- **The telemetry filename convention was documented wrong** (#416) in `STRAYMARK.md` (§10 and §15) and `QUICK-REFERENCE.md` (EN/es/zh-CN) — the docs corroborated the reader, not the writer, in every language. Same correction in the `charter amend --merge-into` guidance the CLI prints.
+
 ## CLI 3.44.0 — 2026-08-06
 
 ### Added (CLI)

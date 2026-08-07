@@ -284,7 +284,7 @@ related:
 │
 ├── charters/                   ← CHARTERS — BOUNDED UNITS OF WORK
 │   ├── [NN-slug.md]            # Declarative ex-ante scope (filename: NN-slug.md, NOT TYPE-YYYY-...)
-│   └── [NN-slug.telemetry.yaml] # Post-close telemetry (created by `straymark charter close`)
+│   └── [CHARTER-NN.telemetry.yaml] # Post-close telemetry (created by `straymark charter close`)
 │
 ├── templates/                  ← TEMPLATES (12 base + 4 China* + Charter)
 
@@ -382,7 +382,7 @@ Charters are **conceptually distinct** from the 12+4 document types listed in se
 
 - They live at `.straymark/charters/NN-slug.md` (sequential prefix, not date-prefix).
 - Their lifecycle is `declared` → `in-progress` → `closed`, persisted in frontmatter as the source of truth.
-- Telemetry sits beside them as `NN-slug.telemetry.yaml`, written by `straymark charter close`.
+- Telemetry sits beside them as `CHARTER-NN.telemetry.yaml`, written by `straymark charter close`. The slug is deliberately absent so the filename survives a Charter rename.
 - External audits resolve to `.straymark/audits/CHARTER-NN/` and merge back into telemetry.
 
 ### When to declare a Charter

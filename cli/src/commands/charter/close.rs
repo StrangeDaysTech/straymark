@@ -305,19 +305,11 @@ fn truncate_desc(s: &str, max: usize) -> String {
 }
 
 /// Build the `.straymark/charters/CHARTER-NN.telemetry.yaml` path for a Charter.
+///
+/// Delegates to the shared helper so the writer and every reader derive the
+/// name from one place (GH #416).
 fn telemetry_path_for(charters_state_dir: &Path, charter: &Charter) -> PathBuf {
-    // Strip optional slug suffix to keep the telemetry filename stable across
-    // Charter renames: CHARTER-01-foo → CHARTER-01.telemetry.yaml.
-    let id = &charter.frontmatter.charter_id;
-    let canonical = id
-        .split_once('-')
-        .and_then(|(prefix, rest)| {
-            // CHARTER-NN[-slug] → CHARTER-NN
-            let nn = rest.split('-').next()?;
-            Some(format!("{}-{}", prefix, nn))
-        })
-        .unwrap_or_else(|| id.clone());
-    charters_state_dir.join(format!("{}.telemetry.yaml", canonical))
+    super::canonical_telemetry_path(charters_state_dir, &charter.frontmatter.charter_id)
 }
 
 /// Copy the template YAML to the telemetry path. Refuses to overwrite an

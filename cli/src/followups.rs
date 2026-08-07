@@ -20,7 +20,7 @@
 //! Move target: straymark-core (Loom M0) — keep this module free of
 //! clap/colored/dialoguer; presentation lives in `commands/followups/`.
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Context, Result, bail};
 use sha2::{Digest, Sha256};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -512,14 +512,109 @@ pub fn find_entry<'a>(registry: &'a Registry, id_input: &str) -> Option<&'a Entr
     None
 }
 
-/// Next sequential FU number: `max(NNN) + 1`, or 1 on an empty registry.
+/// Every entry an id resolves to. Normally one; more than one means the
+/// registry carries duplicate ids and any write addressed by that id is a
+/// coin flip.
+pub fn find_entries<'a>(registry: &'a Registry, id_input: &str) -> Vec<&'a Entry> {
+    let trimmed = id_input.trim();
+    if trimmed.is_empty() {
+        return Vec::new();
+    }
+    let exact: Vec<&Entry> = registry.entries().filter(|e| e.fu_id == trimmed).collect();
+    if !exact.is_empty() {
+        return exact;
+    }
+    let digits = trimmed.strip_prefix("FU-").unwrap_or(trimmed);
+    match digits.parse::<u32>() {
+        Ok(n) => registry.entries().filter(|e| e.fu_number == n).collect(),
+        Err(_) => Vec::new(),
+    }
+}
+
+/// Resolve an id to exactly one entry, or fail.
+///
+/// GH #415: every mutating command resolved by taking the **first** match.
+/// With duplicate ids in the registry — which parallel branches and triage
+/// pruning both produce — `note` wrote into the wrong entry and `set-status`
+/// answered `already closed — nothing to change`, which reads as success. The
+/// operator's actual follow-up stayed open and unannotated, and nothing said so.
+///
+/// Refusing is the only safe answer: the command cannot know which entry was
+/// meant, and guessing is what caused the silent write.
+pub fn find_entry_unique<'a>(registry: &'a Registry, id_input: &str) -> Result<&'a Entry> {
+    let matches = find_entries(registry, id_input);
+    match matches.len() {
+        1 => Ok(matches[0]),
+        0 => bail!(
+            "{} not found in {}",
+            id_input,
+            registry.path.display()
+        ),
+        n => {
+            let mut detail = String::new();
+            for e in &matches {
+                detail.push_str(&format!(
+                    "\n    - {} [{}] {} — {}",
+                    e.fu_id,
+                    e.status.as_str(),
+                    e.origin.as_deref().unwrap_or("origin unknown"),
+                    crate::utils::truncate_visual(&e.description, 60)
+                ));
+            }
+            bail!(
+                "{id_input} is ambiguous: {n} entries share that id in {}.{detail}\n  \
+                 hint: ids are positional, so a merge of parallel branches — or triage pruning a \
+                 closed entry's heading — can hand the same number to two follow-ups. Renumber \
+                 all but one to a free id (`straymark followups status` shows the highest in \
+                 use), then re-run. Addressing a duplicate id would write into whichever entry \
+                 happens to come first in the file.",
+                registry.path.display()
+            )
+        }
+    }
+}
+
+/// Next sequential FU number: one past the highest number the registry has
+/// *ever* used, not one past the highest entry still standing.
+///
+/// GH #415: the high-water mark used to come from parsed entries alone, so an
+/// id stopped being reserved the moment its entry lost its `### FU-NNN`
+/// heading — which is exactly what triage does when it prunes a closed entry
+/// down to a provenance bullet. The next `drift --apply` then handed that
+/// number to an unrelated follow-up, and the registry ended up with two
+/// different items answering to one id. Reported from Sentinel on 2026-06-04
+/// (`FU-123` reused after supersession) and again in #415.
+///
+/// So the scan is over the raw body, not the entry list: any `FU-NNN` mention
+/// anywhere — a pruned bullet, a `Notes` back-reference, a superseded entry —
+/// keeps its number retired. Numbers are cheap; a collision is not.
 pub fn next_fu_number(registry: &Registry) -> u32 {
-    registry
-        .entries()
-        .map(|e| e.fu_number)
-        .max()
-        .map(|n| n + 1)
-        .unwrap_or(1)
+    let from_entries = registry.entries().map(|e| e.fu_number).max().unwrap_or(0);
+    let from_body = highest_fu_mention(&registry.body);
+    from_entries.max(from_body) + 1
+}
+
+/// Highest `FU-NNN` number mentioned anywhere in the registry body, including
+/// ids that no longer have an entry of their own. Author-scoped ids like
+/// `FU-058-022` contribute their first group only — the registry-assigned part.
+fn highest_fu_mention(body: &str) -> u32 {
+    let mut highest = 0u32;
+    let bytes = body.as_bytes();
+    let mut i = 0usize;
+    while let Some(pos) = body[i..].find("FU-") {
+        let start = i + pos + 3;
+        let mut end = start;
+        while end < bytes.len() && bytes[end].is_ascii_digit() {
+            end += 1;
+        }
+        if end > start {
+            if let Ok(n) = body[start..end].parse::<u32>() {
+                highest = highest.max(n);
+            }
+        }
+        i = start.max(i + pos + 1);
+    }
+    highest
 }
 
 /// Counters recomputed from actual entry statuses — the CLI-owned source of

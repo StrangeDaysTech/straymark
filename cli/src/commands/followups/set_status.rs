@@ -54,14 +54,7 @@ pub fn run(path: &str, fu_id: &str, status_input: &str) -> Result<()> {
     let registry = followups::parse_registry(&registry_path)?;
     guard_parse_warnings(&registry)?;
 
-    let entry = followups::find_entry(&registry, fu_id)
-        .ok_or_else(|| {
-            anyhow!(
-                "Entry {} not found in the registry.\n  hint: run `straymark followups list` to see entries.",
-                fu_id
-            )
-        })?
-        .clone();
+    let entry = followups::find_entry_unique(&registry, fu_id)?.clone();
 
     let before = followups::compute_counters(&registry);
     let previous = entry.status_raw.clone().unwrap_or_else(|| entry.status.as_str().to_string());
