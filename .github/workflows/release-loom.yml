@@ -199,6 +199,9 @@ jobs:
               echo "Refusing to prune the release just published ($tag)." >&2
               exit 1
             fi
-            echo "Pruning $tag (outside the newest $KEEP)..."
-            gh release delete "$tag" --yes --cleanup-tag
+            # No --cleanup-tag: the tag is the historical record and costs
+            # nothing to keep. Only the release (and its assets) is pruned, so
+            # `git checkout <tag>` keeps working for every version ever shipped.
+            echo "Pruning release $tag (outside the newest $KEEP); tag kept..."
+            gh release delete "$tag" --yes
           done

@@ -203,12 +203,11 @@ Users can now run `straymark update-framework` to get the new version.
 
 ### Release retention
 
-Every `release-*.yml` workflow prunes its own component's releases to the **newest 5** (`KEEP=5`), deleting the rest with `--cleanup-tag` — which removes the git tag as well as the release.
+Every `release-*.yml` workflow prunes its own component's **releases** to the newest 5 (`KEEP=5`). **Tags are never deleted** — they are the historical record, they cost nothing to keep, and `git checkout <tag>` keeps working for every version ever shipped.
 
-Two consequences worth holding:
-
-- **Only the last 5 versions are downloadable.** Anything older cannot be rolled back to, and a migration cannot be verified against the release it actually shipped in. That is why the window exists at all; it was `KEEP=1` until 2026-08-06, which made both impossible.
-- **Pruning deletes tags.** `git tag -l` in an old clone will show versions that no longer exist on the remote. Do not read a local tag as evidence that a release is still published — check `gh release list`.
+- **Only the last 5 versions are downloadable.** Anything older still has its tag and its source, but no built assets: no `straymark update-framework` rollback to it, and no verifying a migration against the release it actually shipped in. That is why the window exists at all; it was `KEEP=1` until 2026-08-06, which made both impossible.
+- **A tag without a release is normal, not a failure.** Anything older than the newest 5 will be exactly that. Use `gh release list` to see what is downloadable and `git tag -l` to see what was ever released — they answer different questions.
+- **Tags deleted before 2026-08-06 are gone for good.** The old `KEEP=1` step used `--cleanup-tag`, so it removed tags along with releases. Only versions published from that date forward are guaranteed to have a tag.
 
 ## Release Workflow — Loom (EXPERIMENTAL)
 
