@@ -201,6 +201,15 @@ gh release view fw-X.Y.Z --json assets --jq '.assets[].name'
 
 Users can now run `straymark update-framework` to get the new version.
 
+### Release retention
+
+Every `release-*.yml` workflow prunes its own component's releases to the **newest 5** (`KEEP=5`), deleting the rest with `--cleanup-tag` — which removes the git tag as well as the release.
+
+Two consequences worth holding:
+
+- **Only the last 5 versions are downloadable.** Anything older cannot be rolled back to, and a migration cannot be verified against the release it actually shipped in. That is why the window exists at all; it was `KEEP=1` until 2026-08-06, which made both impossible.
+- **Pruning deletes tags.** `git tag -l` in an old clone will show versions that no longer exist on the remote. Do not read a local tag as evidence that a release is still published — check `gh release list`.
+
 ## Release Workflow — Loom (EXPERIMENTAL)
 
 Loom releases are GitHub-release-only (no crates.io while experimental). Tag format: `loom-X.Y.Z`.
