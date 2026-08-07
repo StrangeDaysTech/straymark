@@ -7,6 +7,16 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.44.0 — 2026-08-06
+
+### Added (CLI)
+
+- **`straymark followups install-merge-driver [--path .]`** and **`straymark init --merge-driver` / `--no-merge-driver`** (FU-001, follow-up to #391): wire the follow-ups registry merge driver into a clone in one step. Writes both halves — the committable `.gitattributes` binding and `merge.straymark-followups.driver` in the clone's git config. Idempotent, and it leaves an existing binding or a differently-configured driver untouched rather than overwriting a deliberate choice. `init` offers it as a prompt when a TTY is present; the flags exist because `init` runs unattended in CI, where a blocking prompt is a hang.
+
+### Fixed (Docs)
+
+- **The merge-driver setup docs understated what skipping it costs.** `.git/config` is never committed, so a teammate who pulls the `.gitattributes` line without running the setup does **not** fall back to a normal conflict — git aborts the merge outright with `fatal: custom merge driver straymark-followups lacks command line`. Verified by A/B merge on a seeded registry. CLI-REFERENCE (EN/es/zh-CN) now says so, and the `.gitattributes` block the command writes carries the same warning inline.
+
 ## Framework 4.42.0 / CLI 3.43.0 — 2026-08-05
 
 Google retired Gemini CLI; its successor is **Antigravity CLI** (`agy`). StrayMark's Gemini-era surfaces are retired with it — and the framework gains the mechanism that makes retiring a distributed path possible at all.

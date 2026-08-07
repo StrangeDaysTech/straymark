@@ -46,7 +46,7 @@ StrayMark 为每个组件使用**独立的版本标签**：
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
 | Framework | `fw-` | `fw-4.42.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.43.0` | `straymark` 二进制文件 |
+| CLI | `cli-` | `cli-3.44.0` | `straymark` 二进制文件 |
 | Loom（实验性） | `loom-` | `loom-0.4.2` | `straymark-loom` 可视化服务器，由 `straymark loom serve` 按需下载 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
@@ -926,7 +926,17 @@ $ straymark followups verify FU-016 --premise "yrs 有一个独立的参照物(Y
 
 退出码遵循 git 的 merge-driver 契约：`0` = 已合并（软冲突报告到 stderr），非零 = 未解决（git 回退为将该文件标记为冲突）。
 
-**安装（每个克隆一次）：**
+**安装（每个克隆一次）—— `straymark followups install-merge-driver [--path .]` *(cli-3.44.0+)*：**
+
+```bash
+straymark followups install-merge-driver
+```
+
+写入两个部分：`.gitattributes` 绑定（可提交，团队成员随之继承）以及该克隆 git config 中的 `merge.straymark-followups.driver`。幂等；若已存在绑定或配置了其他驱动，则保持不变并给出提示。`straymark init` 会以提示方式询问，也接受 `--merge-driver` / `--no-merge-driver` 用于无人值守安装。
+
+> **每个克隆都需要，跳过并非无代价。** `.git/config` 从不提交，因此拿到 `.gitattributes` 行却未运行该命令的同事**不会**得到普通冲突 —— git 会直接中止合并并报 `fatal: custom merge driver straymark-followups lacks command line`。
+
+手动等价操作：
 
 ```bash
 echo '.straymark/follow-ups-backlog.md merge=straymark-followups' >> .gitattributes

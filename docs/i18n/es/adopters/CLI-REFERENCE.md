@@ -46,7 +46,7 @@ StrayMark usa **tags de versión independientes** para cada componente:
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
 | Framework | `fw-` | `fw-4.42.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.43.0` | El binario `straymark` |
+| CLI | `cli-` | `cli-3.44.0` | El binario `straymark` |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | El servidor de visualización `straymark-loom`, descargado bajo demanda por `straymark loom serve` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
@@ -883,7 +883,17 @@ El merge es **estructural, no textual**: las entradas se emparejan entre lados *
 
 El exit code sigue el contrato de merge-driver de git: `0` = mergeado (conflictos suaves reportados por stderr), distinto de cero = sin resolver (git marca el archivo en conflicto).
 
-**Configuración (una vez por clon):**
+**Configuración (una vez por clon) — `straymark followups install-merge-driver [--path .]` *(cli-3.44.0+)*:**
+
+```bash
+straymark followups install-merge-driver
+```
+
+Escribe las dos mitades: la línea de `.gitattributes` (commiteable, para que el equipo la herede) y `merge.straymark-followups.driver` en la config git del clon. Idempotente; si ya hay un binding o un driver configurado distinto, lo respeta y lo reporta. `straymark init` lo ofrece como prompt, o acepta `--merge-driver` / `--no-merge-driver` para instalaciones desatendidas.
+
+> **Hace falta en cada clon, y saltárselo no sale gratis.** `.git/config` nunca se commitea, así que quien reciba la línea de `.gitattributes` sin ejecutar el comando **no** obtiene un conflicto normal: git aborta el merge con `fatal: custom merge driver straymark-followups lacks command line`.
+
+El equivalente a mano:
 
 ```bash
 echo '.straymark/follow-ups-backlog.md merge=straymark-followups' >> .gitattributes

@@ -110,13 +110,28 @@ Code contributions should:
    chmod +x .git/hooks/pre-commit
    ```
 
-4. **Install development tools (optional)**
+4. **Wire the follow-ups merge driver**
+   ```bash
+   straymark followups install-merge-driver
+   ```
+
+   This repo commits a `.gitattributes` line binding
+   `.straymark/follow-ups-backlog.md` to a structural merge driver, because the
+   registry is otherwise a guaranteed conflict between parallel PRs whose
+   "obvious" resolution silently reverts closures ([#391](https://github.com/StrangeDaysTech/straymark/issues/391)).
+
+   The other half of the wiring lives in `.git/config`, which is never
+   committed — so **you must run this once per clone**. Skipping it does not
+   give you a normal conflict: git aborts any merge touching the registry with
+   `fatal: custom merge driver straymark-followups lacks command line`.
+
+5. **Install development tools (optional)**
    ```bash
    # Markdown linting
    npm install -g markdownlint-cli
    ```
 
-5. **Create a branch**
+6. **Create a branch**
    ```bash
    git checkout -b feature/your-feature-name
    # or

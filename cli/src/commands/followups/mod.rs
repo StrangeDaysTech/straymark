@@ -16,6 +16,7 @@
 //! same step so the edit-then-`recount` desync window does not exist.
 
 pub mod drift;
+pub mod install_merge_driver;
 pub mod list;
 pub mod merge_driver;
 pub mod new;

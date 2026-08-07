@@ -47,6 +47,15 @@ enum Commands {
         /// project to be a git repository.
         #[arg(long)]
         hooks: bool,
+        /// After init, wire the follow-ups registry merge driver
+        /// (`.gitattributes` + `git config`) so parallel PRs stop conflicting
+        /// on it (GH #391). Without this flag an interactive run offers it as a
+        /// prompt; pass `--no-merge-driver` to decline non-interactively.
+        #[arg(long)]
+        merge_driver: bool,
+        /// Skip the merge-driver prompt entirely, for scripted installs.
+        #[arg(long, conflicts_with = "merge_driver")]
+        no_merge_driver: bool,
     },
     /// Update both framework and CLI to the latest version
     Update {
@@ -440,6 +449,16 @@ enum FollowupsCommands {
         /// Incoming branch's version (git's %B)
         theirs: String,
     },
+    /// Wire the follow-ups registry merge driver into this clone
+    /// (`.gitattributes` + `git config merge.straymark-followups.*`). Needed
+    /// once per clone: the git-config half lives in `.git/config`, which is
+    /// never committed, so cloning a repo that already carries the
+    /// `.gitattributes` line still leaves the driver inert. Idempotent.
+    InstallMergeDriver {
+        /// Project directory (default: current directory)
+        #[arg(default_value = ".")]
+        path: String,
+    },
     /// Recompute the CLI-owned frontmatter counters from actual entry
     /// statuses, without scanning AILOGs. The §13-compliant way to reconcile
     /// counters after a manual-triage session (statuses flipped by hand,
@@ -828,7 +847,12 @@ fn main() {
     let cli = Cli::parse();
 
     let result = match cli.command {
-        Commands::Init { path, hooks } => commands::init::run(&path, hooks),
+        Commands::Init {
+            path,
+            hooks,
+            merge_driver,
+            no_merge_driver,
+        } => commands::init::run(&path, hooks, merge_driver, no_merge_driver),
         Commands::Update { method } => commands::update::run(&method),
         Commands::UpdateFramework => commands::update_framework::run(),
         Commands::UpdateCli { method } => commands::update_cli::run(&method),
@@ -1072,6 +1096,9 @@ fn main() {
             } => commands::followups::drift::run(&path, apply, scan_all, range.as_deref()),
             FollowupsCommands::MergeDriver { base, ours, theirs } => {
                 commands::followups::merge_driver::run(&base, &ours, &theirs)
+            }
+            FollowupsCommands::InstallMergeDriver { path } => {
+                commands::followups::install_merge_driver::run(&path)
             }
             FollowupsCommands::Recount { path } => commands::followups::recount::run(&path),
             FollowupsCommands::Promote {
