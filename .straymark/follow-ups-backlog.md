@@ -1,9 +1,9 @@
 ---
 last_scan: 2026-08-07
 schema_version: v1
-total_open: 3
+total_open: 2
 total_promoted: 0
-total_closed_in_session: 3
+total_closed_in_session: 4
 total_phase_blocked: 0
 total_suspected_closed: 0
 buckets:
@@ -56,11 +56,11 @@ Entry shape (v1 — optional fields marked):
 ### FU-002 — Verify `QWEN.md` and `.qwen/skills/` land through a real `straymark init` and a real `straymark update` once…
 - **Origin**: AILOG-2026-08-05-003 §Follow-ups
 - **Source-hash**: db86ed449fc7
-- **Status**: open
+- **Status**: closed
 - **Trigger**: TBD
 - **Destination**: TBD
 - **Cost**: TBD
-- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-05. · [2026-08-06 · AILOG-2026-08-05-003] Partially verified 2026-08-06 against the published fw-4.42.0: a real 'straymark init' produces QWEN.md (with the marker block) and .qwen/skills/, alongside .agent/skills/ and no retired dirs. The 'real update' half is NOT verified — no earlier release existed to update from (fw-4.41.0 was never tagged; fw-4.40.0 was deleted by the old KEEP=1 retention). Now possible from the next release onward.
+- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-05. · [2026-08-06 · AILOG-2026-08-05-003] Partially verified 2026-08-06 against the published fw-4.42.0: a real 'straymark init' produces QWEN.md (with the marker block) and .qwen/skills/, alongside .agent/skills/ and no retired dirs. The 'real update' half is NOT verified — no earlier release existed to update from (fw-4.41.0 was never tagged; fw-4.40.0 was deleted by the old KEEP=1 retention). Now possible from the next release onward. · [2026-08-07 · AILOG-2026-08-07-001] VERIFIED 2026-08-07 — the 'real update' half is now done, and was only possible because KEEP=5 retention (PR #412) kept fw-4.42.0 alive. Installed the published fw-4.42.0 ZIP with its injections and checksums, then ran a real 'straymark update-framework': 4.42.0 → 4.43.0, 240 files updated, 0 skipped. QWEN.md and GEMINI.md persisted, .qwen/skills and .agent/skills present, and the #416 doc correction landed in both STRAYMARK.md and QUICK-REFERENCE.md. Combined with the init verification of 2026-08-06, this entry is complete.
 
 ### FU-003 — Confirm which customization root Antigravity discovers (`.agent/` vs `.agents/`) before tagging `fw-4.42.0`, and flip…
 - **Origin**: AILOG-2026-08-05-004 §Follow-ups
@@ -78,7 +78,7 @@ Entry shape (v1 — optional fields marked):
 - **Trigger**: TBD
 - **Destination**: TBD
 - **Cost**: TBD
-- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-05. · [2026-08-06 · AILOG-2026-08-05-004] Partially verified 2026-08-06. The prune was exercised end-to-end against the REAL published manifest via 'straymark repair' on an fw-4.42.0 install seeded with retired-channel leftovers: 2 pristine files removed, 1 operator-edited kept and labelled 'you modified it', 1 operator-authored kept and labelled 'not installed by StrayMark'. What remains unverified is the same sweep on the update-framework path specifically, which needs an older published release to update FROM — impossible now, possible from the next release since fw-4.42.0 survives the new KEEP=5 retention (PR #412).
+- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-05. · [2026-08-06 · AILOG-2026-08-05-004] Partially verified 2026-08-06. The prune was exercised end-to-end against the REAL published manifest via 'straymark repair' on an fw-4.42.0 install seeded with retired-channel leftovers: 2 pristine files removed, 1 operator-edited kept and labelled 'you modified it', 1 operator-authored kept and labelled 'not installed by StrayMark'. What remains unverified is the same sweep on the update-framework path specifically, which needs an older published release to update FROM — impossible now, possible from the next release since fw-4.42.0 survives the new KEEP=5 retention (PR #412). · [2026-08-07 · AILOG-2026-08-07-001] Partially closed 2026-08-07. The update-framework CALL SITE is now exercised end-to-end (real 4.42.0 → 4.43.0 update, see FU-002), and the prune behaviour itself is covered by 4 unit tests plus an e2e through 'repair' against the real shipped manifest. What remains permanently untestable via a published release: a tree that still CONTAINS .gemini/skills or .agent/workflows, since every surviving release already retired them and the pre-retirement ones were deleted by the old KEEP=1 policy. Adopters installed before fw-4.42.0 will still exercise it for real on their next update.
 
 ### FU-005 — Wire the driver in Sentinel and LNXDrive — Sentinel is the adopter that filed #391 and the only installation with…
 - **Origin**: AILOG-2026-08-06-001 §Follow-ups
