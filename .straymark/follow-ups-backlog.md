@@ -58,7 +58,7 @@ Entry shape (v1 — optional fields marked):
 - **Trigger**: TBD
 - **Destination**: TBD
 - **Cost**: TBD
-- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-05.
+- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-05. · [2026-08-06 · AILOG-2026-08-05-003] Partially verified 2026-08-06 against the published fw-4.42.0: a real 'straymark init' produces QWEN.md (with the marker block) and .qwen/skills/, alongside .agent/skills/ and no retired dirs. The 'real update' half is NOT verified — no earlier release existed to update from (fw-4.41.0 was never tagged; fw-4.40.0 was deleted by the old KEEP=1 retention). Now possible from the next release onward.
 
 ### FU-003 — Confirm which customization root Antigravity discovers (`.agent/` vs `.agents/`) before tagging `fw-4.42.0`, and flip…
 - **Origin**: AILOG-2026-08-05-004 §Follow-ups
@@ -76,7 +76,7 @@ Entry shape (v1 — optional fields marked):
 - **Trigger**: TBD
 - **Destination**: TBD
 - **Cost**: TBD
-- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-05.
+- **Notes**: Auto-appended by `straymark followups drift --apply` 2026-08-05. · [2026-08-06 · AILOG-2026-08-05-004] Partially verified 2026-08-06. The prune was exercised end-to-end against the REAL published manifest via 'straymark repair' on an fw-4.42.0 install seeded with retired-channel leftovers: 2 pristine files removed, 1 operator-edited kept and labelled 'you modified it', 1 operator-authored kept and labelled 'not installed by StrayMark'. What remains unverified is the same sweep on the update-framework path specifically, which needs an older published release to update FROM — impossible now, possible from the next release since fw-4.42.0 survives the new KEEP=5 retention (PR #412).
 
 ## Bucket: time-triggered
 
