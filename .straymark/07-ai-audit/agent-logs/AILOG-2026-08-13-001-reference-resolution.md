@@ -16,9 +16,14 @@ files_modified:
   - cli/src/main.rs
   - cli/tests/validate_test.rs
   - cli/Cargo.toml
+  - Cargo.lock
   - CHANGELOG.md
+  - docs/adopters/CLI-REFERENCE.md
+  - docs/i18n/es/adopters/CLI-REFERENCE.md
+  - docs/i18n/zh-CN/adopters/CLI-REFERENCE.md
   - .straymark/charters/02-mechanical-verifiers-for-the-markdown-layer-419.md
   - .straymark/charters/README.md
+  - .straymark/follow-ups-backlog.md
 observability_scope: none
 tags: [validate, reference-resolution, hooks, adopter-feedback, cli, charter-02]
 related:
@@ -110,6 +115,15 @@ REF-003 warning on the Charter, documented here.
 - R1 (Charter): REF-001 → Error breaks adopters with dangling `related:`
   refs. Mitigation: CHANGELOG calls it a behavior break; the adopter fix is
   mechanical. No new risk surfaced during implementation.
+- R2 (new, not in Charter): scope expansion reported by
+  `charter drift --range main..HEAD`. Two modified-but-not-declared paths,
+  both intentional: `Cargo.lock` (generated — follows the cli 3.46.0
+  version bump) and `.straymark/follow-ups-backlog.md` (FU-007 created via
+  `followups new` + annotation with the first-run REF-003 baseline — the
+  warn-first flip trigger the Charter defers). Also declared atomically in
+  the Charter table in this same PR: the three CLI-REFERENCE files
+  (`docs/adopters/CLI-REFERENCE.md` and its es/zh-CN mirrors), which the
+  original declaration missed.
 
 ## Validation
 

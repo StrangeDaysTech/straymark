@@ -113,6 +113,8 @@ PR 3 — guard-closure in remediation AILOGs (fw + cli):
 | `docs/adopters/CLI-REFERENCE.md` | `validate`: `--commit-msg` flag, REF-001 → Error note, REF-003 bullet (added during PR 1 — scope expansion recorded per closure protocol) |
 | `docs/i18n/es/adopters/CLI-REFERENCE.md` | Spanish mirror of the above |
 | `docs/i18n/zh-CN/adopters/CLI-REFERENCE.md` | Chinese mirror of the above |
+| `Cargo.lock` | Generated — follows the cli version bumps (added during PR 1 per closure protocol) |
+| `.straymark/follow-ups-backlog.md` | FU-007 (REF-003 flip trigger) created + baseline annotation (added during PR 1 per closure protocol) |
 | `.straymark/07-ai-audit/agent-logs/AILOG-2026-08-13-NNN-*.md` | New, one per PR, `risk_level: medium`, `review_required: false` |
 | `.straymark/charters/02-mechanical-verifiers-for-the-markdown-layer-419.md` | This Charter — status flips + atomic updates per closure protocol |
 | `.straymark/charters/README.md` | Move the CHARTER-02 row to `## Closed` at closure |
