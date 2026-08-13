@@ -16,6 +16,7 @@ pub fn run(
     include_charters: bool,
     check_pending_reviews: bool,
     max_pending_days: i64,
+    commit_msg: Option<&str>,
 ) -> Result<()> {
     // Agent-targeted validation is a separate code path: it inspects an
     // external skills directory (e.g. ~/.codex/skills/), not StrayMark docs.
@@ -50,6 +51,12 @@ pub fn run(
 
     let target = resolved.path;
     let straymark_dir = target.join(".straymark");
+
+    // --commit-msg mode: id-shaped references in a commit message must resolve
+    // (#419). Blocking; hook-shaped like --staged but for commit-msg hooks.
+    if let Some(msg_file) = commit_msg {
+        return run_commit_msg(&straymark_dir, msg_file);
+    }
 
     // --staged mode: validate only git-staged .straymark/ documents.
     // Charter validation in --staged mode is a Phase 2 enhancement; in v0
@@ -120,6 +127,46 @@ pub fn run(
     }
 
     print_results(&result, doc_count);
+    exit_with_code(&result)
+}
+
+/// `validate --commit-msg <file>` (#419): name resolution for commit messages.
+/// Every id-shaped token (AILOG-*, FU-*, CHARTER-*, ...) must resolve to a
+/// document, charter or follow-up in .straymark/ — a citation that resolves to
+/// nothing is a phantom reference and blocks the commit. Designed to be wired
+/// into a commit-msg hook:
+///
+/// ```sh
+/// # .git/hooks/commit-msg
+/// #!/bin/sh
+/// straymark validate --commit-msg "$1"
+/// ```
+fn run_commit_msg(straymark_dir: &std::path::Path, msg_file: &str) -> Result<()> {
+    let content = std::fs::read_to_string(msg_file).map_err(|e| {
+        anyhow::anyhow!("Cannot read commit message file '{msg_file}': {e}")
+    })?;
+
+    println!();
+    println!("  {}", "StrayMark Validate (commit-msg)".bold().cyan());
+    println!("  {}", msg_file.dimmed());
+    println!();
+
+    let result = validation::validate_commit_msg(
+        std::path::Path::new(msg_file),
+        &content,
+        straymark_dir,
+    );
+
+    if result.errors.is_empty() && result.warnings.is_empty() {
+        println!(
+            "  {} Every StrayMark id referenced resolves.",
+            "✓".green().bold()
+        );
+        println!();
+        return Ok(());
+    }
+
+    print_results(&result, 1);
     exit_with_code(&result)
 }
 

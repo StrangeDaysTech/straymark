@@ -1,7 +1,7 @@
 ---
 last_scan: 2026-08-07
 schema_version: v1
-total_open: 2
+total_open: 3
 total_promoted: 0
 total_closed_in_session: 4
 total_phase_blocked: 0
@@ -101,6 +101,16 @@ Entry shape (v1 — optional fields marked):
 ## Bucket: time-triggered
 
 ## Bucket: charter-triggered
+
+### FU-007 — REF-003 baseline: drifted citations in CHARTER-01 and AIDEC-2026-07-18-001 (CHARTER-06, FU-011, CHARTER-04, FU-017, FU-016, FU-010) — reword, resolve, or deliberately accept
+- **Origin**: AILOG-2026-08-13-001
+- **Origin-class**: ex-ante-planning
+- **Status**: open
+- **Trigger**: Before any REF-003 severity flip to Error
+- **Destination**: chore
+- **Cost**: S
+- **Premise**: The warn-first baseline stays small enough that a future Error flip is a bounded rewording pass, not a migration
+- **Notes**: Created by `straymark followups new` 2026-08-13 — declared ex-ante, before execution. · [2026-08-13 · AILOG-2026-08-13-001] Full first-run REF-003 inventory: CHARTER-06 (cited by CHARTER-01, AILOG-2026-07-26-001), CHARTER-04 (CHARTER-01), CHARTER-12 (ADR-2026-06-03-001), CHARTER-55 (AILOG-2026-07-25-001). The FU ids in this entry's title now resolve via the registry-body known-set — the registry knows them as tracked cleanup.
 
 ## Bucket: phase-blocked
 

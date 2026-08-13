@@ -159,6 +159,12 @@ enum Commands {
         /// Threshold for --check-pending-reviews (default: 14 days).
         #[arg(long, default_value_t = 14)]
         max_pending_days: i64,
+        /// Validate id-shaped references (AILOG-*, FU-*, CHARTER-*, ...) in a
+        /// commit message file: every token must resolve to a document, charter
+        /// or follow-up in .straymark/, otherwise exit 1. Designed for
+        /// commit-msg hooks the way --staged is designed for pre-commit (#419).
+        #[arg(long, value_name = "FILE", conflicts_with_all = ["staged", "agent", "fix"])]
+        commit_msg: Option<String>,
     },
     /// Check regulatory compliance (EU, NIST, ISO; China standards opt-in via regional_scope)
     Compliance {
@@ -871,6 +877,7 @@ fn main() {
             include_charters,
             check_pending_reviews,
             max_pending_days,
+            commit_msg,
         } => commands::validate::run(
             &path,
             fix,
@@ -879,6 +886,7 @@ fn main() {
             include_charters,
             check_pending_reviews,
             max_pending_days,
+            commit_msg.as_deref(),
         ),
         Commands::Audit {
             path,

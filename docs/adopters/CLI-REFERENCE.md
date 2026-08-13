@@ -352,7 +352,7 @@ Re-running the command replaces any existing `straymark-*` directories under the
 
 ---
 
-### `straymark validate [path] [--fix] [--staged] [--agent <codex>] [--include-charters] [--check-pending-reviews [--max-pending-days N]]`
+### `straymark validate [path] [--fix] [--staged] [--commit-msg <FILE>] [--agent <codex>] [--include-charters] [--check-pending-reviews [--max-pending-days N]]`
 
 Validate StrayMark documents for compliance and correctness.
 
@@ -363,6 +363,7 @@ Validate StrayMark documents for compliance and correctness.
 | `path` | `.` (current directory) | Target project directory |
 | `--fix` | — | Automatically fix simple issues (e.g., missing `review_required: true` for high-risk docs) |
 | `--staged` | — | Validate only staged (git-added) files. Ideal for pre-commit hooks. |
+| `--commit-msg <FILE>` *(cli-3.46.0+)* | — | Validate id-shaped references in a commit message file instead of documents: every `AILOG-*` / `FU-*` / `CHARTER-*` (etc.) token must resolve to a document, charter, or follow-up in `.straymark/`, otherwise exit 1 (`COMMIT-REF-001`). Designed for `commit-msg` hooks the way `--staged` is designed for pre-commit — `straymark validate --commit-msg "$1"`. Blocking from day one: the id shapes are framework-owned, so an unresolvable token is a phantom reference, not a style difference (#419). |
 | `--agent` *(cli-3.16.0+)* | — | Switch to agent-targeted mode and inspect a user-level skills installation instead of project documents. One of `codex`, `qoder`, `qwen` *(the latter two since cli-3.42.0)* — verifies `~/.codex/skills/straymark-*`, `~/.qoder/skills/straymark-*` or `~/.qwen/skills/straymark-*` for presence, parseable YAML frontmatter and required `name`/`description`. For `codex` it also flags Claude-only keys like `allowed-tools` (whose presence indicates someone copied skills from `.claude/` by mistake); Qoder and Qwen Code parse the full Claude frontmatter, so there `allowed-tools` is expected. |
 | `--include-charters` | — | Also validate Charters in `.straymark/charters/` against the Charter JSON Schema and referential integrity (originating AILOG IDs resolve, originating spec paths exist). Includes **`CHARTER-FILES-EXIST`** *(cli-3.17.0+)*: warns when a `## Files to modify` row names a path that does not exist on disk and is not tagged "New" — catching Charters authored against assumed, un-read code (finding #210). Warn-only; distinct from `charter drift` (which compares declared vs git-modified files). Opt-in so projects that don't yet use the Charter pattern are unaffected. |
 | `--check-pending-reviews` *(cli-3.7.0+)* | off | List documents with `review_required: true` and no `review_outcome` older than `--max-pending-days`. **Warn-only** — never fails the validate exit code; useful for CI dashboards of the approval backlog. |
@@ -375,8 +376,8 @@ Validate StrayMark documents for compliance and correctness.
 - Cross-field consistency (e.g., high risk must have review_required)
 - Type-specific fields (e.g., INC needs severity, SEC needs threat_model_methodology)
 - Sensitive information detection (API keys, passwords)
-- Related document existence
-- Declared work-classification vocabulary *(fw-4.38.0+)*: Charter frontmatter (`work_verb` / `design_provenance`) and follow-up backlog entries (`**Work verb**:` / `**Design provenance**:`) are checked against the controlled vocabulary — `design | implement | audit | operate` and `new | upstream`. **Advisory only** (Baton #332): absent fields emit nothing — undeclared is an honest state, never an error — and out-of-vocabulary values emit a warning that never blocks.
+- Related document existence (`REF-001`). **Error since cli-3.46.0** (#419): an unresolvable `related:` reference fails validation — it is a phantom citation, not a style issue.
+- Unresolved id citations in document bodies (`REF-003`, *cli-3.46.0+, #419*): bodies of dated documents — and of Charters, under `--include-charters` — are scanned for id-shaped tokens (`AILOG-YYYY-MM-DD-NNN`, `FU-NNN`, `CHARTER-NN`, …) that resolve to no document, charter, or follow-up. **Warn-first**: legacy content and intentional phantom citations (test fixtures, examples) trip the rule, so it advises until adopters measure a baseline. FU tokens in AILOG bodies are exempt — `FOLLOWUP-UNTRACKED-ID` owns that class.
 - Untracked follow-up ids *(cli-3.41.0+, #392)*: an AILOG whose body mentions a `FU-NNN` / `FU-NNN-NNN` id outside its own `## Follow-ups` section — where the extractor cannot see it — and that id appears **nowhere in the registry**, emits a `FOLLOWUP-UNTRACKED-ID` warning. The question is "could the extractor ever have seen this?", so three shapes stay quiet *(cli-3.41.1+)*: ids the registry knows as entries; ids the registry mentions in any other form — an author-id alias inside an entry title (`### FU-335 — FU-058-022 — …`), a `Notes` back-reference, an entry closed and pruned by triage; and ids the document itself declares in its own `## Follow-ups`, wherever the prose mention sits. **Warn-only**, skipped entirely when the project has no registry.
 
 When `regional_scope` includes `china`, twelve additional rules activate (`CROSS-004` to `CROSS-011`, `TYPE-003` to `TYPE-006`) covering TC260 review escalation, PIPIA linkage from sensitive-data documents, CACFILE / AILABEL cross-references, CSL severity-to-deadline coherence, and PIPIA 3-year retention. Without `china` in scope, these rules are skipped — no false positives.

@@ -10,7 +10,7 @@ Rows move from `## Active` to `## Closed` as part of the closing PR, not afterwa
 
 | NN | Charter | Status | Effort | Origin |
 |---|---|---|---|---|
-| — | _None._ | | | |
+| 02 | [Mechanical verifiers for the markdown layer (#419)](02-mechanical-verifiers-for-the-markdown-layer-419.md) | in-progress | M | issue #419 |
 
 ## Closed
 
