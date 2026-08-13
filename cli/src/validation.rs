@@ -139,6 +139,10 @@ pub fn validate_charters(project_root: &Path, straymark_dir: &Path) -> (Validati
     let paths = straymark_core::charter::discover_charters(project_root);
     let charter_count = paths.len();
 
+    // Resolution index for REF-003 (charter bodies cite AILOG/FU/CHARTER ids).
+    let docs = document::discover_documents(straymark_dir);
+    let index = IdIndex::build(straymark_dir, &docs);
+
     for path in &paths {
         // Step 1: read raw YAML frontmatter (without typed deserialization).
         // This preserves schema-level errors (bad enum, missing required) so
@@ -235,6 +239,11 @@ pub fn validate_charters(project_root: &Path, straymark_dir: &Path) -> (Validati
                     )),
                 });
             }
+        }
+
+        // REF-003 (#419): id-shaped citations in the Charter body must resolve.
+        if let Ok(content) = std::fs::read_to_string(path) {
+            scan_body_id_references(path, &content, false, &index, &mut result);
         }
 
         // CHARTER-FILES-EXIST (finding #210): every path declared in the
@@ -601,47 +610,279 @@ fn check_followup_mentions(straymark_dir: &Path, paths: &[PathBuf], result: &mut
     }
 }
 
-/// Extract `FU-<digits>` / `FU-<digits>-<digits>` ids from one line. A
-/// boundary before the `F` keeps prose like `XFU-1` out; digit runs of fewer
-/// than two digits stay out too (the registry numbers entries `FU-{:03}`).
+/// Extract `FU-<digits>` / `FU-<digits>-<digits>` ids from one line.
+/// Thin filter over [`scan_straymark_ids`] — the follow-ups rules only care
+/// about the FU family.
 fn scan_fu_ids(line: &str) -> Vec<String> {
+    scan_straymark_ids(line)
+        .into_iter()
+        .filter(|id| id.starts_with("FU-"))
+        .collect()
+}
+
+/// Extract every framework-owned id-shaped token from one line (#419):
+///
+/// - dated document ids — `AILOG-2026-08-12-002` (any `DocType::ALL_PREFIXES`
+///   prefix, `YYYY-MM-DD` date, sequence of 2+ digits; a `-slug` suffix is
+///   stripped),
+/// - follow-up ids — `FU-NNN`, `FU-NNN-NNN` (2+ digits per segment),
+/// - charter ids — `CHARTER-NN` (1+ digits, `-slug` stripped).
+///
+/// A boundary before the token keeps prose like `XFU-1` out. The id shapes are
+/// framework-owned and unambiguous, so a token that does not resolve is a
+/// phantom reference, not a naming-style difference.
+pub fn scan_straymark_ids(line: &str) -> Vec<String> {
     let bytes: Vec<char> = line.chars().collect();
     let mut ids = Vec::new();
     let mut i = 0;
-    while i + 3 <= bytes.len() {
-        if bytes[i] == 'F' && bytes[i + 1] == 'U' && bytes[i + 2] == '-' {
-            let preceded_ok = i == 0 || {
-                let prev = bytes[i - 1];
-                !prev.is_alphanumeric() && prev != '-'
-            };
-            if preceded_ok {
-                let mut j = i + 3;
-                let start_digits = j;
-                while j < bytes.len() && bytes[j].is_ascii_digit() {
-                    j += 1;
-                }
-                if j - start_digits >= 2 {
-                    let mut end = j;
-                    // Optional second segment: `-<digits>`.
-                    if j + 1 < bytes.len() && bytes[j] == '-' && bytes[j + 1].is_ascii_digit() {
-                        let seg_start = j + 1;
-                        let mut k = seg_start;
-                        while k < bytes.len() && bytes[k].is_ascii_digit() {
-                            k += 1;
-                        }
-                        if k - seg_start >= 2 {
-                            end = k;
-                        }
-                    }
-                    ids.push(bytes[i..end].iter().collect());
-                    i = end;
-                    continue;
-                }
+    while i < bytes.len() {
+        let preceded_ok = i == 0 || {
+            let prev = bytes[i - 1];
+            !prev.is_alphanumeric() && prev != '-'
+        };
+        if preceded_ok {
+            if let Some(end) = match_id_at(&bytes, i) {
+                ids.push(bytes[i..end].iter().collect());
+                i = end;
+                continue;
             }
         }
         i += 1;
     }
     ids
+}
+
+fn matches_str(bytes: &[char], start: usize, pat: &str) -> bool {
+    let pat: Vec<char> = pat.chars().collect();
+    bytes.len() >= start + pat.len() && bytes[start..start + pat.len()] == pat[..]
+}
+
+fn match_digits(bytes: &[char], mut j: usize) -> usize {
+    while j < bytes.len() && bytes[j].is_ascii_digit() {
+        j += 1;
+    }
+    j
+}
+
+/// If an id-shaped token starts at `bytes[start]`, return its end index
+/// (exclusive). Families don't overlap (FU / CHARTER / dated doc prefixes),
+/// so the first match wins.
+fn match_id_at(bytes: &[char], start: usize) -> Option<usize> {
+    // FU-<≥2 digits>(-<≥2 digits>)? — the registry numbers entries FU-{:03}.
+    if matches_str(bytes, start, "FU-") {
+        let mut end = match_digits(bytes, start + 3);
+        if end - (start + 3) < 2 {
+            return None;
+        }
+        if bytes.get(end) == Some(&'-')
+            && bytes.get(end + 1).is_some_and(|c| c.is_ascii_digit())
+        {
+            let seg = match_digits(bytes, end + 1);
+            if seg - (end + 1) >= 2 {
+                end = seg;
+            }
+        }
+        return Some(end);
+    }
+    // CHARTER-<≥1 digits> — filenames are `NN-slug.md`, frontmatter ids are
+    // `CHARTER-NN-slug`; both canonicalize to CHARTER-NN.
+    if matches_str(bytes, start, "CHARTER-") {
+        let end = match_digits(bytes, start + 8);
+        if end - (start + 8) < 1 {
+            return None;
+        }
+        return Some(end);
+    }
+    // PREFIX-YYYY-MM-DD-<≥2 digits> for each dated document prefix.
+    for prefix in DocType::ALL_PREFIXES {
+        if !matches_str(bytes, start, &format!("{prefix}-")) {
+            continue;
+        }
+        let mut j = start + prefix.len() + 1;
+        let y = match_digits(bytes, j);
+        if y - j != 4 || bytes.get(y) != Some(&'-') {
+            continue;
+        }
+        let m = match_digits(bytes, y + 1);
+        if m - (y + 1) != 2 || bytes.get(m) != Some(&'-') {
+            continue;
+        }
+        let d = match_digits(bytes, m + 1);
+        if d - (m + 1) != 2 || bytes.get(d) != Some(&'-') {
+            continue;
+        }
+        j = match_digits(bytes, d + 1);
+        if j - (d + 1) < 2 {
+            continue;
+        }
+        return Some(j);
+    }
+    None
+}
+
+/// Index of every StrayMark id that resolves in a project: dated documents,
+/// follow-up registry entries (plus any FU id the registry body mentions) and
+/// charters. Built once per validate run so reference checks are O(1) lookups
+/// instead of one directory scan per reference (#419).
+pub struct IdIndex {
+    ids: std::collections::HashSet<String>,
+}
+
+impl IdIndex {
+    pub fn build(straymark_dir: &Path, docs: &[PathBuf]) -> Self {
+        let mut ids = std::collections::HashSet::new();
+        // Dated documents: the canonical id is the filename's id-shaped prefix.
+        for path in docs {
+            if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                if let Some(id) = scan_straymark_ids(name).into_iter().next() {
+                    ids.insert(id);
+                }
+            }
+        }
+        // Follow-ups registry: entry ids plus every id the body mentions
+        // (closure notes, cross-references) — the same known-set
+        // check_followup_mentions uses.
+        let backlog = straymark_dir.join("follow-ups-backlog.md");
+        if let Ok(registry) = crate::followups::parse_registry(&backlog) {
+            for e in registry.entries() {
+                ids.insert(e.fu_id.clone());
+            }
+            for line in registry.body.lines() {
+                ids.extend(scan_fu_ids(line));
+            }
+        }
+        // Charters: `02-slug.md` resolves both CHARTER-02 and CHARTER-02-slug.
+        if let Ok(rd) = std::fs::read_dir(straymark_dir.join("charters")) {
+            for entry in rd.flatten() {
+                let path = entry.path();
+                if !straymark_core::charter::is_charter_filename(&path) {
+                    continue;
+                }
+                if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
+                    ids.insert(format!("CHARTER-{stem}"));
+                    let digits: String =
+                        stem.chars().take_while(|c| c.is_ascii_digit()).collect();
+                    if !digits.is_empty() {
+                        ids.insert(format!("CHARTER-{digits}"));
+                    }
+                }
+            }
+        }
+        IdIndex { ids }
+    }
+
+    /// True if `id` resolves. Slug-carrying forms
+    /// (`AILOG-2026-08-12-002-remediation`) canonicalize first.
+    pub fn resolves(&self, id: &str) -> bool {
+        if self.ids.contains(id) {
+            return true;
+        }
+        scan_straymark_ids(id)
+            .first()
+            .is_some_and(|c| self.ids.contains(c))
+    }
+}
+
+/// COMMIT-REF-001 (#419): id-shaped tokens in a commit message must resolve.
+/// Blocking from day one — the message is fully author-written and the id
+/// shapes are framework-owned, so precision is total. Designed for commit-msg
+/// hooks the way `--staged` is designed for pre-commit.
+pub fn validate_commit_msg(
+    msg_path: &Path,
+    content: &str,
+    straymark_dir: &Path,
+) -> ValidationResult {
+    let docs = document::discover_documents(straymark_dir);
+    let index = IdIndex::build(straymark_dir, &docs);
+    let mut result = ValidationResult::default();
+    let mut seen = std::collections::HashSet::new();
+    for (idx, line) in content.lines().enumerate() {
+        for id in scan_straymark_ids(line) {
+            if !seen.insert(id.clone()) || index.resolves(&id) {
+                continue;
+            }
+            result.add(ValidationIssue {
+                file: msg_path.to_path_buf(),
+                rule: "COMMIT-REF-001".to_string(),
+                message: format!(
+                    "line {}: commit message references `{id}`, which does not resolve \
+                     to any document, charter, or follow-up in .straymark/",
+                    idx + 1
+                ),
+                severity: Severity::Error,
+                fix_hint: Some(
+                    "Correct the id or create the referenced artifact before committing. \
+                     To cite an artifact from another repo, avoid the framework id shape \
+                     (write e.g. \"Sentinel's charter 61\", not CHARTER-61)."
+                        .to_string(),
+                ),
+            });
+        }
+    }
+    result
+}
+
+/// REF-003 (#419): id-shaped tokens cited in a document body must resolve —
+/// name resolution for the markdown layer. Warn-first: legacy content and
+/// example ids trip the rule, so it advises until the baseline is measured
+/// (design constraint: heuristic checks warn before they block).
+///
+/// FU- tokens in AILOG files are skipped: FOLLOWUP-UNTRACKED-ID already owns
+/// that class and double-reporting the same token is noise.
+fn check_id_references(paths: &[PathBuf], index: &IdIndex, result: &mut ValidationResult) {
+    for path in paths {
+        let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+        let exempt_fu = name.starts_with("AILOG-");
+        let Ok(content) = std::fs::read_to_string(path) else {
+            continue;
+        };
+        scan_body_id_references(path, &content, exempt_fu, index, result);
+    }
+}
+
+/// Shared body scan for REF-003: tokenize every non-frontmatter line and warn
+/// once per unresolved id (first occurrence line reported).
+fn scan_body_id_references(
+    path: &Path,
+    content: &str,
+    exempt_fu: bool,
+    index: &IdIndex,
+    result: &mut ValidationResult,
+) {
+    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut in_frontmatter = content.starts_with("---");
+    for (idx, line) in content.lines().enumerate() {
+        if in_frontmatter {
+            if idx > 0 && line.trim() == "---" {
+                in_frontmatter = false;
+            }
+            continue;
+        }
+        for id in scan_straymark_ids(line) {
+            if exempt_fu && id.starts_with("FU-") {
+                continue;
+            }
+            if index.resolves(&id) || !seen.insert(id.clone()) {
+                continue;
+            }
+            result.add(ValidationIssue {
+                file: path.to_path_buf(),
+                rule: "REF-003".to_string(),
+                message: format!(
+                    "line {}: references `{id}`, which does not resolve to any document, \
+                     charter, or follow-up in .straymark/",
+                    idx + 1
+                ),
+                severity: Severity::Warning,
+                fix_hint: Some(
+                    "Correct the id or create the referenced artifact. Id-shaped citations \
+                     must resolve — an unresolvable reference is indistinguishable from a \
+                     confabulated one (#419)."
+                        .to_string(),
+                ),
+            });
+        }
+    }
 }
 
 /// True if an AILOG file matching the given ID exists under
@@ -682,11 +923,12 @@ pub fn validate_all(straymark_dir: &Path) -> (ValidationResult, usize) {
     let doc_count = paths.len();
     let mut result = ValidationResult::default();
     let china = china_in_scope(straymark_dir);
+    let index = IdIndex::build(straymark_dir, &paths);
 
     for path in &paths {
         match document::parse_document(path) {
             Ok(doc) => {
-                result.merge(validate_document(&doc, straymark_dir, china));
+                result.merge(validate_document(&doc, &index, china));
             }
             Err(e) => {
                 result.errors.push(ValidationIssue {
@@ -709,6 +951,9 @@ pub fn validate_all(straymark_dir: &Path) -> (ValidationResult, usize) {
 
     // REF-002: Detect orphan documents (no traceability links)
     check_orphan_documents(&mut result, &paths, straymark_dir);
+
+    // REF-003 (#419): id-shaped citations in document bodies must resolve.
+    check_id_references(&paths, &index, &mut result);
 
     (result, doc_count)
 }
@@ -782,6 +1027,9 @@ pub fn validate_paths(paths: &[PathBuf], straymark_dir: &Path) -> (ValidationRes
     let mut result = ValidationResult::default();
     let mut doc_count = 0;
     let china = china_in_scope(straymark_dir);
+    // References resolve against the whole tree, not just the staged subset.
+    let all_docs = document::discover_documents(straymark_dir);
+    let index = IdIndex::build(straymark_dir, &all_docs);
 
     for path in paths {
         if !path.exists() {
@@ -794,7 +1042,7 @@ pub fn validate_paths(paths: &[PathBuf], straymark_dir: &Path) -> (ValidationRes
         match document::parse_document(path) {
             Ok(doc) => {
                 doc_count += 1;
-                result.merge(validate_document(&doc, straymark_dir, china));
+                result.merge(validate_document(&doc, &index, china));
             }
             Err(e) => {
                 doc_count += 1;
@@ -811,6 +1059,19 @@ pub fn validate_paths(paths: &[PathBuf], straymark_dir: &Path) -> (ValidationRes
             }
         }
     }
+
+    // REF-003 (#419): id-shaped citations in the staged documents' bodies.
+    // Dated documents only — same scope as validate_all.
+    let dated: Vec<PathBuf> = paths
+        .iter()
+        .filter(|p| {
+            p.file_name()
+                .and_then(|n| n.to_str())
+                .is_some_and(|name| document::detect_doc_type(name).is_some())
+        })
+        .cloned()
+        .collect();
+    check_id_references(&dated, &index, &mut result);
 
     (result, doc_count)
 }
@@ -880,7 +1141,7 @@ fn check_orphan_documents(result: &mut ValidationResult, paths: &[PathBuf], _str
 /// Validate a single parsed document
 fn validate_document(
     doc: &StrayMarkDocument,
-    straymark_dir: &Path,
+    index: &IdIndex,
     china_in_scope: bool,
 ) -> ValidationResult {
     let mut result = ValidationResult::default();
@@ -892,7 +1153,7 @@ fn validate_document(
     check_cross_rules(&mut result, doc);
     check_type_specific(&mut result, doc);
     check_date_consistency(&mut result, doc);
-    check_related_exist(&mut result, doc, straymark_dir);
+    check_related_exist(&mut result, doc, index);
     check_sensitive_info(&mut result, doc);
     check_observability(&mut result, doc);
 
@@ -1546,7 +1807,11 @@ fn retention_satisfies_three_years(created: &str, until_date: &str) -> bool {
 /// Only validates references that look like StrayMark document IDs (e.g., AILOG-2025-01-27-001).
 /// Skips task IDs (T025), requirement IDs (FR-019, US2), risk IDs (RISK-001),
 /// external paths, and other non-document references to avoid false positives.
-fn check_related_exist(result: &mut ValidationResult, doc: &StrayMarkDocument, straymark_dir: &Path) {
+///
+/// Error since #419: an unresolvable `related:` reference is a phantom
+/// citation — the id shapes are framework-owned, so this check is
+/// total-precision and blocks.
+fn check_related_exist(result: &mut ValidationResult, doc: &StrayMarkDocument, index: &IdIndex) {
     if let Some(related) = &doc.frontmatter.related {
         for rel_id in related {
             if rel_id.is_empty() {
@@ -1557,14 +1822,17 @@ fn check_related_exist(result: &mut ValidationResult, doc: &StrayMarkDocument, s
             if !looks_like_straymark_id(rel_id) {
                 continue;
             }
-            // Search for a file matching this id
-            if !find_document_by_id(straymark_dir, rel_id) {
+            if !index.resolves(rel_id) {
                 result.add(ValidationIssue {
                     file: doc.path.clone(),
                     rule: "REF-001".to_string(),
                     message: format!("Related document '{}' not found in .straymark/", rel_id),
-                    severity: Severity::Warning,
-                    fix_hint: None,
+                    severity: Severity::Error,
+                    fix_hint: Some(
+                        "Correct the id or create the referenced document — an unresolvable \
+                         `related:` reference is indistinguishable from a confabulated one (#419)."
+                            .to_string(),
+                    ),
                 });
             }
         }
@@ -1616,17 +1884,6 @@ fn check_date_consistency(result: &mut ValidationResult, doc: &StrayMarkDocument
 }
 
 
-
-/// Search for a document whose filename starts with the given id
-fn find_document_by_id(straymark_dir: &Path, id: &str) -> bool {
-    let docs = document::discover_documents(straymark_dir);
-    docs.iter().any(|p| {
-        p.file_name()
-            .and_then(|n| n.to_str())
-            .map(|n| n.starts_with(id))
-            .unwrap_or(false)
-    })
-}
 
 /// SEC-001: Check for sensitive information patterns
 fn check_sensitive_info(result: &mut ValidationResult, doc: &StrayMarkDocument) {
@@ -2100,5 +2357,162 @@ mod tests {
         let mut result = ValidationResult::default();
         check_valid_status(&mut result, &doc);
         assert!(!result.errors.iter().any(|e| e.rule == "META-003"));
+    }
+
+    // ── #419: generalized id tokenizer ──────────────────────────────
+
+    #[test]
+    fn test_scan_straymark_ids_dated_doc() {
+        assert_eq!(
+            scan_straymark_ids("see AILOG-2026-08-12-002 for details"),
+            vec!["AILOG-2026-08-12-002"]
+        );
+        // Slug suffix is stripped.
+        assert_eq!(
+            scan_straymark_ids("AILOG-2026-08-12-002-remediation"),
+            vec!["AILOG-2026-08-12-002"]
+        );
+        // Every dated prefix is recognized.
+        assert_eq!(
+            scan_straymark_ids("(AIDEC-2026-07-18-001)"),
+            vec!["AIDEC-2026-07-18-001"]
+        );
+    }
+
+    #[test]
+    fn test_scan_straymark_ids_fu_and_charter() {
+        assert_eq!(
+            scan_straymark_ids("FU-055 and FU-055-003"),
+            vec!["FU-055", "FU-055-003"]
+        );
+        assert_eq!(scan_straymark_ids("CHARTER-61"), vec!["CHARTER-61"]);
+        assert_eq!(
+            scan_straymark_ids("CHARTER-02-mechanical-verifiers"),
+            vec!["CHARTER-02"]
+        );
+    }
+
+    #[test]
+    fn test_scan_straymark_ids_boundaries_and_non_ids() {
+        // Glued to a word char or dash: not a token.
+        assert!(scan_straymark_ids("XFU-12").is_empty());
+        assert!(scan_straymark_ids("pre-CHARTER-61").is_empty());
+        // Too-short digit runs are not ids.
+        assert!(scan_straymark_ids("FU-1").is_empty());
+        // Task/requirement ids and loose prefixes are not framework ids.
+        assert!(scan_straymark_ids("T025 FR-019 AILOG-foo").is_empty());
+        // A date without a sequence number is not an id.
+        assert!(scan_straymark_ids("AILOG-2026-08-12").is_empty());
+        // Parenthesized / backticked tokens are found.
+        assert_eq!(scan_straymark_ids("(`FU-12`)"), vec!["FU-12"]);
+    }
+
+    // ── #419: IdIndex ───────────────────────────────────────────────
+
+    fn setup_index_project(dir: &Path) -> PathBuf {
+        let straymark = dir.join(".straymark");
+        let logs = straymark.join("07-ai-audit/agent-logs");
+        std::fs::create_dir_all(&logs).unwrap();
+        std::fs::write(
+            logs.join("AILOG-2026-08-12-002-remediation.md"),
+            "---\nid: AILOG-2026-08-12-002\n---\n\n# Doc\n",
+        )
+        .unwrap();
+        let charters = straymark.join("charters");
+        std::fs::create_dir_all(&charters).unwrap();
+        std::fs::write(charters.join("02-foo.md"), "---\ncharter_id: CHARTER-02-foo\n---\n").unwrap();
+        std::fs::write(
+            straymark.join("follow-ups-backlog.md"),
+            "---\nschema_version: v1\n---\n\n# Follow-ups\n\n## Bucket: framework\n\n### FU-001 — something\n- **Status**: open\n",
+        )
+        .unwrap();
+        straymark
+    }
+
+    #[test]
+    fn test_id_index_resolves_all_families() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let straymark = setup_index_project(dir.path());
+        let docs = document::discover_documents(&straymark);
+        let index = IdIndex::build(&straymark, &docs);
+
+        assert!(index.resolves("AILOG-2026-08-12-002"));
+        // Slug-carrying form canonicalizes.
+        assert!(index.resolves("AILOG-2026-08-12-002-remediation"));
+        assert!(index.resolves("CHARTER-02"));
+        assert!(index.resolves("CHARTER-02-foo"));
+        assert!(index.resolves("FU-001"));
+
+        assert!(!index.resolves("AILOG-2026-08-12-003"));
+        assert!(!index.resolves("FU-377"));
+        assert!(!index.resolves("CHARTER-61"));
+    }
+
+    #[test]
+    fn test_ref_001_unresolved_related_is_error() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let straymark = setup_index_project(dir.path());
+        let docs = document::discover_documents(&straymark);
+        let index = IdIndex::build(&straymark, &docs);
+
+        let fm = Frontmatter {
+            id: Some("AILOG-2026-08-13-001".into()),
+            related: Some(vec!["AILOG-1999-01-01-001".into()]),
+            ..Default::default()
+        };
+        let doc = make_doc("AILOG-2026-08-13-001-test.md", DocType::Ailog, fm, "");
+        let mut result = ValidationResult::default();
+        check_related_exist(&mut result, &doc, &index);
+        assert!(result.errors.iter().any(|e| e.rule == "REF-001"));
+        assert!(result.warnings.iter().all(|w| w.rule != "REF-001"));
+    }
+
+    #[test]
+    fn test_validate_commit_msg_blocks_phantom() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let straymark = setup_index_project(dir.path());
+        let msg = PathBuf::from("COMMIT_EDITMSG");
+
+        let phantom = validate_commit_msg(&msg, "fix: close finding, see AILOG-1999-01-01-001\n", &straymark);
+        assert_eq!(phantom.errors.len(), 1);
+        assert_eq!(phantom.errors[0].rule, "COMMIT-REF-001");
+
+        let clean = validate_commit_msg(
+            &msg,
+            "fix: close finding, see AILOG-2026-08-12-002 and FU-001\n",
+            &straymark,
+        );
+        assert!(clean.errors.is_empty());
+
+        // Ids cited twice are reported once.
+        let dup = validate_commit_msg(&msg, "CHARTER-61\n\nCHARTER-61 again\n", &straymark);
+        assert_eq!(dup.errors.len(), 1);
+    }
+
+    #[test]
+    fn test_ref_003_body_scan_warns_and_skips_frontmatter() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let straymark = setup_index_project(dir.path());
+        let docs = document::discover_documents(&straymark);
+        let index = IdIndex::build(&straymark, &docs);
+
+        // Phantom id in the body → REF-003 warning. Id in frontmatter is ignored.
+        let path = straymark.join("07-ai-audit/agent-logs/AILOG-2026-08-13-009-x.md");
+        std::fs::write(
+            &path,
+            "---\nrelated:\n  - AILOG-2026-08-12-002\n---\n\nBody cites AILOG-2026-08-12-099.\n",
+        )
+        .unwrap();
+        let mut result = ValidationResult::default();
+        check_id_references(&[path.clone()], &index, &mut result);
+        assert_eq!(result.warnings.len(), 1);
+        assert_eq!(result.warnings[0].rule, "REF-003");
+        assert!(result.warnings[0].message.contains("AILOG-2026-08-12-099"));
+
+        // FU tokens in AILOG files are exempt (FOLLOWUP-UNTRACKED-ID owns them).
+        let mut result = ValidationResult::default();
+        std::fs::write(&path, "---\nid: x\n---\n\nBody cites FU-999.\n").unwrap();
+        check_id_references(std::slice::from_ref(&path), &index, &mut result);
+        assert!(result.warnings.is_empty());
     }
 }

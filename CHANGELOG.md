@@ -7,6 +7,30 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.46.0 — 2026-08-13
+
+Adopter report (#419, Sentinel — two external audit rounds): **the code has mechanical verifiers; the governance markdown does not.** A remediation commit cited a phantom AILOG — format right, date plausible, file absent — and nothing rejected it, because nothing resolved id-shaped references outside Charter frontmatter. This release gives the markdown layer its missing name resolution (CHARTER-02, PR 1 of 3).
+
+### Added (CLI)
+
+- **`straymark validate --commit-msg <FILE>`** (#419): extracts every id-shaped token (`AILOG-YYYY-MM-DD-NNN`, `FU-NNN`, `CHARTER-NN`, and the other dated prefixes) from a commit message and **fails (exit 1) when any does not resolve** to a document, charter, or follow-up in `.straymark/`. Designed for `commit-msg` hooks the way `--staged` is designed for pre-commit:
+
+  ```sh
+  # .git/hooks/commit-msg
+  #!/bin/sh
+  straymark validate --commit-msg "$1"
+  ```
+
+  Blocking from day one is safe on this surface: the message is fully author-written and the id shapes are framework-owned, so precision is total. This eliminates the phantom-reference class the issue evidenced.
+
+- **`REF-003` validation rule** (#419, warn-first): bodies of dated documents and Charters are scanned for id-shaped tokens that do not resolve, one warning per id with its first-occurrence line. Warn-first by design constraint — legacy content and *intentional* phantom citations (test fixtures, examples) trip the rule, so the flip to Error waits for a measured adopter baseline. FU tokens in AILOG bodies are exempt: `FOLLOWUP-UNTRACKED-ID` already owns that class. First run against this repository found real drift (a Charter citing another repo's ids; an AIDEC citing pruned FU entries) — recorded as FU-007.
+
+- **`IdIndex`**: one resolution index per validate run — discovered documents, every FU id the registry knows, and charters (`CHARTER-NN` and `CHARTER-NN-slug`) — replacing per-reference directory scans.
+
+### Changed (CLI) — behavior break
+
+- **`REF-001` is now an Error** (#419): a `related:` reference that does not resolve fails `validate` (exit 1) instead of warning. Same total-precision argument as `--commit-msg`. If this breaks an existing repo, the fix is mechanical: correct the id or remove the dangling entry.
+
 ## Framework 4.43.0 / CLI 3.45.0 — 2026-08-06
 
 Two adopter reports, both silent-failure shaped: a heuristic that had been inert in every repo while reporting a reassuring message, and a registry that let writes land on the wrong entry.

@@ -337,7 +337,7 @@ Repairing StrayMark in /home/user/my-project
 
 ---
 
-### `straymark validate [path] [--fix] [--staged] [--agent <codex>] [--include-charters] [--check-pending-reviews [--max-pending-days N]]`
+### `straymark validate [path] [--fix] [--staged] [--commit-msg <FILE>] [--agent <codex>] [--include-charters] [--check-pending-reviews [--max-pending-days N]]`
 
 验证 StrayMark 文档的合规性和正确性。
 
@@ -348,6 +348,7 @@ Repairing StrayMark in /home/user/my-project
 | `path` | `.`（当前目录） | 目标项目目录 |
 | `--fix` | — | 自动修复简单问题（例如为高风险文档添加缺失的 `review_required: true`） |
 | `--staged` | — | 仅验证已暂存（git add）的文件。适合 pre-commit 钩子。 |
+| `--commit-msg <FILE>` *(cli-3.46.0+)* | — | 校验提交信息文件中的 id 形引用（而非文档）：每个 `AILOG-*` / `FU-*` / `CHARTER-*`（等）token 必须能解析到 `.straymark/` 中的文档、章程或 follow-up，否则退出码为 1（`COMMIT-REF-001`）。面向 `commit-msg` 钩子设计，正如 `--staged` 面向 pre-commit —— `straymark validate --commit-msg "$1"`。自首日即阻断：id 形态由框架拥有，无法解析的 token 是幽灵引用，而非风格差异（#419）。 |
 | `--agent` *(cli-3.16.0+)* | — | 切换到代理模式，检查用户级 skills 安装而非项目文档。支持 `codex`、`qoder`、`qwen` *(后两者自 cli-3.42.0 起)* —— 校验 `~/.codex/skills/straymark-*`、`~/.qoder/skills/straymark-*` 或 `~/.qwen/skills/straymark-*` 是否存在、frontmatter YAML 可解析、`name`/`description` 必填。对 `codex` 还会标记 `allowed-tools` 等 Claude 专用键（出现这些键意味着有人误从 `.claude/` 复制了 skill）；Qoder 和 Qwen Code 解析完整的 Claude frontmatter，因此其中出现 `allowed-tools` 属于预期。 |
 | `--include-charters` | — | 同时根据章程 JSON Schema 和引用完整性（`originating_ailogs` 中的 ID 解析；`originating_spec` 路径存在）验证 `.straymark/charters/` 中的章程。包含 **`CHARTER-FILES-EXIST`** *(cli-3.17.0+)*：当 `## 要修改的文件` 中某行所指路径在磁盘上不存在且未标记为"新建"时发出警告 — 捕获基于假设的、未读代码所撰写的章程（发现 #210）。仅警告;不同于 `charter drift`（后者比较声明的文件与 git 修改的文件）。Opt-in，默认 `false`，确保未使用章程模式的项目不受影响。目前仅在非 `--staged` 模式下生效；staged 模式的章程验证将在 cli-3.10.0 中加入。 |
 | `--check-pending-reviews` *(cli-3.7.0+)* | off | 列出所有 `review_required: true` 且没有 `review_outcome`、年龄超过 `--max-pending-days` 的文档。**仅警告** — 永不影响 validate 的退出码；适合用于 CI 仪表板上的审批积压视图。 |
@@ -360,7 +361,8 @@ Repairing StrayMark in /home/user/my-project
 - 跨字段一致性（例如高风险必须有 review_required）
 - 类型特定字段（例如 INC 需要 severity，SEC 需要 threat_model_methodology）
 - 敏感信息检测（API 密钥、密码）
-- 关联文档存在性
+- 关联文档存在性（`REF-001`）。**自 cli-3.46.0 起为错误**（#419）：无法解析的 `related:` 引用会导致验证失败 — 它是幽灵引用，而非风格问题。
+- 文档正文中未解析的 id 引用（`REF-003`，*cli-3.46.0+, #419*）：扫描带日期文档的正文 —— 以及在 `--include-charters` 下的章程正文 —— 查找无法解析到任何文档、章程或 follow-up 的 id 形 token（`AILOG-YYYY-MM-DD-NNN`、`FU-NNN`、`CHARTER-NN` …）。**警告优先**：遗留内容和有意为之的幽灵引用（测试 fixture、示例）会触发该规则，因此在采用者测得基线之前仅作提示。AILOG 正文中的 FU token 豁免 —— 该类别由 `FOLLOWUP-UNTRACKED-ID` 负责。
 - 声明式工作分类词汇表 *(fw-4.38.0+)*：章程前置元数据（`work_verb` / `design_provenance`）与 follow-up 待办条目（`**Work verb**:` / `**Design provenance**:`）会按受控词汇表校验 — `design | implement | audit | operate` 及 `new | upstream`。**仅建议性**（Baton #332）：字段缺失不产生任何提示 — 未声明是诚实状态，绝非错误 — 词汇表外的值会产生永不阻断的警告。
 - 未登记的 follow-up id *(cli-3.41.0+, #392)*：正文在其自身的 `## Follow-ups` 章节之外 —— 即提取器看不见的地方 —— 提及 `FU-NNN` / `FU-NNN-NNN` id、且该 id **在注册表中任何位置都未出现**的 AILOG，会产生 `FOLLOWUP-UNTRACKED-ID` 警告。判定标准是「提取器是否有可能看见它」，因此以下三种情形保持静默 *(cli-3.41.1+)*：注册表已登记为条目的 id；注册表以其他任何形式提及的 id —— 条目标题中的作者 id 别名（`### FU-335 — FU-058-022 — …`）、`Notes` 中的回指、经分诊关闭并移除的条目；以及文档在自身 `## Follow-ups` 中声明的 id，无论正文提及出现在何处。**仅警告**；项目没有注册表时完全跳过。
 

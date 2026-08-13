@@ -173,7 +173,7 @@ fn test_validate_related_not_found() {
     cmd.arg("validate")
         .arg(dir.path().to_str().unwrap())
         .assert()
-        .success() // Warnings don't cause failure
+        .failure() // REF-001 is an Error since #419 — unresolvable related: blocks
         .stdout(predicate::str::contains("REF-001"));
 }
 
@@ -1285,4 +1285,96 @@ This mentions FU-012 but there is no registry to compare against.
         .assert()
         .success()
         .stdout(predicate::str::contains("FOLLOWUP-UNTRACKED-ID").not());
+}
+
+// ── #419: name resolution for the markdown layer ─────────────────────
+
+#[test]
+fn test_validate_commit_msg_phantom_fails() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    create_doc(
+        dir.path(),
+        "07-ai-audit/agent-logs",
+        "AILOG-2025-01-27-001-test.md",
+        "id: AILOG-2025-01-27-001\ntitle: Test\nstatus: draft\ncreated: 2025-01-27\nagent: test\nconfidence: high\nreview_required: false\nrisk_level: low",
+    );
+    let msg = dir.path().join("COMMIT_EDITMSG");
+    std::fs::write(&msg, "fix: close finding, see AILOG-1999-01-01-001\n").unwrap();
+
+    cargo_bin_cmd!("straymark")
+        .arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .arg("--commit-msg")
+        .arg(msg.to_str().unwrap())
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("COMMIT-REF-001"))
+        .stdout(predicate::str::contains("AILOG-1999-01-01-001"));
+}
+
+#[test]
+fn test_validate_commit_msg_resolving_passes() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    create_doc(
+        dir.path(),
+        "07-ai-audit/agent-logs",
+        "AILOG-2025-01-27-001-test.md",
+        "id: AILOG-2025-01-27-001\ntitle: Test\nstatus: draft\ncreated: 2025-01-27\nagent: test\nconfidence: high\nreview_required: false\nrisk_level: low",
+    );
+    let msg = dir.path().join("COMMIT_EDITMSG");
+    std::fs::write(&msg, "fix: close finding, see AILOG-2025-01-27-001\n").unwrap();
+
+    cargo_bin_cmd!("straymark")
+        .arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .arg("--commit-msg")
+        .arg(msg.to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("resolves"));
+}
+
+#[test]
+fn test_validate_commit_msg_no_ids_passes() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    let msg = dir.path().join("COMMIT_EDITMSG");
+    std::fs::write(&msg, "chore: bump version\n").unwrap();
+
+    cargo_bin_cmd!("straymark")
+        .arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .arg("--commit-msg")
+        .arg(msg.to_str().unwrap())
+        .assert()
+        .success();
+}
+
+#[test]
+fn test_validate_ref003_body_phantom_warns() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    create_doc(
+        dir.path(),
+        "07-ai-audit/agent-logs",
+        "AILOG-2025-01-27-001-test.md",
+        "id: AILOG-2025-01-27-001\ntitle: Test\nstatus: draft\ncreated: 2025-01-27\nagent: test\nconfidence: high\nreview_required: false\nrisk_level: low",
+    );
+    // The create_doc body is "# Document"; rewrite with a phantom citation.
+    std::fs::write(
+        dir.path()
+            .join(".straymark/07-ai-audit/agent-logs/AILOG-2025-01-27-001-test.md"),
+        "---\nid: AILOG-2025-01-27-001\ntitle: Test\nstatus: draft\ncreated: 2025-01-27\nagent: test\nconfidence: high\nreview_required: false\nrisk_level: low\n---\n\n# Document\n\nBody cites AILOG-1999-01-01-099, which does not exist.\n",
+    )
+    .unwrap();
+
+    cargo_bin_cmd!("straymark")
+        .arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success() // REF-003 is warn-first
+        .stdout(predicate::str::contains("REF-003"))
+        .stdout(predicate::str::contains("AILOG-1999-01-01-099"));
 }

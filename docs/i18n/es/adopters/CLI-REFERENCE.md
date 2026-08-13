@@ -318,7 +318,7 @@ Re-ejecutar el comando reemplaza cualquier directorio `straymark-*` existente en
 
 ---
 
-### `straymark validate [path] [--fix] [--staged] [--agent <codex>] [--include-charters] [--check-pending-reviews [--max-pending-days N]]`
+### `straymark validate [path] [--fix] [--staged] [--commit-msg <FILE>] [--agent <codex>] [--include-charters] [--check-pending-reviews [--max-pending-days N]]`
 
 Valida documentos StrayMark verificando cumplimiento y corrección.
 
@@ -329,6 +329,7 @@ Valida documentos StrayMark verificando cumplimiento y corrección.
 | `path` | `.` (directorio actual) | Directorio del proyecto |
 | `--fix` | — | Corregir automáticamente problemas simples |
 | `--staged` | — | Validar solo archivos staged en Git (ideal para hooks pre-commit) |
+| `--commit-msg <FILE>` *(cli-3.46.0+)* | — | Valida referencias con forma de id en un archivo de mensaje de commit en lugar de documentos: cada token `AILOG-*` / `FU-*` / `CHARTER-*` (etc.) debe resolver a un documento, charter o follow-up en `.straymark/`; si no, exit 1 (`COMMIT-REF-001`). Diseñado para hooks `commit-msg` del mismo modo que `--staged` lo está para pre-commit — `straymark validate --commit-msg "$1"`. Bloqueante desde el primer día: las formas de id pertenecen al framework, así que un token no resoluble es una referencia fantasma, no una diferencia de estilo (#419). |
 | `--agent` *(cli-3.16.0+)* | — | Cambia a modo agente y revisa una instalación a nivel de usuario de skills en lugar de documentos del proyecto. Uno de `codex`, `qoder`, `qwen` *(estos dos últimos desde cli-3.42.0)* — verifica `~/.codex/skills/straymark-*`, `~/.qoder/skills/straymark-*` o `~/.qwen/skills/straymark-*` para presencia, frontmatter YAML parseable y `name`/`description` requeridos. Para `codex` además señala claves Claude-only como `allowed-tools` (cuya presencia indica que alguien copió skills desde `.claude/` por error); Qoder y Qwen Code parsean el frontmatter completo de Claude, así que ahí `allowed-tools` es lo esperado. |
 | `--include-charters` | — | Validar también los Charters en `.straymark/charters/` contra el JSON Schema y la integridad referencial (los IDs en `originating_ailogs` resuelven; el path en `originating_spec` existe). Incluye **`CHARTER-FILES-EXIST`** *(cli-3.17.0+)*: avisa cuando una fila de `## Archivos a modificar` nombra una ruta que no existe en disco y no está marcada como "Nuevo" — atrapa Charters redactados contra código asumido, no leído (hallazgo #210). Solo-aviso; distinto de `charter drift` (que compara lo declarado contra los archivos modificados en git). Opt-in, default `false` para no afectar a proyectos que no usan el patrón. Por ahora solo se honra fuera de `--staged`; la validación de Charters en modo staged llega en cli-3.10.0. |
 | `--check-pending-reviews` *(cli-3.7.0+)* | off | Lista documentos con `review_required: true` y sin `review_outcome` cuya antigüedad supere `--max-pending-days`. **Solo warn** — nunca falla el exit code de validate; útil para dashboards de CI sobre el backlog de aprobaciones. |
@@ -340,7 +341,8 @@ Valida documentos StrayMark verificando cumplimiento y corrección.
 - `META-001/002/003`: Campos obligatorios, id vs nombre de archivo, valores válidos
 - `CROSS-001/002/003`: Riesgo alto requiere revisión, EU AI Act, tipos SEC/MCARD/DPIA
 - `TYPE-001/002`: INC necesita severidad, ETH necesita base legal GDPR
-- `REF-001`: Documentos referenciados existen
+- `REF-001`: Documentos referenciados existen. **Error desde cli-3.46.0** (#419): una referencia `related:` no resoluble falla la validación — es una cita fantasma, no un problema de estilo.
+- Citas de id no resueltas en los cuerpos de documentos (`REF-003`, *cli-3.46.0+, #419*): los cuerpos de los documentos fechados — y de los Charters, bajo `--include-charters` — se escanean en busca de tokens con forma de id (`AILOG-YYYY-MM-DD-NNN`, `FU-NNN`, `CHARTER-NN`, …) que no resuelven a ningún documento, charter o follow-up. **Warn-first**: el contenido legacy y las citas fantasma intencionales (fixtures de prueba, ejemplos) disparan la regla, así que aconseja hasta que los adoptantes midan una línea base. Los tokens FU en cuerpos de AILOG están exentos — `FOLLOWUP-UNTRACKED-ID` es dueño de esa clase.
 - `SEC-001`: No contiene información sensible
 - `OBS-001`: Tag observabilidad requiere sección de alcance
 - Vocabulario de clasificación declarada de trabajo *(fw-4.38.0+)*: el frontmatter de Charter (`work_verb` / `design_provenance`) y las entradas del backlog de follow-ups (`**Work verb**:` / `**Design provenance**:`) se verifican contra el vocabulario controlado — `design | implement | audit | operate` y `new | upstream`. **Solo advisory** (Baton #332): campos ausentes no emiten nada — no declarado es un estado honesto, nunca un error — y valores fuera del vocabulario emiten un warning que nunca bloquea.
