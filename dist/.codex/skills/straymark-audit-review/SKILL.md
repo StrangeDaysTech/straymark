@@ -150,10 +150,13 @@ of this Charter. The auditors' findings are evaluated against THIS scope.]
 
 ## 4. Remediation plan — VALID and PARTIALLY VALID findings
 
+Every remediation item carries a **Guard** line (fw-4.44.0+): the mechanical check that will prevent the finding from recurring — a command, a validate rule, a test — or `unguardable: <specific rationale>` naming what a guard would have to observe and why it cannot. Stock rationales ("human review", "n/a") are not acceptable. These lines feed `guard_closure:` in the remediation AILOG (`charter amend`, §15.B); GUARD-001 warns when an item is missing, ambiguous, or generic.
+
 ### P0 — Security
 - **Files:** `path:line`
 - **Problem:** [description with code evidence]
 - **Remediation:** [specific approach]
+- **Guard:** [mechanical check preventing recurrence, or `unguardable: <specific rationale>`]
 - **Complexity:** [Low / Medium / High]
 - **Detected by:** [auditor slug(s), or "Missed by all auditors" if you found it]
 

@@ -178,6 +178,22 @@ impl fmt::Display for DocType {
     }
 }
 
+/// One guard-closure item in a remediation AILOG (#419). Exactly one of
+/// `guard` / `unguardable` must be present and non-empty — GUARD-001 warns
+/// on both-set and on neither-set.
+#[derive(Debug, Clone, Deserialize, Default)]
+#[allow(dead_code)]
+pub struct GuardClosureItem {
+    /// Audit finding id this item closes (e.g. `F3`), where applicable.
+    pub finding: Option<String>,
+    /// The mechanical guard that now prevents recurrence (command, rule, or
+    /// check an adopter can run).
+    pub guard: Option<String>,
+    /// Why no mechanical guard is possible — must be specific enough to act
+    /// on; generic rationales ("n/a", "human review") trip GUARD-001.
+    pub unguardable: Option<String>,
+}
+
 /// Frontmatter fields extracted from a StrayMark document.
 /// All fields are optional so the validator can report which are missing.
 #[derive(Debug, Clone, Deserialize, Default)]
@@ -239,6 +255,17 @@ pub struct Frontmatter {
     pub api_changes: Option<Vec<String>>,
     // REQ-specific (OpenAPI/AsyncAPI)
     pub api_spec_path: Option<String>,
+
+    // ----- Remediation AILOGs (charter amend, fw-4.44.0 / #419) -----
+    /// What surfaced after the Charter closed: `external_audit` |
+    /// `production_incident` | `deferred_implementation`. Its presence marks
+    /// the AILOG as a remediation document — the signature GUARD-001 keys on.
+    pub trigger: Option<String>,
+    /// Per-finding closure of the lesson-as-prose loop: every finding the
+    /// remediation closes names either the mechanical `guard` that now
+    /// prevents recurrence, or an `unguardable` rationale explaining why no
+    /// mechanical guard is possible. Exactly one per item.
+    pub guard_closure: Option<Vec<GuardClosureItem>>,
 
     // ----- China regulatory profile (regional_scope: china) -----
 

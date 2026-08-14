@@ -1152,6 +1152,7 @@ fn validate_document(
     check_valid_status(&mut result, doc);
     check_cross_rules(&mut result, doc);
     check_type_specific(&mut result, doc);
+    check_guard_closure(&mut result, doc);
     check_date_consistency(&mut result, doc);
     check_related_exist(&mut result, doc, index);
     check_sensitive_info(&mut result, doc);
@@ -1529,6 +1530,93 @@ fn check_type_specific(result: &mut ValidationResult, doc: &StrayMarkDocument) {
             fix_hint: Some("Add 'gdpr_legal_basis: consent' (or appropriate basis) to the frontmatter".to_string()),
         });
     }
+}
+
+/// GUARD-001 (#419, warn-first): a remediation AILOG — signature: `trigger:`
+/// present, written by `charter amend` — must close the lesson-as-prose loop.
+/// Every finding it closes names either the mechanical `guard` that now
+/// prevents recurrence, or an `unguardable` rationale specific enough to act
+/// on. A lesson that lives only in prose recurs (issue case 3).
+fn check_guard_closure(result: &mut ValidationResult, doc: &StrayMarkDocument) {
+    if doc.doc_type != DocType::Ailog || doc.frontmatter.trigger.is_none() {
+        return;
+    }
+    let fm = &doc.frontmatter;
+
+    let items = match &fm.guard_closure {
+        Some(items) if !items.is_empty() => items,
+        _ => {
+            result.add(ValidationIssue {
+                file: doc.path.clone(),
+                rule: "GUARD-001".to_string(),
+                message: "remediation AILOG (`trigger:` present) has no `guard_closure` — each closed finding must name its mechanical guard or an unguardable rationale".to_string(),
+                severity: Severity::Warning,
+                fix_hint: Some("Add a `guard_closure:` list with one item per finding: `- finding: F1` + exactly one of `guard:` / `unguardable:` (#419)".to_string()),
+            });
+            return;
+        }
+    };
+
+    for (i, item) in items.iter().enumerate() {
+        let label = item
+            .finding
+            .as_deref()
+            .map(|f| format!(" (finding {f})"))
+            .unwrap_or_default();
+        let guard = item.guard.as_deref().map(str::trim).filter(|s| !s.is_empty());
+        let unguardable = item
+            .unguardable
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
+
+        if guard.is_some() == unguardable.is_some() {
+            result.add(ValidationIssue {
+                file: doc.path.clone(),
+                rule: "GUARD-001".to_string(),
+                message: format!("guard_closure item {}{} must set exactly one of `guard:` / `unguardable:`", i + 1, label),
+                severity: Severity::Warning,
+                fix_hint: Some("Keep `guard:` when a mechanical check prevents recurrence; otherwise keep `unguardable:` with a specific rationale".to_string()),
+            });
+            continue;
+        }
+
+        if let Some(rationale) = unguardable {
+            if is_generic_unguardable(rationale) {
+                result.add(ValidationIssue {
+                    file: doc.path.clone(),
+                    rule: "GUARD-001".to_string(),
+                    message: format!("guard_closure item {}{} has a generic `unguardable:` rationale — it must say WHY no mechanical guard is possible, specifically", i + 1, label),
+                    severity: Severity::Warning,
+                    fix_hint: Some("Name what a guard would have to observe and why it cannot — e.g. which human judgment, which external system (#419)".to_string()),
+                });
+            }
+        }
+    }
+}
+
+/// Generic unguardable rationales: short enough to carry no information, or a
+/// stock phrase. "Non-generic" is heuristic by design (warn-first) — the bar
+/// is that a reader can tell what makes mechanization impossible.
+fn is_generic_unguardable(rationale: &str) -> bool {
+    const STOCK: &[&str] = &[
+        "n/a",
+        "none",
+        "not applicable",
+        "no guard",
+        "no guard possible",
+        "cannot be guarded",
+        "can't be guarded",
+        "not guardable",
+        "too hard",
+        "human review",
+        "manual review",
+    ];
+    let lower = rationale.trim().to_lowercase();
+    if STOCK.contains(&lower.as_str()) {
+        return true;
+    }
+    rationale.trim().len() < 30
 }
 
 /// Returns true when `related` includes any entry whose ID starts with `prefix`.
@@ -2513,6 +2601,128 @@ mod tests {
         let mut result = ValidationResult::default();
         std::fs::write(&path, "---\nid: x\n---\n\nBody cites FU-999.\n").unwrap();
         check_id_references(std::slice::from_ref(&path), &index, &mut result);
+        assert!(result.warnings.is_empty());
+    }
+    #[test]
+    fn test_guard_001_remediation_without_guard_closure_warns() {
+        let fm = Frontmatter {
+            id: Some("AILOG-2025-01-01-002".into()),
+            trigger: Some("external_audit".into()),
+            ..Default::default()
+        };
+        let doc = make_doc("AILOG-2025-01-01-002-fix.md", DocType::Ailog, fm, "");
+        let mut result = ValidationResult::default();
+        check_guard_closure(&mut result, &doc);
+        assert_eq!(result.warnings.len(), 1);
+        assert_eq!(result.warnings[0].rule, "GUARD-001");
+        assert!(result.warnings[0].message.contains("no `guard_closure`"));
+    }
+
+    #[test]
+    fn test_guard_001_clean_items_pass() {
+        use straymark_core::document::GuardClosureItem;
+        let fm = Frontmatter {
+            id: Some("AILOG-2025-01-01-002".into()),
+            trigger: Some("external_audit".into()),
+            guard_closure: Some(vec![
+                GuardClosureItem {
+                    finding: Some("F1".into()),
+                    guard: Some("validate --commit-msg blocks phantom citations".into()),
+                    unguardable: None,
+                },
+                GuardClosureItem {
+                    finding: Some("F2".into()),
+                    guard: None,
+                    unguardable: Some(
+                        "Depends on auditor attention in an external CLI session, which no local check can observe"
+                            .into(),
+                    ),
+                },
+            ]),
+            ..Default::default()
+        };
+        let doc = make_doc("AILOG-2025-01-01-002-fix.md", DocType::Ailog, fm, "");
+        let mut result = ValidationResult::default();
+        check_guard_closure(&mut result, &doc);
+        assert!(result.warnings.is_empty());
+    }
+
+    #[test]
+    fn test_guard_001_both_or_neither_set_warns() {
+        use straymark_core::document::GuardClosureItem;
+        let fm = Frontmatter {
+            id: Some("AILOG-2025-01-01-002".into()),
+            trigger: Some("production_incident".into()),
+            guard_closure: Some(vec![
+                GuardClosureItem {
+                    finding: None,
+                    guard: Some("x".into()),
+                    unguardable: Some("also set, which is ambiguous".into()),
+                },
+                GuardClosureItem {
+                    finding: Some("F2".into()),
+                    guard: None,
+                    unguardable: None,
+                },
+            ]),
+            ..Default::default()
+        };
+        let doc = make_doc("AILOG-2025-01-01-002-fix.md", DocType::Ailog, fm, "");
+        let mut result = ValidationResult::default();
+        check_guard_closure(&mut result, &doc);
+        assert_eq!(result.warnings.len(), 2);
+        assert!(result.warnings.iter().all(|w| w.rule == "GUARD-001"));
+        assert!(result.warnings[0].message.contains("exactly one"));
+    }
+
+    #[test]
+    fn test_guard_001_generic_unguardable_warns() {
+        use straymark_core::document::GuardClosureItem;
+        assert!(is_generic_unguardable("human review"));
+        assert!(is_generic_unguardable("n/a"));
+        assert!(is_generic_unguardable("too short"));
+        assert!(!is_generic_unguardable(
+            "Depends on auditor attention in an external CLI session, which no local check can observe"
+        ));
+
+        let fm = Frontmatter {
+            id: Some("AILOG-2025-01-01-002".into()),
+            trigger: Some("deferred_implementation".into()),
+            guard_closure: Some(vec![GuardClosureItem {
+                finding: Some("F3".into()),
+                guard: None,
+                unguardable: Some("human review".into()),
+            }]),
+            ..Default::default()
+        };
+        let doc = make_doc("AILOG-2025-01-01-002-fix.md", DocType::Ailog, fm, "");
+        let mut result = ValidationResult::default();
+        check_guard_closure(&mut result, &doc);
+        assert_eq!(result.warnings.len(), 1);
+        assert!(result.warnings[0].message.contains("generic"));
+    }
+
+    #[test]
+    fn test_guard_001_skips_non_remediation_docs() {
+        // No trigger: not a remediation AILOG — guard_closure is not required.
+        let fm = Frontmatter {
+            id: Some("AILOG-2025-01-01-002".into()),
+            ..Default::default()
+        };
+        let doc = make_doc("AILOG-2025-01-01-002-fix.md", DocType::Ailog, fm, "");
+        let mut result = ValidationResult::default();
+        check_guard_closure(&mut result, &doc);
+        assert!(result.warnings.is_empty());
+
+        // Trigger on a non-AILOG: same.
+        let fm = Frontmatter {
+            id: Some("ADR-2025-01-01-001".into()),
+            trigger: Some("external_audit".into()),
+            ..Default::default()
+        };
+        let doc = make_doc("ADR-2025-01-01-001-x.md", DocType::Adr, fm, "");
+        let mut result = ValidationResult::default();
+        check_guard_closure(&mut result, &doc);
         assert!(result.warnings.is_empty());
     }
 }

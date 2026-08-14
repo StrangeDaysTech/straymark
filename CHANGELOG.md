@@ -7,6 +7,18 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.44.0 / CLI 3.48.0 — 2026-08-14
+
+Third and closing PR of CHARTER-02 (#419): a remediation AILOG used to be able to close a Critical finding with prose alone — no mechanical check preventing recurrence, and nothing asked for one. This release makes the absence of a guard a first-class, validatable fact instead of an invisible omission.
+
+### Added (Framework + CLI)
+
+- **`guard_closure:` frontmatter field on remediation AILOGs** (#419, fw-4.44.0 / core 0.10.0): one item per finding being closed, each declaring **exactly one** of `guard:` (the mechanical check — rule id, CLI flag, or CI gate — that prevents recurrence) or `unguardable:` (a specific rationale when no mechanical guard exists). A remediation AILOG is recognized by the presence of `trigger:` (`external_audit | production_incident | deferred_implementation`). Documented in STRAYMARK.md §8 (frontmatter snippet), §13 (type-table note), and §15.B (guard-closure paragraph); the `straymark-audit-review` skill's remediation template now requires a **Guard** line per item so the audit cycle feeds the field.
+
+- **`GUARD-001` validation rule** (#419, warn-first): fires on remediation AILOGs when `guard_closure:` is missing or empty, when an item sets both or neither of `guard`/`unguardable`, or when `unguardable` is generic — stock phrases ("human review", "n/a", "not applicable", …) or a rationale under 30 characters. Warn-first by design constraint: pre-existing remediation AILOGs legitimately lack the field, so the flip to Error waits for a measured adopter baseline. Defect class: unguarded remediations — findings "fixed" with no barrier against recurrence (issue case 3).
+
+- **`charter amend` scaffolds the field**: the amendment AILOG template now renders a commented `guard_closure:` block (one placeholder item, syntax reminder inline) so the operator fills it instead of discovering GUARD-001 at validation time.
+
 ## CLI 3.47.0 — 2026-08-14
 
 Second PR of CHARTER-02 (#419): the follow-ups registry also states claims about the tree — and those decay just as silently as id citations do.
