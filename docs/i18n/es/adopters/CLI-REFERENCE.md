@@ -835,7 +835,7 @@ $ straymark followups promote FU-010 --premise-verified
   Premise re-verification recorded: Verified-at → 2026-06-04.
 ```
 
-#### `straymark followups verify <FU-NNN> [--premise "..."] [--verified] [--at <YYYY-MM-DD>] [--path <dir>]` *(cli-3.37.0+)*
+#### `straymark followups verify [FU-NNN] [--claims] [--premise "..."] [--verified] [--at <YYYY-MM-DD>] [--path <dir>]` *(cli-3.37.0+; `--claims` desde cli-3.47.0)*
 
 Re-verifica la premisa de un follow-up **en tiempo de ejecución** y la registra. Una entrada del registry es una **hipótesis fechada y decadente** (`AIDEC-2026-07-18-001`, de #365): su premisa pudo ser falsa en la captura o haberse vuelto obsoleta, y el único bug real es actuar sobre una sin re-testear su premisa. El registry es un buffer especulativo — la captura barata es su valor — así que la verificación pertenece al momento barato (actuar sobre la entrada), no a la captura. Este verbo cubre el caso común de una entrada actuada como chore que nunca promueve.
 
@@ -844,8 +844,9 @@ Re-verifica la premisa de un follow-up **en tiempo de ejecución** y la registra
 | `--premise <texto>` | — | Registra o actualiza el `Premise` de la entrada (la suposición a re-chequear). Omitido → se superficie la premisa existente. |
 | `--verified` | off | Sella `Verified-at`, confirmando que la premisa se re-chequeó contra el código. |
 | `--at <YYYY-MM-DD>` | hoy | Fecha de verificación. |
+| `--claims` *(cli-3.47.0+)* | off | Modo batch (en conflicto con los flags por-entrada): re-deriva contra el árbol las afirmaciones mecánicas de las entradas `open`/`in-progress` — rutas en backticks que ya no existen (`CLAIM-PATH-GONE`), símbolos en backticks ausentes fuera de `.straymark/` (`CLAIM-SYMBOL-GONE`), y afirmaciones «no callers / not wired / unused» cuyo símbolo ahora aparece en ≥2 archivos (`CLAIM-STALE-DEAD`). Con un `FU-NNN` explícito el batch se filtra a esa entrada. **Warn-first** (#419): los hallazgos se imprimen, el exit code queda en 0. |
 
-Sin `--premise`/`--verified` es **read-only** — superficie la premisa y hace un nudge. El juicio humano queda fuera del CLI: superficie y sella, nunca decide la verdad.
+Sin `--premise`/`--verified` es **read-only** — superficie la premisa y hace un nudge. El juicio humano queda fuera del CLI: superficie y sella, nunca decide la verdad. `--claims` es grep-tier por diseño (sin AST, cross-stack): alto recall, precisión modesta — de ahí el warn-first.
 
 ```bash
 $ straymark followups verify FU-016 --premise "yrs tiene una referencia independiente (Yjs)" --verified

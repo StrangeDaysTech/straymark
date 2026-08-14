@@ -20,6 +20,7 @@ mod platform;
 mod prompts;
 mod self_update;
 mod telemetry_schema;
+mod tree_grep;
 #[cfg(feature = "tui")]
 mod tui;
 mod utils;
@@ -499,8 +500,17 @@ enum FollowupsCommands {
     /// only real bug is acting on one without re-testing its premise. Surfaces
     /// the premise, optionally records/updates it, and stamps `Verified-at`.
     Verify {
-        /// Entry identifier (FU-NNN or just NNN)
-        fu_id: String,
+        /// Entry identifier (FU-NNN or just NNN). Optional with --claims:
+        /// the batch then covers every open/in-progress entry, or just this one.
+        #[arg(required_unless_present = "claims")]
+        fu_id: Option<String>,
+        /// Batch mode: re-derive the code claims embedded in registry entries
+        /// against the tree — backticked paths that no longer exist, backticked
+        /// symbols absent from the tree, and "no caller / not wired / unused"
+        /// claims whose symbol now has callers (#419). Warn-first: findings
+        /// print but the exit code stays 0.
+        #[arg(long, conflicts_with_all = ["premise", "verified", "at"])]
+        claims: bool,
         /// Record or update the entry's premise (the load-bearing assumption
         /// to re-check). When omitted, the existing premise is surfaced.
         #[arg(long)]
@@ -1122,17 +1132,24 @@ fn main() {
             ),
             FollowupsCommands::Verify {
                 fu_id,
+                claims,
                 premise,
                 verified,
                 at,
                 path,
-            } => commands::followups::verify::run(
-                &path,
-                &fu_id,
-                premise.as_deref(),
-                verified,
-                at.as_deref(),
-            ),
+            } => {
+                if claims {
+                    commands::followups::verify_claims::run(&path, fu_id.as_deref())
+                } else {
+                    commands::followups::verify::run(
+                        &path,
+                        fu_id.as_deref().expect("clap requires fu_id unless --claims"),
+                        premise.as_deref(),
+                        verified,
+                        at.as_deref(),
+                    )
+                }
+            }
             FollowupsCommands::Note {
                 fu_id,
                 text,

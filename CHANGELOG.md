@@ -7,6 +7,20 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.47.0 — 2026-08-14
+
+Second PR of CHARTER-02 (#419): the follow-ups registry also states claims about the tree — and those decay just as silently as id citations do.
+
+### Added (CLI)
+
+- **`straymark followups verify --claims [FU-NNN]`** (#419, warn-first): batch re-derivation of the mechanical claims embedded in `open` / `in-progress` entries — backticked paths that no longer exist (`CLAIM-PATH-GONE`), backticked symbols with zero word-boundary occurrences outside `.straymark/` (`CLAIM-SYMBOL-GONE`), and "no callers / not wired / unused / dead code" assertions whose symbol is now mentioned by ≥2 files (`CLAIM-STALE-DEAD`). Grep tier by design (no AST, cross-stack), warn-first by design constraint: findings print, the exit code stays 0. With an explicit `FU-NNN` the batch filters to that entry. Defect class: registry drift vs the tree (issue case 2).
+- **`tree_grep` module**: the (glob, regex) walker behind `analyze declared-vs-wired`'s `collect_symbols`, extracted and shared with the new claims mode.
+
+### Changed (CLI)
+
+- **`regex` and `glob` are now required dependencies** (previously optional, behind the `analyze` feature — which keeps only `arborist-metrics`): `followups verify --claims` needs them unconditionally. No CLI surface change.
+- `followups verify`'s positional `FU-NNN` is optional when `--claims` is passed; it remains required for the per-entry mode (clap-enforced).
+
 ## CLI 3.46.0 — 2026-08-13
 
 Adopter report (#419, Sentinel — two external audit rounds): **the code has mechanical verifiers; the governance markdown does not.** A remediation commit cited a phantom AILOG — format right, date plausible, file absent — and nothing rejected it, because nothing resolved id-shaped references outside Charter frontmatter. This release gives the markdown layer its missing name resolution (CHARTER-02, PR 1 of 3).

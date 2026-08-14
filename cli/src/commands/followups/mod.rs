@@ -26,3 +26,4 @@ pub mod recount;
 pub mod set_status;
 pub mod status;
 pub mod verify;
+pub mod verify_claims;

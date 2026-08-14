@@ -1160,3 +1160,158 @@ fn merge_driver_respects_deletion_and_keeps_conflicts_visible() {
     let idx = merged.find("Harden staging probe").unwrap();
     assert!(merged[idx..].contains("- **Status**: closed"), "ours kept on same-rank conflict: {merged}");
 }
+
+// ───────────────────────────── verify --claims (cli-3.47.0, #419) ─────────────────────────────
+
+/// Registry whose entries carry mechanical code claims: one good, one with a
+/// phantom path, one with a phantom symbol, one with a stale "no callers"
+/// claim, one closed entry whose phantom claim must be ignored by the batch.
+const CLAIMS_REGISTRY: &str = r#"---
+schema_version: v1
+last_scan: 2026-08-13
+total_open: 4
+total_promoted: 0
+total_closed_in_session: 1
+total_phase_blocked: 0
+total_suspected_closed: 0
+buckets:
+  - ready
+fully_extracted_ailogs: []
+---
+
+## Bucket: ready
+
+### FU-020 — Move the parser off `src/old/parser.rs`
+- **Origin**: AILOG-2026-08-13-001 §Follow-ups
+- **Status**: open
+- **Trigger**: ready
+- **Destination**: chore
+- **Cost**: S
+
+### FU-021 — Delete `definitely_gone_fn`
+- **Origin**: AILOG-2026-08-13-001 §Follow-ups
+- **Status**: open
+- **Premise**: `definitely_gone_fn` is still referenced from the sync loop
+- **Trigger**: ready
+- **Destination**: chore
+- **Cost**: S
+
+### FU-022 — `wired_helper` has no callers and should be deleted
+- **Origin**: AILOG-2026-08-13-001 §Follow-ups
+- **Status**: in-progress
+- **Trigger**: ready
+- **Destination**: chore
+- **Cost**: S
+
+### FU-023 — Closed entry citing `ghost_fn`
+- **Origin**: AILOG-2026-08-13-001 §Follow-ups
+- **Status**: closed
+- **Trigger**: ready
+- **Destination**: chore
+- **Cost**: S
+"#;
+
+#[test]
+fn verify_claims_flags_phantom_path_and_symbol_but_exits_zero() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, CLAIMS_REGISTRY);
+
+    cmd()
+        .args(["followups", "verify", "--claims", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("CLAIM-PATH-GONE"))
+        .stdout(predicate::str::contains("src/old/parser.rs"))
+        .stdout(predicate::str::contains("CLAIM-SYMBOL-GONE"))
+        .stdout(predicate::str::contains("definitely_gone_fn"));
+}
+
+#[test]
+fn verify_claims_flags_stale_dead_claim_when_symbol_has_callers() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, CLAIMS_REGISTRY);
+    std::fs::create_dir_all(tmp.path().join("src")).unwrap();
+    std::fs::write(tmp.path().join("src/a.rs"), "fn wired_helper() {}\n").unwrap();
+    std::fs::write(tmp.path().join("src/b.rs"), "use crate::a::wired_helper;\n").unwrap();
+
+    cmd()
+        .args(["followups", "verify", "--claims", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("CLAIM-STALE-DEAD"))
+        .stdout(predicate::str::contains("wired_helper"));
+}
+
+#[test]
+fn verify_claims_ignores_closed_entries_in_batch() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, CLAIMS_REGISTRY);
+
+    // ghost_fn appears nowhere, but FU-023 is closed — the batch must not flag it.
+    cmd()
+        .args(["followups", "verify", "--claims", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("FU-023").not());
+}
+
+#[test]
+fn verify_claims_clean_tree_reports_success() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, CLAIMS_REGISTRY);
+    std::fs::create_dir_all(tmp.path().join("src/old")).unwrap();
+    std::fs::write(tmp.path().join("src/old/parser.rs"), "fn parse() {}\n").unwrap();
+    std::fs::write(tmp.path().join("src/sync.rs"), "fn definitely_gone_fn() {}\nfn wired_helper() {}\n").unwrap();
+
+    cmd()
+        .args(["followups", "verify", "--claims", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("CLAIM-PATH-GONE").not())
+        .stdout(predicate::str::contains("CLAIM-SYMBOL-GONE").not())
+        .stdout(predicate::str::contains("re-derived clean"));
+}
+
+#[test]
+fn verify_claims_with_fu_id_filters_to_that_entry() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, CLAIMS_REGISTRY);
+
+    // FU-021's phantom symbol is flagged; FU-020's phantom path is not in scope.
+    cmd()
+        .args(["followups", "verify", "FU-021", "--claims", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("FU-021"))
+        .stdout(predicate::str::contains("CLAIM-SYMBOL-GONE"))
+        .stdout(predicate::str::contains("FU-020").not());
+}
+
+#[test]
+fn verify_claims_conflicts_with_per_entry_flags() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, CLAIMS_REGISTRY);
+
+    cmd()
+        .args(["followups", "verify", "FU-020", "--claims", "--verified", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .failure();
+}
+
+#[test]
+fn verify_without_fu_id_or_claims_fails() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, CLAIMS_REGISTRY);
+
+    cmd()
+        .args(["followups", "verify", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .failure();
+}
