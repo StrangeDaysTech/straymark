@@ -29,10 +29,10 @@ use anyhow::{anyhow, bail, Context, Result};
 use colored::Colorize;
 use regex::Regex;
 use serde::Serialize;
-use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use crate::config::{DeclaredVsWiredProfile, StrayMarkConfig};
+use crate::tree_grep::collect_symbols;
 use crate::utils;
 
 /// Parsed CLI inputs for the subcommand.
@@ -183,40 +183,6 @@ fn compile(pattern: &str, side: &str) -> Result<Regex> {
     Ok(re)
 }
 
-/// Glob files relative to `base`, scan each for `re`, and return a map of
-/// symbol name → first relative file path it appeared in. A `BTreeMap` keeps
-/// the output deterministic (sorted) without an explicit sort.
-fn collect_symbols(base: &Path, glob_pat: &str, re: &Regex) -> Result<BTreeMap<String, String>> {
-    let pattern = format!("{}/{}", base.display(), glob_pat);
-    let mut out: BTreeMap<String, String> = BTreeMap::new();
-    let entries = glob::glob(&pattern)
-        .with_context(|| format!("invalid glob pattern: `{glob_pat}`"))?;
-    for entry in entries {
-        let path = match entry {
-            Ok(p) => p,
-            Err(_) => continue,
-        };
-        if !path.is_file() {
-            continue;
-        }
-        let content = match std::fs::read_to_string(&path) {
-            Ok(c) => c,
-            Err(_) => continue, // skip binary / unreadable files
-        };
-        let rel = path
-            .strip_prefix(base)
-            .unwrap_or(&path)
-            .display()
-            .to_string();
-        for caps in re.captures_iter(&content) {
-            if let Some(m) = caps.get(1) {
-                out.entry(m.as_str().to_string()).or_insert_with(|| rel.clone());
-            }
-        }
-    }
-    Ok(out)
-}
-
 fn print_text(report: &Report) {
     println!();
     println!("  {}", "StrayMark Analyze — declared-vs-wired".bold().cyan());
@@ -333,27 +299,6 @@ mod tests {
     fn compile_rejects_pattern_without_capture_group() {
         assert!(compile(r"fn \w+", "declared").is_err());
         assert!(compile(r"fn (\w+)", "declared").is_ok());
-    }
-
-    #[test]
-    fn collect_symbols_extracts_capture_group_1() {
-        let tmp = tempfile::TempDir::new().unwrap();
-        std::fs::write(tmp.path().join("a.rs"), "fn foo() {}\nfn bar() {}\n").unwrap();
-        let re = Regex::new(r"fn (\w+)").unwrap();
-        let syms = collect_symbols(tmp.path(), "*.rs", &re).unwrap();
-        assert!(syms.contains_key("foo"));
-        assert!(syms.contains_key("bar"));
-        assert_eq!(syms["foo"], "a.rs");
-    }
-
-    #[test]
-    fn collect_symbols_handles_nested_glob() {
-        let tmp = tempfile::TempDir::new().unwrap();
-        std::fs::create_dir_all(tmp.path().join("client/src")).unwrap();
-        std::fs::write(tmp.path().join("client/src/proxy.rs"), "fn complete_auth() {}\n").unwrap();
-        let re = Regex::new(r"fn (\w+)").unwrap();
-        let syms = collect_symbols(tmp.path(), "client/**/*.rs", &re).unwrap();
-        assert!(syms.contains_key("complete_auth"));
     }
 
     #[test]

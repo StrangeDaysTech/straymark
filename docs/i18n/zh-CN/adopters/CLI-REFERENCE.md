@@ -878,7 +878,7 @@ $ straymark followups promote FU-010 --premise-verified
   Premise re-verification recorded: Verified-at → 2026-06-04.
 ```
 
-#### `straymark followups verify <FU-NNN> [--premise "..."] [--verified] [--at <YYYY-MM-DD>] [--path <dir>]` *(cli-3.37.0+)*
+#### `straymark followups verify [FU-NNN] [--claims] [--premise "..."] [--verified] [--at <YYYY-MM-DD>] [--path <dir>]` *(cli-3.37.0+;`--claims` 自 cli-3.47.0 起)*
 
 在**执行时**重新验证一个 follow-up 的前提并记录它。一个注册表条目是一个**有日期、会衰减的假设**(`AIDEC-2026-07-18-001`,来自 #365):它的前提在捕获时可能就为假,或自那以后已经过时,而唯一真正的 bug 是在不重新测试其前提的情况下对它采取行动。注册表是一个推测性缓冲区 —— 廉价捕获是它的价值 —— 所以验证属于那个廉价的时刻(对条目采取行动时),而不是捕获时。此动词覆盖了一个条目作为杂务被执行、却从不提升的常见情形。
 
@@ -887,8 +887,9 @@ $ straymark followups promote FU-010 --premise-verified
 | `--premise <文本>` | — | 记录或更新条目的 `Premise`(需重新核查的假设)。省略 → 浮现现有前提。 |
 | `--verified` | 关 | 盖上 `Verified-at`,确认前提已针对代码重新核查。 |
 | `--at <YYYY-MM-DD>` | 今天 | 验证日期。 |
+| `--claims` *(cli-3.47.0+)* | 关 | 批处理模式(与各单条目 flag 互斥):针对代码树重新推导 `open`/`in-progress` 条目中嵌入的机械性断言 —— 反引号路径已不存在(`CLAIM-PATH-GONE`)、反引号符号在 `.straymark/` 之外无处可寻(`CLAIM-SYMBOL-GONE`)、以及「no callers / not wired / unused」类断言的符号现在被 ≥2 个文件提及(`CLAIM-STALE-DEAD`)。给定明确的 `FU-NNN` 时,批处理只覆盖该条目。**警告优先**(#419):仅打印发现,退出码保持 0。 |
 
-不带 `--premise`/`--verified` 时它是**只读的** —— 浮现前提并做提示。人的判断留在 CLI 之外:它浮现并盖印,从不裁定真伪。
+不带 `--premise`/`--verified` 时它是**只读的** —— 浮现前提并做提示。人的判断留在 CLI 之外:它浮现并盖印,从不裁定真伪。`--claims` 按设计为 grep 层级(无 AST,跨技术栈):高召回、精度有限 —— 因此采用警告优先。
 
 ```bash
 $ straymark followups verify FU-016 --premise "yrs 有一个独立的参照物(Yjs)" --verified

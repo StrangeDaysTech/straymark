@@ -92,6 +92,7 @@ PR 3 — guard-closure in remediation AILOGs (fw + cli):
 | `cli/src/commands/validate.rs` | New `--commit-msg` mode branch mirroring `run_staged` |
 | `cli/src/main.rs` | `Validate` gains `--commit-msg`; `FollowupsCommands::Verify` gains `--claims`, fu_id → optional |
 | `cli/src/commands/followups/verify.rs` | Dispatch `--claims` to the new batch mode; keep per-entry behavior intact |
+| `cli/src/commands/followups/mod.rs` | `pub mod verify_claims;` registration (added during PR 2 per closure protocol) |
 | `cli/src/commands/followups/verify_claims.rs` | New — batch claim re-derivation (warn-first) |
 | `cli/src/tree_grep.rs` | New — shared tree walker/symbol grep extracted from `collect_symbols` |
 | `cli/src/commands/analyze_declared_vs_wired.rs` | Reuse the extracted shared walker instead of its private `collect_symbols` |
