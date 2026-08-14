@@ -133,6 +133,11 @@ a **Guard** line per item, so external audit cycles feed the field upstream.
   and the 21-file footer stamp sweep. Same category as PR 1's Cargo.lock
   row: mechanical followers of a version bump, recorded here and added to
   the Charter table in this same PR per the drift-check protocol.
+- R5 (new, not in Charter): `STRAYMARK.md` (repo root) is declared in the
+  Charter and was edited on disk — §8, §13, §15.B — but can never appear
+  in a git drift range: `.gitignore` excludes it (operator-local mirror
+  kept in sync by `straymark update`). The tracked half of the change is
+  `dist/STRAYMARK.md`, modified in this PR.
 
 ## Validation
 
