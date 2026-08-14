@@ -2574,7 +2574,7 @@ dependencies = [
 
 [[package]]
 name = "straymark-cli"
-version = "3.47.0"
+version = "3.48.0"
 dependencies = [
  "anyhow",
  "arborist-metrics",
@@ -2607,7 +2607,7 @@ dependencies = [
 
 [[package]]
 name = "straymark-core"
-version = "0.9.1"
+version = "0.10.0"
 dependencies = [
  "anyhow",
  "serde",

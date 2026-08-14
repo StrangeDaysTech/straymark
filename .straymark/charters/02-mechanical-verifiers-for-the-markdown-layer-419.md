@@ -98,8 +98,12 @@ PR 3 — guard-closure in remediation AILOGs (fw + cli):
 | `cli/src/commands/analyze_declared_vs_wired.rs` | Reuse the extracted shared walker instead of its private `collect_symbols` |
 | `core/src/document.rs` | `Frontmatter` gains optional `guard_closure` (additive) |
 | `cli/src/commands/charter/amend.rs` | Remediation-AILOG template renders `guard_closure` |
-| `cli/Cargo.toml` | `regex`+`glob` → required deps; version bumps (3.46.0, 3.47.0, patch for PR 3) |
+| `cli/Cargo.toml` | `regex`+`glob` → required deps; version bumps (3.46.0, 3.47.0, 3.48.0) |
 | `core/Cargo.toml` | Minor bump for the additive Frontmatter field |
+| `experiment-loom/Cargo.toml` | `straymark-core` pin → 0.10.0 (added during PR 3 per closure protocol) |
+| `experiment-baton/Cargo.toml` | `straymark-core` pin → 0.10.0 (added during PR 3 per closure protocol) |
+| `dist/dist-manifest.yml` | `version:` → 4.44.0 (added during PR 3 per closure protocol) |
+| `README.md`, `docs/i18n/*/README.md`, `dist/.straymark/00-governance/**` (21 files) | Footer stamp sweep fw-4.43.0 → fw-4.44.0 — follows the framework release like Cargo.lock follows cli bumps (added during PR 3 per closure protocol) |
 | `cli/tests/validate_test.rs` | `--commit-msg` pass/fail, REF-003 warning, REF-001 error |
 | `cli/tests/followups_test.rs` | `--claims` batch cases over a fixture tree |
 | `cli/tests/charter_amend_test.rs` | Template renders `guard_closure` |

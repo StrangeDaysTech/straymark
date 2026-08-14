@@ -185,6 +185,11 @@ related:
 # nist_genai_risks: []
 # iso_42001_clause: []
 # observability_scope: none
+# Remediation AILOGs only (charter amend, fw-4.44.0+ — see §15.B):
+# trigger: external_audit | production_incident | deferred_implementation
+# guard_closure: one item per closed finding — exactly one of
+#   guard: <mechanical check that now prevents recurrence>
+#   unguardable: <specific rationale; stock phrases trip GUARD-001>
 ---
 ```
 
@@ -352,6 +357,8 @@ related:
 | `DPIA` | Data Protection Impact Assessment | `.straymark/07-ai-audit/ethical-reviews/` |
 | `Charter` | Bounded unit of work (filename `NN-slug.md`, not `TYPE-YYYY-…`) | `.straymark/charters/` |
 
+An AILOG carrying `trigger:` is a **remediation document** (§15.B): it must close every finding in `guard_closure:` — either the mechanical `guard` that now prevents recurrence, or a specific `unguardable:` rationale. GUARD-001 (warn-first, fw-4.44.0+) nags when the field is missing, ambiguous, or generic.
+
 ---
 
 ## 14. Regulatory Alignment
@@ -451,6 +458,13 @@ straymark charter amend CHARTER-NN \         # scaffolds the new AILOG, edits th
 ```
 
 The command does not touch git — the operator decides when to commit. The `straymark charter audit <id> --merge-reports --merge-into <telemetry-yaml>` path tolerates `external_audit: []` placeholders in v0.2+ schema so the round-trip with `post_close_amendment` is smooth. See `.straymark/00-governance/CHARTER-CHAIN-EVOLUTION.md` Pattern 2 for full mechanics.
+
+**Guard closure (fw-4.44.0+, #419).** A remediation that lives only in prose recurs: the audit lesson ("X had no callers but was declared dead", "the commit cited a phantom AILOG") must terminate in something mechanical, or be declared unguardable with a reason specific enough to act on. The amendment AILOG therefore carries `guard_closure:` — one item per finding being closed, each with exactly one of:
+
+- `guard:` — the mechanical check that now prevents recurrence (a command, a validate rule, a test). E.g. `guard: "validate --commit-msg blocks phantom AILOG citations (cli-3.46.0)"`.
+- `unguardable:` — why no mechanical guard is possible, naming what a guard would have to observe and why it cannot. Stock phrases ("human review", "n/a") and one-liners under 30 chars trip **GUARD-001** (warn-first).
+
+`charter amend` scaffolds the field with a placeholder item per finding; `straymark validate` warns until every item is unambiguous and specific.
 
 ---
 

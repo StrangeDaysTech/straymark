@@ -199,3 +199,56 @@ fn amend_merge_into_writes_post_close_amendment_to_telemetry() {
         .and_then(|v| v.as_str());
     assert_eq!(trigger, Some("external_audit"));
 }
+
+#[test]
+fn amend_new_ailog_renders_guard_closure_placeholder() {
+    let dir = TempDir::new().unwrap();
+    write_closed_charter(dir.path());
+    write_prior_ailog(dir.path());
+
+    cargo_bin_cmd!("straymark")
+        .args([
+            "charter",
+            "amend",
+            "CHARTER-18",
+            "--trigger",
+            "external_audit",
+            "--findings-closed",
+            "2",
+            "--ailog-title",
+            "guard closure scaffold",
+            "--path",
+        ])
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success();
+
+    let logs = dir.path().join(".straymark/07-ai-audit/agent-logs");
+    let new_ailog = std::fs::read_dir(&logs)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .map(|e| e.path())
+        .find(|p| {
+            p.file_name()
+                .and_then(|n| n.to_str())
+                .is_some_and(|n| n.starts_with("AILOG-") && n.contains("guard-closure-scaffold"))
+        })
+        .expect("new AILOG exists");
+    let content = std::fs::read_to_string(new_ailog).unwrap();
+    assert!(
+        content.contains("guard_closure:"),
+        "remediation AILOG template renders the guard_closure field (#419):\n{content}"
+    );
+    assert!(
+        content.contains("- finding: F1"),
+        "placeholder item per finding:\n{content}"
+    );
+
+    // The placeholder frontmatter must parse as valid YAML carrying the field.
+    let fm_text = content
+        .strip_prefix("---\n")
+        .and_then(|rest| rest.split("\n---\n").next())
+        .expect("frontmatter delimiters");
+    let parsed: serde_yaml::Value = serde_yaml::from_str(fm_text).expect("frontmatter parses");
+    assert!(parsed.get("guard_closure").is_some());
+}

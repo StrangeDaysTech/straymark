@@ -319,6 +319,12 @@ review_required: true\n\
 {amends_line}\
 trigger: {trigger}\n\
 findings_closed: {findings_closed}\n\
+guard_closure:\n\
+  # Per finding being closed: exactly one of `guard:` (the mechanical check that now\n\
+  # prevents recurrence — a command, rule, or test) or `unguardable:` (a specific\n\
+  # rationale; stock phrases like 'human review' trip GUARD-001). One item per finding.\n\
+  - finding: F1  # replace with the real finding id from the audit review\n\
+    guard: \"\"\n\
 ---\n\
 \n\
 # {title}\n\
