@@ -1,8 +1,10 @@
 ---
 charter_id: CHARTER-02-mechanical-verifiers-for-the-markdown-layer-419
-status: in-progress
+status: closed
+closed_at: 2026-08-14
 effort_estimate: M
 trigger: "Adopter issue #419 (Sentinel, CHARTER-61 external audit rounds 1-2): governance artifacts drift from the tree because nothing mechanically rejects them — three evidenced defect classes with upstream-shaped remediations."
+execution_ailogs: [AILOG-2026-08-13-001, AILOG-2026-08-14-001, AILOG-2026-08-14-002]
 # Exactly one of the following two should be set when the Charter has a known origin.
 # Both absent is valid for a Charter scaffolded without an explicit origin (must be
 # filled before status moves to in-progress).
@@ -24,7 +26,7 @@ design_provenance: new
 
 # Charter: Mechanical verifiers for the markdown layer (#419)
 
-> **Status (mirrored from frontmatter — source of truth is above):** in-progress. Effort: M.
+> **Status (mirrored from frontmatter — source of truth is above):** closed (2026-08-14). Effort: M.
 >
 > **Origin:** adopter issue [#419](https://github.com/StrangeDaysTech/straymark/issues/419) — Sentinel field report (Sentinel's charter 61, external audit rounds 1–2). No originating AILOG/spec: the origin is the upstream issue itself.
 
@@ -207,21 +209,29 @@ When closing this Charter:
 
 ## Closing notes
 
-> Add this section ONLY when Tasks #7 drift check reported drift that the
-> implementer chose to remediate atomically (rather than redoing the implementation
-> to match `## Files to modify` exactly). Each bullet: what changed vs declaration,
-> why, reference to the AILOG that documented the decision. Omit the section
-> entirely if no drift was detected — empty `## Closing notes` is noise.
->
-> Historical examples in Sentinel: PLAN-05 (`docs/plans/05-per-service-anomaly-thresholds.md`)
-> §Notas de cierre — files removed because the implementation chose a different
-> injection point; PLAN-07 (`docs/plans/07-fix-distribution-aligner.md`) §Notas de
-> cierre — file removed because the live test was agnostic to the change. Both
-> demonstrate the pattern in production usage.
+Post-merge drift check over the three PR ranges (`58242795..4b875ff6`): **zero
+scope-expansion, 3 residual omissions** — all three artifacts of declaration
+mechanics, none of them unexecuted work:
 
-- `[path/file-from-declaration.ext]` [removed | relocated to X | repurposed]:
-  [1-2 lines explaining what the implementation did instead and why the original
-  declaration is no longer accurate]. Reference: AILOG-YYYY-MM-DD-NNN §[section].
+- `.straymark/07-ai-audit/agent-logs/AILOG-2026-08-13-NNN-*.md` [satisfied, glob
+  unresolvable]: the three execution AILOGs exist (`AILOG-2026-08-13-001`,
+  `AILOG-2026-08-14-001`, `AILOG-2026-08-14-002`), but the declared pattern keeps
+  the literal text `NNN` outside the `*`, so `glob_match` can never satisfy it.
+  Declaration authored from the naming-convention placeholder rather than from a
+  matchable shape — same reconnaissance class as CHARTER-01's generator row.
+- `STRAYMARK.md` [edited on disk, invisible to git]: the repo-root copy is
+  gitignored (operator-local mirror kept by `straymark update`); the tracked half
+  of the change is `dist/STRAYMARK.md`, modified in PR 3. Reference:
+  AILOG-2026-08-14-002 §Risks (R5).
+- `cli/src/commands/followups/verify.rs` [repurposed]: declared to "dispatch
+  `--claims`"; the dispatch landed in `cli/src/main.rs` next to every other
+  command dispatch, and the per-entry mode needed no changes. Reference:
+  AILOG-2026-08-14-001 §Risks (R3).
+
+Per-PR drift remediations landed atomically in their own PRs: PR 1 (R2 —
+`Cargo.lock`, `.straymark/follow-ups-backlog.md`, CLI-REFERENCE ×3),
+PR 2 (R3 — `followups/mod.rs` row), PR 3 (R4 — experiment-crate core pins,
+`dist/dist-manifest.yml`, 21-file footer stamp sweep; R5 above).
 
 ---
 
