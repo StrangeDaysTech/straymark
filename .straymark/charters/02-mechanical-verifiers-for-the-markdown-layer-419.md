@@ -103,7 +103,9 @@ PR 3 — guard-closure in remediation AILOGs (fw + cli):
 | `experiment-loom/Cargo.toml` | `straymark-core` pin → 0.10.0 (added during PR 3 per closure protocol) |
 | `experiment-baton/Cargo.toml` | `straymark-core` pin → 0.10.0 (added during PR 3 per closure protocol) |
 | `dist/dist-manifest.yml` | `version:` → 4.44.0 (added during PR 3 per closure protocol) |
-| `README.md`, `docs/i18n/*/README.md`, `dist/.straymark/00-governance/**` (21 files) | Footer stamp sweep fw-4.43.0 → fw-4.44.0 — follows the framework release like Cargo.lock follows cli bumps (added during PR 3 per closure protocol) |
+| `README.md` | Footer stamp fw-4.43.0 → fw-4.44.0 — follows the framework release like Cargo.lock follows cli bumps (added during PR 3 per closure protocol) |
+| `docs/i18n/*/README.md` | Same stamp sweep, localized READMEs (added during PR 3 per closure protocol) |
+| `dist/.straymark/00-governance/**` | Same stamp sweep, governance footers incl. i18n (added during PR 3 per closure protocol) |
 | `cli/tests/validate_test.rs` | `--commit-msg` pass/fail, REF-003 warning, REF-001 error |
 | `cli/tests/followups_test.rs` | `--claims` batch cases over a fixture tree |
 | `cli/tests/charter_amend_test.rs` | Template renders `guard_closure` |
