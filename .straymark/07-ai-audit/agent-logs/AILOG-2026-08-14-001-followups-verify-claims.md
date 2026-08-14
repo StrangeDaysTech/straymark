@@ -102,7 +102,10 @@ findings** — clean. The batch correctly ignored multi-word command spans
 - R3 (new, not in Charter): `cli/src/commands/followups/verify.rs` was
   declared in the Charter ("dispatch `--claims` …") but did not need
   changes — the dispatch landed in `cli/src/main.rs` next to every other
-  command dispatch, and the per-entry mode is untouched.
+  command dispatch, and the per-entry mode is untouched. Conversely,
+  `cli/src/commands/followups/mod.rs` was NOT declared and needed a
+  one-line `pub mod verify_claims;` registration — recorded here per the
+  drift-check protocol.
 
 ## Validation
 
