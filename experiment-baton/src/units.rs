@@ -14,7 +14,7 @@
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
-use straymark_core::charter::{discover_and_parse, display_title, read_frontmatter_yaml};
+use straymark_core::charter::{discover_and_parse, display_title, read_frontmatter_yaml, Charter};
 use straymark_core::charter_files::parse_files_to_modify;
 
 use crate::intent::SourceRef;
@@ -284,8 +284,42 @@ fn yaml_str(y: &serde_yaml::Value, key: &str) -> Option<String> {
 
 // ---- Task (from `specs/**/tasks.md`) --------------------------------------
 
+/// A task has no declaration slot (#332). Inherit only from one explicit
+/// Charter origin resolving to its sibling spec, never from titles or nearest
+/// directories. Multiple Charters can cover one spec; without a task-to-Charter
+/// assignment their declarations are ambiguous, even when they happen to agree.
+fn task_declaration(root: &Path, tasks: &Path, charters: &[Charter]) -> (Option<String>, Option<String>) {
+    let resolve = || {
+        let root = root.canonicalize().ok()?;
+        let spec = tasks.parent()?.join("spec.md").canonicalize().ok()?;
+        if !spec.is_file() || !spec.starts_with(&root) {
+            return None;
+        }
+        let mut parents = charters.iter().filter(|c| {
+            c.frontmatter
+                .originating_spec
+                .as_ref()
+                .and_then(|origin| root.join(origin).canonicalize().ok())
+                .is_some_and(|origin| origin == spec)
+        });
+        let parent = parents.next()?;
+        if parents.next().is_some() {
+            return None;
+        }
+        let yaml = read_frontmatter_yaml(&parent.path).ok()?;
+        Some((yaml_str(&yaml, "work_verb"), yaml_str(&yaml, "design_provenance")))
+    };
+    resolve().unwrap_or((None, None))
+}
+
 fn read_tasks(root: &Path) -> Vec<RoutableUnit> {
     let mut out = Vec::new();
+    let (mut charters, errors) = discover_and_parse(root);
+    // An unreadable Charter could be a competing parent. Do not silently turn
+    // an incomplete inventory into permission to recommend a cheaper tier.
+    if !errors.is_empty() {
+        charters.clear();
+    }
     for path in find_files(root, |p| file_name(p) == "tasks.md") {
         let Ok(content) = std::fs::read_to_string(&path) else {
             continue;
@@ -297,6 +331,7 @@ fn read_tasks(root: &Path) -> Vec<RoutableUnit> {
             .unwrap_or("spec")
             .to_string();
         let rel_path = rel(root, &path);
+        let (work_verb, design_provenance) = task_declaration(root, &path, &charters);
         for line in content.lines() {
             let t = line.trim();
             let body = t
@@ -324,8 +359,8 @@ fn read_tasks(root: &Path) -> Vec<RoutableUnit> {
                 effort_estimate: None,
                 followup_bucket: None,
                 followup_severity: None,
-                work_verb: None,
-                design_provenance: None,
+                work_verb: work_verb.clone(),
+                design_provenance: design_provenance.clone(),
                 scope_globs: Vec::new(),
             });
         }
@@ -456,7 +491,7 @@ mod tests {
         assert_eq!(fu.work_verb.as_deref(), Some("implement"));
         assert_eq!(fu.design_provenance.as_deref(), Some("upstream"));
 
-        // Batches/tasks have no declaration slot in the prototype → undeclared.
+        // This legacy fixture has no sibling spec.md to resolve as a parent.
         assert!(u.iter().filter(|u| u.granularity == Granularity::Task).all(|u| u.work_verb.is_none()));
     }
 

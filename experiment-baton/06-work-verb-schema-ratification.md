@@ -101,11 +101,20 @@ frontmatter nuevo en unidades que no lo tienen.
   declara el verbo al grano más fino que sí tenga slot (por batch, vía la línea del ledger). No se
   fragmenta artificialmente una unidad homogénea.
 
-**Nota de honestidad (estado del prototipo).** Hoy el prototipo **no** implementa la herencia: cosecha
-el verbo del charter frontmatter y de las líneas de follow-up, y deja batch/task como `undeclared`
-([`src/units.rs`](src/units.rs)). La herencia es una **regla ratificada aquí**, pendiente de
-implementar en la graduación al framework (o en un follow-on de Baton). Documentarla ahora evita que
-la graduación invente un mecanismo de declaración por-task que esta ratificación descarta.
+**Nota de honestidad (estado del prototipo).** La herencia de Task está implementada
+para un vínculo explícito e inequívoco: el `originating_spec` de un único Charter
+resuelve al `spec.md` hermano de `tasks.md`, dentro del proyecto. Hereda verbo y
+procedencia, no el esfuerzo del Charter. No se añade frontmatter a `tasks.md`.
+Si falta el spec/padre, hay varios Charters candidatos o el inventario contiene un
+Charter ilegible, las tareas permanecen `undeclared`; no se deduce pertenencia desde
+títulos ni desde el orden de archivos. Un verbo inválido conserva el comportamiento
+conservador del clasificador. El vínculo `context_spec` no establece parentesco.
+
+Batch, overrides por ledger, vínculos de follow-ups y declaraciones directas en
+spec continúan pendientes. El kit Track C y el placement de batches tienen una
+discrepancia documentada en #428; esta corrección de tareas no redefine ese contrato.
+La herencia es una regla ratificada; estos límites describen su implementación
+parcial en [`src/units.rs`](src/units.rs), no una validación humana de las declaraciones.
 
 ## 4. Undeclared = estado honesto
 
