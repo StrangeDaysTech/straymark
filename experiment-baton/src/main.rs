@@ -17,7 +17,7 @@ use straymark_baton::signals::signals_for;
 use straymark_baton::speckit;
 use straymark_baton::telemetry::{build_report, EconomicTelemetry, UnitRouting};
 use straymark_baton::tiers::Policy;
-use straymark_baton::units::{inventory, task_inheritance_blockers, Granularity};
+use straymark_baton::units::{inheritance_blockers, inventory, Granularity};
 
 #[derive(Parser)]
 #[command(
@@ -174,16 +174,17 @@ fn parse_granularity(s: &str) -> anyhow::Result<Option<Granularity>> {
     })
 }
 
-/// Say why tasks stay undeclared when an unreadable Charter disables task
-/// inheritance (#427) — otherwise the only hint is "declare the verb".
+/// Say why tasks and batches stay undeclared when an unreadable Charter
+/// disables inheritance (#427, #428) — otherwise the only hint is "declare the
+/// verb".
 fn note_inheritance_blockers(root: &Path, only: Option<Granularity>) {
-    if only.is_some_and(|g| g != Granularity::Task) {
+    if only.is_some_and(|g| !matches!(g, Granularity::Task | Granularity::Batch)) {
         return;
     }
-    let blockers = task_inheritance_blockers(root);
+    let blockers = inheritance_blockers(root);
     if !blockers.is_empty() {
         eprintln!(
-            "{} task inheritance disabled — unreadable Charter frontmatter could hide a competing parent: {}",
+            "{} inheritance from Charters disabled — unreadable Charter frontmatter could hide a competing parent: {}",
             "note:".yellow(),
             blockers.join(", ")
         );

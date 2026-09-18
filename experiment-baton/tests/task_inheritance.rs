@@ -233,7 +233,7 @@ fn cli_says_why_an_unreadable_charter_disables_inheritance() {
         .unwrap();
     assert!(run.status.success());
     let stderr = String::from_utf8_lossy(&run.stderr);
-    assert!(stderr.contains("task inheritance disabled"), "{stderr}");
+    assert!(stderr.contains("inheritance from Charters disabled"), "{stderr}");
     assert!(
         stderr.contains(".straymark/charters/02-broken.md"),
         "{stderr}"

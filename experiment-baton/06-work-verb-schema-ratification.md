@@ -114,10 +114,25 @@ incumple el esquema tipado sigue contando como padre. No se deduce pertenencia d
 títulos ni desde el orden de archivos. Un verbo inválido conserva el comportamiento
 conservador del clasificador. El vínculo `context_spec` no establece parentesco.
 
-Batch, overrides por ledger, vínculos de follow-ups y declaraciones directas en
-spec continúan pendientes. El kit Track C y el placement de batches tienen una
-discrepancia documentada en #428; esta corrección de tareas no redefine ese contrato.
-La herencia es una regla ratificada; estos límites describen su implementación
+La herencia de Batch también está implementada (#428). Un batch toma la **declaración
+más cercana**:
+
+1. su propia línea `- **Work verb**:` en la entrada del ledger (el override por
+   heterogeneidad);
+2. si no la tiene, el frontmatter del AILOG que contiene el ledger (el slot que ya trae
+   la plantilla de AILOG, y que actúa como el "padre" homogéneo de sus batches);
+3. si tampoco, los Charters cuyo AILOG de ledger es ese AILOG, con la misma resolución
+   que usa `straymark charter batch-complete` (`originating_ailogs[0]`, si no
+   `execution_ailogs[0]`), siempre que todos declaren lo mismo.
+
+Un override reemplaza la declaración completa: una línea de verbo sin procedencia no
+hereda la procedencia del padre, y una línea de procedencia sola no declara nada. Si el
+frontmatter del AILOG es ilegible, sus batches no heredan: podría declarar algo que no
+se ve. Las líneas dentro de comentarios, bloques de código u otras secciones no
+declaran nada.
+
+Siguen pendientes los vínculos de follow-ups con un padre y las declaraciones directas
+en spec. La herencia es una regla ratificada; estos límites describen su implementación
 parcial en [`src/units.rs`](src/units.rs), no una validación humana de las declaraciones.
 
 ## 4. Undeclared = estado honesto
