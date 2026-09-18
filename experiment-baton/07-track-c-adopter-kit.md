@@ -41,6 +41,10 @@ El oráculo sigues siendo tú, que hiciste el trabajo.
   `aarch64-apple-darwin`, `x86_64-pc-windows-msvc`), extráelo y colócalo en tu
   `PATH`. Alternativa: compílalo desde el repo
   (`cargo build --release --manifest-path experiment-baton/Cargo.toml`).
+  **Usa `baton-0.3.0` o posterior**: es la primera versión que hereda declaraciones
+  en tasks y batches, y que no cuenta checkouts anidados ni el ejemplo `FU-NNN`.
+  Con 0.2.x, esas unidades salen `undeclared` o duplicadas. Para declarar follow-ups
+  necesitas además el CLI ≥ 3.49 (`straymark followups declare`).
 - Tu repo con su `.straymark/` habitual.
 
 Comprobación rápida (no muta nada):
