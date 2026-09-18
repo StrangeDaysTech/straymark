@@ -1,17 +1,19 @@
 ---
 id: AIDEC-2026-09-13-001
 title: Conservative explicit parent resolution for Baton tasks
-status: review
+status: accepted
 created: 2026-09-13
 agent: codex-cli-v0.154.0
 confidence: high
-review_required: true
+review_required: false
 risk_level: medium
 eu_ai_act_risk: not_applicable
 nist_genai_risks: [human_ai_config]
 iso_42001_clause: []
 tags: [baton, inheritance]
-related: [07-ai-audit/agent-logs/AILOG-2026-09-13-001-baton-task-inheritance.md]
+related:
+  - 07-ai-audit/agent-logs/AILOG-2026-09-13-001-baton-task-inheritance.md
+  - 07-ai-audit/agent-logs/AILOG-2026-09-17-001-baton-task-inheritance-maintainer-review-amendment.md
 ---
 
 # AIDEC: Explicit task parent
@@ -30,16 +32,34 @@ slots. One spec may have multiple Charters; filenames and titles cannot assign a
    multi-Charter specs and incomplete inventories undeclared.
 3. Design a new task-to-Charter mapping: fuller solution, requires a separate schema
    decision and exceeds this first adopter contribution.
+4. (Added in maintainer review.) Every Charter whose originating_spec resolves to the
+   sibling spec.md is a candidate parent; inherit when all candidates declare the same
+   work_verb and design_provenance. Same evidence as option 2 — neither proves which
+   tasks a Charter owns — but stable under the charter-chain pattern.
 
-## Decision proposed and implemented in the PR
+## Decision
 
-Use option 2. A malformed Charter makes the parent inventory incomplete, so inheritance
-is disabled conservatively. Only work_verb and design_provenance flow to the child;
-parent effort_estimate is not a measurement of task size. Missing or invalid verbs
-remain unclassifiable in the existing classifier; no title fallback or task frontmatter.
+Proposed in the PR: option 2. **Amended in maintainer review (2026-09-17): option 4**,
+chosen by the maintainer. Option 2 is not monotonic: Sentinel's specs 002–005 carry
+2–8 Charters each, so a spec that gains an agreeing Charter (e.g. a polish Charter)
+would retroactively unclassify tasks already done. Uniqueness never established
+ownership either, so it bought no safety that agreement does not. Agreement is on the
+declaration itself, not on the class the current classifier derives: `operate` and
+`operate` + `design_provenance: new` do not agree. A candidate declaring nothing means
+disagreement.
+
+Candidate parents are read from the raw frontmatter, so a Charter the typed parser
+rejects (an out-of-schema field) still counts as a parent. Only an unreadable
+frontmatter makes the parent inventory incomplete; inheritance is then disabled for
+the project and the CLI names the blocking Charters on stderr. Only work_verb and
+design_provenance flow to the child; parent effort_estimate is not a measurement of
+task size. Missing or invalid verbs remain unclassifiable in the existing classifier;
+no title fallback or task frontmatter.
 
 ## Consequences and review
 
 Preserves deterministic and read-only recommendations. Known false negatives remain
-visible as undeclared. Extending mappings or risk policy is separate work. This choice
-is implemented for upstream review, not recorded as human acceptance or schema ratification.
+visible as undeclared, and a disagreeing Charter still unclassifies a spec's tasks —
+correctly, since ownership is then ambiguous. Extending mappings or risk policy is
+separate work. Accepted by the maintainer as the implementation rule for #332's task
+inheritance; it is not a schema ratification and adds no declaration slot.

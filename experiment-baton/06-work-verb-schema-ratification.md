@@ -102,11 +102,15 @@ frontmatter nuevo en unidades que no lo tienen.
   fragmenta artificialmente una unidad homogénea.
 
 **Nota de honestidad (estado del prototipo).** La herencia de Task está implementada
-para un vínculo explícito e inequívoco: el `originating_spec` de un único Charter
-resuelve al `spec.md` hermano de `tasks.md`, dentro del proyecto. Hereda verbo y
-procedencia, no el esfuerzo del Charter. No se añade frontmatter a `tasks.md`.
-Si falta el spec/padre, hay varios Charters candidatos o el inventario contiene un
-Charter ilegible, las tareas permanecen `undeclared`; no se deduce pertenencia desde
+por vínculo explícito: son padres los Charters cuyo `originating_spec` resuelve al
+`spec.md` hermano de `tasks.md`, dentro del proyecto, y la tarea hereda cuando **todos**
+declaran lo mismo (verbo y procedencia). Así, una cadena de Charters sobre la misma spec
+que coincide no desclasifica tareas ya hechas. Hereda verbo y procedencia, no el
+esfuerzo del Charter. No se añade frontmatter a `tasks.md`.
+Si falta el spec o el padre, si los Charters candidatos discrepan (o alguno no declara)
+o si el inventario contiene un Charter con frontmatter ilegible, las tareas permanecen
+`undeclared`; en el último caso el CLI nombra el Charter en stderr. Un Charter que solo
+incumple el esquema tipado sigue contando como padre. No se deduce pertenencia desde
 títulos ni desde el orden de archivos. Un verbo inválido conserva el comportamiento
 conservador del clasificador. El vínculo `context_spec` no establece parentesco.
 

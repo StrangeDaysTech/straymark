@@ -39,7 +39,8 @@ impl Project {
 }
 impl Drop for Project {
     fn drop(&mut self) {
-        std::fs::remove_dir_all(&self.0).unwrap();
+        // Never panic in Drop: a failing test is already unwinding.
+        let _ = std::fs::remove_dir_all(&self.0);
     }
 }
 
@@ -112,16 +113,33 @@ fn canonical_paths_match_but_other_specs_do_not() {
 }
 
 #[test]
-fn multiple_parents_remain_undeclared_even_when_their_verbs_agree() {
-    for second in ["operate", "design"] {
+fn parents_that_all_agree_keep_their_tasks_classified() {
+    // The charter-chain case: a later Charter for the same spec declaring the
+    // same thing must not retroactively unclassify the spec's tasks.
+    let p = Project::new();
+    let declaration = "work_verb: implement\ndesign_provenance: new\n";
+    p.charter(1, "specs/001-example/spec.md", declaration);
+    p.charter(2, "specs/001-example/spec.md", declaration);
+    assert_eq!(
+        task_route(&p.0, None),
+        (Some(TaskClass::Implementer), Tier::Economic)
+    );
+}
+
+#[test]
+fn parents_that_disagree_or_do_not_declare_leave_tasks_undeclared() {
+    for second in [
+        "work_verb: design\n",
+        "",
+        "design_provenance: new\n",
+        // Same class today, different declaration: agreement is on what was
+        // declared, not on what the current classifier happens to derive.
+        "work_verb: operate\ndesign_provenance: new\n",
+    ] {
         let p = Project::new();
         p.charter(1, "specs/001-example/spec.md", "work_verb: operate\n");
-        p.charter(
-            2,
-            "specs/001-example/spec.md",
-            &format!("work_verb: {second}\n"),
-        );
-        assert_eq!(task_route(&p.0, None), (None, Tier::Frontier));
+        p.charter(2, "specs/001-example/spec.md", second);
+        assert_eq!(task_route(&p.0, None), (None, Tier::Frontier), "{second:?}");
     }
 }
 
@@ -170,6 +188,59 @@ fn malformed_charter_cannot_hide_a_competing_parent() {
         "---\ncharter_id: [invalid\n---\n",
     );
     assert_eq!(task_route(&p.0, None), (None, Tier::Frontier));
+}
+
+/// A Charter the typed parser rejects (here an out-of-schema effort estimate)
+/// still has readable frontmatter: it must count as a parent, neither hidden
+/// nor disabling inheritance for the whole project.
+fn typed_invalid_charter(p: &Project, number: u8, declaration: &str) {
+    p.write(
+        &format!(".straymark/charters/{number:02}-typed-invalid.md"),
+        &format!("---\ncharter_id: CHARTER-{number:02}-typed-invalid\nstatus: in-progress\neffort_estimate: XXL\ntrigger: synthetic\noriginating_spec: specs/001-example/spec.md\n{declaration}---\n"),
+    );
+}
+
+#[test]
+fn a_typed_invalid_charter_is_still_a_parent() {
+    let p = Project::new();
+    typed_invalid_charter(&p, 1, "work_verb: operate\n");
+    assert_eq!(
+        task_route(&p.0, None),
+        (Some(TaskClass::Operator), Tier::Local)
+    );
+}
+
+#[test]
+fn a_typed_invalid_charter_can_still_compete() {
+    let p = Project::new();
+    p.charter(1, "specs/001-example/spec.md", "work_verb: operate\n");
+    typed_invalid_charter(&p, 2, "work_verb: design\n");
+    assert_eq!(task_route(&p.0, None), (None, Tier::Frontier));
+}
+
+#[test]
+fn cli_says_why_an_unreadable_charter_disables_inheritance() {
+    let p = Project::new();
+    p.charter(1, "specs/001-example/spec.md", "work_verb: operate\n");
+    p.write(
+        ".straymark/charters/02-broken.md",
+        "---\ncharter_id: [invalid\n---\n",
+    );
+    let run = std::process::Command::new(env!("CARGO_BIN_EXE_straymark-baton"))
+        .args(["classify", ".", "--granularity", "task", "--out", "json"])
+        .current_dir(&p.0)
+        .output()
+        .unwrap();
+    assert!(run.status.success());
+    let stderr = String::from_utf8_lossy(&run.stderr);
+    assert!(stderr.contains("task inheritance disabled"), "{stderr}");
+    assert!(
+        stderr.contains(".straymark/charters/02-broken.md"),
+        "{stderr}"
+    );
+    // The JSON on stdout stays machine-readable.
+    let json: serde_json::Value = serde_json::from_slice(&run.stdout).unwrap();
+    assert_eq!(json[0]["class"], "undeclared");
 }
 
 #[cfg(unix)]
