@@ -1,8 +1,20 @@
 //! Low-level, dependency-free text scanners shared across the adapter, the
 //! code-shape extractor, and provenance inference. No regex (matching the
 //! `core` philosophy); char-boundary-safe over accented prose.
+//!
+//! Also the one rule every directory walker shares: [`is_nested_checkout`].
 
 use std::collections::HashSet;
+use std::path::Path;
+
+/// True when `dir` is the root of *another* checkout — a linked git worktree
+/// or a submodule (a `.git` file) or a nested clone (a `.git` directory).
+/// Walkers never descend into one: its artifacts belong to another working
+/// copy, and reading them duplicates units and contracts (#434). Structural on
+/// purpose — no gitignore parsing, nothing for an adopter to configure.
+pub(crate) fn is_nested_checkout(dir: &Path) -> bool {
+    dir.join(".git").exists()
+}
 
 /// Scan `text` for all identifiers shaped `<prefix><body>` where `body` is made
 /// of ASCII alphanumerics / hyphens and contains at least one digit. Returns

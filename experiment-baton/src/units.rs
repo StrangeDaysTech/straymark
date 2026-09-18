@@ -18,6 +18,7 @@ use straymark_core::charter::{discover_and_parse, display_title, read_frontmatte
 use straymark_core::charter_files::parse_files_to_modify;
 
 use crate::intent::SourceRef;
+use crate::scan::is_nested_checkout;
 
 /// Directories never walked for governance artifacts.
 const SKIP_DIRS: &[&str] = &[
@@ -211,9 +212,24 @@ fn read_followups(root: &Path) -> Vec<RoutableUnit> {
     let rel_path = rel(root, &registry);
     let mut out = Vec::new();
     let mut bucket: Option<String> = None;
+    // Only live entries count (#431): the shipped registry documents the entry
+    // shape as a commented `### FU-NNN` example, and adopters keep examples in
+    // fenced blocks. Metadata lines belong to the entry heading right above
+    // them, never to an earlier entry across another heading.
+    let mut in_comment = false;
+    let mut in_fence = false;
+    let mut in_entry = false;
 
     for line in content.lines() {
-        let t = line.trim();
+        let visible = outside_html_comments(line, &mut in_comment);
+        let t = visible.trim();
+        if t.starts_with("```") || t.starts_with("~~~") {
+            in_fence = !in_fence;
+            continue;
+        }
+        if in_fence || t.is_empty() {
+            continue;
+        }
         if let Some(h) = t.strip_prefix("## ") {
             // `## Bucket: ready` → `ready`; any other `## …` is a non-bucket section.
             bucket = Some(
@@ -222,23 +238,23 @@ fn read_followups(root: &Path) -> Vec<RoutableUnit> {
                     .trim()
                     .to_string(),
             );
+            in_entry = false;
             continue;
         }
         // `### FU-NNN — <description>`
         if let Some(rest) = t.strip_prefix("### ") {
             let (head, desc) = split_on_dash(rest);
-            let Some(id) = head.split_whitespace().next() else {
+            let id = head.split_whitespace().next().and_then(followup_id);
+            in_entry = id.is_some();
+            let Some(id) = id else {
                 continue;
             };
-            if !id.starts_with("FU-") {
-                continue;
-            }
             out.push(RoutableUnit {
-                id: id.to_string(),
+                id: id.clone(),
                 granularity: Granularity::Followup,
                 source: SourceRef {
                     file: rel_path.clone(),
-                    symbol: Some(id.to_string()),
+                    symbol: Some(id),
                 },
                 title: if desc.is_empty() { rest.trim().to_string() } else { desc },
                 effort_estimate: None,
@@ -248,6 +264,9 @@ fn read_followups(root: &Path) -> Vec<RoutableUnit> {
                 design_provenance: None,
                 scope_globs: Vec::new(),
             });
+            continue;
+        }
+        if !in_entry {
             continue;
         }
         // `- **Label**: value` metadata lines within the current entry.
@@ -264,6 +283,42 @@ fn read_followups(root: &Path) -> Vec<RoutableUnit> {
         }
     }
     out
+}
+
+/// Canonical follow-up id of a heading token: `FU-` + digits (`FU-012`, also
+/// `FU-012:`), as `straymark followups` reads it. `FU-NNN` and other
+/// placeholders are not ids.
+fn followup_id(token: &str) -> Option<String> {
+    let digits: String = token
+        .strip_prefix("FU-")?
+        .chars()
+        .take_while(|c| c.is_ascii_digit())
+        .collect();
+    (!digits.is_empty()).then(|| format!("FU-{digits}"))
+}
+
+/// The part of `line` outside HTML comments. `in_comment` carries an open
+/// `<!--` across lines, since a comment may span many.
+fn outside_html_comments(line: &str, in_comment: &mut bool) -> String {
+    let mut out = String::new();
+    let mut rest = line;
+    loop {
+        if *in_comment {
+            let Some(end) = rest.find("-->") else {
+                return out;
+            };
+            rest = &rest[end + 3..];
+            *in_comment = false;
+        } else {
+            let Some(start) = rest.find("<!--") else {
+                out.push_str(rest);
+                return out;
+            };
+            out.push_str(&rest[..start]);
+            rest = &rest[start + 4..];
+            *in_comment = true;
+        }
+    }
 }
 
 /// Value of a `- **Label**: value` metadata line (trimmed, backtick-stripped),
@@ -380,7 +435,7 @@ fn find_files(root: &Path, pred: impl Fn(&Path) -> bool) -> Vec<PathBuf> {
         entries.sort();
         for p in entries {
             if p.is_dir() {
-                if !SKIP_DIRS.contains(&file_name(&p)) {
+                if !SKIP_DIRS.contains(&file_name(&p)) && !is_nested_checkout(&p) {
                     stack.push(p);
                 }
             } else if pred(&p) {
