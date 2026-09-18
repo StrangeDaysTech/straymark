@@ -77,7 +77,8 @@ pub fn build_governance_state(root: &Path) -> GovernanceState {
 
 /// Source files (paths relative to `root`), filtered by the project's
 /// [`ScanConfig`] (source extensions + excluded dirs, defaults ∪ the
-/// `architecture:` config section, #279). Used for the on-disk inventory (the
+/// `architecture:` config section, #279). Never descends into another
+/// checkout nested in the project ([`crate::walk::is_nested_checkout`], #434). Used for the on-disk inventory (the
 /// `uncharted` signal) and by the CLI generator to discover component dirs.
 pub fn collect_source_files(root: &Path) -> Vec<PathBuf> {
     collect_source_files_with(root, &resolve_scan_config(root))
@@ -94,7 +95,7 @@ pub fn collect_source_files_with(root: &Path, cfg: &ScanConfig) -> Vec<PathBuf> 
             let path = entry.path();
             if path.is_dir() {
                 if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                    if !cfg.is_excluded_dir(name) {
+                    if !cfg.is_excluded_dir(name) && !crate::walk::is_nested_checkout(&path) {
                         walk(&path, root, cfg, out);
                     }
                 }
@@ -307,6 +308,26 @@ mod tests {
             .map(|p| p.to_string_lossy().replace('\\', "/"))
             .collect();
         assert_eq!(files, vec!["src/main.rs"]); // README.md (not source), target/, node_modules/ excluded
+    }
+
+    #[test]
+    fn collect_source_files_skips_nested_checkouts() {
+        // #434: a linked worktree (`.git` file) and a nested clone (`.git`
+        // dir) are other checkouts, not this project's source.
+        let tmp = tempfile::TempDir::new().unwrap();
+        let root = tmp.path();
+        for d in ["src", ".worktrees/feature/src", "vendor/clone/src"] {
+            std::fs::create_dir_all(root.join(d)).unwrap();
+            std::fs::write(root.join(d).join("main.rs"), "fn main() {}\n").unwrap();
+        }
+        std::fs::write(root.join(".worktrees/feature/.git"), "gitdir: /elsewhere\n").unwrap();
+        std::fs::create_dir(root.join("vendor/clone/.git")).unwrap();
+
+        let files: Vec<String> = collect_source_files(root)
+            .iter()
+            .map(|p| p.to_string_lossy().replace('\\', "/"))
+            .collect();
+        assert_eq!(files, vec!["src/main.rs"]);
     }
 
     #[test]

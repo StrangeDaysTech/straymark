@@ -73,7 +73,9 @@ fn walk_recursive(dir: &Path, files: &mut Vec<PathBuf>) {
         let path = entry.path();
         if path.is_dir() {
             if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                if !EXCLUDED_DIRS.contains(&name) {
+                if !EXCLUDED_DIRS.contains(&name)
+                    && !straymark_core::walk::is_nested_checkout(&path)
+                {
                     walk_recursive(&path, files);
                 }
             }
@@ -200,6 +202,20 @@ mod tests {
 
         // Create a valid source file at root
         fs::write(dir.path().join("main.rs"), "fn included() {}").unwrap();
+
+        let files = walk_source_files(dir.path());
+        assert_eq!(files.len(), 1);
+        assert!(files[0].ends_with("main.rs"));
+    }
+
+    #[test]
+    fn test_walk_skips_nested_checkouts() {
+        // #434: functions in a worktree copy are not this project's functions.
+        let dir = TempDir::new().unwrap();
+        fs::write(dir.path().join("main.rs"), "fn included() {}").unwrap();
+        let clone = dir.path().join("third_party/clone");
+        fs::create_dir_all(clone.join(".git")).unwrap();
+        fs::write(clone.join("lib.rs"), "fn duplicated() {}").unwrap();
 
         let files = walk_source_files(dir.path());
         assert_eq!(files.len(), 1);

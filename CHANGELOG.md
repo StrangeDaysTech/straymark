@@ -7,6 +7,21 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.49.2 / core 0.10.1 / Loom 0.7.1 — 2026-09-18
+
+Follow-up to #434, which fixed the Baton half. The shared source scanner in `straymark-core` and two CLI walkers also descended into **another checkout nested in the project**: a linked git worktree such as `.worktrees/<name>/`, a submodule or a nested clone. Each read that copy as the project's own code. On an adopter's repository with one worktree inside, `straymark architecture generate` invented a `.worktrees` component holding a full copy of the repo.
+
+### Fixed (CLI / core / Loom)
+
+- **`straymark-core` 0.10.1**: new `walk::is_nested_checkout`, the one rule every project-wide walker shares. A sub-directory with its own `.git` (file or directory) is another checkout and is never walked. It is structural, so no gitignore parsing and nothing to configure. `architecture::collect_source_files` uses it, which covers:
+  - `straymark architecture generate | sync | validate` and `status --where`;
+  - Loom's architecture view and Intent plane (**Loom 0.7.1**, rebuilt);
+  - Baton's overlay.
+- **CLI 3.49.2**: `tree_grep` (behind `followups verify --claims` and `analyze declared-vs-wired`) and the `analyze` complexity walker use the same rule. A worktree copy no longer counts as "callers" of a symbol, and its functions are no longer analyzed twice.
+- Baton now reuses the `core` rule instead of its own copy. Its behavior is unchanged.
+
+Until upgraded, the workaround is `architecture: { excluded_dirs: [".worktrees"] }` in `.straymark/config.yml`, which covers only the architecture scanner and only that directory name.
+
 ## Baton 0.3.0 — 2026-09-17
 
 First Baton release driven by an adopter's Track C work (Estoa, Discussion #426). Before it, the declared-verb router (#332) classified only units with their own slot: every SpecKit task and every batch was `undeclared`, and the inventory counted work that was not live. Experimental; distributed as `baton-*` GitHub releases (`--latest=false`).

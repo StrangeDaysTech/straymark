@@ -12,6 +12,15 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.1] — 2026-09-18 (nested checkouts)
+
+### Fixed
+- Rebuilt against `straymark-core` 0.10.1, whose source scanner no longer descends into another
+  checkout nested in the project: a linked git worktree (`.worktrees/<name>/`), a submodule or a
+  nested clone (#434). Before, the architecture view's on-disk inventory counted that copy as the
+  project's own code, which inflated `uncharted` files and duplicated whole modules. The Intent
+  plane's overlay uses the same inventory, so it is fixed too. No Loom code change.
+
 ## [0.6.2] — 2026-06-16 (scoped has-debt attribution)
 
 ### Changed

@@ -80,7 +80,9 @@ fn walk(base: &Path, dir: &Path, out: &mut Vec<TextFile>) {
         let path = entry.path();
         if file_type.is_dir() {
             let name = entry.file_name();
-            if EXCLUDED_DIRS.contains(&name.to_string_lossy().as_ref()) {
+            if EXCLUDED_DIRS.contains(&name.to_string_lossy().as_ref())
+                || straymark_core::walk::is_nested_checkout(&path)
+            {
                 continue;
             }
             walk(base, &path, out);
@@ -151,6 +153,20 @@ mod tests {
         std::fs::write(tmp.path().join("target/out.rs"), "fn generated() {}\n").unwrap();
         std::fs::create_dir_all(tmp.path().join(".straymark")).unwrap();
         std::fs::write(tmp.path().join(".straymark/registry.md"), "FU-001\n").unwrap();
+        let tree = read_text_tree(tmp.path());
+        assert_eq!(tree.len(), 1);
+        assert_eq!(tree[0].rel_path, "main.rs");
+    }
+
+    #[test]
+    fn read_text_tree_skips_nested_checkouts() {
+        // #434: a worktree copy would count its symbols as the project's own.
+        let tmp = tempfile::TempDir::new().unwrap();
+        std::fs::write(tmp.path().join("main.rs"), "fn main() {}\n").unwrap();
+        let worktree = tmp.path().join(".worktrees/feature");
+        std::fs::create_dir_all(&worktree).unwrap();
+        std::fs::write(worktree.join(".git"), "gitdir: /elsewhere\n").unwrap();
+        std::fs::write(worktree.join("main.rs"), "fn main() {}\n").unwrap();
         let tree = read_text_tree(tmp.path());
         assert_eq!(tree.len(), 1);
         assert_eq!(tree[0].rel_path, "main.rs");

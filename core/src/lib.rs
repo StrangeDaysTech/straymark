@@ -15,3 +15,4 @@ pub mod drift;
 pub mod entities;
 pub mod graph;
 pub mod utils;
+pub mod walk;
