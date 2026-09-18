@@ -7,6 +7,28 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Baton 0.3.0 — 2026-09-17
+
+First Baton release driven by an adopter's Track C work (Estoa, Discussion #426). Before it, the declared-verb router (#332) classified only units with their own slot: every SpecKit task and every batch was `undeclared`, and the inventory counted work that was not live. Experimental; distributed as `baton-*` GitHub releases (`--latest=false`).
+
+### Added (Baton — experiment)
+
+- **Task inheritance** (#427, #430): a task inherits the declaration of the Charters whose `originating_spec` resolves to its sibling `spec.md`, when they **all declare the same thing**. Ownership is never guessed from titles or file order, and the parent's effort is not inherited.
+- **Batch inheritance** (#428, #437): a batch takes the **nearest declaration**, in this order:
+  1. its own `- **Work verb**:` ledger line (the override for a heterogeneous batch);
+  2. the AILOG's frontmatter;
+  3. the Charters whose ledger that AILOG is (resolved as in `charter batch-complete`), when they agree.
+
+  An override replaces the whole declaration.
+
+### Fixed (Baton — experiment)
+
+- **Nested checkouts are no longer inventoried** (#434, #435). The unit, coherence and code-scan walkers skip any sub-directory with its own `.git` (linked worktrees, submodules, nested clones). Walking into them duplicated units under the same id.
+- **Follow-up examples are not work** (#431, #435): HTML comments, fenced blocks and placeholder ids such as `FU-NNN` are ignored, and metadata lines attach only to the entry directly above them.
+- Candidate parents are read from the raw frontmatter, so a Charter the typed parser rejects still counts as a parent. An unreadable Charter disables Charter-level inheritance, and `classify` / `route` say which Charter did, on stderr.
+
+Measured read-only on the three adopter corpora, all previously 0: Sentinel classifies 86 tasks and 22 batches, LNXDrive 7 batches, and Estoa its inherited tasks and 8 batches. Illustrative tier costs are unchanged; this is still a recommend-only, dry-run router.
+
 ## CLI 3.49.1 — 2026-09-17
 
 Adopter report from Estoa/Sentinel (#433): `straymark followups drift --apply` changed the titles it extracted without saying so, and the title is the key the merge driver matches on (#391).
