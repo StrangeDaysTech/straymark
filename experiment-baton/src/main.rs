@@ -4,7 +4,7 @@
 //! Coherence Bridge can see. The reconciling `coherence` command (finding
 //! classes C1–C4) lands in batch B3.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand, ValueEnum};
 use colored::Colorize;
@@ -17,7 +17,7 @@ use straymark_baton::signals::signals_for;
 use straymark_baton::speckit;
 use straymark_baton::telemetry::{build_report, EconomicTelemetry, UnitRouting};
 use straymark_baton::tiers::Policy;
-use straymark_baton::units::{inventory, Granularity};
+use straymark_baton::units::{inventory, task_inheritance_blockers, Granularity};
 
 #[derive(Parser)]
 #[command(
@@ -174,9 +174,26 @@ fn parse_granularity(s: &str) -> anyhow::Result<Option<Granularity>> {
     })
 }
 
+/// Say why tasks stay undeclared when an unreadable Charter disables task
+/// inheritance (#427) — otherwise the only hint is "declare the verb".
+fn note_inheritance_blockers(root: &Path, only: Option<Granularity>) {
+    if only.is_some_and(|g| g != Granularity::Task) {
+        return;
+    }
+    let blockers = task_inheritance_blockers(root);
+    if !blockers.is_empty() {
+        eprintln!(
+            "{} task inheritance disabled — unreadable Charter frontmatter could hide a competing parent: {}",
+            "note:".yellow(),
+            blockers.join(", ")
+        );
+    }
+}
+
 fn classify_cmd(root: PathBuf, out: OutFmt, granularity: &str) -> anyhow::Result<()> {
     let only = parse_granularity(granularity)?;
     let units = inventory(&root, only);
+    note_inheritance_blockers(&root, only);
 
     #[derive(serde::Serialize)]
     struct Row {
@@ -243,6 +260,7 @@ fn route_cmd(
     }
     let only = parse_granularity(granularity)?;
     let units = inventory(&root, only);
+    note_inheritance_blockers(&root, only);
     let policy = Policy::load(&root, config.as_deref());
     if policy.using_defaults {
         eprintln!(

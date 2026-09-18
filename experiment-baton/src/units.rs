@@ -14,7 +14,9 @@
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
-use straymark_core::charter::{discover_and_parse, display_title, read_frontmatter_yaml};
+use straymark_core::charter::{
+    discover_and_parse, discover_charters, display_title, read_frontmatter_yaml,
+};
 use straymark_core::charter_files::parse_files_to_modify;
 
 use crate::intent::SourceRef;
@@ -284,8 +286,91 @@ fn yaml_str(y: &serde_yaml::Value, key: &str) -> Option<String> {
 
 // ---- Task (from `specs/**/tasks.md`) --------------------------------------
 
+/// `(work_verb, design_provenance)` as declared in a frontmatter.
+type Declaration = (Option<String>, Option<String>);
+
+/// A Charter as a candidate task parent: where its `originating_spec` resolves
+/// (canonical, `None` if absent or unresolvable) and what it declares.
+struct CharterOrigin {
+    spec: Option<PathBuf>,
+    declaration: Declaration,
+}
+
+/// Every Charter's origin, read from the raw frontmatter so a typed-schema
+/// problem (a bad enum, a missing required field) does not hide a parent.
+/// `Err` lists the Charters whose frontmatter cannot be read at all: any of them
+/// could be a competing parent, so the parent inventory is incomplete.
+fn charter_origins(root: &Path) -> Result<Vec<CharterOrigin>, Vec<String>> {
+    let mut origins = Vec::new();
+    let mut unreadable = Vec::new();
+    for path in discover_charters(root) {
+        let Ok(yaml) = read_frontmatter_yaml(&path) else {
+            unreadable.push(rel(root, &path));
+            continue;
+        };
+        let spec = match yaml.get("originating_spec") {
+            None => None,
+            Some(v) => match v.as_str() {
+                Some(origin) => root.join(origin).canonicalize().ok(),
+                None => {
+                    unreadable.push(rel(root, &path));
+                    continue;
+                }
+            },
+        };
+        origins.push(CharterOrigin {
+            spec,
+            declaration: (
+                yaml_str(&yaml, "work_verb"),
+                yaml_str(&yaml, "design_provenance"),
+            ),
+        });
+    }
+    if unreadable.is_empty() {
+        Ok(origins)
+    } else {
+        Err(unreadable)
+    }
+}
+
+/// Charters whose unreadable frontmatter disables task inheritance for the
+/// whole inventory (empty = inheritance active). Lets the CLI say *why* tasks
+/// stay undeclared instead of only nudging to declare a verb.
+pub fn task_inheritance_blockers(root: &Path) -> Vec<String> {
+    charter_origins(root).err().unwrap_or_default()
+}
+
+/// A task has no declaration slot (#332). Inherit only through explicit
+/// Charter origins resolving to its sibling spec, never from titles or nearest
+/// directories. Several Charters can cover one spec and none says which tasks it
+/// owns, so they must all declare the same thing: a spec gaining a Charter that
+/// agrees keeps its tasks classified, one that disagrees (or declares nothing)
+/// makes them ambiguous.
+fn task_declaration(root: &Path, tasks: &Path, origins: &[CharterOrigin]) -> Declaration {
+    let resolve = || {
+        let root = root.canonicalize().ok()?;
+        let spec = tasks.parent()?.join("spec.md").canonicalize().ok()?;
+        if !spec.is_file() || !spec.starts_with(&root) {
+            return None;
+        }
+        let mut parents = origins
+            .iter()
+            .filter(|o| o.spec.as_ref() == Some(&spec))
+            .map(|o| &o.declaration);
+        let first = parents.next()?;
+        if parents.any(|d| d != first) {
+            return None;
+        }
+        Some(first.clone())
+    };
+    resolve().unwrap_or((None, None))
+}
+
 fn read_tasks(root: &Path) -> Vec<RoutableUnit> {
     let mut out = Vec::new();
+    // An unreadable Charter could be a competing parent. Do not silently turn
+    // an incomplete inventory into permission to recommend a cheaper tier.
+    let origins = charter_origins(root).unwrap_or_default();
     for path in find_files(root, |p| file_name(p) == "tasks.md") {
         let Ok(content) = std::fs::read_to_string(&path) else {
             continue;
@@ -297,6 +382,7 @@ fn read_tasks(root: &Path) -> Vec<RoutableUnit> {
             .unwrap_or("spec")
             .to_string();
         let rel_path = rel(root, &path);
+        let (work_verb, design_provenance) = task_declaration(root, &path, &origins);
         for line in content.lines() {
             let t = line.trim();
             let body = t
@@ -324,8 +410,8 @@ fn read_tasks(root: &Path) -> Vec<RoutableUnit> {
                 effort_estimate: None,
                 followup_bucket: None,
                 followup_severity: None,
-                work_verb: None,
-                design_provenance: None,
+                work_verb: work_verb.clone(),
+                design_provenance: design_provenance.clone(),
                 scope_globs: Vec::new(),
             });
         }
@@ -456,7 +542,7 @@ mod tests {
         assert_eq!(fu.work_verb.as_deref(), Some("implement"));
         assert_eq!(fu.design_provenance.as_deref(), Some("upstream"));
 
-        // Batches/tasks have no declaration slot in the prototype → undeclared.
+        // This legacy fixture has no sibling spec.md to resolve as a parent.
         assert!(u.iter().filter(|u| u.granularity == Granularity::Task).all(|u| u.work_verb.is_none()));
     }
 

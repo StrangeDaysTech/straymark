@@ -101,11 +101,24 @@ frontmatter nuevo en unidades que no lo tienen.
   declara el verbo al grano más fino que sí tenga slot (por batch, vía la línea del ledger). No se
   fragmenta artificialmente una unidad homogénea.
 
-**Nota de honestidad (estado del prototipo).** Hoy el prototipo **no** implementa la herencia: cosecha
-el verbo del charter frontmatter y de las líneas de follow-up, y deja batch/task como `undeclared`
-([`src/units.rs`](src/units.rs)). La herencia es una **regla ratificada aquí**, pendiente de
-implementar en la graduación al framework (o en un follow-on de Baton). Documentarla ahora evita que
-la graduación invente un mecanismo de declaración por-task que esta ratificación descarta.
+**Nota de honestidad (estado del prototipo).** La herencia de Task está implementada
+por vínculo explícito: son padres los Charters cuyo `originating_spec` resuelve al
+`spec.md` hermano de `tasks.md`, dentro del proyecto, y la tarea hereda cuando **todos**
+declaran lo mismo (verbo y procedencia). Así, una cadena de Charters sobre la misma spec
+que coincide no desclasifica tareas ya hechas. Hereda verbo y procedencia, no el
+esfuerzo del Charter. No se añade frontmatter a `tasks.md`.
+Si falta el spec o el padre, si los Charters candidatos discrepan (o alguno no declara)
+o si el inventario contiene un Charter con frontmatter ilegible, las tareas permanecen
+`undeclared`; en el último caso el CLI nombra el Charter en stderr. Un Charter que solo
+incumple el esquema tipado sigue contando como padre. No se deduce pertenencia desde
+títulos ni desde el orden de archivos. Un verbo inválido conserva el comportamiento
+conservador del clasificador. El vínculo `context_spec` no establece parentesco.
+
+Batch, overrides por ledger, vínculos de follow-ups y declaraciones directas en
+spec continúan pendientes. El kit Track C y el placement de batches tienen una
+discrepancia documentada en #428; esta corrección de tareas no redefine ese contrato.
+La herencia es una regla ratificada; estos límites describen su implementación
+parcial en [`src/units.rs`](src/units.rs), no una validación humana de las declaraciones.
 
 ## 4. Undeclared = estado honesto
 
