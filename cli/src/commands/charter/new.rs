@@ -403,26 +403,44 @@ fn find_section_paragraph(body: &str, headers: &[&str]) -> Option<String> {
 
 pub(crate) fn strip_inline_markup(s: &str) -> String {
     // Strip bold (**x** or __x__) and italic (*x* or _x_) markers but leave
-    // their content. Backticks are preserved (code spans are useful).
+    // their content. Code spans are copied verbatim — backticks included — so
+    // `delivery_log` or `COMMSHUB_*` survive (#433). An underscore run between
+    // two alphanumerics is part of a word, never an emphasis delimiter
+    // (CommonMark), so `snake_case_word` survives outside code too.
     let mut out = String::with_capacity(s.len());
     let chars: Vec<char> = s.chars().collect();
     let mut i = 0;
     while i < chars.len() {
-        // Handle ** and __ (bold).
-        if i + 1 < chars.len()
-            && ((chars[i] == '*' && chars[i + 1] == '*')
-                || (chars[i] == '_' && chars[i + 1] == '_'))
-        {
-            i += 2;
-            continue;
+        let c = chars[i];
+        let run = chars[i..].iter().take_while(|&&x| x == c).count();
+        match c {
+            '`' => {
+                // A code span closes on a backtick run of the same length.
+                let close = (i + run..chars.len()).find(|&j| {
+                    chars[j] == '`'
+                        && (j == 0 || chars[j - 1] != '`')
+                        && chars[j..].iter().take_while(|&&x| x == '`').count() == run
+                });
+                let end = close.map_or(i + run, |j| j + run);
+                out.extend(&chars[i..end]);
+                i = end;
+            }
+            '_' => {
+                let prev = i.checked_sub(1).map(|j| chars[j]);
+                let next = chars.get(i + run).copied();
+                let intra_word = prev.is_some_and(char::is_alphanumeric)
+                    && next.is_some_and(char::is_alphanumeric);
+                if intra_word {
+                    out.extend(&chars[i..i + run]);
+                }
+                i += run;
+            }
+            '*' => i += run,
+            _ => {
+                out.push(c);
+                i += 1;
+            }
         }
-        // Handle single * or _ (italic).
-        if chars[i] == '*' || chars[i] == '_' {
-            i += 1;
-            continue;
-        }
-        out.push(chars[i]);
-        i += 1;
     }
     out
 }
@@ -696,6 +714,27 @@ ignored.
         assert!(!extracted.contains("__"));
         // Backticks preserved.
         assert!(extracted.contains("`thing`"), "got: {extracted}");
+    }
+
+    #[test]
+    fn strip_inline_markup_keeps_code_spans_and_intra_word_underscores() {
+        // #433: `_` and `*` inside code and inside words are content, not emphasis.
+        assert_eq!(
+            strip_inline_markup("The table `delivery_log` and `COMMSHUB_*` vars."),
+            "The table `delivery_log` and `COMMSHUB_*` vars."
+        );
+        assert_eq!(
+            strip_inline_markup("Plain snake_case_word outside code."),
+            "Plain snake_case_word outside code."
+        );
+        // Real emphasis is still stripped.
+        assert_eq!(
+            strip_inline_markup("**bold** _italic_ __strong__ *em*"),
+            "bold italic strong em"
+        );
+        // Double-backtick span holding a single backtick; unclosed backtick is literal.
+        assert_eq!(strip_inline_markup("``a`_b`` c_"), "``a`_b`` c");
+        assert_eq!(strip_inline_markup("a ` b_c"), "a ` b_c");
     }
 
     #[test]

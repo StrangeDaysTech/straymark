@@ -1009,16 +1009,27 @@ fn unwrap_lead_paragraph(bullet: &str) -> String {
 /// (≥ 15 chars, so a bare `**R6**` tag falls through to first-sentence), return
 /// that content with inline emphasis stripped (backticks kept). This matches the
 /// convention of leading a follow-up bullet with a bolded title (#365).
+///
+/// A single-token span is a *tag*, whatever its length: `**FU-BARRIDOS-006**
+/// — text` names the item, the text describes it. Taking the tag as the title
+/// dropped the description entirely once the id reached 15 chars (#433).
 fn leading_bold_title(para: &str) -> Option<String> {
     let rest = para.strip_prefix("**")?;
     let end = rest.find("**")?;
     let inner = crate::commands::charter::new::strip_inline_markup(rest[..end].trim());
     let inner = inner.trim();
-    if inner.chars().count() >= 15 {
+    if inner.chars().count() >= 15 && !title_is_bare(inner) {
         Some(inner.to_string())
     } else {
         None
     }
+}
+
+/// A title that is a single token — an id or a tag with no description, e.g. a
+/// bullet that is only `**FU-X-001**`. `drift --apply` warns on these instead
+/// of reporting a clean extraction (#433).
+pub fn title_is_bare(title: &str) -> bool {
+    title.split_whitespace().count() <= 1
 }
 
 /// Trim to `max` chars at a word boundary, appending an ellipsis when cut.
@@ -2550,6 +2561,30 @@ Done.
         assert_eq!(entry.origin.as_deref(), Some("CHARTER-06 §Scope"));
         assert_eq!(entry.origin_class.as_deref(), Some("ex-ante-planning"));
         assert!(entry.source_hash.is_none());
+    }
+
+    #[test]
+    fn entry_title_keeps_the_description_after_a_long_local_id() {
+        // #433: a bold local id of 15+ chars used to become the whole title.
+        for (bullet, title) in [
+            ("**FU-ABCDEFG-005** — Description seven.", "FU-ABCDEFG-005 — Description seven."),
+            ("**FU-BARRIDOS-006** — Description eight.", "FU-BARRIDOS-006 — Description eight."),
+            ("**FU-ABCDEFGHI-007** — Description nine.", "FU-ABCDEFGHI-007 — Description nine."),
+            (
+                "**FU-UND-001** — The table `delivery_log` keeps a column.",
+                "FU-UND-001 — The table `delivery_log` keeps a column.",
+            ),
+            (
+                "**FU-UND-002** — Plain snake_case_word outside code.",
+                "FU-UND-002 — Plain snake_case_word outside code.",
+            ),
+            // A substantial multi-word bold lead is still the title (#365).
+            ("**Footgun de pack local en CI**: el pack lee de disco.", "Footgun de pack local en CI"),
+        ] {
+            assert_eq!(entry_title(bullet), title);
+        }
+        assert!(title_is_bare(&entry_title("**FU-BARRIDOS-006**")));
+        assert!(!title_is_bare(&entry_title("**FU-BARRIDOS-006** — text")));
     }
 
     #[test]

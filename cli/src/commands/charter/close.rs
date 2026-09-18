@@ -267,6 +267,7 @@ fn offer_followup_promotions(path: &str, project_root: &Path) -> Result<()> {
             report.suspected
         );
     }
+    drift::warn_bare_titles(&report.applied);
     println!(
         "  Review against the TDE-promotion criteria (AGENT-RULES.md §3): prior-Charter heritage, spans multiple modules/Charters, needs a dedicated Charter, or needs human prioritization."
     );

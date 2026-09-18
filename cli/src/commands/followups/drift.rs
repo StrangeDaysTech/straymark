@@ -152,6 +152,7 @@ pub fn run(path: &str, apply: bool, scan_all: bool, range: Option<&str>) -> Resu
             "suspected-closed".magenta()
         );
     }
+    warn_bare_titles(&report.applied);
     if report.was_v0 {
         utils::info("Registry upgraded to schema v1 (non-destructive — counters are now CLI-owned).");
     }
@@ -164,6 +165,29 @@ pub fn run(path: &str, apply: bool, scan_all: bool, range: Option<&str>) -> Resu
     );
     println!("  Next: reclassify bucket/trigger/destination at triage (`straymark followups list --bucket ready`).");
     Ok(())
+}
+
+/// Say which entries landed with a title that is only an id or a tag — the
+/// source bullet carried no description — instead of reporting a clean
+/// extraction (#433). The title is also the merge driver's matching key (#391).
+pub fn warn_bare_titles(applied: &[AppliedFu]) {
+    let bare: Vec<&AppliedFu> = applied
+        .iter()
+        .filter(|a| followups::title_is_bare(&a.title))
+        .collect();
+    if bare.is_empty() {
+        return;
+    }
+    println!(
+        "  {} {} entr{} extracted with no description — the source bullet has nothing after its id. Describe {} at triage (`straymark followups note FU-NNN \"…\"`):",
+        "!".yellow().bold(),
+        bare.len(),
+        if bare.len() == 1 { "y" } else { "ies" },
+        if bare.len() == 1 { "it" } else { "them" }
+    );
+    for a in bare {
+        println!("    - {} — {}", a.fu_id, a.title);
+    }
 }
 
 /// Resolve the candidate AILOG files for a scan: `--scan-all` sweeps the whole
@@ -240,6 +264,8 @@ pub fn detect_drift_candidates(
 pub struct AppliedFu {
     pub fu_id: String,
     pub description: String,
+    /// The heading title written for the entry (see `followups::entry_title`).
+    pub title: String,
     pub suspected_closed: bool,
 }
 
@@ -285,6 +311,7 @@ pub fn apply_candidates(
             applied.push(AppliedFu {
                 fu_id: format!("FU-{:03}", next_n),
                 description: fu.description.clone(),
+                title: fu.title.clone(),
                 suspected_closed: fu.suspected_closed,
             });
             next_n += 1;

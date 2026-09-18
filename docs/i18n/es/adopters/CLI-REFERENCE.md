@@ -46,7 +46,7 @@ StrayMark usa **tags de versión independientes** para cada componente:
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
 | Framework | `fw-` | `fw-4.45.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.49.0` | El binario `straymark` |
+| CLI | `cli-` | `cli-3.49.1` | El binario `straymark` |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | El servidor de visualización `straymark-loom`, descargado bajo demanda por `straymark loom serve` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
@@ -801,7 +801,7 @@ Detecta los AILOGs cuyo contenido de follow-ups aún no se ha extraído al regis
 | Flag | Default | Descripción |
 |------|---------|-------------|
 | *(default)* | — | Escanea los AILOGs cambiados en `origin/main..HEAD` (fallback `origin/master..HEAD`, luego `HEAD~1..HEAD` con una advertencia). Avisa + **exit 1** ante drift. |
-| `--apply` | off | Extrae las entradas faltantes a `## Bucket: ready` con ids `FU-NNN` auto-numerados, añade los ids de los AILOGs a `fully_extracted_ailogs`, **recalcula los contadores**, y actualiza los registros v0 a v1 in place. Siembra el registro desde el template del framework cuando no existe. Desde cli-3.20.0 los contadores se recalculan **incluso cuando no hay nada que extraer** (#222 Finding 1). Las entradas cuyo **título** ya existe en el registro se omiten (#391) — los ids son posicionales y se renumeran al regenerar, así que el título es la identidad estable; esto evita que una declaración que cambió de sección genere una entrada duplicada `open` que opaque el status del operador. |
+| `--apply` | off | Extrae las entradas faltantes a `## Bucket: ready` con ids `FU-NNN` auto-numerados, añade los ids de los AILOGs a `fully_extracted_ailogs`, **recalcula los contadores**, y actualiza los registros v0 a v1 in place. Siembra el registro desde el template del framework cuando no existe. Desde cli-3.20.0 los contadores se recalculan **incluso cuando no hay nada que extraer** (#222 Finding 1). Las entradas cuyo **título** ya existe en el registro se omiten (#391) — los ids son posicionales y se renumeran al regenerar, así que el título es la identidad estable; esto evita que una declaración que cambió de sección genere una entrada duplicada `open` que opaque el status del operador. Los títulos conservan literalmente los code spans y los guiones bajos dentro de una palabra (`delivery_log`, `COMMSHUB_*`); una negrita inicial de un solo token, como un id local (`**FU-SWEEP-006** — …`), se lee como etiqueta y no como título; y las entradas cuyo título queda reducido a un id se listan como aviso en lugar de un `✓ Extracted` limpio *(cli-3.49.1+, #433)*. |
 | `--scan-all` | off | Barre cada AILOG del proyecto en lugar del rango de git. |
 | `--range <REV..REV>` | — | Rango de git explícito para el escaneo por defecto. |
 
