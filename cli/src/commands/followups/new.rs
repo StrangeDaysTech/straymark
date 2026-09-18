@@ -36,6 +36,8 @@ pub struct NewArgs<'a> {
     pub trigger: Option<&'a str>,
     pub destination: Option<&'a str>,
     pub cost: Option<&'a str>,
+    pub work_verb: Option<&'a str>,
+    pub design_provenance: Option<&'a str>,
     pub premise: Option<&'a str>,
 }
 
@@ -66,6 +68,16 @@ pub fn run(args: NewArgs<'_>) -> Result<()> {
     if status == FuStatus::Promoted {
         bail!("An entry cannot be created as `promoted` — use `followups promote` on an existing entry.");
     }
+    // Declared work classification (Baton #332, #432). Validated before any
+    // write: the registry only ever receives a well-formed declaration.
+    let declaration = match (args.work_verb, args.design_provenance) {
+        (Some(verb), provenance) => Some(followups::Declaration::new(verb, provenance)?),
+        (None, Some(_)) => bail!(
+            "--design-provenance needs --work-verb implement: provenance qualifies an \
+             implementation, it is not a declaration on its own."
+        ),
+        (None, None) => None,
+    };
 
     let resolved = utils::resolve_project_root(args.path)
         .ok_or_else(|| anyhow!("StrayMark not installed. Run 'straymark init' first."))?;
@@ -95,6 +107,7 @@ pub fn run(args: NewArgs<'_>) -> Result<()> {
         args.trigger,
         args.destination,
         args.cost,
+        declaration.as_ref(),
         args.premise,
         &notes,
     );

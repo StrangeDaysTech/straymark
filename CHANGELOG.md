@@ -7,6 +7,26 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## Framework 4.45.0 / CLI 3.49.0 — 2026-09-17
+
+Adopter report from Estoa (#432, Track C of Baton): the follow-ups registry is CLI-owned ("never hand-edit an entry"), and Track C asks each follow-up to declare its `Work verb` / `Design provenance`, but no verb could write those fields. An adopter honouring both rules was left with undeclared entries. This release adds the missing writer.
+
+### Added (CLI)
+
+- **`straymark followups declare FU-NNN --work-verb <v> [--design-provenance <p>]`** (#432): writes an existing entry's declared work classification, the bullets Baton's router reads (#332).
+  - The vocabulary is validated: `design | implement | audit | operate`; provenance `new | upstream`, accepted only with `implement`. Invalid input is refused before anything is written.
+  - The declaration is written **as a unit**: both bullets are replaced together, and omitting `--design-provenance` removes a previous provenance instead of pairing a stale one with the new verb. Re-declaring the same value is a no-op.
+- **`followups new --work-verb … [--design-provenance …]`**: declares an entry at creation. The bullets land after `Cost`, as in the template's entry shape.
+- `followups status FU-NNN` shows the declaration.
+
+### Fixed (CLI)
+
+- **`straymark validate` no longer warns on the registry template's example line** (#431). The shipped `follow-ups-backlog.md` documents the entry shape inside an HTML comment whose `- **Work verb**: design | implement | audit | operate` line tripped `FOLLOWUP-WORK-VERB` / `FOLLOWUP-DESIGN-PROVENANCE` in every adopter's registry. The check now reads only live entries and skips HTML comments and fenced blocks.
+
+### Changed (Framework)
+
+- The `straymark-followups` skill (all agent mirrors), `FOLLOW-UPS-BACKLOG-PATTERN.md` (EN/es/zh-CN) and the registry template's "never hand-edit" note now include `declare` and the declaration flags of `new` as the supported way to declare a follow-up. The skill adds a short "declare the work classification" step that says to leave an entry undeclared rather than guess, and never to put a declaration in `Notes`.
+
 ## Framework 4.44.0 / CLI 3.48.0 — 2026-08-14
 
 Third and closing PR of CHARTER-02 (#419): a remediation AILOG used to be able to close a Critical finding with prose alone — no mechanical check preventing recurrence, and nothing asked for one. This release makes the absence of a guard a first-class, validatable fact instead of an invisible omission.

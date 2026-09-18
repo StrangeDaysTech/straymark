@@ -22,7 +22,7 @@ La validación prospectiva (gate #3 para graduar Baton) necesita tráfico real d
 
 1. **Declara la clase de trabajo** en unidades nuevas, exactamente como documenta la [Referencia de CLI](./CLI-REFERENCE.md#straymark-validate):
    - Frontmatter del Charter: `work_verb: design | implement | audit | operate` y, solo cuando importa para `implement`, `design_provenance: new | upstream`.
-   - Entradas del backlog de follow-ups: los mismos campos opcionales.
+   - Entradas del backlog de follow-ups: los mismos campos opcionales, escritos con `straymark followups declare FU-NNN --work-verb …` o `followups new --work-verb …` *(cli-3.49.0+)* — nunca editando el registro a mano.
 2. **Trabaja como siempre.** Nada más de tu cadencia cambia; los campos son advisory y la ausencia es silenciosa.
 3. **Tras 2–4 semanas**, corre el protocolo de calibración simplificado del [kit del adoptante](https://github.com/StrangeDaysTech/straymark/blob/main/experiment-baton/07-track-c-adopter-kit.md) y reporta (ver [Adopter Feedback](./ADOPTER-FEEDBACK.md)).
 

@@ -50,8 +50,10 @@ cheap moment — not at capture: `straymark followups verify FU-NNN --verified`
 Never hand-edit an entry: `straymark followups note FU-NNN "<text>"` appends a
 dated annotation, `straymark followups set-status FU-NNN <status>` flips the
 status and recomputes the counters in the same step (no `recount` to forget),
-and `straymark followups new` creates one with an atomically-assigned id. A
-hand-edit can malform an entry and break `list`/`status`/`drift`.
+`straymark followups new` creates one with an atomically-assigned id (with
+`--work-verb` / `--design-provenance` to declare it), and `straymark followups
+declare FU-NNN --work-verb <verb>` declares an existing one. A hand-edit can
+malform an entry and break `list`/`status`/`drift`.
 -->
 
 ## Bucket: ready

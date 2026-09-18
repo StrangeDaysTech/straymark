@@ -45,8 +45,8 @@ StrayMark usa **tags de versión independientes** para cada componente:
 
 | Componente | Prefijo de tag | Ejemplo | Qué incluye |
 |------------|---------------|---------|-------------|
-| Framework | `fw-` | `fw-4.44.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
-| CLI | `cli-` | `cli-3.45.0` | El binario `straymark` |
+| Framework | `fw-` | `fw-4.45.0` | Plantillas (12 tipos), docs de gobernanza, directivas |
+| CLI | `cli-` | `cli-3.49.0` | El binario `straymark` |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | El servidor de visualización `straymark-loom`, descargado bajo demanda por `straymark loom serve` |
 
 Framework y CLI se publican de forma independiente. Una actualización del framework no requiere actualización del CLI, y viceversa.
@@ -771,6 +771,7 @@ El parsing es **tolerante**: los registros v0 (pre-fw-4.21.0) se leen sin errore
 - `straymark followups promote` — eleva una entrada a un documento TDE *(cli-3.19.0+)*
 - `straymark followups verify` — re-verifica la premisa de una hipótesis fechada en tiempo de ejecución *(cli-3.37.0+)*
 - `straymark followups merge-driver` — merge driver de git que resuelve conflictos del registro estructuralmente (#391) *(cli-3.41.0+)*
+- `straymark followups declare` — declara la clasificación de trabajo de una entrada (`Work verb` / `Design provenance`, Baton #332) *(cli-3.49.0+)*
 
 #### `straymark followups list [--bucket <name>] [--status <s>] [--severity <s>] [--label <tag>] [path]`
 
@@ -903,15 +904,29 @@ echo '.straymark/follow-ups-backlog.md merge=straymark-followups' >> .gitattribu
 git config merge.straymark-followups.driver 'straymark followups merge-driver %O %A %B'
 ```
 
-#### `straymark followups new --title <título> --origin <origen> [--bucket <name>] [--status <s>] [--trigger <t>] [--destination <d>] [--cost <c>] [--premise <p>] [--path <dir>]` *(cli-3.39.0+)*
+#### `straymark followups new --title <título> --origin <origen> [--bucket <name>] [--status <s>] [--trigger <t>] [--destination <d>] [--cost <c>] [--work-verb <v> [--design-provenance <p>]] [--premise <p>] [--path <dir>]` *(cli-3.39.0+; flags de declaración cli-3.49.0+)*
 
 Crea una entrada cuyo origen es una **declaración de Charter** (ex-ante), antes de que exista ejecución alguna (#360). Las dos rutas de poblado anteriores asumen origen ex-post: `drift --apply` extrae de AILOGs, y un diferimiento decidido *en tiempo de declaración* — "el job de CI de Redis queda fuera de alcance; registra el hueco de cobertura para que quede diferido, no silenciado" — precede a cualquier AILOG por diseño.
 
 El riesgo que cierra es de corrección, no de ergonomía. A falta de un verbo de creación, el adoptante que lo reportó forward-referenció `FU-011` en el cuerpo del Charter sin nada que lo reservara; y como los ids se acuñan `max(existente) + 1` en tiempo de extracción, el siguiente `drift --apply` no relacionado le daría `FU-011` a otra entrada, apuntando en silencio las citas del Charter al follow-up equivocado. `new` asigna el id de forma atómica y lo imprime, así que cuando el Charter lo cita la entrada ya existe.
 
-La entrada se escribe con `Origin-class: ex-ante-planning` y **sin `Source-hash`**: no hay AILOG que hashear, e inventar uno haría que un `drift --apply` posterior creyera haber extraído algo que nunca vio.
+La entrada se escribe con `Origin-class: ex-ante-planning` y **sin `Source-hash`**: no hay AILOG que hashear, e inventar uno haría que un `drift --apply` posterior creyera haber extraído algo que nunca vio. Con `--work-verb` (y `--design-provenance`, solo junto a `implement`) la entrada nace declarada; el vocabulario se valida igual que en `followups declare`.
 
-> **Los tres se niegan a escribir un registro con avisos de parseo.** Una edición quirúrgica contra una estructura mal leída puede corromper entradas vecinas, así que primero hay que arreglar la entrada malformada. `recount` sigue siendo la vía de escape para una sesión de triage manual masivo — y el chequeo idempotente de que estos verbos hicieron bien la aritmética.
+#### `straymark followups declare <FU-NNN> --work-verb <v> [--design-provenance <p>] [--path <dir>]` *(cli-3.49.0+)*
+
+Escribe la **clasificación de trabajo declarada** de una entrada existente: las líneas `Work verb` / `Design provenance` que lee el router de Baton (#332). Antes ningún verbo podía escribirlas. `new` no tenía flags para ellas, `note` solo añade a `Notes` (que Baton no lee) y `drift --apply` extrae sin ellas. Un adoptante que respetaba "nunca edites una entrada a mano" no tenía, por tanto, una vía soportada para declarar un follow-up (#432).
+
+- **Vocabulario validado.** `--work-verb` acepta `design` · `implement` · `audit` · `operate`. `--design-provenance` acepta `new` · `upstream` y solo se admite con `implement`: indica si el diseño que se implementa es nuevo o ya se decidió aguas arriba, y `upstream` se rutea como trabajo mecánico. Una entrada inválida se rechaza y no se escribe nada.
+- **Se escribe como unidad.** Ambas líneas se reemplazan juntas, donde estaban o, si no, justo después de `Cost`, como en la plantilla. Omitir `--design-provenance` **elimina** una procedencia anterior, para que nunca quede una obsoleta emparejada con un verbo nuevo. Volver a declarar el mismo valor no hace nada.
+
+```bash
+$ straymark followups declare FU-012 --work-verb implement --design-provenance new
+✓ FU-012: undeclared → implement / new
+```
+
+`straymark followups status FU-NNN` muestra la declaración. `straymark validate` sigue avisando (de forma consultiva) ante un valor fuera del vocabulario. Desde cli-3.49.0 ignora el ejemplo de formato comentado del registro (#431).
+
+> **Los cuatro se niegan a escribir un registro con avisos de parseo.** Una edición quirúrgica contra una estructura mal leída puede corromper entradas vecinas, así que primero hay que arreglar la entrada malformada. `recount` sigue siendo la vía de escape para una sesión de triage manual masivo — y el chequeo idempotente de que estos verbos hicieron bien la aritmética.
 
 ---
 

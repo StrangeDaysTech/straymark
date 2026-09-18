@@ -1378,3 +1378,44 @@ fn test_validate_ref003_body_phantom_warns() {
         .stdout(predicate::str::contains("REF-003"))
         .stdout(predicate::str::contains("AILOG-1999-01-01-099"));
 }
+
+// --- FOLLOWUP-WORK-VERB / FOLLOWUP-DESIGN-PROVENANCE (#431: live entries only) ---
+
+#[test]
+fn test_followups_work_verb_ignores_the_shipped_template_example() {
+    // The shipped registry documents the entry shape in an HTML comment whose
+    // example line lists the whole vocabulary; it is not a declaration.
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    let template = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../dist/.straymark/templates/follow-ups-backlog.md");
+    std::fs::copy(template, dir.path().join(".straymark/follow-ups-backlog.md")).unwrap();
+
+    let mut cmd = cargo_bin_cmd!("straymark");
+    cmd.arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("FOLLOWUP-WORK-VERB").not())
+        .stdout(predicate::str::contains("FOLLOWUP-DESIGN-PROVENANCE").not());
+}
+
+#[test]
+fn test_followups_work_verb_still_warns_on_live_entries() {
+    let dir = TempDir::new().unwrap();
+    setup_straymark(dir.path());
+    std::fs::write(
+        dir.path().join(".straymark/follow-ups-backlog.md"),
+        "<!--\n- **Work verb**: design | implement | audit | operate\n-->\n\n## Bucket: ready\n\n### FU-001 — Live entry\n- **Status**: open\n- **Work verb**: refactor\n",
+    )
+    .unwrap();
+
+    let mut cmd = cargo_bin_cmd!("straymark");
+    cmd.arg("validate")
+        .arg(dir.path().to_str().unwrap())
+        .assert()
+        .success() // advisory
+        .stdout(predicate::str::contains("FOLLOWUP-WORK-VERB"))
+        .stdout(predicate::str::contains("refactor"))
+        .stdout(predicate::str::contains("design | implement").not());
+}

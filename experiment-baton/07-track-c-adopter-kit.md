@@ -61,7 +61,7 @@ descomentar y llenar:
 |---|---|
 | Charter | Frontmatter: `work_verb:` / `design_provenance:` |
 | Batch (AILOG ledger) | Línea `- **Work verb**:` en la entrada del batch; placement ratificado, aún pendiente en el inventario (#428) |
-| Follow-up | Líneas `- **Work verb**:` / `- **Design provenance**:` |
+| Follow-up | Líneas `- **Work verb**:` / `- **Design provenance**:`, escritas con `straymark followups declare FU-NNN --work-verb …` o con `followups new --work-verb …` (cli-3.49.0+; nunca a mano ni en `Notes`) |
 | Task (SpecKit) | Sin slot propio — hereda de los Charters cuyo `originating_spec` resuelve al `spec.md` hermano, si todos declaran lo mismo; vínculo ausente o discrepante → `undeclared` |
 
 ### Vocabulario y reglas de decisión (resumen de la ratificación)

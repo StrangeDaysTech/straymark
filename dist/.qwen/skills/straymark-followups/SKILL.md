@@ -1,12 +1,12 @@
 ---
 name: straymark-followups
-description: Maintain the follow-ups backlog registry — the canonical answer to "what's pending?". Session-start glance, pre-commit drift --apply, post-Charter-close triage (note / set-status), ex-ante creation at Charter declaration (new), and operator-gated promote. Thin wrapper over the straymark followups CLI; never edits CLI-owned counters by hand.
+description: Maintain the follow-ups backlog registry — the canonical answer to "what's pending?". Session-start glance, pre-commit drift --apply, post-Charter-close triage (note / set-status), ex-ante creation at Charter declaration (new), work-classification declaration (declare), and operator-gated promote. Thin wrapper over the straymark followups CLI; never edits CLI-owned counters by hand.
 allowed-tools: Read, Glob, Bash(git diff *, git log *, git status *, ls *, straymark followups *)
 ---
 
 # StrayMark Follow-ups Registry Skill
 
-Maintain the central follow-ups registry (`.straymark/follow-ups-backlog.md`) — the first-class artifact that aggregates `§Follow-ups` and `R<N> (new, not in Charter)` entries across AILOGs *(first-class since fw-4.21.0 / cli-3.19.0)*. The agent is the registry's **primary maintainer**; this skill drives the three directives of `AGENT-RULES.md §13` by delegating every mutation to the CLI (`straymark followups list/status/drift/note/set-status/new/promote`). The skill contains no extraction or counting logic of its own — parsing, schema validation, counter recomputation, and FU → TDE elevation all live in the CLI.
+Maintain the central follow-ups registry (`.straymark/follow-ups-backlog.md`) — the first-class artifact that aggregates `§Follow-ups` and `R<N> (new, not in Charter)` entries across AILOGs *(first-class since fw-4.21.0 / cli-3.19.0)*. The agent is the registry's **primary maintainer**; this skill drives the three directives of `AGENT-RULES.md §13` by delegating every mutation to the CLI (`straymark followups list/status/drift/note/set-status/new/declare/promote`). The skill contains no extraction or counting logic of its own — parsing, schema validation, counter recomputation, and FU → TDE elevation all live in the CLI.
 
 > See `.straymark/00-governance/FOLLOW-UPS-BACKLOG-PATTERN.md` and `STRAYMARK.md §16` for the pattern; `AGENT-RULES.md §13` for the shipped directives this skill wraps.
 
@@ -78,6 +78,19 @@ straymark followups new --title "<what was deferred>" \
 
 The command prints the assigned `FU-NNN`. **Cite that id in the Charter body** — never a guessed id: the entry now exists, so a later `drift --apply` cannot hand the same number to a different entry.
 
+### 3c. Declare the work classification (cli-3.49.0+)
+
+When an entry's kind of work is clear, declare it — the `Work verb` / `Design provenance` bullets are the signal Baton routes on (#332), and an undeclared entry routes conservatively to the frontier tier:
+
+```bash
+straymark followups new … --work-verb implement --design-provenance new   # at creation
+straymark followups declare FU-NNN --work-verb audit                      # on an existing entry
+```
+
+- Vocabulary: `design | implement | audit | operate`. `--design-provenance new|upstream` only applies to `implement` (`upstream` = instrumenting a design already decided elsewhere, which routes as mechanical work). Defining a bounded foundational contract is `implement`, not `design`.
+- `declare` writes the declaration **as a unit**: omitting `--design-provenance` removes a previous one.
+- Leave an entry undeclared rather than guess. Never put a declaration in `Notes` — Baton does not read it there.
+
 ### 4. Report result
 
 Surface the CLI output verbatim (counters, alerts, created TDE paths). Example after a pre-commit sync:
@@ -93,7 +106,7 @@ StrayMark: registry synced — commit it together with the AILOG.
 ## What this skill does NOT do
 
 - **It does not edit the frontmatter counters** (`total_open`, `total_promoted`, `total_suspected_closed`, …). They are CLI-owned: `straymark followups recount` (or any write command) recomputes them. Hand-editing them is a §13 violation.
-- **It does not hand-edit entries.** `note` / `set-status` / `new` (cli-3.39.0+) are the write path; hand-editing a CLI-parsed registry is what those verbs exist to replace.
+- **It does not hand-edit entries.** `note` / `set-status` / `new` (cli-3.39.0+) and `declare` (cli-3.49.0+) are the write path; hand-editing a CLI-parsed registry is what those verbs exist to replace.
 - **It does not promote without the operator.** `straymark followups promote` is proposed, never auto-run — prioritization and assignment stay human (`AGENT-RULES.md §3`).
 - **It does not delete `suspected-closed` entries.** The operator confirms (→ `closed`) or reopens them at the next triage.
 - **It does not re-scan AILOGs to answer "what's pending?"** when the registry exists — the registry is canonical; `drift` tells you when it is not trustworthy.

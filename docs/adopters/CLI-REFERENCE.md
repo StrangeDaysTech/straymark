@@ -45,8 +45,8 @@ StrayMark uses **independent version tags** for each component:
 
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
-| Framework | `fw-` | `fw-4.44.0` | Templates (12 types), governance docs, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.45.0` | The `straymark` binary |
+| Framework | `fw-` | `fw-4.45.0` | Templates (12 types), governance docs, directives, Charter template + schema |
+| CLI | `cli-` | `cli-3.49.0` | The `straymark` binary |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | The `straymark-loom` visualization server, downloaded on demand by `straymark loom serve` |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
@@ -968,6 +968,7 @@ Parsing is **lenient**: v0 registries (pre-fw-4.21.0) are read without errors; t
 - `straymark followups note` — append a dated annotation to an entry's `Notes` *(cli-3.39.0+)*
 - `straymark followups set-status` — change an entry's status and recompute the counters in one step *(cli-3.39.0+)*
 - `straymark followups new` — create an entry declared **ex-ante**, at Charter-declaration time *(cli-3.39.0+)*
+- `straymark followups declare` — declare an entry's work classification (`Work verb` / `Design provenance`, Baton #332) *(cli-3.49.0+)*
 - `straymark followups merge-driver` — git merge driver that resolves registry conflicts structurally (#391) *(cli-3.41.0+)*
 
 #### `straymark followups list [--bucket <name>] [--status <s>] [--severity <s>] [--label <tag>] [path]`
@@ -1113,7 +1114,7 @@ echo '.straymark/follow-ups-backlog.md merge=straymark-followups' >> .gitattribu
 git config merge.straymark-followups.driver 'straymark followups merge-driver %O %A %B'
 ```
 
-#### `straymark followups new --title <title> --origin <origin> [--bucket <name>] [--status <s>] [--trigger <t>] [--destination <d>] [--cost <c>] [--premise <p>] [--path <dir>]` *(cli-3.39.0+)*
+#### `straymark followups new --title <title> --origin <origin> [--bucket <name>] [--status <s>] [--trigger <t>] [--destination <d>] [--cost <c>] [--work-verb <v> [--design-provenance <p>]] [--premise <p>] [--path <dir>]` *(cli-3.39.0+; declaration flags cli-3.49.0+)*
 
 Create an entry whose origin is a **Charter declaration** (ex-ante), before any execution exists (#360). Both older population paths assume an ex-post origin: `drift --apply` extracts from AILOGs, and a deferral decided *at declaration time* — "the Redis CI job is out of scope; register the coverage gap so it is deferred, not silenced" — precedes any AILOG by design.
 
@@ -1127,6 +1128,8 @@ The hazard this closes is correctness, not ergonomics. Lacking a creation verb, 
 | `--status <s>` | `open` | Initial status. |
 | `--trigger` / `--destination` / `--cost` | `TBD` | The usual entry fields; unset ones are written as `TBD`, matching the template's convention. |
 | `--premise <p>` | — | The load-bearing assumption the entry rests on, so acting on it later is a seconds-long re-check. |
+| `--work-verb <v>` *(cli-3.49.0+)* | — | Declared work classification: `design` · `implement` · `audit` · `operate`. Omit to leave the entry undeclared. See `followups declare` below. |
+| `--design-provenance <p>` *(cli-3.49.0+)* | — | `new` · `upstream`, only with `--work-verb implement`. |
 
 The entry is written with `Origin-class: ex-ante-planning` and **no `Source-hash`**: there is no AILOG to hash, and inventing one would make a later `drift --apply` believe it had already extracted something it never saw.
 
@@ -1138,7 +1141,22 @@ $ straymark followups new --title "Redis CI job deferred" --origin "CHARTER-06 �
   Next: the id is assigned and written — cite FU-012 in the Charter body now, not a reserved guess.
 ```
 
-> **All three refuse to write a registry with parse warnings.** A surgical edit against a structure the parser mis-read can corrupt neighbouring entries, so a malformed entry must be fixed first. `recount` remains the escape hatch for a bulk manual-triage session — and the idempotent check that these verbs got the arithmetic right.
+#### `straymark followups declare <FU-NNN> --work-verb <v> [--design-provenance <p>] [--path <dir>]` *(cli-3.49.0+)*
+
+Write an existing entry's **declared work classification**: the `Work verb` / `Design provenance` bullets that Baton's cost-aware router reads (#332). Before this verb, nothing could write them. `new` had no flags for them, `note` only appends to `Notes` (which Baton does not read), and `drift --apply` extracts entries without them. An adopter following "never hand-edit an entry" therefore had no supported way to declare a follow-up (#432).
+
+- **Validated vocabulary.** `--work-verb` takes `design` · `implement` · `audit` · `operate`. `--design-provenance` takes `new` · `upstream` and is accepted only with `implement`: it says whether the design being implemented is new or already decided upstream, and `upstream` routes as mechanical work. Invalid input is refused and nothing is written.
+- **Written as a unit.** Both bullets are replaced together, where the old ones were or else right after `Cost`, as in the template. Omitting `--design-provenance` **removes** a previous provenance, so a stale one never pairs with a new verb. Re-declaring the same value is a no-op.
+- Counters are unaffected, but the write still goes through the same recount path as every other verb.
+
+```bash
+$ straymark followups declare FU-012 --work-verb implement --design-provenance new
+✓ FU-012: undeclared → implement / new
+```
+
+`straymark followups status FU-NNN` shows the declaration. `straymark validate` keeps warning (advisory) on a declared value outside the vocabulary. Since cli-3.49.0 it ignores the registry's commented format example (#431).
+
+> **All four refuse to write a registry with parse warnings.** A surgical edit against a structure the parser mis-read can corrupt neighbouring entries, so a malformed entry must be fixed first. `recount` remains the escape hatch for a bulk manual-triage session — and the idempotent check that these verbs got the arithmetic right.
 
 ---
 
