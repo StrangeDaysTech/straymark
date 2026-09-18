@@ -162,10 +162,119 @@ fn read_charters(root: &Path) -> Vec<RoutableUnit> {
         .collect()
 }
 
+// ---- Parent declarations (#332 inheritance) --------------------------------
+
+/// `(work_verb, design_provenance)` as declared in a frontmatter or ledger line.
+type Declaration = (Option<String>, Option<String>);
+
+/// A Charter as a candidate parent: where its `originating_spec` resolves
+/// (canonical, `None` if absent or unresolvable), which AILOG holds its batch
+/// ledger, and what it declares.
+struct CharterOrigin {
+    spec: Option<PathBuf>,
+    /// Key of the AILOG `straymark charter batch-complete` writes this Charter's
+    /// ledger into: `originating_ailogs[0]`, else `execution_ailogs[0]`.
+    ledger_ailog: Option<String>,
+    declaration: Declaration,
+}
+
+/// Every Charter's origin, read from the raw frontmatter so a typed-schema
+/// problem (a bad enum, a missing required field) does not hide a parent.
+/// `Err` lists the Charters whose parent links cannot be read at all: any of
+/// them could be a competing parent, so the parent inventory is incomplete.
+fn charter_origins(root: &Path) -> Result<Vec<CharterOrigin>, Vec<String>> {
+    let mut origins = Vec::new();
+    let mut unreadable = Vec::new();
+    for path in discover_charters(root) {
+        let Ok(yaml) = read_frontmatter_yaml(&path) else {
+            unreadable.push(rel(root, &path));
+            continue;
+        };
+        let spec = match yaml.get("originating_spec") {
+            None => None,
+            Some(v) => match v.as_str() {
+                Some(origin) => root.join(origin).canonicalize().ok(),
+                None => {
+                    unreadable.push(rel(root, &path));
+                    continue;
+                }
+            },
+        };
+        let Ok(ledger_ailog) = ledger_ailog(&yaml) else {
+            unreadable.push(rel(root, &path));
+            continue;
+        };
+        origins.push(CharterOrigin {
+            spec,
+            ledger_ailog,
+            declaration: (
+                yaml_str(&yaml, "work_verb"),
+                yaml_str(&yaml, "design_provenance"),
+            ),
+        });
+    }
+    if unreadable.is_empty() {
+        Ok(origins)
+    } else {
+        Err(unreadable)
+    }
+}
+
+/// The Charter's ledger AILOG, resolved exactly as `charter batch-complete`
+/// does. `Err` = a link field present but not a list of ids.
+fn ledger_ailog(yaml: &serde_yaml::Value) -> Result<Option<String>, ()> {
+    for key in ["originating_ailogs", "execution_ailogs"] {
+        let Some(value) = yaml.get(key) else {
+            continue;
+        };
+        let ids = value
+            .as_sequence()
+            .ok_or(())?
+            .iter()
+            .map(|id| id.as_str().ok_or(()))
+            .collect::<Result<Vec<_>, _>>()?;
+        if let Some(first) = ids.first() {
+            return Ok(ailog_key(first.trim()));
+        }
+    }
+    Ok(None)
+}
+
+/// `AILOG-YYYY-MM-DD-NNN[x]`: the first five `-` segments, which is how
+/// `straymark` resolves an AILOG id to its file. A slugged id and a filename
+/// stem therefore compare equal, while `…-028` and `…-028b` do not.
+fn ailog_key(s: &str) -> Option<String> {
+    s.starts_with("AILOG-")
+        .then(|| s.split('-').take(5).collect::<Vec<_>>().join("-"))
+}
+
+/// Charters whose unreadable frontmatter disables inheritance from Charters
+/// for the whole inventory (empty = inheritance active). Lets the CLI say *why*
+/// tasks and batches stay undeclared instead of only nudging to declare a verb.
+pub fn inheritance_blockers(root: &Path) -> Vec<String> {
+    charter_origins(root).err().unwrap_or_default()
+}
+
+/// The declaration every candidate parent agrees on. No artifact says which
+/// units each parent owns, so several parents must all declare the same thing:
+/// one that differs, or declares nothing, makes the unit ambiguous.
+fn agreed<'a>(mut parents: impl Iterator<Item = &'a Declaration>) -> Option<Declaration> {
+    let first = parents.next()?;
+    if parents.any(|d| d != first) {
+        return None;
+    }
+    Some(first.clone())
+}
+
 // ---- Batch (from AILOG `## Batch Ledger`) ---------------------------------
 
+/// The ratified placement (#332 §3, #428): a batch declares on its own ledger
+/// line only when it differs from its parent — the AILOG's frontmatter, else the
+/// Charter(s) whose ledger this AILOG is.
 fn read_batches(root: &Path) -> Vec<RoutableUnit> {
     let mut out = Vec::new();
+    // An unreadable Charter could be a competing parent (see `read_tasks`).
+    let origins = charter_origins(root).unwrap_or_default();
     for path in find_files(root, |p| {
         ext_is(p, "md") && file_name(p).starts_with("AILOG-")
     }) {
@@ -174,34 +283,112 @@ fn read_batches(root: &Path) -> Vec<RoutableUnit> {
         };
         let stem = file_stem(&path);
         let rel_path = rel(root, &path);
+        let parent = batch_parent(&path, &stem, &origins);
+        let first = out.len();
+        // Per-batch `Work verb` / `Design provenance` lines, in batch order.
+        let mut own: Vec<Declaration> = Vec::new();
+        let mut in_comment = false;
+        let mut in_fence = false;
+        let mut in_batch = false;
         for line in content.lines() {
-            // `### Batch 1 — B1: crate scaffold + SpecKit adapter (T1.1–T1.5)`
-            let Some(rest) = line.trim().strip_prefix("### Batch ") else {
-                continue;
-            };
-            let (num, title) = split_on_dash(rest);
-            let num = num.split_whitespace().next().unwrap_or("").trim();
-            if num.is_empty() {
+            let visible = outside_html_comments(line, &mut in_comment);
+            let t = visible.trim();
+            if t.starts_with("```") || t.starts_with("~~~") {
+                in_fence = !in_fence;
                 continue;
             }
-            out.push(RoutableUnit {
-                id: format!("{stem}#batch-{num}"),
-                granularity: Granularity::Batch,
-                source: SourceRef {
-                    file: rel_path.clone(),
-                    symbol: Some(format!("Batch {num}")),
-                },
-                title: if title.is_empty() { rest.trim().to_string() } else { title },
-                effort_estimate: None,
-                followup_bucket: None,
-                followup_severity: None,
-                work_verb: None,
-                design_provenance: None,
-                scope_globs: Vec::new(),
-            });
+            if in_fence {
+                continue;
+            }
+            if is_heading(t) {
+                in_batch = false;
+                // `### Batch 1 — B1: crate scaffold + SpecKit adapter (T1.1–T1.5)`
+                let Some(rest) = t.strip_prefix("### Batch ") else {
+                    continue;
+                };
+                let (num, title) = split_on_dash(rest);
+                let num = num.split_whitespace().next().unwrap_or("").trim();
+                if num.is_empty() {
+                    continue;
+                }
+                out.push(RoutableUnit {
+                    id: format!("{stem}#batch-{num}"),
+                    granularity: Granularity::Batch,
+                    source: SourceRef {
+                        file: rel_path.clone(),
+                        symbol: Some(format!("Batch {num}")),
+                    },
+                    title: if title.is_empty() { rest.trim().to_string() } else { title },
+                    effort_estimate: None,
+                    followup_bucket: None,
+                    followup_severity: None,
+                    work_verb: None,
+                    design_provenance: None,
+                    scope_globs: Vec::new(),
+                });
+                own.push((None, None));
+                in_batch = true;
+                continue;
+            }
+            if !in_batch {
+                continue;
+            }
+            let Some(declared) = own.last_mut() else {
+                continue;
+            };
+            if let Some(v) = field_value(t, "**Work verb**") {
+                declared.0.get_or_insert(v);
+            } else if let Some(v) = field_value(t, "**Design provenance**") {
+                declared.1.get_or_insert(v);
+            }
+        }
+        // A batch's own `Work verb` line overrides its parent as a whole
+        // declaration; a provenance line alone qualifies nothing.
+        for (unit, declared) in out[first..].iter_mut().zip(own) {
+            let (verb, provenance) = if declared.0.is_some() {
+                declared
+            } else {
+                parent.clone()
+            };
+            unit.work_verb = verb;
+            unit.design_provenance = provenance;
         }
     }
     out
+}
+
+/// What a ledger's batches inherit: the AILOG's own frontmatter declaration,
+/// else the Charter(s) whose ledger this AILOG is, when they all agree.
+fn batch_parent(path: &Path, stem: &str, origins: &[CharterOrigin]) -> Declaration {
+    match read_frontmatter_yaml(path) {
+        Ok(yaml) => {
+            let own = (
+                yaml_str(&yaml, "work_verb"),
+                yaml_str(&yaml, "design_provenance"),
+            );
+            if own.0.is_some() {
+                return own;
+            }
+        }
+        // A frontmatter we cannot read may declare something we cannot see;
+        // inheriting past it could route cheaper than the AILOG says.
+        Err(_) => return (None, None),
+    }
+    let Some(key) = ailog_key(stem) else {
+        return (None, None);
+    };
+    agreed(
+        origins
+            .iter()
+            .filter(|o| o.ledger_ailog.as_deref() == Some(key.as_str()))
+            .map(|o| &o.declaration),
+    )
+    .unwrap_or((None, None))
+}
+
+/// A markdown ATX heading (`#`…`######` followed by a space).
+fn is_heading(line: &str) -> bool {
+    line.starts_with('#') && line.trim_start_matches('#').starts_with(' ')
 }
 
 // ---- Follow-up (the registry) ---------------------------------------------
@@ -341,60 +528,6 @@ fn yaml_str(y: &serde_yaml::Value, key: &str) -> Option<String> {
 
 // ---- Task (from `specs/**/tasks.md`) --------------------------------------
 
-/// `(work_verb, design_provenance)` as declared in a frontmatter.
-type Declaration = (Option<String>, Option<String>);
-
-/// A Charter as a candidate task parent: where its `originating_spec` resolves
-/// (canonical, `None` if absent or unresolvable) and what it declares.
-struct CharterOrigin {
-    spec: Option<PathBuf>,
-    declaration: Declaration,
-}
-
-/// Every Charter's origin, read from the raw frontmatter so a typed-schema
-/// problem (a bad enum, a missing required field) does not hide a parent.
-/// `Err` lists the Charters whose frontmatter cannot be read at all: any of them
-/// could be a competing parent, so the parent inventory is incomplete.
-fn charter_origins(root: &Path) -> Result<Vec<CharterOrigin>, Vec<String>> {
-    let mut origins = Vec::new();
-    let mut unreadable = Vec::new();
-    for path in discover_charters(root) {
-        let Ok(yaml) = read_frontmatter_yaml(&path) else {
-            unreadable.push(rel(root, &path));
-            continue;
-        };
-        let spec = match yaml.get("originating_spec") {
-            None => None,
-            Some(v) => match v.as_str() {
-                Some(origin) => root.join(origin).canonicalize().ok(),
-                None => {
-                    unreadable.push(rel(root, &path));
-                    continue;
-                }
-            },
-        };
-        origins.push(CharterOrigin {
-            spec,
-            declaration: (
-                yaml_str(&yaml, "work_verb"),
-                yaml_str(&yaml, "design_provenance"),
-            ),
-        });
-    }
-    if unreadable.is_empty() {
-        Ok(origins)
-    } else {
-        Err(unreadable)
-    }
-}
-
-/// Charters whose unreadable frontmatter disables task inheritance for the
-/// whole inventory (empty = inheritance active). Lets the CLI say *why* tasks
-/// stay undeclared instead of only nudging to declare a verb.
-pub fn task_inheritance_blockers(root: &Path) -> Vec<String> {
-    charter_origins(root).err().unwrap_or_default()
-}
-
 /// A task has no declaration slot (#332). Inherit only through explicit
 /// Charter origins resolving to its sibling spec, never from titles or nearest
 /// directories. Several Charters can cover one spec and none says which tasks it
@@ -408,15 +541,12 @@ fn task_declaration(root: &Path, tasks: &Path, origins: &[CharterOrigin]) -> Dec
         if !spec.is_file() || !spec.starts_with(&root) {
             return None;
         }
-        let mut parents = origins
-            .iter()
-            .filter(|o| o.spec.as_ref() == Some(&spec))
-            .map(|o| &o.declaration);
-        let first = parents.next()?;
-        if parents.any(|d| d != first) {
-            return None;
-        }
-        Some(first.clone())
+        agreed(
+            origins
+                .iter()
+                .filter(|o| o.spec.as_ref() == Some(&spec))
+                .map(|o| &o.declaration),
+        )
     };
     resolve().unwrap_or((None, None))
 }
