@@ -1455,3 +1455,95 @@ fn declare_validates_and_refuses_unknown_entries() {
         V1_REGISTRY
     );
 }
+
+// ──────────────── drift title fidelity (#433) ────────────────
+
+#[test]
+fn drift_apply_keeps_descriptions_after_long_ids_and_underscores() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+    write_ailog(
+        &straymark,
+        "AILOG-2099-01-01-001-titles.md",
+        "# AILOG\n\n## Follow-ups\n\n\
+         - **FU-ABCDEFG-005** — Description seven.\n\
+         - **FU-BARRIDOS-006** — Description eight.\n\
+         - **FU-ABCDEFGHI-007** — Description nine.\n\
+         - **FU-UND-001** — The table `delivery_log` keeps a column.\n\
+         - **FU-UND-002** — Plain snake_case_word and `COMMSHUB_*` vars.\n",
+    );
+
+    cmd()
+        .args(["followups", "drift", "--scan-all", "--apply", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Extracted 5"))
+        .stdout(predicate::str::contains("no description").not());
+
+    let updated = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    for heading in [
+        "### FU-012 — FU-ABCDEFG-005 — Description seven.\n",
+        "### FU-013 — FU-BARRIDOS-006 — Description eight.\n",
+        "### FU-014 — FU-ABCDEFGHI-007 — Description nine.\n",
+        "### FU-015 — FU-UND-001 — The table `delivery_log` keeps a column.\n",
+        "### FU-016 — FU-UND-002 — Plain snake_case_word and `COMMSHUB_*` vars.\n",
+    ] {
+        assert!(updated.contains(heading), "missing {heading:?} in:\n{updated}");
+    }
+}
+
+#[test]
+fn drift_apply_warns_when_an_entry_has_no_description() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+    write_ailog(
+        &straymark,
+        "AILOG-2099-01-01-002-bare.md",
+        "# AILOG\n\n## Follow-ups\n\n- **FU-BARRIDOS-006**\n- **FU-SWEEP-003** — Has a description.\n",
+    );
+
+    cmd()
+        .args(["followups", "drift", "--scan-all", "--apply", "--path", tmp.path().to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Extracted 2"))
+        .stdout(predicate::str::contains("1 entry extracted with no description"))
+        .stdout(predicate::str::contains("FU-012 — FU-BARRIDOS-006"))
+        .stdout(predicate::str::contains("FU-013 — FU-SWEEP-003").not());
+}
+
+#[test]
+fn drift_does_not_re_extract_entries_carrying_a_pre_fix_title() {
+    // Registries extracted before #433 hold deformed titles. Dedup keys on the
+    // Source-hash (raw first line), so the corrected title must not make the
+    // same bullet look new.
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+    write_ailog(
+        &straymark,
+        "AILOG-2099-01-01-003-legacy.md",
+        "# AILOG\n\n## Follow-ups\n\n- **FU-UND-001** — The table `delivery_log` keeps a column.\n",
+    );
+    let path = tmp.path().to_str().unwrap();
+    cmd()
+        .args(["followups", "drift", "--scan-all", "--apply", "--path", path])
+        .assert()
+        .success();
+    let registry_path = straymark.join("follow-ups-backlog.md");
+    let fixed = std::fs::read_to_string(&registry_path).unwrap();
+    let legacy = fixed.replace(
+        "FU-UND-001 — The table `delivery_log` keeps a column.",
+        "FU-UND-001 — The table `deliverylog` keeps a column.",
+    );
+    assert_ne!(fixed, legacy);
+    std::fs::write(&registry_path, &legacy).unwrap();
+
+    cmd()
+        .args(["followups", "drift", "--scan-all", "--path", path])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("registry in sync"));
+}

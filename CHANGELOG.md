@@ -7,6 +7,17 @@ and this project uses [independent versioning](README.md#versioning) for Framewo
 
 ---
 
+## CLI 3.49.1 — 2026-09-17
+
+Adopter report from Estoa/Sentinel (#433): `straymark followups drift --apply` changed the titles it extracted without saying so, and the title is the key the merge driver matches on (#391).
+
+### Fixed (CLI)
+
+- **A long local id no longer replaces the description** (#433). A bullet that opens with a bold id, such as `**FU-BARRIDOS-006** — text`, became an entry titled only `FU-BARRIDOS-006` once the id reached 15 characters, the threshold at which a bold lead counts as a title (#365). The text was dropped without a warning. A single-token bold span is now read as a tag, never as the title.
+- **Underscores survive in titles** (#433). The markup stripper removed every `_` and `*`, even inside code spans and words: `delivery_log` became `deliverylog`, and `COMMSHUB_*` became `COMMSHUB`. Code spans are now copied verbatim, and an underscore between two alphanumerics is treated as part of the word, as in CommonMark. The same fix applies to the spec lead that `charter new` extracts.
+- **`drift --apply` (and `charter close`) now warn about entries left without a description**, listing them, instead of reporting only `✓ Extracted N entries`.
+- Titles already in a registry are not rewritten. Dedup keys on the Source-hash, so re-scanning an AILOG extracted under the old titles creates no duplicates. On a copy of the reference adopter's corpus, 58 of 520 regenerated titles change, all of them restoring lost `_` or `*`, or a lost description.
+
 ## Framework 4.45.0 / CLI 3.49.0 — 2026-09-17
 
 Adopter report from Estoa (#432, Track C of Baton): the follow-ups registry is CLI-owned ("never hand-edit an entry"), and Track C asks each follow-up to declare its `Work verb` / `Design provenance`, but no verb could write those fields. An adopter honouring both rules was left with undeclared entries. This release adds the missing writer.

@@ -46,7 +46,7 @@ StrayMark uses **independent version tags** for each component:
 | Component | Tag prefix | Example | What it includes |
 |-----------|-----------|---------|------------------|
 | Framework | `fw-` | `fw-4.45.0` | Templates (12 types), governance docs, directives, Charter template + schema |
-| CLI | `cli-` | `cli-3.49.0` | The `straymark` binary |
+| CLI | `cli-` | `cli-3.49.1` | The `straymark` binary |
 | Loom (EXPERIMENTAL) | `loom-` | `loom-0.4.2` | The `straymark-loom` visualization server, downloaded on demand by `straymark loom serve` |
 
 Framework and CLI are released independently. A framework update does not require a CLI update, and vice versa.
@@ -999,7 +999,7 @@ Detect AILOGs whose follow-up content is not yet extracted into the registry. Gr
 | Flag | Default | Description |
 |------|---------|-------------|
 | *(default)* | — | Scan AILOGs changed in `origin/main..HEAD` (fallback `origin/master..HEAD`, then `HEAD~1..HEAD` with a warning). Warn + **exit 1** on drift. |
-| `--apply` | off | Extract the missing entries into `## Bucket: ready` with auto-numbered `FU-NNN` ids, append the AILOG ids to `fully_extracted_ailogs`, **recompute the counters**, and upgrade v0 registries to v1 in place. Seeds the registry from the framework template when absent. Since cli-3.20.0 the counters are recomputed **even when there is nothing to extract** (#222 Finding 1). Entries whose **title** already exists in the registry are skipped (#391) — ids are positional and renumber on regeneration, so the title is the stable identity; this keeps a declaration that moved section from spawning a duplicate `open` entry that shadows the operator's status. |
+| `--apply` | off | Extract the missing entries into `## Bucket: ready` with auto-numbered `FU-NNN` ids, append the AILOG ids to `fully_extracted_ailogs`, **recompute the counters**, and upgrade v0 registries to v1 in place. Seeds the registry from the framework template when absent. Since cli-3.20.0 the counters are recomputed **even when there is nothing to extract** (#222 Finding 1). Entries whose **title** already exists in the registry are skipped (#391) — ids are positional and renumber on regeneration, so the title is the stable identity; this keeps a declaration that moved section from spawning a duplicate `open` entry that shadows the operator's status. Titles keep code spans and in-word underscores verbatim (`delivery_log`, `COMMSHUB_*`); a bold single-token lead such as a local id (`**FU-SWEEP-006** — …`) is read as a tag, not as the title; and entries whose title ends up being only an id are listed as a warning instead of a clean `✓ Extracted` *(cli-3.49.1+, #433)*. |
 | `--scan-all` | off | Sweep every AILOG in the project instead of the git range. |
 | `--range <REV..REV>` | — | Explicit git range for the default scan. |
 

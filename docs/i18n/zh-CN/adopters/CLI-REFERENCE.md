@@ -46,7 +46,7 @@ StrayMark 为每个组件使用**独立的版本标签**：
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
 | Framework | `fw-` | `fw-4.45.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.49.0` | `straymark` 二进制文件 |
+| CLI | `cli-` | `cli-3.49.1` | `straymark` 二进制文件 |
 | Loom（实验性） | `loom-` | `loom-0.4.2` | `straymark-loom` 可视化服务器，由 `straymark loom serve` 按需下载 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
@@ -844,7 +844,7 @@ $ straymark followups list --severity blocking
 | Flag | Default | Description |
 |------|---------|-------------|
 | *(default)* | — | 扫描在 `origin/main..HEAD` 中变更的 AILOG（回退到 `origin/master..HEAD`，再回退到带告警的 `HEAD~1..HEAD`）。有漂移时告警并 **exit 1**。 |
-| `--apply` | off | 将缺失的条目提取到 `## Bucket: ready`，使用自动编号的 `FU-NNN` id，把 AILOG id 追加到 `fully_extracted_ailogs`，**重新计算计数器**，并就地把 v0 注册表升级为 v1。注册表不存在时从框架模板播种。自 cli-3.20.0 起,**即使没有可提取的内容也会重新计算计数器**(#222 Finding 1)。**标题**已存在于注册表中的条目会被跳过（#391）—— id 是位置性的，重新生成时会重新编号，因此标题才是稳定身份；这使得一个移动过章节的声明不会衍生出遮蔽操作员 status 的重复 `open` 条目。 |
+| `--apply` | off | 将缺失的条目提取到 `## Bucket: ready`，使用自动编号的 `FU-NNN` id，把 AILOG id 追加到 `fully_extracted_ailogs`，**重新计算计数器**，并就地把 v0 注册表升级为 v1。注册表不存在时从框架模板播种。自 cli-3.20.0 起,**即使没有可提取的内容也会重新计算计数器**(#222 Finding 1)。**标题**已存在于注册表中的条目会被跳过（#391）—— id 是位置性的，重新生成时会重新编号，因此标题才是稳定身份；这使得一个移动过章节的声明不会衍生出遮蔽操作员 status 的重复 `open` 条目。 标题会原样保留 code span 以及词内的下划线(`delivery_log`、`COMMSHUB_*`);开头只有单个 token 的粗体(例如本地 id `**FU-SWEEP-006** — …`)被视为标签而非标题;标题最终只剩一个 id 的条目会以告警列出,而不是只报告一个干净的 `✓ Extracted` *(cli-3.49.1+,#433)*。 |
 | `--scan-all` | off | 扫描项目中的每一个 AILOG，而非 git 范围。 |
 | `--range <REV..REV>` | — | 默认扫描的显式 git 范围。 |
 
