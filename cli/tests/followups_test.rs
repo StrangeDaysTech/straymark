@@ -1315,3 +1315,143 @@ fn verify_without_fu_id_or_claims_fails() {
         .assert()
         .failure();
 }
+
+// ─────────────── declared work classification (Baton #332, #432) ───────────────
+
+fn entry_block(registry: &str, id: &str) -> String {
+    let start = registry.find(&format!("### {id}")).unwrap();
+    let rest = &registry[start..];
+    let end = rest[4..].find("\n### ").map(|i| i + 5).unwrap_or(rest.len());
+    rest[..end].to_string()
+}
+
+#[test]
+fn new_writes_a_validated_declaration_in_template_position() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+
+    cmd()
+        .args([
+            "followups", "new",
+            "--title", "Instrument the retry budget",
+            "--origin", "CHARTER-06 §Scope",
+            "--cost", "S",
+            "--work-verb", "Implement",
+            "--design-provenance", "upstream",
+            "--path", tmp.path().to_str().unwrap(),
+        ])
+        .assert()
+        .success();
+
+    let updated = std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+    let block = entry_block(&updated, "FU-012");
+    // Normalized, and right after Cost as in the template's entry shape.
+    assert!(
+        block.contains("- **Cost**: S\n- **Work verb**: implement\n- **Design provenance**: upstream\n"),
+        "{block}"
+    );
+}
+
+#[test]
+fn new_rejects_an_invalid_declaration_without_writing() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+    let path = tmp.path().to_str().unwrap();
+    let base = ["followups", "new", "--title", "X", "--origin", "CHARTER-06 §Scope"];
+
+    for (extra, expected) in [
+        (&["--work-verb", "refactor"][..], "Unknown work verb"),
+        (&["--work-verb", "implement", "--design-provenance", "maybe"][..], "Unknown design provenance"),
+        (&["--work-verb", "design", "--design-provenance", "upstream"][..], "only applies to `implement`"),
+        (&["--design-provenance", "new"][..], "--work-verb"),
+    ] {
+        cmd()
+            .args(base)
+            .args(extra)
+            .args(["--path", path])
+            .assert()
+            .failure()
+            .stderr(predicate::str::contains(expected));
+    }
+    assert_eq!(
+        std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap(),
+        V1_REGISTRY,
+        "a rejected declaration must not touch the registry"
+    );
+}
+
+#[test]
+fn declare_writes_replaces_and_removes_as_a_unit() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+    let path = tmp.path().to_str().unwrap();
+    let registry = || std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap();
+
+    // Undeclared → implement/new, inserted after Cost (before Labels).
+    cmd()
+        .args(["followups", "declare", "FU-010", "--work-verb", "implement", "--design-provenance", "new", "--path", path])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("undeclared"))
+        .stdout(predicate::str::contains("implement / new"));
+    let block = entry_block(&registry(), "FU-010");
+    assert!(
+        block.contains("- **Cost**: M\n- **Work verb**: implement\n- **Design provenance**: new\n- **Labels**:"),
+        "{block}"
+    );
+
+    // Same declaration again: nothing to change, file untouched.
+    let before = registry();
+    cmd()
+        .args(["followups", "declare", "10", "--work-verb", "implement", "--design-provenance", "new", "--path", path])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("nothing to change"));
+    assert_eq!(before, registry());
+
+    // Re-declared as `design`: the stale provenance goes, in place.
+    cmd()
+        .args(["followups", "declare", "FU-010", "--work-verb", "design", "--path", path])
+        .assert()
+        .success();
+    let after = registry();
+    let block = entry_block(&after, "FU-010");
+    assert!(block.contains("- **Cost**: M\n- **Work verb**: design\n- **Labels**:"), "{block}");
+    assert!(!block.contains("Design provenance"), "{block}");
+    // The neighbouring entry and the blank line between entries are intact.
+    assert!(after.contains("reliability\n\n### FU-011"), "{after}");
+    assert!(!entry_block(&after, "FU-011").contains("Work verb"));
+
+    // `status` shows the declaration.
+    cmd()
+        .args(["followups", "status", "FU-010", "--path", path])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Work verb"))
+        .stdout(predicate::str::contains("design"));
+}
+
+#[test]
+fn declare_validates_and_refuses_unknown_entries() {
+    let tmp = TempDir::new().unwrap();
+    let straymark = scaffold(tmp.path());
+    write_registry(&straymark, V1_REGISTRY);
+    let path = tmp.path().to_str().unwrap();
+
+    cmd()
+        .args(["followups", "declare", "FU-011", "--work-verb", "operate", "--design-provenance", "new", "--path", path])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("only applies to `implement`"));
+    cmd()
+        .args(["followups", "declare", "FU-999", "--work-verb", "audit", "--path", path])
+        .assert()
+        .failure();
+    assert_eq!(
+        std::fs::read_to_string(straymark.join("follow-ups-backlog.md")).unwrap(),
+        V1_REGISTRY
+    );
+}

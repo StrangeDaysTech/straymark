@@ -22,7 +22,7 @@ Forward-validation (gate #3 for graduating Baton) needs real governance traffic.
 
 1. **Declare the work class** on new units, exactly as documented in the [CLI Reference](./CLI-REFERENCE.md#straymark-validate):
    - Charter frontmatter: `work_verb: design | implement | audit | operate` and, only when significant for `implement`, `design_provenance: new | upstream`.
-   - Follow-up backlog entries: the same optional fields.
+   - Follow-up backlog entries: the same optional fields, written with `straymark followups declare FU-NNN --work-verb …` or `followups new --work-verb …` *(cli-3.49.0+)* — never by hand-editing the registry.
 2. **Work as usual.** Nothing else in your cadence changes; the fields are advisory and absence is silent.
 3. **After 2–4 weeks**, run the simplified calibration protocol from the [adopter kit](https://github.com/StrangeDaysTech/straymark/blob/main/experiment-baton/07-track-c-adopter-kit.md) and report back (see [Adopter Feedback](./ADOPTER-FEEDBACK.md)).
 

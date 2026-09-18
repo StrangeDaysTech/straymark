@@ -22,7 +22,7 @@ Baton 是 StrayMark 的实验性 **Coherence Bridge**：它对照治理与代码
 
 1. **在新单元上声明工作类别**，与 [CLI 参考](./CLI-REFERENCE.md#straymark-validate) 中的文档完全一致：
    - Charter frontmatter：`work_verb: design | implement | audit | operate`，以及仅当对 `implement` 有意义时的 `design_provenance: new | upstream`。
-   - follow-up backlog 条目：相同的可选字段。
+   - follow-up backlog 条目：相同的可选字段，通过 `straymark followups declare FU-NNN --work-verb …` 或 `followups new --work-verb …` 写入 *(cli-3.49.0+)* —— 切勿手工编辑注册表。
 2. **照常工作。** 你的节奏没有任何其他变化；这些字段只是建议性的，缺省时完全静默。
 3. **2–4 周后**，按[采纳者工具包](https://github.com/StrangeDaysTech/straymark/blob/main/experiment-baton/07-track-c-adopter-kit.md)中的简化校准协议执行并反馈（见 [Adopter Feedback](./ADOPTER-FEEDBACK.md)）。
 

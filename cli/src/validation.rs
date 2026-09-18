@@ -399,18 +399,29 @@ fn check_charter_work_verb(raw_yaml: &serde_yaml::Value, path: &Path, result: &m
 
 /// Advisory check for `**Work verb**:` / `**Design provenance**:` lines in the
 /// follow-ups backlog (Baton #332, same vocabulary as `check_charter_work_verb`).
-/// Anti-noise: only flags values *present but outside* the controlled vocabulary.
+/// Anti-noise: only flags values *present but outside* the controlled vocabulary,
+/// and only in live entries — the shipped registry documents the entry shape in
+/// an HTML comment whose example line lists the whole vocabulary (#431).
 fn check_followups_work_verb(straymark_dir: &Path, result: &mut ValidationResult) {
-    const WORK_VERBS: &[&str] = &["design", "implement", "audit", "operate"];
-    const PROVENANCES: &[&str] = &["new", "upstream"];
+    use crate::followups::{DESIGN_PROVENANCES as PROVENANCES, WORK_VERBS};
 
     let backlog = straymark_dir.join("follow-ups-backlog.md");
     let Ok(content) = std::fs::read_to_string(&backlog) else {
         return; // No backlog — nothing to check.
     };
 
+    let mut in_comment = false;
+    let mut in_fence = false;
     for (line_no, line) in content.lines().enumerate() {
-        let trimmed = line.trim();
+        let visible = outside_html_comments(line, &mut in_comment);
+        let trimmed = visible.trim();
+        if trimmed.starts_with("```") || trimmed.starts_with("~~~") {
+            in_fence = !in_fence;
+            continue;
+        }
+        if in_fence {
+            continue;
+        }
         for (prefix, valid, rule) in [
             ("- **Work verb**:", WORK_VERBS, "FOLLOWUP-WORK-VERB"),
             ("- **Design provenance**:", PROVENANCES, "FOLLOWUP-DESIGN-PROVENANCE"),
@@ -435,6 +446,30 @@ fn check_followups_work_verb(straymark_dir: &Path, result: &mut ValidationResult
                     });
                 }
             }
+        }
+    }
+}
+
+/// The part of `line` outside HTML comments. `in_comment` carries an open
+/// `<!--` across lines, since a comment may span many.
+fn outside_html_comments(line: &str, in_comment: &mut bool) -> String {
+    let mut out = String::new();
+    let mut rest = line;
+    loop {
+        if *in_comment {
+            let Some(end) = rest.find("-->") else {
+                return out;
+            };
+            rest = &rest[end + 3..];
+            *in_comment = false;
+        } else {
+            let Some(start) = rest.find("<!--") else {
+                out.push_str(rest);
+                return out;
+            };
+            out.push_str(&rest[..start]);
+            rest = &rest[start + 4..];
+            *in_comment = true;
         }
     }
 }

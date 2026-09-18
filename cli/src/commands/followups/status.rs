@@ -218,6 +218,8 @@ fn print_entry_detail(registry: &Registry, id: &str) -> Result<()> {
     print_field("Trigger", entry.trigger.as_deref());
     print_field("Destination", entry.destination.as_deref());
     print_field("Cost", entry.cost.as_deref());
+    print_field("Work verb", entry.work_verb.as_deref());
+    print_field("Design provenance", entry.design_provenance.as_deref());
     if !entry.labels.is_empty() {
         print_field("Labels", Some(&entry.labels.join(", ")));
     }

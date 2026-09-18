@@ -582,10 +582,35 @@ enum FollowupsCommands {
         /// Effort estimate, free-form (default: TBD)
         #[arg(long)]
         cost: Option<String>,
+        /// Declared work classification (Baton #332): design | implement |
+        /// audit | operate. Omit to leave the entry undeclared.
+        #[arg(long = "work-verb")]
+        work_verb: Option<String>,
+        /// new | upstream — only with `--work-verb implement` (is the design
+        /// being implemented new, or already decided upstream?)
+        #[arg(long = "design-provenance", requires = "work_verb")]
+        design_provenance: Option<String>,
         /// The load-bearing assumption this entry rests on — what a future
         /// reader must re-check before acting (AIDEC-2026-07-18-001)
         #[arg(long)]
         premise: Option<String>,
+        /// Project directory (default: current directory)
+        #[arg(long = "path", default_value = ".")]
+        path: String,
+    },
+    /// Declare an existing entry's work classification (Baton #332, #432):
+    /// writes the `Work verb` / `Design provenance` bullets as one unit, with
+    /// the vocabulary validated. Omitting --design-provenance removes a
+    /// previous one, so a stale provenance never pairs with a new verb.
+    Declare {
+        /// Entry identifier (FU-NNN or just NNN)
+        fu_id: String,
+        /// design | implement | audit | operate
+        #[arg(long = "work-verb")]
+        work_verb: String,
+        /// new | upstream — only with `--work-verb implement`
+        #[arg(long = "design-provenance")]
+        design_provenance: Option<String>,
         /// Project directory (default: current directory)
         #[arg(long = "path", default_value = ".")]
         path: String,
@@ -1169,6 +1194,8 @@ fn main() {
                 trigger,
                 destination,
                 cost,
+                work_verb,
+                design_provenance,
                 premise,
                 path,
             } => commands::followups::new::run(commands::followups::new::NewArgs {
@@ -1180,8 +1207,21 @@ fn main() {
                 trigger: trigger.as_deref(),
                 destination: destination.as_deref(),
                 cost: cost.as_deref(),
+                work_verb: work_verb.as_deref(),
+                design_provenance: design_provenance.as_deref(),
                 premise: premise.as_deref(),
             }),
+            FollowupsCommands::Declare {
+                fu_id,
+                work_verb,
+                design_provenance,
+                path,
+            } => commands::followups::declare::run(
+                &path,
+                &fu_id,
+                &work_verb,
+                design_provenance.as_deref(),
+            ),
         },
         Commands::Architecture { command } => match command {
             ArchitectureCommands::Generate { path, force, out } => {

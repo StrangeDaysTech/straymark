@@ -45,8 +45,8 @@ StrayMark 为每个组件使用**独立的版本标签**：
 
 | 组件 | 标签前缀 | 示例 | 包含内容 |
 |------|----------|------|----------|
-| Framework | `fw-` | `fw-4.44.0` | 模板（12 种类型）、治理文档、指令 |
-| CLI | `cli-` | `cli-3.45.0` | `straymark` 二进制文件 |
+| Framework | `fw-` | `fw-4.45.0` | 模板（12 种类型）、治理文档、指令 |
+| CLI | `cli-` | `cli-3.49.0` | `straymark` 二进制文件 |
 | Loom（实验性） | `loom-` | `loom-0.4.2` | `straymark-loom` 可视化服务器，由 `straymark loom serve` 按需下载 |
 
 Framework 和 CLI 独立发布。Framework 更新不需要 CLI 更新，反之亦然。
@@ -814,6 +814,7 @@ $ straymark charter audit CHARTER-05 --finalize
 - `straymark followups promote` — 将条目提升为 TDE 文档 *(cli-3.19.0+)*
 - `straymark followups verify` — 在执行时重新验证一个有日期假设的前提 *(cli-3.37.0+)*
 - `straymark followups merge-driver` — 以结构化方式解决注册表冲突的 git merge driver（#391）*(cli-3.41.0+)*
+- `straymark followups declare` — 声明条目的工作分类（`Work verb` / `Design provenance`，Baton #332）*(cli-3.49.0+)*
 
 #### `straymark followups list [--bucket <name>] [--status <s>] [--severity <s>] [--label <tag>] [path]`
 
@@ -946,15 +947,29 @@ echo '.straymark/follow-ups-backlog.md merge=straymark-followups' >> .gitattribu
 git config merge.straymark-followups.driver 'straymark followups merge-driver %O %A %B'
 ```
 
-#### `straymark followups new --title <标题> --origin <来源> [--bucket <name>] [--status <s>] [--trigger <t>] [--destination <d>] [--cost <c>] [--premise <p>] [--path <dir>]` *(cli-3.39.0+)*
+#### `straymark followups new --title <标题> --origin <来源> [--bucket <name>] [--status <s>] [--trigger <t>] [--destination <d>] [--cost <c>] [--work-verb <v> [--design-provenance <p>]] [--premise <p>] [--path <dir>]` *(cli-3.39.0+;声明类 flag 自 cli-3.49.0+)*
 
 创建来源为**Charter 声明**(事前)的条目,此时尚不存在任何执行(#360)。此前两条填充路径都假定来源是事后的:`drift --apply` 从 AILOG 提取,而在**声明时刻**做出的推迟 —— "Redis 的 CI job 不在范围内;登记这个覆盖缺口,使其被推迟而非被消音" —— 按设计先于任何 AILOG。
 
 它关闭的是正确性风险,而非人机工程问题。由于缺少创建动词,提交该报告的采用方在 Charter 正文中前向引用了 `FU-011`,却没有任何东西为其预留;而 id 是在提取时按 `max(既有) + 1` 铸造的,于是下一次无关的 `drift --apply` 会把 `FU-011` 分配给别的条目,悄悄让 Charter 的引用指向错误的 follow-up。`new` 原子地分配并打印 id,因此当 Charter 引用它时该条目已经存在。
 
-该条目写入时带 `Origin-class: ex-ante-planning` 且**不带 `Source-hash`**:没有 AILOG 可供哈希,而编造一个会让后续的 `drift --apply` 以为自己已经提取过它从未见过的东西。
+该条目写入时带 `Origin-class: ex-ante-planning` 且**不带 `Source-hash`**:没有 AILOG 可供哈希,而编造一个会让后续的 `drift --apply` 以为自己已经提取过它从未见过的东西。使用 `--work-verb`(以及仅与 `implement` 搭配的 `--design-provenance`)可在创建时直接声明该条目;词表校验与 `followups declare` 相同。
 
-> **三者都拒绝写入存在解析告警的注册表。** 针对被解析器误读的结构做手术式编辑可能损坏相邻条目,因此必须先修好变形的条目。`recount` 仍是批量手工 triage 的逃生通道 —— 也是这些动词算术是否正确的幂等校验。
+#### `straymark followups declare <FU-NNN> --work-verb <v> [--design-provenance <p>] [--path <dir>]` *(cli-3.49.0+)*
+
+为已有条目写入**声明的工作分类**:即 Baton 成本感知路由器读取的 `Work verb` / `Design provenance` 两行(#332)。此前没有任何动词能写入它们:`new` 没有对应的 flag,`note` 只追加到 `Notes`(Baton 不读取该字段),`drift --apply` 提取时也不带它们。因此遵守"绝不手工编辑条目"的采用方没有受支持的方式来声明一个 follow-up(#432)。
+
+- **词表会被校验。** `--work-verb` 接受 `design` · `implement` · `audit` · `operate`。`--design-provenance` 接受 `new` · `upstream`,且只能与 `implement` 一起使用:它说明所实现的设计是新的,还是已在上游确定;`upstream` 按机械性工作路由。无效输入会被拒绝,且不会写入任何内容。
+- **作为整体写入。** 两行一起替换:写在原先的位置,若原先没有,则紧跟在 `Cost` 之后(与模板一致)。省略 `--design-provenance` 会**删除**先前的 provenance,使过时的值不会与新的 verb 配对。重复声明相同的值不会做任何改动。
+
+```bash
+$ straymark followups declare FU-012 --work-verb implement --design-provenance new
+✓ FU-012: undeclared → implement / new
+```
+
+`straymark followups status FU-NNN` 会显示该声明。对于词表之外的声明值,`straymark validate` 仍会给出(建议性)告警;自 cli-3.49.0 起,它会忽略注册表中被注释掉的格式示例(#431)。
+
+> **四者都拒绝写入存在解析告警的注册表。** 针对被解析器误读的结构做手术式编辑可能损坏相邻条目,因此必须先修好变形的条目。`recount` 仍是批量手工 triage 的逃生通道 —— 也是这些动词算术是否正确的幂等校验。
 
 ---
 

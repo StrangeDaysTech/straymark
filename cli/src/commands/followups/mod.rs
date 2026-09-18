@@ -14,7 +14,10 @@
 //! annotate, re-state and create entries through the same surgical helpers the
 //! rest of the namespace writes with, recomputing the CLI-owned counters in the
 //! same step so the edit-then-`recount` desync window does not exist.
+//! `declare` (#432) does the same for an entry's declared work classification
+//! (Baton #332), the one declaration slot that still had no writer.
 
+pub mod declare;
 pub mod drift;
 pub mod install_merge_driver;
 pub mod list;

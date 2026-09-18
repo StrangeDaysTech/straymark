@@ -150,6 +150,11 @@ pub struct Entry {
     /// `followups verify`/`promote --premise-verified`. Absent = never
     /// re-checked since capture (the default, honest state).
     pub verified_at: Option<String>,
+    /// Declared work classification (Baton #332): `design` | `implement` |
+    /// `audit` | `operate`. Absent = undeclared (the honest default).
+    pub work_verb: Option<String>,
+    /// `new` | `upstream` — only meaningful with `implement`.
+    pub design_provenance: Option<String>,
     /// Byte offset of the `### ` heading line start, into `Registry::body`.
     pub span_start: usize,
     /// Byte offset one past the entry's last byte (start of the next heading
@@ -408,6 +413,8 @@ fn parse_entries(
             promoted_to: None,
             premise: None,
             verified_at: None,
+            work_verb: None,
+            design_provenance: None,
             span_start: abs_start,
             span_end: abs_end,
         };
@@ -447,6 +454,10 @@ fn parse_entries(
                 "premise" => entry.premise = some_nonempty(value),
                 "verified-at" | "verified at" | "verified_at" => {
                     entry.verified_at = some_nonempty(value)
+                }
+                "work verb" | "work-verb" | "work_verb" => entry.work_verb = some_nonempty(value),
+                "design provenance" | "design-provenance" | "design_provenance" => {
+                    entry.design_provenance = some_nonempty(value)
                 }
                 _ => {} // unknown field — lenient, preserved in the raw body
             }
@@ -1389,6 +1400,114 @@ pub fn set_entry_field(body: &str, entry: &Entry, field: &str, value: &str) -> S
     out
 }
 
+/// Controlled vocabulary of `Work verb` (Baton #332, ratified in
+/// `experiment-baton/06-work-verb-schema-ratification.md`).
+pub const WORK_VERBS: &[&str] = &["design", "implement", "audit", "operate"];
+/// Controlled vocabulary of `Design provenance`.
+pub const DESIGN_PROVENANCES: &[&str] = &["new", "upstream"];
+
+/// An entry's declared work classification, validated at construction so a
+/// writer can only ever put a well-formed declaration in the registry. The
+/// reader (`validate`, Baton) stays lenient — this is the one strict side.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Declaration {
+    pub work_verb: String,
+    pub design_provenance: Option<String>,
+}
+
+impl Declaration {
+    pub fn new(work_verb: &str, design_provenance: Option<&str>) -> Result<Self> {
+        let verb = work_verb.trim().to_lowercase();
+        if !WORK_VERBS.contains(&verb.as_str()) {
+            bail!(
+                "Unknown work verb '{}'. Valid: {}.",
+                work_verb.trim(),
+                WORK_VERBS.join(" | ")
+            );
+        }
+        let provenance = match design_provenance.map(|p| p.trim().to_lowercase()) {
+            None => None,
+            Some(p) if !DESIGN_PROVENANCES.contains(&p.as_str()) => bail!(
+                "Unknown design provenance '{}'. Valid: {}.",
+                p,
+                DESIGN_PROVENANCES.join(" | ")
+            ),
+            Some(_) if verb != "implement" => bail!(
+                "--design-provenance only applies to `implement` (it says whether the design being \
+                 implemented is new or already decided upstream); `{}` takes none.",
+                verb
+            ),
+            Some(p) => Some(p),
+        };
+        Ok(Self {
+            work_verb: verb,
+            design_provenance: provenance,
+        })
+    }
+
+    /// Whether `entry` already carries exactly this declaration.
+    pub fn matches(&self, entry: &Entry) -> bool {
+        entry.work_verb.as_deref() == Some(self.work_verb.as_str())
+            && entry.design_provenance.as_deref() == self.design_provenance.as_deref()
+    }
+
+    /// The entry bullets encoding this declaration, in template order.
+    fn bullets(&self) -> Vec<String> {
+        let mut out = vec![format!("- **Work verb**: {}", self.work_verb)];
+        if let Some(p) = &self.design_provenance {
+            out.push(format!("- **Design provenance**: {}", p));
+        }
+        out
+    }
+}
+
+/// Replace an entry's declared work classification **as a unit**: the
+/// `Work verb` and `Design provenance` bullets are removed and the new
+/// declaration's bullets written in their place. Replacing only the verb would
+/// let a stale provenance from an earlier declaration pair with the new verb.
+/// New bullets go where the old ones were, else after `Cost` (the template
+/// position), else after the last bullet.
+pub fn set_entry_declaration(body: &str, entry: &Entry, declaration: &Declaration) -> String {
+    let block = &body[entry.span_start..entry.span_end];
+    let is_declaration = |l: &str| {
+        parse_field_line(l).is_some_and(|(field, _)| {
+            matches!(
+                field.to_lowercase().as_str(),
+                "work verb" | "work-verb" | "work_verb" | "design provenance"
+                    | "design-provenance" | "design_provenance"
+            )
+        })
+    };
+    let mut lines: Vec<String> = block.lines().map(|s| s.to_string()).collect();
+    let previous = lines.iter().position(|l| is_declaration(l));
+    lines.retain(|l| !is_declaration(l));
+    let insert_at = previous.unwrap_or_else(|| {
+        let after = |field: &str| {
+            lines.iter().rposition(|l| {
+                parse_field_line(l).is_some_and(|(f, _)| field.is_empty() || f.eq_ignore_ascii_case(field))
+            })
+        };
+        after("Cost")
+            .or_else(|| after(""))
+            .map(|i| i + 1)
+            .unwrap_or(lines.len())
+    });
+    for (offset, line) in declaration.bullets().into_iter().enumerate() {
+        lines.insert(insert_at + offset, line);
+    }
+    let mut new_block = lines.join("\n");
+    // Same trailing-newline preservation as `set_entry_field`.
+    let trailing = block.len() - block.trim_end_matches('\n').len();
+    while new_block.len() - new_block.trim_end_matches('\n').len() < trailing {
+        new_block.push('\n');
+    }
+    let mut out = String::with_capacity(body.len() + 64);
+    out.push_str(&body[..entry.span_start]);
+    out.push_str(&new_block);
+    out.push_str(&body[entry.span_end..]);
+    out
+}
+
 /// The five canonical buckets (schema v1 `buckets` enum). Stable at N=91
 /// entries in the reference adopter — no sixth has been needed.
 pub const CANONICAL_BUCKETS: &[&str] = &[
@@ -1463,6 +1582,7 @@ pub fn render_declared_entry(
     trigger: Option<&str>,
     destination: Option<&str>,
     cost: Option<&str>,
+    declaration: Option<&Declaration>,
     premise: Option<&str>,
     notes: &str,
 ) -> String {
@@ -1488,6 +1608,12 @@ pub fn render_declared_entry(
         field(destination),
         field(cost),
     );
+    if let Some(d) = declaration {
+        for line in d.bullets() {
+            block.push_str(&line);
+            block.push('\n');
+        }
+    }
     if let Some(p) = premise.map(str::trim).filter(|s| !s.is_empty()) {
         block.push_str(&format!("- **Premise**: {}\n", p));
     }
@@ -2400,6 +2526,7 @@ Done.
             None,
             None,
             Some("S"),
+            None,
             Some("the Redis adapter has no CI coverage today"),
             "Created by `straymark followups new` 2026-07-26.",
         );
@@ -2427,8 +2554,35 @@ Done.
 
     #[test]
     fn render_declared_entry_omits_premise_when_absent() {
-        let block = render_declared_entry(1, "T", "CHARTER-01 §Scope", "open", None, None, None, None, "n");
+        let block = render_declared_entry(1, "T", "CHARTER-01 §Scope", "open", None, None, None, None, None, "n");
         assert!(!block.contains("Premise"));
+        assert!(!block.contains("Work verb"), "undeclared unless asked");
+    }
+
+    #[test]
+    fn declaration_round_trips_through_the_parser() {
+        let declaration = Declaration::new(" Implement ", Some("UPSTREAM")).unwrap();
+        let block = render_declared_entry(
+            12, "T", "CHARTER-01 §Scope", "open", None, None, Some("S"), Some(&declaration), None, "n",
+        );
+        assert!(block.contains("- **Cost**: S\n- **Work verb**: implement\n- **Design provenance**: upstream\n"));
+        let reg = parse(V0_REGISTRY);
+        let reparsed = parse(&assemble(
+            &reg.frontmatter_raw,
+            &insert_into_bucket(&reg, "ready", &block),
+        ));
+        let entry = find_entry(&reparsed, "FU-012").unwrap();
+        assert!(declaration.matches(entry));
+        assert_eq!(entry.work_verb.as_deref(), Some("implement"));
+        assert_eq!(entry.design_provenance.as_deref(), Some("upstream"));
+    }
+
+    #[test]
+    fn declaration_rejects_out_of_vocabulary_and_misplaced_provenance() {
+        assert!(Declaration::new("refactor", None).is_err());
+        assert!(Declaration::new("implement", Some("maybe")).is_err());
+        assert!(Declaration::new("design", Some("new")).is_err());
+        assert!(Declaration::new("operate", None).is_ok());
     }
 
     #[test]
