@@ -22,7 +22,7 @@ use std::path::Path;
 use serde::Serialize;
 
 use crate::intent::{Confidence, IntentContract, IntentModel, SourceRef};
-use crate::scan::normalize_endpoint;
+use crate::scan::{is_nested_checkout, normalize_endpoint};
 use crate::speckit::IntendedComponent;
 
 /// A flat, lowercased listing of on-disk file paths (read-only) — used to tell
@@ -61,7 +61,7 @@ impl Inventory {
             for p in entries {
                 if p.is_dir() {
                     let name = p.file_name().and_then(|n| n.to_str()).unwrap_or_default();
-                    if !SKIP.contains(&name) {
+                    if !SKIP.contains(&name) && !is_nested_checkout(&p) {
                         stack.push(p);
                     }
                 } else if let Ok(rel) = p.strip_prefix(root) {

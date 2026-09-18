@@ -29,7 +29,7 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 use crate::intent::{ContractShape, EnumDef, Field, Lang, ShapeRole, SourceRef};
-use crate::scan::{normalize_endpoint, scan_endpoints};
+use crate::scan::{is_nested_checkout, normalize_endpoint, scan_endpoints};
 
 const SKIP_DIRS: &[&str] = &[
     ".git",
@@ -595,7 +595,7 @@ fn walk_code(root: &Path) -> Vec<std::path::PathBuf> {
         for p in entries {
             if p.is_dir() {
                 let name = p.file_name().and_then(|n| n.to_str()).unwrap_or_default();
-                if !SKIP_DIRS.contains(&name) {
+                if !SKIP_DIRS.contains(&name) && !is_nested_checkout(&p) {
                     stack.push(p);
                 }
             } else if matches!(ext(&p), Some("go") | Some("ts") | Some("tsx"))
